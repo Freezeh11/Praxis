@@ -97,21 +97,21 @@ LEVELS = [
                     "Now x'y + xy — both terms share a common variable.",
                     "Factor out the common variable, then look for a pair that cancels to 1.",
                 ],
-                "optimalSteps": 4,
+                "optimalSteps": 3,
                 "optimalHint": "If you took more steps, remember to remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive) to avoid creating a massive equation.",
             },
-            # Stage 3 — De Morgan's OR -> Double Negation -> Idempotent
+            # Stage 3 — De Morgan's OR -> Idempotent (double-neg auto-handled)
             {
                 "expr": "(x+y')' + x'y",
                 "goal": "x'y",
-                "targetLaws": ["demorgan-or", "double-neg"],
+                "targetLaws": ["demorgan-or"],
                 "hints": [
                     "Click the (x+y')' group to apply De Morgan's Law.",
-                    "After applying De Morgan's, each negated term flips. Look for a term that can be simplified further.",
-                    "Use Double Negation to remove the double-bar, then look for identical terms.",
+                    "After applying De Morgan's, the expression simplifies automatically. Look for identical terms.",
+                    "Use Idempotent Law to remove the duplicate term.",
                 ],
-                "optimalSteps": 3,
-                "optimalHint": "There is no workaround here! You must use De Morgan's Law to break apart the negated group.",
+                "optimalSteps": 2,
+                "optimalHint": "There is no workaround here! De Morgan's Law (OR→AND) breaks apart the negated group, then Idempotent removes the duplicate — just 2 steps.",
             },
             # Stage 4 — De Morgan's AND -> Absorption (The Detour)
             {
@@ -136,21 +136,21 @@ LEVELS = [
                     "Look at the last two terms: x'y + xy. They both share y.",
                     "Factor out y, turn x'+x into 1, and you're left with x + y.",
                 ],
-                "optimalSteps": 4,
-                "optimalHint": "If you got stuck, always look ahead to see if factoring two adjacent terms creates a clean complement (x + x' = 1) before trying absorption.",
+                "optimalSteps": 2,
+                "optimalHint": "The optimal path is just 2 steps: Distributive (factor y from x'y + xy), then Complement (x' + x = 1). The simplification to x + y happens automatically!",
             },
             # Stage 6 — De Morgan's -> Annulment (The Nuke)
             {
                 "expr": "(x'y)' + (xy')' + xy",
                 "goal": "1",
-                "targetLaws": ["demorgan-and", "complement", "annulment"],
+                "targetLaws": ["demorgan-and", "complement"],
                 "hints": [
                     "Start by expanding the negated groups using De Morgan's Law.",
                     "After expanding, scan the entire expression for a variable paired with its complement.",
-                    "When you find a complementary pair (A + A' = 1), the 1 nukes everything else via Annulment.",
+                    "When you find a complementary pair (A + A' = 1), the expression collapses to 1 automatically!",
                 ],
-                "optimalSteps": 4,
-                "optimalHint": "Once you expand the terms and find a Complement (x + x' = 1), you can instantly nuke the entire rest of the expression using the Annulment Law (1 + A = 1).",
+                "optimalSteps": 3,
+                "optimalHint": "The optimal path is 3 steps: De Morgan's on both groups, then Complement. Finding x + x' = 1 collapses everything to 1 instantly!",
             },
         ],
     },

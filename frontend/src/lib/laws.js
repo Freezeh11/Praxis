@@ -16,7 +16,7 @@ export function termsEq(a, b) { return nodeText(a) === nodeText(b) }
 
 export function isSubT(shorter, longer) {
   const sLits = getLits(shorter), lLits = getLits(longer)
-  if (sLits.length >= lLits.length) return false
+  if (sLits.length === 0 || sLits.length >= lLits.length) return false
   return sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
 }
 
