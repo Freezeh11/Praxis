@@ -97,7 +97,7 @@ LEVELS = [
                     "Now x'y + xy — both terms share a common variable.",
                     "Factor out the common variable, then look for a pair that cancels to 1.",
                 ],
-                "optimalSteps": 3,
+                "optimalSteps": 4,
                 "optimalHint": "If you took more steps, remember to remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive) to avoid creating a massive equation.",
             },
             # Stage 3 — De Morgan's OR -> Idempotent (double-neg auto-handled)
@@ -134,23 +134,23 @@ LEVELS = [
                 "hints": [
                     "Look for two terms that share a common factor which would create a complementary pair (like x and x') inside the brackets.",
                     "Look at the last two terms: x'y + xy. They both share y.",
-                    "Factor out y, turn x'+x into 1, and you're left with x + y.",
+                    "Factor out y, turn x'+x into 1, and you're left with x + y·1 — then remove the 1.",
                 ],
-                "optimalSteps": 2,
-                "optimalHint": "The optimal path is just 2 steps: Distributive (factor y from x'y + xy), then Complement (x' + x = 1). The simplification to x + y happens automatically!",
+                "optimalSteps": 3,
+                "optimalHint": "The optimal path is 3 steps: Distributive (factor y from x'y + xy), Complement (x' + x = 1), then Identity (y·1 = y). Don't try Absorption on x and xy — it leads to a dead end!",
             },
-            # Stage 6 — De Morgan's -> Annulment (The Nuke)
+            # Stage 6 — De Morgan's -> Complement -> Annulment (The Nuke)
             {
                 "expr": "(x'y)' + (xy')' + xy",
                 "goal": "1",
-                "targetLaws": ["demorgan-and", "complement"],
+                "targetLaws": ["demorgan-and", "complement", "annulment"],
                 "hints": [
                     "Start by expanding the negated groups using De Morgan's Law.",
                     "After expanding, scan the entire expression for a variable paired with its complement.",
-                    "When you find a complementary pair (A + A' = 1), the expression collapses to 1 automatically!",
+                    "When you find a complementary pair (A + A' = 1), use Annulment — 1 + anything = 1!",
                 ],
-                "optimalSteps": 3,
-                "optimalHint": "The optimal path is 3 steps: De Morgan's on both groups, then Complement. Finding x + x' = 1 collapses everything to 1 instantly!",
+                "optimalSteps": 4,
+                "optimalHint": "The optimal path is 4 steps: De Morgan's on both groups, then Complement (x + x' = 1), then Annulment (1 + anything = 1).",
             },
         ],
     },
