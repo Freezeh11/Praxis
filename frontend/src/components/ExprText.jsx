@@ -15,10 +15,24 @@ export default function ExprText({ text, className = '' }) {
 
 function renderTokens(tokens) {
   return tokens.map((tok, i) => {
-    if (tok.type === 'overline') {
+    if (tok.type === 'overline-lit') {
+      // Single negated literal — text-decoration:overline tight against the letter
       return (
-        <span key={i} style={{ borderTop: '1.8px solid currentColor', paddingTop: '1px', display: 'inline-block' }}>
+        <span key={i} style={{ textDecoration: 'overline' }}>
           {tok.value}
+        </span>
+      )
+    }
+    if (tok.type === 'overline-group') {
+      // Negated group — border-top spans the whole group (higher than any inner bars)
+      // Recursively tokenise inner content so nested primes also render as bars
+      return (
+        <span key={i} style={{
+          borderTop: '1.8px solid currentColor',
+          paddingTop: '4px',
+          display: 'inline-block',
+        }}>
+          ({renderTokens(tokenize(tok.value))})
         </span>
       )
     }
@@ -61,8 +75,9 @@ function tokenize(str) {
           inner.forEach(t => parts.push(t))
           i = close + 3
         } else {
-          // (…)' → overline over "(…)"
-          parts.push({ type: 'overline', value: group })
+          // (…)' → overline-group, store INNER content (no parens) — renderer adds them
+          const inner = str.slice(i + 1, close)
+          parts.push({ type: 'overline-group', value: inner })
           i = close + 2
         }
         continue
@@ -77,7 +92,7 @@ function tokenize(str) {
         appendPlain(str[i])
         i += 3
       } else {
-        parts.push({ type: 'overline', value: str[i] })
+        parts.push({ type: 'overline-lit', value: str[i] })
         i += 2
       }
       continue
