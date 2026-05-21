@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BooleanQuest — Interactive Boolean Simplifier</title>
+  <meta name="description" content="Master Boolean algebra by interactively simplifying expressions — select terms, discover laws, and simplify step by step." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- SCREEN: Home -->
+  <div id="screen-home" class="screen active">
+    <div class="stars-bg"></div>
+    <div class="home-content">
+      <div class="logo-badge"><span class="logo-icon">⊕</span><span class="logo-text">BooleanQuest</span></div>
+      <h1 class="home-title">Simplify Boolean<br /><span class="gradient-text">Expressions</span></h1>
+      <p class="home-subtitle">Select terms, discover applicable laws, and simplify step-by-step.<br />An interactive journey from single variables to complex expressions.</p>
+      <div class="home-stats-row">
+        <div class="stat-pill"><span id="home-total-xp">0</span> XP earned</div>
+        <div class="stat-pill"><span id="home-levels-done">0</span>/8 Levels cleared</div>
+        <div class="stat-pill">🔥 <span id="home-streak">0</span> streak</div>
+      </div>
+      <div class="home-actions">
+        <button class="btn-primary" id="btn-start">Start Journey</button>
+        <button class="btn-secondary" id="btn-reference">Law Reference</button>
+      </div>
+      <div class="home-cards-row">
+        <div class="home-card"><div class="home-card-icon">🖱️</div><div class="home-card-title">Click to Select</div><div class="home-card-desc">Tap terms to select them and discover which laws apply</div></div>
+        <div class="home-card"><div class="home-card-icon">⚡</div><div class="home-card-title">Apply Laws</div><div class="home-card-desc">Choose from context-sensitive actions to simplify step by step</div></div>
+        <div class="home-card"><div class="home-card-icon">🏆</div><div class="home-card-title">8 Levels</div><div class="home-card-desc">Progress from 1-variable basics to complex 4-variable boss fights</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Level Select -->
+  <div id="screen-levels" class="screen">
+    <div class="stars-bg"></div>
+    <header class="game-header">
+      <button class="btn-icon" id="levels-home-btn">⬅ Home</button>
+      <div class="header-right">
+        <button class="btn-icon" id="levels-ref-btn">📖 Laws</button>
+        <div class="header-xp"><span class="xp-icon">⭐</span><span id="header-xp">0</span> XP</div>
+      </div>
+    </header>
+    <div class="stages-content">
+      <h2 class="stages-title">Choose Your Level</h2>
+      <p class="stages-subtitle">Each level introduces more variables and complexity</p>
+      <div class="stage-path" id="level-path"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Game -->
+  <div id="screen-game" class="screen">
+    <div class="stars-bg"></div>
+    <header class="game-header">
+      <button class="btn-icon" id="game-back-btn">⬅ Levels</button>
+      <div class="game-progress-info">
+        <span id="game-level-label">Level 1</span>
+        <div class="progress-bar-container"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
+        <span id="game-puzzle-counter">1/3</span>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" id="game-ref-btn">📖 Laws</button>
+        <button class="btn-icon btn-smart-hints" id="btn-smart-hints">🔍 Hints: OFF</button>
+        <div class="header-xp"><span class="xp-icon">⭐</span><span id="game-xp">0</span> XP</div>
+      </div>
+    </header>
+
+    <div class="game-content">
+      <!-- Goal -->
+      <div class="goal-panel" id="goal-panel">
+        <span class="goal-label">🎯 Simplify to:</span>
+        <span class="goal-expr" id="goal-expr">x</span>
+      </div>
+
+      <!-- Expression Workspace -->
+      <div class="expr-workspace" id="expr-workspace">
+        <div class="expr-instruction" id="expr-instruction">Select two terms to see applicable laws</div>
+        <div class="expr-display" id="expr-display">
+          <!-- Terms rendered by JS -->
+        </div>
+        <div class="expr-controls">
+          <button class="btn-undo" id="btn-undo" disabled>↩ Undo</button>
+          <button class="btn-reset" id="btn-reset">⟳ Reset</button>
+        </div>
+      </div>
+
+      <!-- Action Menu (appears when 2 terms selected) -->
+      <div class="action-menu hidden" id="action-menu">
+        <div class="action-menu-title">Applicable Laws:</div>
+        <div class="action-menu-items" id="action-items"></div>
+      </div>
+
+      <!-- Step History -->
+      <div class="step-history" id="step-history">
+        <div class="step-history-title">Steps taken:</div>
+        <div class="step-history-list" id="step-list"></div>
+      </div>
+
+      <!-- Hint -->
+      <div class="hint-bubble hidden" id="hint-bubble">
+        <span class="hint-icon">💡</span>
+        <span class="hint-text" id="hint-text"></span>
+      </div>
+      <button class="btn-hint" id="btn-hint">💡 Hint</button>
+
+      <!-- Success Panel -->
+      <div class="success-panel hidden" id="success-panel">
+        <div class="success-icon">🎉</div>
+        <div class="success-title" id="success-title">Simplified!</div>
+        <div class="success-body" id="success-body"></div>
+        <div class="success-xp" id="success-xp">+30 XP</div>
+        <button class="btn-primary btn-next" id="btn-next-puzzle">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Level Complete -->
+  <div id="screen-complete" class="screen">
+    <div class="stars-bg"></div>
+    <div class="complete-content">
+      <div class="complete-stars" id="complete-stars"></div>
+      <h2 class="complete-title" id="complete-title">Level Complete!</h2>
+      <p class="complete-subtitle" id="complete-subtitle"></p>
+      <div class="complete-stats">
+        <div class="cstat"><div class="cstat-val" id="cs-xp">0</div><div class="cstat-label">XP Earned</div></div>
+        <div class="cstat"><div class="cstat-val" id="cs-steps">0</div><div class="cstat-label">Steps</div></div>
+        <div class="cstat"><div class="cstat-val" id="cs-hints">0</div><div class="cstat-label">Hints Used</div></div>
+      </div>
+      <div class="complete-badge" id="complete-badge"></div>
+      <div class="complete-actions">
+        <button class="btn-primary" id="btn-next-level">Next Level →</button>
+        <button class="btn-secondary" id="btn-replay-level">Replay</button>
+        <button class="btn-ghost" id="btn-to-levels">All Levels</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Reference -->
+  <div id="screen-reference" class="screen">
+    <div class="stars-bg"></div>
+    <header class="game-header">
+      <button class="btn-icon" id="ref-back-btn">⬅ Back</button>
+      <span class="header-title">Boolean Law Reference</span>
+    </header>
+    <div class="reference-content">
+      <div class="reference-grid" id="reference-grid"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+  <!-- Particles -->
+  <div class="particle-container" id="particle-container"></div>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

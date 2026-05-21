@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════════════
+   BooleanQuest — Design System
+   Wireframe-accurate, clean light aesthetic
+   ═══════════════════════════════════════════════ */
+
+/* ── Google Fonts are loaded in index.html ── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══ TOKENS ═══ */
+@layer base {
+  :root {
+    --color-bg:          #f0f2f7;
+    --color-bg-card:     #ffffff;
+    --color-border:      #e2e5ed;
+    --color-border-dark: #c8ccd6;
+    --color-text-1:      #1a2035;
+    --color-text-2:      #4b5468;
+    --color-text-3:      #9aa0b0;
+    --color-accent:      #1a2035;
+    --color-teal:        #0ea5e9;
+    --color-teal-light:  #e0f4fd;
+    --color-amber:       #f59e0b;
+    --color-amber-light: #fef3c7;
+    --color-green:       #10b981;
+    --color-green-light: #d1fae5;
+    --color-red:         #ef4444;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg:  0 16px 40px rgba(0,0,0,0.14);
+
+    --radius-sm:  6px;
+    --radius-md:  12px;
+    --radius-lg:  20px;
+
+    --font-sans:  'Inter', system-ui, sans-serif;
+    --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+    --transition: 0.18s ease;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; font-family: var(--font-sans); }
+  body { background: var(--color-bg); color: var(--color-text-1); -webkit-font-smoothing: antialiased; }
+  button { font-family: var(--font-sans); cursor: pointer; border: none; background: none; }
+  a { text-decoration: none; }
+}
+
+@keyframes guidePulse {
+  0% { box-shadow: 0 0 0 0 rgba(46, 196, 182, 0.6); }
+  70% { box-shadow: 0 0 0 6px rgba(46, 196, 182, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 196, 182, 0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
