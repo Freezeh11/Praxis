@@ -19,8 +19,13 @@ function splitTopLevel(str) {
   for (let i = 0; i < str.length; i++) {
     if (str[i] === '(') depth++
     else if (str[i] === ')') depth--
-    if (depth === 0 && str.slice(i, i + 3) === ' + ') { parts.push(cur); cur = ''; i += 2 }
-    else cur += str[i]
+    if (depth === 0 && str[i] === '+') {
+      parts.push(cur.replace(/ +$/, ''))  // push current term, strip trailing space
+      cur = ''
+      if (str[i + 1] === ' ') i++         // skip one leading space after +
+    } else {
+      cur += str[i]
+    }
   }
   parts.push(cur); return parts
 }
