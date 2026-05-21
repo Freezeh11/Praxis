@@ -2,80 +2,103 @@
  * ExprText — renders a plain nodeText() string with proper overline bars
  * instead of apostrophes for negated literals.
  *
- * Input:  "x'y + xy + (x + x')'"
- * Output: "x̄y + xy + (x + x̄)̄"  (using CSS text-decoration: overline)
- *
- * Parsing rules:
- *  - A single letter followed by ' → overlined letter
- *  - (…)' → overlined group
- *  - Everything else → plain text
+ * Rules:
+ *   X'        →  overline on "X"
+ *   (A+B)'    →  overline spanning "(A+B)" (parens kept, bar over all)
+ *   X''       →  plain "X"  (double negation collapses)
+ *   everything else → plain text
  */
 export default function ExprText({ text, className = '' }) {
   if (!text) return null
-  const parts = tokenize(text)
-  return (
-    <span className={className}>
-      {parts.map((p, i) => {
-        if (p.type === 'overline-lit') {
-          return <span key={i} style={{ textDecoration: 'overline' }}>{p.value}</span>
-        }
-        if (p.type === 'overline-group') {
-          return <span key={i} style={{ textDecoration: 'overline' }}>{p.value}</span>
-        }
-        return <span key={i}>{p.value}</span>
-      })}
-    </span>
-  )
+  return <span className={className}>{renderTokens(tokenize(text))}</span>
+}
+
+function renderTokens(tokens) {
+  return tokens.map((tok, i) => {
+    if (tok.type === 'overline') {
+      return (
+        <span key={i} style={{ borderTop: '1.8px solid currentColor', paddingTop: '1px', display: 'inline-block' }}>
+          {tok.value}
+        </span>
+      )
+    }
+    return <span key={i}>{tok.value}</span>
+  })
 }
 
 /**
- * Tokenises a nodeText string into segments for rendering.
+ * Tokenises a nodeText string into { type: 'plain'|'overline', value: string } tokens.
+ *
  * Handles:
- *   X'  → overline-lit  "X"
- *   (…)'→ overline-group "…"
- *   rest→ plain text
+ *   X'        → overline "X"
+ *   (…)'      → overline "(…)"   ← parens included so bar is clearly a group bar
+ *   X''       → plain "X"        ← double negation
+ *   rest      → plain text
  */
 function tokenize(str) {
   const parts = []
   let i = 0
+
+  const appendPlain = (ch) => {
+    if (parts.length > 0 && parts[parts.length - 1].type === 'plain') {
+      parts[parts.length - 1].value += ch
+    } else {
+      parts.push({ type: 'plain', value: ch })
+    }
+  }
+
   while (i < str.length) {
-    // Try to match a grouped negation:  (…)'
+    // ── Grouped negation: (…)'  ──────────────────────────────────────────
     if (str[i] === '(') {
       const close = findClose(str, i)
       if (close !== -1 && str[close + 1] === "'") {
-        // Everything inside the parens gets overlined
-        parts.push({ type: 'overline-group', value: str.slice(i + 1, close) })
-        i = close + 2
+        const group = str.slice(i, close + 1) // includes ( and )
+        const doubleNeg = str[close + 2] === "'"
+        if (doubleNeg) {
+          // (…)'' → double negation → render the inner content plain (no bar)
+          // Recursively tokenise the inner content
+          const inner = tokenize(str.slice(i + 1, close))
+          inner.forEach(t => parts.push(t))
+          i = close + 3
+        } else {
+          // (…)' → overline over "(…)"
+          parts.push({ type: 'overline', value: group })
+          i = close + 2
+        }
         continue
       }
     }
 
-    // Try to match a single letter followed by '
-    if (/[A-Za-z]/.test(str[i]) && str[i + 1] === "'") {
-      parts.push({ type: 'overline-lit', value: str[i] })
-      i += 2
+    // ── Single-letter negation: X'  ──────────────────────────────────────
+    if (/[A-Za-z0-9]/.test(str[i]) && str[i + 1] === "'") {
+      const doubleNeg = str[i + 2] === "'"
+      if (doubleNeg) {
+        // X'' → double negation → plain X
+        appendPlain(str[i])
+        i += 3
+      } else {
+        parts.push({ type: 'overline', value: str[i] })
+        i += 2
+      }
       continue
     }
 
-    // Plain character — append to last plain segment or create new one
-    if (parts.length > 0 && parts[parts.length - 1].type === 'plain') {
-      parts[parts.length - 1].value += str[i]
-    } else {
-      parts.push({ type: 'plain', value: str[i] })
-    }
+    // ── Anything else: plain character ───────────────────────────────────
+    appendPlain(str[i])
     i++
   }
+
   return parts
 }
 
-/** Find the matching closing paren, returns -1 if not found */
+/** Returns the index of the matching closing paren, or -1 */
 function findClose(str, openIdx) {
   let depth = 0
-  for (let i = openIdx; i < str.length; i++) {
-    if (str[i] === '(') depth++
-    else if (str[i] === ')') {
+  for (let k = openIdx; k < str.length; k++) {
+    if (str[k] === '(') depth++
+    else if (str[k] === ')') {
       depth--
-      if (depth === 0) return i
+      if (depth === 0) return k
     }
   }
   return -1

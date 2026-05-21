@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import levels, laws
+from routers import levels, laws, score
 
-app = FastAPI(title="BooleanQuest API", version="1.0.0")
+app = FastAPI(title="Praxis API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,8 +14,9 @@ app.add_middleware(
 
 app.include_router(levels.router, prefix="/api")
 app.include_router(laws.router, prefix="/api")
+app.include_router(score.router, prefix="/api")
 
 
 @app.get("/")
 def root():
-    return {"message": "BooleanQuest API is running", "docs": "/docs"}
+    return {"message": "Praxis API is running", "docs": "/docs"}

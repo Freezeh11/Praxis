@@ -28,7 +28,7 @@ export default function LevelSelectPage() {
       <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg">⊕</span>
-          <span className="font-bold text-[19px] tracking-tight text-accent">BooleanQuest</span>
+          <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
         </div>
         <div className="flex items-center gap-3">
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference">📖</button>

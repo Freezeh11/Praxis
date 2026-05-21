@@ -32,5 +32,19 @@ export function useApi() {
     return res.json()
   }
 
-  return { levels, laws, loading, error, fetchLevel }
+  const submitScore = async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
+    try {
+      const res = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }),
+      })
+      if (!res.ok) return null
+      return res.json()
+    } catch {
+      return null
+    }
+  }
+
+  return { levels, laws, loading, error, fetchLevel, submitScore }
 }

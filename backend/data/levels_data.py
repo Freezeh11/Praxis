@@ -1,5 +1,5 @@
 """
-BooleanQuest Level Data — Level 1 (Two-variable expressions)
+Praxis Level Data — Level 1 (Two-variable expressions)
 Each puzzle has: expr (SOP string), goal (target expression), hints (list of strings)
 Notation: Use ' for complement  e.g. x' = NOT x
 """
@@ -26,13 +26,13 @@ LAWS = [
     {
         "id": "identity",
         "name": "Identity Law",
-        "formulas": ["A + 0 = A", "A \u00b7 1 = A"],
+        "formulas": ["A + 0 = A", "A · 1 = A"],
         "desc": "OR with 0 or AND with 1 keeps the original.",
     },
     {
         "id": "annulment",
         "name": "Annulment Law",
-        "formulas": ["A + 1 = 1", "A \u00b7 0 = 0"],
+        "formulas": ["A + 1 = 1", "A · 0 = 0"],
         "desc": "OR with 1 is always 1.",
     },
     {
@@ -78,10 +78,11 @@ LEVELS = [
             {
                 "expr": "x + xy",
                 "goal": "x",
+                "targetLaws": ["absorption"],
                 "hints": [
                     "x is shorter than xy.",
                     "x absorbs xy because xy contains x.",
-                    "Absorption Law: A + AB = A — select x and xy to show it.",
+                    "Absorption Law: A + AB = A — select x and xy to apply it.",
                 ],
                 "optimalSteps": 1,
                 "optimalHint": "Did you take a longer route? The Absorption Law (A + AB = A) can solve this in a single step.",
@@ -90,22 +91,24 @@ LEVELS = [
             {
                 "expr": "x'y + xy + xy",
                 "goal": "y",
+                "targetLaws": ["idempotent", "distributive", "complement"],
                 "hints": [
-                    "Two identical xy terms — remove the duplicate first (Idempotent).",
-                    "Now x'y + xy — both share y.",
-                    "Factor out y, then x' + x = 1 inside the brackets.",
+                    "Two identical xy terms — remove the duplicate first.",
+                    "Now x'y + xy — both terms share a common variable.",
+                    "Factor out the common variable, then look for a pair that cancels to 1.",
                 ],
                 "optimalSteps": 4,
                 "optimalHint": "If you took more steps, remember to remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive) to avoid creating a massive equation.",
             },
-            # Stage 3 — De Morgan's OR -> Double Negation (The Gate)
+            # Stage 3 — De Morgan's OR -> Double Negation -> Idempotent
             {
                 "expr": "(x+y')' + x'y",
                 "goal": "x'y",
+                "targetLaws": ["demorgan-or", "double-neg"],
                 "hints": [
                     "Click the (x+y')' group to apply De Morgan's Law.",
-                    "The OR becomes AND, and each term gets negated: x'(y')'.",
-                    "Use Double Negation on (y')' to get y, then remove duplicates.",
+                    "After applying De Morgan's, each negated term flips. Look for a term that can be simplified further.",
+                    "Use Double Negation to remove the double-bar, then look for identical terms.",
                 ],
                 "optimalSteps": 3,
                 "optimalHint": "There is no workaround here! You must use De Morgan's Law to break apart the negated group.",
@@ -114,34 +117,37 @@ LEVELS = [
             {
                 "expr": "(xy)' + x'y",
                 "goal": "x' + y'",
+                "targetLaws": ["demorgan-and", "absorption"],
                 "hints": [
                     "Click (xy)' — De Morgan's expands it to x' + y'.",
-                    "Now x' + y' + x'y — x' absorbs x'y.",
-                    "Result: x' + y'.",
+                    "Now scan the full expression for a shorter term that shares all its variables with a longer one.",
+                    "After expanding, look for a shorter term that swallows a longer one containing it.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "After expanding with De Morgan's Law, look for the Absorption Law (x' + x'y = x') instead of blindly factoring. Factoring here is a detour!",
+                "optimalHint": "After expanding with De Morgan's Law, look for the Absorption Law instead of blindly factoring. Factoring here is a detour!",
             },
             # Stage 5 — Distributive Trap (The Undo Dead End)
             {
                 "expr": "x + x'y + xy",
                 "goal": "x + y",
+                "targetLaws": ["distributive", "complement"],
                 "hints": [
-                    "Do NOT absorb x and xy first! It leads to a dead end.",
+                    "Look for two terms that share a common factor which would create a complementary pair (like x and x') inside the brackets.",
                     "Look at the last two terms: x'y + xy. They both share y.",
                     "Factor out y, turn x'+x into 1, and you're left with x + y.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "If you got stuck on 'x + x\\'y', you fell for the trap! Always look ahead to see if factoring two adjacent terms creates a clean '1' (x + x') before absorbing.",
+                "optimalHint": "If you got stuck, always look ahead to see if factoring two adjacent terms creates a clean complement (x + x' = 1) before trying absorption.",
             },
             # Stage 6 — De Morgan's -> Annulment (The Nuke)
             {
                 "expr": "(x'y)' + (xy')' + xy",
                 "goal": "1",
+                "targetLaws": ["demorgan-and", "complement", "annulment"],
                 "hints": [
-                    "Use De Morgan's on both negated groups.",
-                    "Look for opposites! x + x' or y + y'.",
-                    "When you find opposites, they become 1. And 1 + anything is 1 (Annulment).",
+                    "Start by expanding the negated groups using De Morgan's Law.",
+                    "After expanding, scan the entire expression for a variable paired with its complement.",
+                    "When you find a complementary pair (A + A' = 1), the 1 nukes everything else via Annulment.",
                 ],
                 "optimalSteps": 4,
                 "optimalHint": "Once you expand the terms and find a Complement (x + x' = 1), you can instantly nuke the entire rest of the expression using the Annulment Law (1 + A = 1).",

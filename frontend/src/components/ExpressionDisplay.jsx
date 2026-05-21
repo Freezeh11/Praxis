@@ -40,7 +40,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
     >
       {node.type === 'lit' ? (
         node.n
-          ? <span style={{ textDecoration: 'overline' }}>{node.v}</span>
+          ? <span style={{ borderTop: '1.8px solid currentColor', paddingTop: '2px', display: 'inline-block' }}>{node.v}</span>
           : node.v
       ) : node.val}
     </motion.span>
@@ -64,8 +64,14 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
     >
-      <span className="text-text-3">(</span>
-      <span style={{ textDecoration: 'overline', display: 'inline-flex', alignItems: 'baseline', gap: 0 }}>
+      {/* Single continuous overline bar via border-top on the whole group */}
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'baseline',
+        borderTop: '1.8px solid currentColor',
+        paddingTop: '2px',
+      }}>
+        <span className="text-text-3" style={{ textDecoration: 'none' }}>(</span>
         <ExprNode
           node={node.child}
           path={`${path}.0`}
@@ -77,6 +83,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
           animationPaths={animationPaths}
           animationLaw={animationLaw}
         />
+        <span className="text-text-3" style={{ textDecoration: 'none' }}>)</span>
       </span>
     </motion.span>
   )

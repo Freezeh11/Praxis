@@ -99,6 +99,8 @@ export function normalize(n) {
   if (n.type === 'not') {
     const child = normalize(n.child)
     if (child.type === 'const') return con(1 - child.val)
+    // Double negation: not(not(x)) = x
+    if (child.type === 'not') return normalize(child.child)
     return { type: 'not', child }
   }
   return n

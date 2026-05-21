@@ -10,7 +10,7 @@ import ExprText from '../components/ExprText'
 export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
   const navigate = useNavigate()
-  const { fetchLevel, laws } = useApi()
+  const { fetchLevel, laws, submitScore } = useApi()
   const { progress, addPoints, deductPoints, completeStage } = useProgress()
 
   const [level, setLevel] = useState(null)
@@ -19,6 +19,11 @@ export default function ProblemPage() {
   const [currentHint, setCurrentHint] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const [scoreResult, setScoreResult] = useState(null)
+  const [zoom, setZoom] = useState(1)
+  const ZOOM_STEP = 0.15
+  const ZOOM_MIN = 0.5
+  const ZOOM_MAX = 2.0
 
   const {
     expr, sel, steps, exprHistory,
@@ -51,6 +56,7 @@ export default function ProblemPage() {
   useEffect(() => {
     setShowSuccess(false)
     setShowHint(false)
+    setScoreResult(null)
   }, [levelId, stageNum])
 
   // Show success screen when puzzle is done
@@ -58,6 +64,33 @@ export default function ProblemPage() {
     if (isComplete) {
       addPoints(earnedXp)
       completeStage(Number(levelId), stageNum)
+
+      // Derive lawsUsed from step history at this moment
+      const lawsUsed = steps.map(s => {
+        // Map law name back to law id via a simple lookup
+        const nameToId = {
+          'Absorption Law': 'absorption',
+          'Idempotent Law': 'idempotent',
+          'Identity Law': 'identity',
+          'Annulment Law': 'annulment',
+          'Complement Law': 'complement',
+          'Distributive (Factor)': 'distributive',
+          'Double Negation': 'double-neg',
+          "De Morgan's (AND\u2192OR)": 'demorgan-and',
+          "De Morgan's (OR\u2192AND)": 'demorgan-or',
+        }
+        return nameToId[s.law] || s.law
+      })
+
+      // Submit score and show breakdown after 3s
+      submitScore({
+        levelId: Number(levelId),
+        stageIdx: stageNum,
+        stepsUsed: steps.length,
+        lawsUsed,
+        hintsUsed,
+      }).then(result => setScoreResult(result))
+
       setTimeout(() => setShowSuccess(true), 3000)
     }
   }, [isComplete])
@@ -147,15 +180,36 @@ export default function ProblemPage() {
             <div className="text-[15px] font-bold text-text-1">Simplify Expression</div>
             <div className="text-[11px] text-text-3 mt-0.5">Reduce to its simplest form</div>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 items-center">
+            {/* Zoom controls */}
             <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:not:disabled:bg-border hover:not:disabled:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => setZoom(z => Math.max(ZOOM_MIN, parseFloat((z - ZOOM_STEP).toFixed(2))))}
+              disabled={zoom <= ZOOM_MIN}
+              title="Zoom out"
+            >−</button>
+            <button
+              className="h-7 px-2 rounded border border-border bg-bg text-[10px] font-mono text-text-2 hover:bg-border transition-all"
+              onClick={() => setZoom(1)}
+              title="Reset zoom"
+            >{Math.round(zoom * 100)}%</button>
+            <button
+              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => setZoom(z => Math.min(ZOOM_MAX, parseFloat((z + ZOOM_STEP).toFixed(2))))}
+              disabled={zoom >= ZOOM_MAX}
+              title="Zoom in"
+            >+</button>
+
+            <div className="w-px h-5 bg-border mx-0.5" />
+
+            <button
+              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={undoAction}
               disabled={exprHistory.length === 0}
               title="Undo"
             >↩</button>
             <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:not:disabled:bg-border hover:not:disabled:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={handleReset}
               title="Reset puzzle"
             >⟳</button>
@@ -164,13 +218,13 @@ export default function ProblemPage() {
 
 
         {/* Expression workspace — grid bg + derivation chain */}
-        <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[400px] ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
+        <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
           <div className="relative w-full h-full flex flex-col justify-center items-center">
             {isAnimating && <AnimationOverlay data={animationData} />}
 
-            {/* Status pill — absolutely pinned to the top of workspace */}
+            {/* Status pill — absolutely pinned to top, outside zoom wrapper so it stays fixed size */}
             {status !== 'select' && (
-              <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-10 transition-all duration-200
+              <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-20 transition-all duration-200
                 ${status === 'error' ? 'bg-red-100 text-red-700 border-red-300' : ''}
                 ${status === 'laws' ? 'bg-teal-light text-sky-700 border-sky-300' : ''}
                 ${status === 'success' ? 'bg-green-light text-green-800 border-green-300' : ''}
@@ -181,6 +235,9 @@ export default function ProblemPage() {
                 {statusMsg}
               </div>
             )}
+
+            {/* Zoom wrapper — scales the entire expression block */}
+            <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
 
             {/* Derivation chain */}
             {expr && (() => {
@@ -228,7 +285,7 @@ export default function ProblemPage() {
                   </div>
                 </div>
               )
-            })()}
+            })()}</div>{/* end zoom wrapper */}
 
             {/* Hint bubble */}
             {showHint && (
@@ -334,30 +391,78 @@ export default function ProblemPage() {
       {/* ── SUCCESS OVERLAY ── */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[8px]">
-          <div className="bg-white rounded-2xl p-10 flex flex-col items-center shadow-2xl max-w-[380px] animate-fade-in border border-border">
-            <div className="text-[48px] mb-2 leading-none">🎉</div>
-            <h2 className="text-[28px] font-extrabold text-accent mb-6">Stage Complete!</h2>
-            
-            <div className="w-full flex flex-col gap-2.5 mb-6">
-              <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
-                <span className="font-medium">Optimal steps:</span>
-                <span className="font-bold">{puzzle?.optimalSteps || '?'}</span>
-              </div>
-              <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
-                <span className="font-medium">Your steps:</span>
-                <span className={`font-bold px-2.5 py-0.5 rounded-full ${steps.length > (puzzle?.optimalSteps || 0) ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                  {steps.length}
-                </span>
-              </div>
-            </div>
+          <div className="bg-white rounded-2xl px-8 py-8 flex flex-col items-center shadow-2xl max-w-[420px] w-full animate-fade-in border border-border">
+            <div className="text-[44px] mb-1 leading-none">🎉</div>
+            <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete!</h2>
+            <p className="text-xs text-text-3 mb-5">Here's how you did across the three metrics</p>
 
-            {puzzle?.optimalSteps && steps.length > puzzle.optimalSteps && puzzle.optimalHint && (
-              <div className="text-[13px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full mb-6 leading-relaxed">
-                <strong>💡 Hint:</strong> {puzzle.optimalHint}
+            {scoreResult ? (
+              <div className="w-full flex flex-col gap-3 mb-5">
+                {/* Total score badge */}
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <span className={`text-3xl font-extrabold ${
+                    scoreResult.total >= 80 ? 'text-green-600' :
+                    scoreResult.total >= 50 ? 'text-amber-600' : 'text-red-500'
+                  }`}>{scoreResult.total}</span>
+                  <span className="text-sm text-text-3 font-medium">/ 100</span>
+                </div>
+
+                {/* Metric rows */}
+                {[
+                  { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
+                    sub: `${scoreResult.breakdown.stepsUsed} steps (optimal: ${scoreResult.breakdown.optimalSteps})`,
+                    color: 'bg-sky-500' },
+                  { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
+                    sub: scoreResult.breakdown.targetLawsRequired.length === 0
+                      ? 'No required laws'
+                      : `Used ${scoreResult.breakdown.targetLawsUsed.length} / ${scoreResult.breakdown.targetLawsRequired.length} required`,
+                    color: 'bg-violet-500' },
+                  { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
+                    sub: `${scoreResult.breakdown.hintsUsed} hint${scoreResult.breakdown.hintsUsed !== 1 ? 's' : ''} used`,
+                    color: 'bg-teal' },
+                ].map(({ label, score, max, sub, color }) => (
+                  <div key={label} className="bg-bg rounded-xl px-4 py-3">
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="text-[13px] font-semibold text-text-1">{label}</span>
+                      <span className="text-[13px] font-bold text-text-1">{score}<span className="text-text-3 font-normal text-xs"> / {max}</span></span>
+                    </div>
+                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${color} transition-all duration-700`}
+                        style={{ width: `${(score / max) * 100}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-text-3 mt-1">{sub}</div>
+                  </div>
+                ))}
+
+                {/* Optimal hint shown if efficiency < max */}
+                {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
+                  <div className="text-[12px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full leading-relaxed">
+                    <strong>💡 Tip:</strong> {puzzle.optimalHint}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Fallback while score loads (or if backend is down)
+              <div className="w-full flex flex-col gap-2.5 mb-5">
+                <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
+                  <span className="font-medium">Optimal steps:</span>
+                  <span className="font-bold">{puzzle?.optimalSteps || '?'}</span>
+                </div>
+                <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
+                  <span className="font-medium">Your steps:</span>
+                  <span className={`font-bold px-2.5 py-0.5 rounded-full ${
+                    steps.length > (puzzle?.optimalSteps || 0) ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                  }`}>{steps.length}</span>
+                </div>
               </div>
             )}
 
-            <div className="inline-block text-[15px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-8">+{earnedXp} Points</div>
+            <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-5">
+              +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
+            </div>
+
             <div className="flex gap-3 w-full">
               {level && stageNum + 1 < level.puzzles.length ? (
                 <button className="flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:bg-text-1 hover:shadow-lg hover:-translate-y-px" onClick={handleNextStage}>
