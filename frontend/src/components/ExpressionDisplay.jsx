@@ -64,14 +64,14 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
     >
-      {/* Single continuous overline bar via border-top — sits above any per-literal text-decoration:overline bars */}
+      {/* Parens are OUTSIDE the border-top span so only the inner content gets the bar */}
+      <span className="text-text-3">(</span>
       <span style={{
         display: 'inline-flex',
         alignItems: 'baseline',
         borderTop: '1.8px solid currentColor',
         paddingTop: '4px',
       }}>
-        <span className="text-text-3">(</span>
         <ExprNode
           node={node.child}
           path={`${path}.0`}
@@ -83,8 +83,8 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
           animationPaths={animationPaths}
           animationLaw={animationLaw}
         />
-        <span className="text-text-3">)</span>
       </span>
+      <span className="text-text-3">)</span>
     </motion.span>
   )
 }

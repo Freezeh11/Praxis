@@ -24,15 +24,21 @@ function renderTokens(tokens) {
       )
     }
     if (tok.type === 'overline-group') {
-      // Negated group — border-top spans the whole group (higher than any inner bars)
-      // Recursively tokenise inner content so nested primes also render as bars
+      // Negated group — border-top spans ONLY the inner content.
+      // Parens sit OUTSIDE the border-top wrapper so they don't get the bar.
+      // Recursively tokenise inner content so nested primes also render correctly.
       return (
-        <span key={i} style={{
-          borderTop: '1.8px solid currentColor',
-          paddingTop: '4px',
-          display: 'inline-block',
-        }}>
-          ({renderTokens(tokenize(tok.value))})
+        <span key={i} style={{ display: 'inline', whiteSpace: 'nowrap' }}>
+          <span style={{ opacity: 0.5 }}>(</span>
+          <span style={{
+            display: 'inline-block',
+            borderTop: '1.8px solid currentColor',
+            paddingTop: '2px',
+            lineHeight: 'inherit',
+          }}>
+            {renderTokens(tokenize(tok.value))}
+          </span>
+          <span style={{ opacity: 0.5 }}>)</span>
         </span>
       )
     }
