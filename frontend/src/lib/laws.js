@@ -246,8 +246,8 @@ export function scanHints(node, path) {
         for (let j = i + 1; j < T.length; j++) {
           const p2 = path + '.' + j, t2 = T[j]
           if (termsEq(t1, t2)) add('idempotent', [p1, p2])
-          if (isSubT(t1, t2)) add('absorption', [p1])
-          if (isSubT(t2, t1)) add('absorption', [p2])
+          if (isSubT(t1, t2)) add('absorption', [p1, p2])
+          if (isSubT(t2, t1)) add('absorption', [p2, p1])
           if (t1.type === 'lit' && t2.type === 'lit' && t1.v === t2.v && t1.n !== t2.n)
             add('complement', [p1, p2])
           if ((t1.type === 'const' && t1.val === 1) || (t2.type === 'const' && t2.val === 1))

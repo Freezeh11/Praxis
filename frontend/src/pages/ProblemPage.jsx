@@ -5,6 +5,7 @@ import { useProgress } from '../hooks/useProgress'
 import { useGameState } from '../hooks/useGameState'
 import ExpressionDisplay from '../components/ExpressionDisplay'
 import AnimationOverlay from '../components/AnimationOverlay'
+import ExprText from '../components/ExprText'
 
 export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
@@ -46,12 +47,18 @@ export default function ProblemPage() {
     })
   }, [levelId, stageNum])
 
+  // Reset overlays when navigating to a new stage
+  useEffect(() => {
+    setShowSuccess(false)
+    setShowHint(false)
+  }, [levelId, stageNum])
+
   // Show success screen when puzzle is done
   useEffect(() => {
     if (isComplete) {
-      addPoints(earnedXp) // earnedXp is now 10 points
+      addPoints(earnedXp)
       completeStage(Number(levelId), stageNum)
-      setTimeout(() => setShowSuccess(true), 600)
+      setTimeout(() => setShowSuccess(true), 3000)
     }
   }, [isComplete])
 
@@ -118,10 +125,10 @@ export default function ProblemPage() {
               <div key={i} className={`border rounded-md px-3 py-2.5 font-mono text-[11px] transition-all
                 ${isLatest ? 'border-teal bg-teal-light' : 'border-border bg-bg'}`}>
                 <div className="text-text-2 leading-relaxed">
-                  <span className="text-text-3 mr-1">F =</span> {s.from}
+                  <span className="text-text-3 mr-1">F =</span> <ExprText text={s.from} />
                 </div>
                 <div className="text-text-1 font-semibold leading-relaxed">
-                  <span className="text-text-3 mr-1">F =</span> {s.to}
+                  <span className="text-text-3 mr-1">F =</span> <ExprText text={s.to} />
                 </div>
                 <div className="mt-1.5 inline-block text-[10px] font-sans font-semibold text-teal bg-white border border-teal rounded px-1.5 py-0.5">
                   {s.law}
@@ -190,14 +197,14 @@ export default function ProblemPage() {
                 <div className="flex flex-col gap-1 font-mono text-[22px] font-medium">
                   {/* Dimmed past lines */}
                   {pastLines.map((line, i) => {
-                    const age = total - i   // 1 = most recent past, higher = older
+                    const age = total - i
                     const opacity = Math.max(0.12, 0.4 - (age - 1) * 0.07)
                     return (
                       <div key={i} className="flex items-baseline gap-3.5 pointer-events-none select-none transition-opacity duration-400 blur-[0.3px]" style={{ opacity }}>
                         <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
                           {line.isFirst ? 'F =' : '\u00a0\u00a0='}
                         </span>
-                        <span className="text-text-1">{line.text}</span>
+                        <ExprText text={line.text} className="text-text-1" />
                       </div>
                     )
                   })}
@@ -215,6 +222,8 @@ export default function ProblemPage() {
                       onClickTerm={onClickTerm}
                       onSwapTerms={onSwapTerms}
                       activeGuidePaths={activeGuidePaths}
+                      animationPaths={isAnimating ? animationData?.paths : []}
+                      animationLaw={isAnimating ? animationData?.lawId : null}
                     />
                   </div>
                 </div>
@@ -348,7 +357,7 @@ export default function ProblemPage() {
               </div>
             )}
 
-            <div className="inline-block text-[15px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-8 transform -rotate-2">+{earnedXp} Points</div>
+            <div className="inline-block text-[15px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-8">+{earnedXp} Points</div>
             <div className="flex gap-3 w-full">
               {level && stageNum + 1 < level.puzzles.length ? (
                 <button className="flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:bg-text-1 hover:shadow-lg hover:-translate-y-px" onClick={handleNextStage}>

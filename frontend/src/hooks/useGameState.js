@@ -249,16 +249,42 @@ export function useGameState() {
   const activateGuide = useCallback(() => {
     if (!expr) return false
     const hints = scanHints(expr, 'R')
-    if (hints.length > 0) {
-      setActiveGuidePaths(hints[0].paths)
-      setStatus('select')
-      setStatusMsg('Guide active! Select the highlighted terms.')
-      return true
-    } else {
+    if (hints.length === 0) {
       setStatus('error')
       setStatusMsg('No simplifications found for the current expression.')
       return false
     }
+
+    const hint = hints[0]
+    const paths = hint.paths
+
+    // For single-path hints (not nodes: double-neg, demorgan)
+    // highlight it and let user click it (analyzeNot handles single clicks)
+    if (paths.length === 1) {
+      setActiveGuidePaths(paths)
+      setSel([])
+      setApplicableLaws([])
+      setStatus('select')
+      setStatusMsg('Guide: click the highlighted element to see applicable laws.')
+      return true
+    }
+
+    // For two-path hints: pre-select both items and compute laws immediately
+    // Determine if these are term-level selections (whole terms) or literal-level
+    const isTermSel = ['idempotent', 'absorption', 'complement', 'annulment', 'identity'].includes(hint.law)
+    const nextSel = paths.map(p => ({ path: p, isTermSel }))
+
+    setActiveGuidePaths(paths)
+    setSel(nextSel)
+
+    // Compute applicable laws right away so user just has to pick one
+    const laws = analyzeSelection(expr, nextSel)
+    setApplicableLaws(laws)
+    setStatus(laws.length ? 'laws' : 'select')
+    setStatusMsg(laws.length
+      ? 'Guide: the terms are pre-selected — pick a law to apply!'
+      : 'Guide: click the highlighted terms, then choose a law.')
+    return true
   }, [expr])
 
   return {

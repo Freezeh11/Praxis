@@ -21,9 +21,10 @@ function isSelected(sel, path) {
 }
 
 /* ── Literal node (variable or constant) ── */
-function LitNode({ node, path, sel, onClickLit, activeGuidePaths }) {
+function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
+  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
   return (
     <motion.span
       layout
@@ -32,24 +33,25 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths }) {
         ${selected ? 'bg-teal-light border-teal text-teal' : 'border-transparent hover:bg-teal-light hover:border-teal hover:text-teal'}
         ${node.type === 'const' ? 'text-text-3' : ''}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal shadow-[0_0_0_6px_rgba(46,196,182,0)] animate-[guidePulse_2s_infinite] z-10' : ''}
+        ${isAnimatingHide ? 'opacity-0' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickLit(path) }}
     >
       {node.type === 'lit' ? (
-        <>
-          {node.v}
-          {node.n && <sup className="text-[0.6em] leading-none align-super not-italic">'</sup>}
-        </>
+        node.n
+          ? <span style={{ textDecoration: 'overline' }}>{node.v}</span>
+          : node.v
       ) : node.val}
     </motion.span>
   )
 }
 
 /* ── NOT group: (child)' ── */
-function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths }) {
+function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
+  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
   return (
     <motion.span
       layout
@@ -57,31 +59,35 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
       className={`inline-flex items-baseline px-1 py-[3px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
         ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light hover:border-amber'}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
+        ${isAnimatingHide ? 'opacity-0' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
     >
       <span className="text-text-3">(</span>
-      <ExprNode
-        node={node.child}
-        path={`${path}.0`}
-        sel={sel}
-        onClickLit={onClickLit}
-        onClickNot={onClickNot}
-        onClickTerm={onClickTerm}
-        activeGuidePaths={activeGuidePaths}
-      />
-      <span className="text-text-3">)</span>
-      <sup className="text-[0.6em] leading-none align-super not-italic">'</sup>
+      <span style={{ textDecoration: 'overline', display: 'inline-flex', alignItems: 'baseline', gap: 0 }}>
+        <ExprNode
+          node={node.child}
+          path={`${path}.0`}
+          sel={sel}
+          onClickLit={onClickLit}
+          onClickNot={onClickNot}
+          onClickTerm={onClickTerm}
+          activeGuidePaths={activeGuidePaths}
+          animationPaths={animationPaths}
+          animationLaw={animationLaw}
+        />
+      </span>
     </motion.span>
   )
 }
 
 /* ── Product (AND): juxtaposition ── */
-function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths }) {
+function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
   const isGuide = activeGuidePaths?.includes(path)
+  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
   return (
-    <motion.span layout transition={transitionConfig} className={`inline-flex items-center ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}`}>
+    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-center ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0' : ''}`}>
       {node.factors.map((f, i) => {
         const fPath = `${path}.${i}`
         const prevIsConst = i > 0 && node.factors[i - 1].type === 'const'
@@ -94,11 +100,11 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, active
             {f.type === 'sum' ? (
               <>
                 <span className="text-text-3">(</span>
-                <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} />
+                <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
                 <span className="text-text-3">)</span>
               </>
             ) : (
-              <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} />
+              <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
             )}
           </motion.span>
         )
@@ -108,7 +114,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, active
 }
 
 /* ── Sum (OR): terms separated by + with selectable/draggable term wrappers ── */
-function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths }) {
+function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
   const hasMultiple = node.terms.length >= 2
   const dragOverIdx = useRef(null)
   const dragSrc = useRef({ sumPath: null, idx: null })
@@ -165,8 +171,10 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
     dragSrc.current.idx = null
   }
 
+  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+
   return (
-    <motion.span layout transition={transitionConfig} className="inline-flex flex-wrap items-center gap-0.5">
+    <motion.span layout transition={transitionConfig} className={`inline-flex flex-wrap items-center gap-0.5 ${isAnimatingHide ? 'opacity-0' : ''}`}>
       {node.terms.map((t, i) => {
         const tPath = `${path}.${i}`
         const termSel = sel.some(s => s.path === tPath)
@@ -180,9 +188,11 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
               <motion.span
                 layout
                 transition={transitionConfig}
+                data-path={tPath}
                 className={`inline-flex items-center px-1.5 py-[3px] pl-0.5 rounded-md border-[1.5px] border-dashed transition-all gap-0.5 cursor-default group
                   ${termSel ? 'border-teal bg-teal-light !border-solid' : 'border-transparent hover:border-border-dark hover:bg-bg'}
                   ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
+                  ${animationPaths?.includes(tPath) && ['annulment','identity','idempotent','complement'].includes(animationLaw) ? 'opacity-0' : ''}
                 `}
                 draggable={true}
                 onDragStart={e => handleDragStart(path, i, e)}
@@ -207,6 +217,8 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                   onClickTerm={onClickTerm}
                   onSwapTerms={onSwapTerms}
                   activeGuidePaths={activeGuidePaths}
+                  animationPaths={animationPaths}
+                  animationLaw={animationLaw}
                 />
               </motion.span>
             ) : (
@@ -220,6 +232,8 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                   onClickTerm={onClickTerm}
                   onSwapTerms={onSwapTerms}
                   activeGuidePaths={activeGuidePaths}
+                  animationPaths={animationPaths}
+                  animationLaw={animationLaw}
                 />
               </motion.span>
             )}
@@ -231,21 +245,21 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
 }
 
 /* ── Recursive dispatcher ── */
-function ExprNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths }) {
+function ExprNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
   if (!node) return null
   if (node.type === 'lit' || node.type === 'const')
-    return <LitNode node={node} path={path} sel={sel} onClickLit={onClickLit} activeGuidePaths={activeGuidePaths} />
+    return <LitNode node={node} path={path} sel={sel} onClickLit={onClickLit} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'not')
-    return <NotNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} />
+    return <NotNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'prod')
-    return <ProdNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} />
+    return <ProdNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'sum')
-    return <SumNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} />
+    return <SumNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   return null
 }
 
 /* ── Public component ── */
-export default function ExpressionDisplay({ expr, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths }) {
+export default function ExpressionDisplay({ expr, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
   if (!expr) return null
   return (
     <div className="font-mono text-[22px] font-medium text-text-1 leading-[1.8] text-center select-none tracking-[0.5px]">
@@ -258,6 +272,8 @@ export default function ExpressionDisplay({ expr, sel, onClickLit, onClickNot, o
         onClickTerm={onClickTerm}
         onSwapTerms={onSwapTerms}
         activeGuidePaths={activeGuidePaths}
+        animationPaths={animationPaths}
+        animationLaw={animationLaw}
       />
     </div>
   )

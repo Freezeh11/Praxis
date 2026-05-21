@@ -57,3 +57,58 @@
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Merge animations (annulment / identity / idempotent) ── */
+/* Victim slides toward survivor */
+@keyframes slideMerge {
+  0%   { transform: translate(0, 0);                                         opacity: 1; }
+  70%  { transform: translate(var(--slide-dx), var(--slide-dy));             opacity: 1; }
+  100% { transform: translate(var(--slide-dx), var(--slide-dy)) scale(0.4); opacity: 0; }
+}
+
+/* Single-element identity (e.g. A·1 — the 1 shrinks away) */
+@keyframes singleFade {
+  0%   { transform: scale(1);   opacity: 1; }
+  60%  { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(0);   opacity: 0; }
+}
+
+/* Plus sign fades out as terms approach */
+@keyframes fadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Survivor glows amber when merge lands */
+@keyframes mergeGlow {
+  0%   { box-shadow: none;                              border-color: #e2e5ed; background: #ffffff; }
+  50%  { box-shadow: 0 0 22px 6px rgba(245,158,11,0.5); border-color: #f59e0b; background: rgba(245,158,11,0.12); }
+  100% { box-shadow: 0 0 10px 2px rgba(245,158,11,0.25); border-color: #f59e0b; background: rgba(245,158,11,0.06); }
+}
+
+/* Complement law — both terms slide to centre, then "1" bursts */
+@keyframes complementSlide1 {
+  0%   { transform: translate(0, 0);                          opacity: 1; }
+  75%  { transform: translate(var(--cdx), var(--cdy));        opacity: 1; }
+  100% { transform: translate(var(--cdx), var(--cdy)) scale(0); opacity: 0; }
+}
+@keyframes complementSlide2 {
+  0%   { transform: translate(0, 0);                          opacity: 1; }
+  75%  { transform: translate(var(--cdx), var(--cdy));        opacity: 1; }
+  100% { transform: translate(var(--cdx), var(--cdy)) scale(0); opacity: 0; }
+}
+@keyframes complementBurst {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+  70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1);   }
+}
+
+/* ── SVG arc animations (distributive / absorption / demorgan) ── */
+@keyframes svgDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes svgFadeIn {
+  to { opacity: 1; }
+}
