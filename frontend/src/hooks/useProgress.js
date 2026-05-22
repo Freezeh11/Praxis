@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useApi } from './useApi'
 
 const STORAGE_KEY = 'praxis_v1'
 
@@ -12,6 +13,7 @@ const defaultProgress = {
 }
 
 export function useProgress() {
+  const { loadProgress, saveProgress } = useApi()
   const [progress, setProgress] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -20,10 +22,64 @@ export function useProgress() {
       return defaultProgress
     }
   })
+  const [serverLoaded, setServerLoaded] = useState(false)
+  const saveTimeoutRef = useRef(null)
 
+  // Load progress from server on mount (hydrate from server, fall back to localStorage)
+  useEffect(() => {
+    const hydrateFromServer = async () => {
+      const serverData = await loadProgress()
+      if (serverData) {
+        setProgress(prev => {
+          // Merge: server data takes priority, but keep any local data that's newer
+          const merged = {
+            ...defaultProgress,
+            ...prev,
+            points: Math.max(prev.points, serverData.points || 0),
+            streak: serverData.streak || prev.streak,
+            bestStreak: Math.max(prev.bestStreak, serverData.bestStreak || 0),
+          }
+
+          // Merge stageProgress (union of completed stages)
+          const mergedStageProgress = { ...prev.stageProgress }
+          for (const [key, stages] of Object.entries(serverData.stageProgress || {})) {
+            const existing = mergedStageProgress[key] || []
+            const combined = [...new Set([...existing, ...stages])]
+            mergedStageProgress[key] = combined
+          }
+          merged.stageProgress = mergedStageProgress
+
+          // Merge stageScores (take the best score)
+          const mergedScores = { ...prev.stageScores }
+          for (const [key, score] of Object.entries(serverData.stageScores || {})) {
+            mergedScores[key] = Math.max(mergedScores[key] || 0, score)
+          }
+          merged.stageScores = mergedScores
+
+          return merged
+        })
+      }
+      setServerLoaded(true)
+    }
+    hydrateFromServer()
+  }, [])
+
+  // Save to localStorage on every change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
   }, [progress])
+
+  // Debounced save to server (500ms after last change)
+  useEffect(() => {
+    if (!serverLoaded) return
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(() => {
+      saveProgress(progress)
+    }, 500)
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [progress, serverLoaded])
 
   const addPoints = (amount) =>
     setProgress(p => ({

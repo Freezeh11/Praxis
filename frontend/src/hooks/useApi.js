@@ -37,6 +37,7 @@ export function useApi() {
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }),
       })
       if (!res.ok) return null
@@ -46,5 +47,32 @@ export function useApi() {
     }
   }
 
-  return { levels, laws, loading, error, fetchLevel, submitScore }
+  /** Load progress from server for the authenticated user */
+  const loadProgress = async () => {
+    try {
+      const res = await fetch('/api/progress', { credentials: 'include' })
+      if (!res.ok) return null
+      return res.json()
+    } catch {
+      return null
+    }
+  }
+
+  /** Save progress to server for the authenticated user */
+  const saveProgress = async (progressData) => {
+    try {
+      const res = await fetch('/api/progress/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ progress: progressData }),
+      })
+      if (!res.ok) return null
+      return res.json()
+    } catch {
+      return null
+    }
+  }
+
+  return { levels, laws, loading, error, fetchLevel, submitScore, loadProgress, saveProgress }
 }
