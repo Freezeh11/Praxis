@@ -159,7 +159,86 @@ LEVELS = [
         "name": "Level 2",
         "desc": "Three-variable expressions",
         "varCount": 3,
-        "puzzles": [],  # Unlocked in future release
+        "puzzles": [
+            # Stage 1 — Double Absorption Chain
+            {
+                "expr": "xyz + xz + yz + y",
+                "goal": "xz + y",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Look for shorter terms that contain the same literals as longer ones.",
+                    "xz and xyz — all of xz's variables appear in xyz. What law applies?",
+                    "After removing xyz, look at y and yz. The same law applies again.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "Both absorptions can be done in either order — just 2 steps. Watch out for factoring z from xz+yz first; it creates a dead end.",
+            },
+            # Stage 2 — Two-Round Factoring
+            {
+                "expr": "x'y + xy + x'z + xz",
+                "goal": "y + z",
+                "targetLaws": ["distributive", "complement"],
+                "hints": [
+                    "Each pair of terms shares a common variable. Pick one pair and factor it out.",
+                    "After factoring, you'll have a complementary pair inside the brackets: x' + x.",
+                    "Repeat the same Distributive → Complement → Identity sequence on the remaining pair.",
+                ],
+                "optimalSteps": 6,
+                "optimalHint": "The optimal path applies the same 3-step sequence (Distributive → Complement → Identity) twice — once for y, once for z. Factoring the 'wrong' pair first doesn't gain anything.",
+            },
+            # Stage 3 — De Morgan Reveals Absorption
+            {
+                "expr": "(x'z)' + xz + y",
+                "goal": "x + y + z'",
+                "targetLaws": ["demorgan-and", "absorption"],
+                "hints": [
+                    "The negated group hides a simpler expression. Apply De Morgan's Law to reveal it.",
+                    "After expanding, look for a term that appears both alone and inside a longer product.",
+                    "A shorter term absorbs any longer term that contains all its literals.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "De Morgan's reveals x, which instantly absorbs xz — just 2 steps. You can't simplify further without expanding first.",
+            },
+            # Stage 4 — Nested Factoring
+            {
+                "expr": "xy'z + xyz",
+                "goal": "xz",
+                "targetLaws": ["distributive", "complement"],
+                "hints": [
+                    "Both terms share a common variable. Factor it out first.",
+                    "After factoring, you'll have a smaller sub-expression inside. Can you factor that too?",
+                    "The inner expression now has a complementary pair. Simplify it, then remove the 1.",
+                ],
+                "optimalSteps": 4,
+                "optimalHint": "The optimal path factors twice — first x from the outer terms, then z from the inner sum — creating y'+y=1. Then Identity removes the 1.",
+            },
+            # Stage 5 — Double De Morgan → Immediate Annulment
+            {
+                "expr": "(xy)' + (x'y')' + z",
+                "goal": "1",
+                "targetLaws": ["demorgan-and", "complement", "annulment"],
+                "hints": [
+                    "Both negated groups can be expanded using De Morgan's Law.",
+                    "After expanding both groups, look for a variable paired with its complement.",
+                    "Once you have a 1 in the sum, select it with any other term — Annulment collapses everything instantly.",
+                ],
+                "optimalSteps": 4,
+                "optimalHint": "After two De Morgan's, you have x, x', y, y', z. Apply Complement on x+x' to get 1, then immediately Annul — 4 steps total. Doing both complements before annulling costs an extra step.",
+            },
+            # Stage 6 — The Three-Law Chain
+            {
+                "expr": "x'y + xy + x'yz",
+                "goal": "y",
+                "targetLaws": ["distributive", "complement", "absorption"],
+                "hints": [
+                    "Two of the three terms share a common variable with opposite complements. Factor it out.",
+                    "After simplifying inside the brackets, you'll have a standalone y — but the job isn't done yet.",
+                    "Now check: does the shorter term appear (with the same sign) inside the longer term? Use Absorption.",
+                ],
+                "optimalSteps": 4,
+                "optimalHint": "The optimal path: Distributive → Complement → Identity (creates y), then Absorption (y absorbs x'yz, since y appears inside x'yz). All 3 law types must be used.",
+            },
+        ],
     },
     {
         "id": 3,

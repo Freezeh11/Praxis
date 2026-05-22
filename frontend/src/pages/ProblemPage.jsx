@@ -11,7 +11,7 @@ export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
   const navigate = useNavigate()
   const { fetchLevel, laws, submitScore } = useApi()
-  const { progress, addPoints, deductPoints, completeStage } = useProgress()
+  const { progress, addPoints, deductPoints, completeStage, saveScore } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [puzzle, setPuzzle] = useState(null)
@@ -34,7 +34,7 @@ export default function ProblemPage() {
     isAnimating, animationData,
     loadPuzzle,
     handleClickLit, handleClickNot, handleClickTerm,
-    applyLaw, undoAction, resetPuzzle, getHint, swapTerms, activateGuide,
+    applyLaw, undoAction, resetPuzzle, useHint, swapTerms, activateGuide,
     hintsUsed,
   } = useGameState()
 
@@ -89,7 +89,12 @@ export default function ProblemPage() {
         stepsUsed: steps.length,
         lawsUsed,
         hintsUsed,
-      }).then(result => setScoreResult(result))
+      }).then(result => {
+        if (result) {
+          saveScore(Number(levelId), stageNum, result.total)
+          setScoreResult(result)
+        }
+      })
 
       setTimeout(() => setShowSuccess(true), 3000)
     }
@@ -97,7 +102,7 @@ export default function ProblemPage() {
 
   const handleHint = () => {
     if (!puzzle) return
-    const hint = getHint(puzzle)
+    const hint = useHint(puzzle)
     if (hint) {
       setCurrentHint(hint)
       setShowHint(true)

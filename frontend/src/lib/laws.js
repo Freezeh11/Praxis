@@ -192,9 +192,9 @@ export function analyzeProductConst(expr, constPath, constVal, prodPath) {
         const p = getNode(tree, prodPath)
         const nf = p.factors.filter((_, i) => i !== idx)
         const result = nf.length === 1 ? nf[0] : { type: 'prod', factors: nf }
-        if (prodPath === 'R') return normalize(result)
-        setNode(tree, prodPath, normalize(result))
-        return normalize(tree)
+        if (prodPath === 'R') return normalizeFlat(result)
+        setNode(tree, prodPath, result)
+        return normalizeFlat(tree)
       },
     })
   }

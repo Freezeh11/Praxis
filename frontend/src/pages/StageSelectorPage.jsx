@@ -37,7 +37,7 @@ export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
   const { fetchLevel } = useApi()
-  const { getStagesCompleted } = useProgress()
+  const { progress, getStagesCompleted, getLevelProgress } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -156,6 +156,69 @@ export default function StageSelectorPage() {
               <span>⊕</span>
             </div>
           </div>
+
+          {/* ── Level 2 unlock progress (only shown on Level 1) ── */}
+          {Number(levelId) === 1 && puzzles.length > 0 && (() => {
+            const lp = getLevelProgress(1, puzzles.length)
+            const pct = Math.min(100, lp.avgScore)
+            const barColor = lp.unlocked ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
+            return (
+              <div className="w-full max-w-[380px] bg-bg-card border border-border rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-bold text-text-1">Level 2 Unlock</span>
+                  {lp.unlocked
+                    ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🔓 Unlocked!</span>
+                    : <span className="text-[11px] font-semibold text-text-3">Need 70% avg across all stages</span>
+                  }
+                </div>
+
+                {/* Avg score bar */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[11px] font-semibold text-text-2">
+                    <span>{lp.completed} / {puzzles.length} stages attempted</span>
+                    <span>{lp.avgScore} / 100 avg score</span>
+                  </div>
+                  <div className="relative w-full h-2.5 bg-border rounded-full overflow-visible">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, background: barColor }}
+                    />
+                    {/* 70% threshold marker */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-2 rounded-full"
+                      style={{ left: '70%' }}
+                      title="70% threshold"
+                    />
+                  </div>
+                  <div className="text-[10px] text-text-3 text-right">Target: 70%</div>
+                </div>
+
+                {/* Per-stage score breakdown */}
+                <div className="flex flex-col gap-1.5 text-[11px] text-text-2">
+                  {Array.from({ length: puzzles.length }, (_, i) => {
+                    const stageScore = progress.stageScores?.[`1:${i}`] ?? null
+                    const done = completedSet.has(i)
+                    return (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold border ${
+                          done ? 'bg-green-light text-green border-green' : 'bg-bg text-text-3 border-border'
+                        }`}>{done ? '✓' : i + 1}</span>
+                        <span className="flex-1 text-text-2">Stage {i + 1}</span>
+                        {stageScore !== null
+                          ? <span className={`font-bold px-1.5 py-0.5 rounded ${
+                              stageScore >= 70 ? 'text-green bg-green-light' :
+                              stageScore >= 40 ? 'text-amber bg-amber-light' :
+                              'text-red-600 bg-red-50'
+                            }`}>{stageScore}/100</span>
+                          : <span className="text-text-3 italic">not yet attempted</span>
+                        }
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
     </div>

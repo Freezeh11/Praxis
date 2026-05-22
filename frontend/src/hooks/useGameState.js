@@ -2,6 +2,47 @@ import { useState, useCallback, useRef } from 'react'
 import { parseExpr, cloneN, canonText, nodeText, getNode } from '../lib/expr.js'
 import { analyzeSelection, analyzeNot, analyzeProductConst, scanHints } from '../lib/laws.js'
 
+/**
+ * Converts a scanHints result into a human-readable hint string.
+ * @param {string} law - law id from scanHints
+ * @param {string[]} paths - node paths from scanHints
+ * @param {object} expr - current expression tree
+ */
+function buildHintText(law, paths, expr) {
+  try {
+    switch (law) {
+      case 'double-neg':
+        return `There's a term with two negations stacked on top of each other. Double Negation can clean that up.`
+      case 'demorgan':
+      case 'demorgan-and':
+      case 'demorgan-or':
+        return `There's a negated group in the expression. Try applying De Morgan's Law to expand it.`
+      case 'absorption':
+        return `One term already contains all the variables of another. Absorption Law can eliminate the longer one.`
+      case 'idempotent':
+        return `The same term appears more than once. Idempotent Law lets you remove the duplicate.`
+      case 'complement':
+        return `There's a variable and its complement in the expression. Complement Law turns them into 1.`
+      case 'annulment': {
+        const n1 = getNode(expr, paths[0])
+        const n2 = paths[1] ? getNode(expr, paths[1]) : null
+        const hasOne = (n1?.type === 'const' && n1.val === 1) || (n2?.type === 'const' && n2.val === 1)
+        return hasOne
+          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 — the whole sum collapses.`
+          : `There's a 0 in a product. Annulment Law says A · 0 = 0.`
+      }
+      case 'identity':
+        return `There's a 0 in a sum that isn't doing anything. Identity Law lets you remove it.`
+      case 'distributive':
+        return `Two or more terms share a common variable. Try Distributive Law to factor it out.`
+      default:
+        return `Look at the current expression — a simplification is available.`
+    }
+  } catch {
+    return `A simplification is available in the current expression — look carefully.`
+  }
+}
+
 export function useGameState() {
   const [expr, setExpr] = useState(null)
   const [sel, setSel] = useState([])
@@ -220,12 +261,23 @@ export function useGameState() {
   }, [loadPuzzle])
 
   const useHint = useCallback((puzzle) => {
+    // Always try to generate a contextual hint from the current expression first
+    if (expr) {
+      const scanResults = scanHints(expr, 'R')
+      if (scanResults.length > 0) {
+        const { law, paths } = scanResults[0]
+        const contextMsg = buildHintText(law, paths, expr)
+        setHintsUsed(h => h + 1)
+        return contextMsg
+      }
+    }
+    // Fallback: static puzzle hints (e.g. expression is already at goal)
     if (!puzzle?.hints?.length) return null
     const hint = puzzle.hints[Math.min(hintIdx, puzzle.hints.length - 1)]
     setHintIdx(i => i + 1)
     setHintsUsed(h => h + 1)
     return hint
-  }, [hintIdx])
+  }, [expr, hintIdx])
 
   /** Drag-and-drop term reorder — no law applied, no step recorded */
   const swapTerms = useCallback((sumPath, fromIdx, toIdx) => {
