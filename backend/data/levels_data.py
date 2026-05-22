@@ -173,31 +173,31 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "Both absorptions can be done in either order — just 2 steps. Watch out for factoring z from xz+yz first; it creates a dead end.",
             },
-            # Stage 2 — Two-Round Factoring
+            # Stage 2 — Factor & Collapse (3-variable terms)
             {
-                "expr": "x'y + xy + x'z + xz",
-                "goal": "y + z",
-                "targetLaws": ["distributive", "complement"],
+                "expr": "x'yz + xyz + z",
+                "goal": "z",
+                "targetLaws": ["distributive", "complement", "absorption"],
                 "hints": [
-                    "Each pair of terms shares a common variable. Pick one pair and factor it out.",
-                    "After factoring, you'll have a complementary pair inside the brackets: x' + x.",
-                    "Repeat the same Distributive → Complement → Identity sequence on the remaining pair.",
+                    "The first two terms are 3-variable products — look for the common 2-variable factor between them.",
+                    "Factor yz out of x'yz and xyz — you'll get a complementary pair inside the brackets: x' + x.",
+                    "After the complement gives you yz, compare it with the standalone z. One of them absorbs the other.",
                 ],
-                "optimalSteps": 6,
-                "optimalHint": "The optimal path applies the same 3-step sequence (Distributive → Complement → Identity) twice — once for y, once for z. Factoring the 'wrong' pair first doesn't gain anything.",
+                "optimalSteps": 4,
+                "optimalHint": "The optimal path is 4 steps: Distributive (factor yz from x'yz + xyz), Complement (x' + x = 1), Identity (yz · 1 = yz), then Absorption (z absorbs yz, since yz contains z).",
             },
-            # Stage 3 — De Morgan Reveals Absorption
+            # Stage 3 — De Morgan Reveals 3-Var Absorption
             {
-                "expr": "(x'z)' + xz + y",
+                "expr": "(x'z)' + xyz + y",
                 "goal": "x + y + z'",
                 "targetLaws": ["demorgan-and", "absorption"],
                 "hints": [
                     "The negated group hides a simpler expression. Apply De Morgan's Law to reveal it.",
-                    "After expanding, look for a term that appears both alone and inside a longer product.",
-                    "A shorter term absorbs any longer term that contains all its literals.",
+                    "After expanding, you'll have a standalone variable and a 3-variable product — check if one contains all the literals of the other.",
+                    "A shorter term absorbs any longer term that contains all its literals — even a 3-variable one.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "De Morgan's reveals x, which instantly absorbs xz — just 2 steps. You can't simplify further without expanding first.",
+                "optimalHint": "De Morgan's reveals x, which instantly absorbs xyz (since xyz contains x) — just 2 steps. The 3-variable term gets eliminated in a single move!",
             },
             # Stage 4 — Nested Factoring
             {
@@ -212,18 +212,18 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "The optimal path factors twice — first x from the outer terms, then z from the inner sum — creating y'+y=1. Then Identity removes the 1.",
             },
-            # Stage 5 — Double De Morgan → Immediate Annulment
+            # Stage 5 — Double De Morgan (3-variable group) → Collapse
             {
-                "expr": "(xy)' + (x'y')' + z",
+                "expr": "(xy)' + (x'yz)' + z",
                 "goal": "1",
                 "targetLaws": ["demorgan-and", "complement", "annulment"],
                 "hints": [
-                    "Both negated groups can be expanded using De Morgan's Law.",
-                    "After expanding both groups, look for a variable paired with its complement.",
+                    "Both negated groups can be expanded using De Morgan's Law — note that the second group has 3 variables.",
+                    "After expanding both groups, scan the full expression for a variable paired with its complement.",
                     "Once you have a 1 in the sum, select it with any other term — Annulment collapses everything instantly.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "After two De Morgan's, you have x, x', y, y', z. Apply Complement on x+x' to get 1, then immediately Annul — 4 steps total. Doing both complements before annulling costs an extra step.",
+                "optimalHint": "After two De Morgan's, you'll see x', y' (from the first group) and x, y', z' (from the 3-var group). Apply Complement on x'+x to get 1, then immediately Annul — 4 steps total.",
             },
             # Stage 6 — The Three-Law Chain
             {
