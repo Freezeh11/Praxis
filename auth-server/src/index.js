@@ -6,11 +6,15 @@ import { auth } from "./auth.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const frontendUrl = process.env.FRONTEND_URL || "https://praxis-blush-six.vercel.app";
+
+// Trust proxy for secure cookies behind Render's load balancer
+app.set('trust proxy', 1);
 
 // CORS — must come before Better Auth handler
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173", frontendUrl],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
