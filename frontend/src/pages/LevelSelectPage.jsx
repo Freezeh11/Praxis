@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
+import { signOut } from '../lib/auth-client'
+import { toast } from 'sonner'
 
 // Level 3+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = [3]
@@ -46,6 +48,17 @@ export default function LevelSelectPage() {
     navigate(`/level/${lv.id}/stages`)
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.info('You have been securely logged out.')
+      // Wait a moment for Better Auth's global state to clear before routing
+      setTimeout(() => navigate('/'), 100)
+    } catch (err) {
+      toast.error('Failed to log out.')
+    }
+  }
+
   const prev = () => setSelected(s => Math.max(0, s - 1))
   const next = () => setSelected(s => Math.min((levels.length || 1) - 1, s + 1))
 
@@ -60,7 +73,13 @@ export default function LevelSelectPage() {
         <div className="flex items-center gap-3">
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference">📖</button>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Progress">◈</button>
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Settings">⚙</button>
+          <button 
+            onClick={handleLogout}
+            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2" 
+            title="Sign Out"
+          >
+            Sign Out
+          </button>
         </div>
       </header>
 

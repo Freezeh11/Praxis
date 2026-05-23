@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from data.levels_data import LEVELS
+from auth_middleware import optional_user
 
 router = APIRouter()
 
@@ -24,8 +25,8 @@ class ScoreResponse(BaseModel):
 
 
 @router.post("/score", response_model=ScoreResponse)
-def compute_score(req: ScoreRequest):
-    """Compute the three-metric score for a completed puzzle."""
+async def compute_score(req: ScoreRequest, user: Optional[dict] = Depends(optional_user)):
+    """Compute the three-metric score for a completed puzzle. Optionally saves to DB if authenticated."""
     level = next((lv for lv in LEVELS if lv["id"] == req.levelId), None)
     if not level:
         raise HTTPException(status_code=404, detail=f"Level {req.levelId} not found")
@@ -61,6 +62,45 @@ def compute_score(req: ScoreRequest):
 
     # Bonus points on top of the base 10 (score of 100 = +5 bonus, 0 = +0)
     earned_points = round((total / 100) * 5)
+
+    # ── Save to database if user is authenticated ───────────────────────────
+    if user:
+        try:
+            from supabase_client import supabase
+
+            # Save to score_history
+            supabase.table("score_history").insert({
+                "user_id": user["id"],
+                "level_id": req.levelId,
+                "stage_idx": req.stageIdx,
+                "steps_used": req.stepsUsed,
+                "laws_used": req.lawsUsed,
+                "hints_used": req.hintsUsed,
+                "efficiency": efficiency,
+                "target_law": target_law,
+                "hint_independence": hint_independence,
+                "total": total,
+                "earned_points": earned_points,
+            }).execute()
+
+            # Update best score in stage_progress
+            existing = supabase.table("stage_progress").select("best_score").eq(
+                "user_id", user["id"]
+            ).eq("level_id", req.levelId).eq("stage_idx", req.stageIdx).execute()
+
+            current_best = existing.data[0]["best_score"] if existing.data else 0
+
+            if total > current_best:
+                supabase.table("stage_progress").upsert({
+                    "user_id": user["id"],
+                    "level_id": req.levelId,
+                    "stage_idx": req.stageIdx,
+                    "best_score": total,
+                    "completed": True,
+                }).execute()
+        except Exception as e:
+            # Don't fail the score computation if DB save fails
+            print(f"Warning: Failed to save score to database: {e}")
 
     return ScoreResponse(
         efficiency=efficiency,
