@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "https://REPLACE_WITH_RENDER_AUTH_URL/api/auth/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://REPLACE_WITH_RENDER_BACKEND_URL/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
