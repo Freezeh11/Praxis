@@ -2,6 +2,8 @@ import { useState, useCallback, useRef } from 'react'
 import { parseExpr, cloneN, canonText, nodeText, getNode } from '../lib/expr.js'
 import { analyzeSelection, analyzeNot, analyzeProductConst, scanHints } from '../lib/laws.js'
 
+const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
+
 /**
  * Converts a scanHints result into a human-readable hint string.
  * @param {string} law - law id from scanHints
@@ -28,7 +30,7 @@ function buildHintText(law, paths, expr) {
         const n2 = paths[1] ? getNode(expr, paths[1]) : null
         const hasOne = (n1?.type === 'const' && n1.val === 1) || (n2?.type === 'const' && n2.val === 1)
         return hasOne
-          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 — the whole sum collapses.`
+          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 - the whole sum collapses.`
           : `There's a 0 in a product. Annulment Law says A · 0 = 0.`
       }
       case 'identity':
@@ -36,10 +38,10 @@ function buildHintText(law, paths, expr) {
       case 'distributive':
         return `Two or more terms share a common variable. Try Distributive Law to factor it out.`
       default:
-        return `Look at the current expression — a simplification is available.`
+        return `Look at the current expression - a simplification is available.`
     }
   } catch {
-    return `A simplification is available in the current expression — look carefully.`
+    return `A simplification is available in the current expression - look carefully.`
   }
 }
 
@@ -56,6 +58,7 @@ export function useGameState() {
   const [status, setStatus] = useState('select') // 'select' | 'laws' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('Select a term or variable to begin')
   const [isComplete, setIsComplete] = useState(false)
+  const [isDeadEnd, setIsDeadEnd] = useState(false)
   const [earnedXp, setEarnedXp] = useState(0)
   const [activeGuidePaths, setActiveGuidePaths] = useState([])
   const [isAnimating, setIsAnimating] = useState(false)
@@ -63,6 +66,29 @@ export function useGameState() {
 
   // Keep goalCanon in a ref so applyLaw can always read the latest value
   const goalCanonRef = useRef('')
+
+  const syncDeadEndStatus = useCallback((exprSnapshot, fallbackMsg = 'Select a term or variable to begin') => {
+    if (!exprSnapshot) return false
+
+    if (canonText(exprSnapshot) === goalCanonRef.current) {
+      setIsDeadEnd(false)
+      return false
+    }
+
+    const hints = scanHints(exprSnapshot, 'R')
+    if (hints.length === 0) {
+      setIsDeadEnd(true)
+      setApplicableLaws([])
+      setStatus('error')
+      setStatusMsg(DEAD_END_MSG)
+      return true
+    }
+
+    setIsDeadEnd(false)
+    setStatus('select')
+    setStatusMsg(fallbackMsg)
+    return false
+  }, [])
 
   const loadPuzzle = useCallback((puzzle) => {
     const parsedExpr = parseExpr(puzzle.expr)
@@ -79,29 +105,49 @@ export function useGameState() {
     setApplicableLaws([])
     setActiveGuidePaths([])
     setIsComplete(false)
+    setIsDeadEnd(false)
     setIsAnimating(false)
     setAnimationData(null)
     setEarnedXp(0)
-    setStatus('select')
-    setStatusMsg('Select a term or variable to begin')
-  }, [])
+    syncDeadEndStatus(parsedExpr)
+  }, [syncDeadEndStatus])
 
   const updateLaws = useCallback((nextSel, exprSnapshot) => {
+    if (isDeadEnd) {
+      setApplicableLaws([])
+      setStatus('error')
+      setStatusMsg(DEAD_END_MSG)
+      return
+    }
+
     if (nextSel.length === 2) {
       const laws = analyzeSelection(exprSnapshot, nextSel)
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
-      setStatusMsg(laws.length ? 'Choose an applicable law →' : 'No simplification here — try different terms')
+      setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No simplification here - try different terms')
     } else {
       setApplicableLaws([])
       setStatus('select')
       setStatusMsg(nextSel.length === 1 ? 'Now select a second term or variable' : 'Select a term or variable to begin')
     }
-  }, [])
+  }, [isDeadEnd])
 
   /* ---- selection handlers ---- */
   const handleClickLit = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
+    if (isDeadEnd) {
+      setSel(prev => {
+        const existing = prev.findIndex(s => s.path === path)
+        return existing >= 0
+          ? prev.filter((_, i) => i !== existing)
+          : prev.length >= 2
+            ? [prev[1], { path, isTermSel: false }]
+            : [...prev, { path, isTermSel: false }]
+      })
+      setApplicableLaws([])
+      return
+    }
+
     const node = getNode(exprSnapshot, path)
     // Special case: const (0 or 1) directly inside a product
     if (node && node.type === 'const') {
@@ -114,7 +160,7 @@ export function useGameState() {
           setSel([])
           setApplicableLaws(laws)
           setStatus(laws.length ? 'laws' : 'error')
-          setStatusMsg(laws.length ? 'Choose an applicable law →' : 'No law applies here — try different terms')
+          setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No law applies here - try different terms')
           return
         }
       }
@@ -133,10 +179,23 @@ export function useGameState() {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [])
+  }, [isAnimating, isDeadEnd, updateLaws])
 
   const handleClickNot = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
+    if (isDeadEnd) {
+      setSel(prev => {
+        const existing = prev.findIndex(s => s.path === path)
+        return existing >= 0
+          ? prev.filter((_, i) => i !== existing)
+          : prev.length >= 2
+            ? [prev[1], { path, isTermSel: false }]
+            : [...prev, { path, isTermSel: false }]
+      })
+      setApplicableLaws([])
+      return
+    }
+
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
       let next
@@ -155,19 +214,32 @@ export function useGameState() {
         const laws = analyzeSelection(exprSnapshot, next)
         setApplicableLaws(laws)
         setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(laws.length ? 'Choose an applicable law →' : 'No simplification here — try different terms')
+        setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No simplification here - try different terms')
       } else {
         const laws = analyzeNot(exprSnapshot, path)
         setApplicableLaws(laws)
         setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(laws.length ? 'Choose an applicable law →' : 'No law applies — try a different element')
+        setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No law applies - try a different element')
       }
       return next
     })
-  }, [])
+  }, [isAnimating, isDeadEnd])
 
   const handleClickTerm = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
+    if (isDeadEnd) {
+      setSel(prev => {
+        const existing = prev.findIndex(s => s.path === path)
+        return existing >= 0
+          ? prev.filter((_, i) => i !== existing)
+          : prev.length >= 2
+            ? [prev[1], { path, isTermSel: true }]
+            : [...prev, { path, isTermSel: true }]
+      })
+      setApplicableLaws([])
+      return
+    }
+
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
       let next
@@ -185,7 +257,7 @@ export function useGameState() {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [])
+  }, [isAnimating, isDeadEnd, updateLaws])
 
   const applyLaw = useCallback((law, currentExpr, currentSteps) => {
     if (isAnimating) return
@@ -229,16 +301,16 @@ export function useGameState() {
 
       // Check completion
       if (canonText(newExpr) === goalCanonRef.current) {
+        setIsDeadEnd(false)
         setEarnedXp(10) // Fixed 10 points per completion
         setIsComplete(true)
         setStatus('success')
         setStatusMsg('Expression simplified! 🎉')
       } else {
-        setStatus('select')
-        setStatusMsg('Step applied. Select next terms to continue.')
+        syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
       }
     }, 2500) // 2.5s duration
-  }, [sel, isAnimating])
+  }, [sel, isAnimating, syncDeadEndStatus])
 
   const undoAction = useCallback(() => {
     setExprHistory(h => {
@@ -250,11 +322,10 @@ export function useGameState() {
       setApplicableLaws([])
       setActiveGuidePaths([])
       setIsComplete(false)
-      setStatus('select')
-      setStatusMsg('Undone. Select terms to continue.')
+      syncDeadEndStatus(prev, 'Undone. Select terms to continue.')
       return h.slice(0, -1)
     })
-  }, [])
+  }, [syncDeadEndStatus])
 
   const resetPuzzle = useCallback((puzzle) => {
     if (puzzle) loadPuzzle(puzzle)
@@ -279,9 +350,10 @@ export function useGameState() {
     return hint
   }, [expr, hintIdx])
 
-  /** Drag-and-drop term reorder — no law applied, no step recorded */
+  /** Drag-and-drop term reorder - no law applied, no step recorded */
   const swapTerms = useCallback((sumPath, fromIdx, toIdx) => {
     if (fromIdx === toIdx) return
+    let nextExpr = null
     setExpr(prevExpr => {
       const tree = cloneN(prevExpr)
       const sn = getNode(tree, sumPath)
@@ -289,24 +361,28 @@ export function useGameState() {
       const tmp = sn.terms[fromIdx]
       sn.terms[fromIdx] = sn.terms[toIdx]
       sn.terms[toIdx] = tmp
+      nextExpr = tree
       return tree
     })
     setSel([])
     setApplicableLaws([])
     setActiveGuidePaths([])
-    setStatus('select')
-    setStatusMsg('Terms reordered. Select terms to continue.')
-  }, [])
+    if (nextExpr) {
+      syncDeadEndStatus(nextExpr, 'Terms reordered. Select terms to continue.')
+    }
+  }, [syncDeadEndStatus])
 
   const activateGuide = useCallback(() => {
     if (!expr) return false
     const hints = scanHints(expr, 'R')
     if (hints.length === 0) {
+      setIsDeadEnd(true)
       setStatus('error')
-      setStatusMsg('No simplifications found for the current expression.')
+      setStatusMsg(DEAD_END_MSG)
       return false
     }
 
+    setIsDeadEnd(false)
     const hint = hints[0]
     const paths = hint.paths
 
@@ -334,7 +410,7 @@ export function useGameState() {
     setApplicableLaws(laws)
     setStatus(laws.length ? 'laws' : 'select')
     setStatusMsg(laws.length
-      ? 'Guide: the terms are pre-selected — pick a law to apply!'
+      ? 'Guide: the terms are pre-selected - pick a law to apply!'
       : 'Guide: click the highlighted terms, then choose a law.')
     return true
   }, [expr])
