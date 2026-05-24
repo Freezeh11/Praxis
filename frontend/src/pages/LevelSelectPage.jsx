@@ -5,26 +5,19 @@ import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
 
-// Level 3+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = [3]
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
   const { levels, loading, error } = useApi()
-  const { progress, isLevelCompleted, getLevelProgress } = useProgress()
-  const [selected, setSelected] = useState(0) // index into levels array
+  const { isLevelCompleted, getLevelProgress } = useProgress()
+  const [selected, setSelected] = useState(0)
 
-  /**
-   * A level is locked if it's "coming soon" OR it requires a prerequisite
-   * that hasn't been satisfied yet.
-   * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
-   */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
     if (lv.id === 2) {
-      // Find Level 1 in the levels array to get its stage count
       const lvl1 = levels.find(l => l.id === 1)
       const totalStages = lvl1?.puzzles?.length ?? 6
       const p = getLevelProgress(1, totalStages)
@@ -52,7 +45,6 @@ export default function LevelSelectPage() {
     try {
       await signOut()
       toast.info('You have been securely logged out.')
-      // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
     } catch (err) {
       toast.error('Failed to log out.')
@@ -64,7 +56,6 @@ export default function LevelSelectPage() {
 
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-      {/* Header */}
       <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg">⊕</span>
@@ -73,9 +64,9 @@ export default function LevelSelectPage() {
         <div className="flex items-center gap-3">
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference">📖</button>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Progress">◈</button>
-          <button 
+          <button
             onClick={handleLogout}
-            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2" 
+            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2"
             title="Sign Out"
           >
             Sign Out
@@ -83,13 +74,11 @@ export default function LevelSelectPage() {
         </div>
       </header>
 
-      {/* Title */}
       <div className="mt-10 flex flex-col items-center gap-1.5">
-        <h1 className="font-bold text-[32px] tracking-tight text-accent">Choose Your Level</h1>
-        <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
+        <h1 className="font-bold text-[32px] tracking-tight text-accent">Select a Level</h1>
+        <p className="text-[15px] text-text-3 font-medium">Each level introduces additional variables and complexity</p>
       </div>
 
-      {/* Carousel */}
       <div className="flex items-center justify-center gap-8 mt-10 flex-1">
         <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
           <span>‹</span>
@@ -117,7 +106,6 @@ export default function LevelSelectPage() {
                 `}
                 onClick={() => !locked && setSelected(i)}
               >
-                {/* Icon */}
                 <div className={`w-16 h-16 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
                   ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px]' : 'border-border text-[26px]'}
                   ${done && !isActive ? 'bg-green-light text-green' : ''}
@@ -129,14 +117,12 @@ export default function LevelSelectPage() {
                 <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
                 <div className="text-[13px] text-text-3 text-center">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2 */}
                 {isScoreGated && isActive && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
                       <span>{lockState.progress.completed}/{lockState.totalStages} stages</span>
                       <span>{lockState.progress.avgScore}/100 avg</span>
                     </div>
-                    {/* Progress bar */}
                     <div className="w-full h-2 bg-bg rounded-full overflow-hidden border border-border">
                       <div
                         className="h-full rounded-full transition-all duration-500"
@@ -150,14 +136,12 @@ export default function LevelSelectPage() {
                         }}
                       />
                     </div>
-                    {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
                       Need 70% avg across all Level 1 stages
                     </div>
                   </div>
                 )}
 
-                {/* Tags */}
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
                 )}
@@ -174,13 +158,6 @@ export default function LevelSelectPage() {
         </button>
       </div>
 
-      {/* XP bar */}
-      <div className="flex justify-center gap-4 mb-5">
-        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-4 py-1.5 text-sm font-bold text-text-1 shadow-sm flex items-center gap-1.5">⭐ {progress.points || 0} Points</span>
-        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-4 py-1.5 text-sm font-bold text-text-1 shadow-sm flex items-center gap-1.5">🔥 {progress.streak} streak</span>
-      </div>
-
-      {/* Start button */}
       <div className="flex justify-center pb-16">
         <button
           id="start-level-btn"
@@ -188,7 +165,7 @@ export default function LevelSelectPage() {
           onClick={handleStart}
           disabled={!levels[selected] || getLockState(levels[selected]).locked}
         >
-          START LEVEL
+          OPEN LEVEL
         </button>
       </div>
     </div>

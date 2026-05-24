@@ -1,6 +1,6 @@
 # Praxis
 
-Praxis is an interactive web application designed to help users master Boolean Algebra through step-by-step logic puzzles. The application features a clean, game-like UI, robust authentication, and server-side progress persistence.
+Praxis is an interactive web application designed to help users work through Boolean Algebra step by step. The application includes a focused interface, robust authentication, and server-side progress persistence.
 
 ## Tech Stack
 
@@ -66,7 +66,7 @@ npm run dev
 
 ### 3. Start the Backend API (Terminal 2)
 
-This FastAPI server handles the game logic, scoring algorithms, and persists progress securely to the database by verifying sessions against the Auth Server.
+This FastAPI server handles expression-solving logic, scoring algorithms, and persists progress securely to the database by verifying sessions against the Auth Server.
 
 ```bash
 cd backend

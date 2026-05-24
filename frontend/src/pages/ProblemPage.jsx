@@ -40,7 +40,6 @@ export default function ProblemPage() {
 
   const stageNum = parseInt(stageIdx)
 
-  // Load puzzle data
   useEffect(() => {
     fetchLevel(Number(levelId)).then(data => {
       setLevel(data)
@@ -52,22 +51,18 @@ export default function ProblemPage() {
     })
   }, [levelId, stageNum])
 
-  // Reset overlays when navigating to a new stage
   useEffect(() => {
     setShowSuccess(false)
     setShowHint(false)
     setScoreResult(null)
   }, [levelId, stageNum])
 
-  // Show success screen when puzzle is done
   useEffect(() => {
     if (isComplete) {
       addPoints(earnedXp)
       completeStage(Number(levelId), stageNum)
 
-      // Derive lawsUsed from step history at this moment
       const lawsUsed = steps.map(s => {
-        // Map law name back to law id via a simple lookup
         const nameToId = {
           'Absorption Law': 'absorption',
           'Idempotent Law': 'idempotent',
@@ -76,13 +71,12 @@ export default function ProblemPage() {
           'Complement Law': 'complement',
           'Distributive (Factor)': 'distributive',
           'Double Negation': 'double-neg',
-          "De Morgan's (AND\u2192OR)": 'demorgan-and',
-          "De Morgan's (OR\u2192AND)": 'demorgan-or',
+          "De Morgan's (AND→OR)": 'demorgan-and',
+          "De Morgan's (OR→AND)": 'demorgan-or',
         }
         return nameToId[s.law] || s.law
       })
 
-      // Submit score and show breakdown after 3s
       submitScore({
         levelId: Number(levelId),
         stageIdx: stageNum,
@@ -126,7 +120,7 @@ export default function ProblemPage() {
         deductPoints(20)
       }
     } else {
-      alert("Not enough points! You need 20 points to use the Guide.")
+      alert('Guide unavailable right now.')
     }
   }
 
@@ -136,7 +130,6 @@ export default function ProblemPage() {
     resetPuzzle(puzzle)
   }
 
-  /* Wrapper functions to pass current expr snapshot to handlers */
   const onClickLit = (path) => expr && handleClickLit(path, expr)
   const onClickNot = (path) => expr && handleClickNot(path, expr)
   const onClickTerm = (path) => expr && handleClickTerm(path, expr)
@@ -145,7 +138,6 @@ export default function ProblemPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
-      {/* ── LEFT PANEL: Step History ── */}
       <aside className="w-[260px] min-w-[200px] max-w-[300px] bg-white border-r border-border flex flex-col overflow-hidden">
         <div className="px-4 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-2">
           <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all w-fit" onClick={() => navigate(`/level/${levelId}/stages`)}>
@@ -177,16 +169,13 @@ export default function ProblemPage() {
         </div>
       </aside>
 
-      {/* ── CENTER PANEL: Expression Workspace ── */}
       <main className="flex-1 flex flex-col bg-white border border-border m-3 rounded-xl shadow-sm overflow-hidden">
-        {/* Center header */}
         <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <div>
             <div className="text-[15px] font-bold text-text-1">Simplify Expression</div>
             <div className="text-[11px] text-text-3 mt-0.5">Reduce to its simplest form</div>
           </div>
           <div className="flex gap-1.5 items-center">
-            {/* Zoom controls */}
             <button
               className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={() => setZoom(z => Math.max(ZOOM_MIN, parseFloat((z - ZOOM_STEP).toFixed(2))))}
@@ -216,18 +205,15 @@ export default function ProblemPage() {
             <button
               className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={handleReset}
-              title="Reset puzzle"
+              title="Reset problem"
             >⟳</button>
           </div>
         </div>
 
-
-        {/* Expression workspace — grid bg + derivation chain */}
         <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
           <div className="relative w-full h-full flex flex-col justify-center items-center">
             {isAnimating && <AnimationOverlay data={animationData} />}
 
-            {/* Status pill — absolutely pinned to top, outside zoom wrapper so it stays fixed size */}
             {status !== 'select' && (
               <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-20 transition-all duration-200
                 ${status === 'error' ? 'bg-red-100 text-red-700 border-red-300' : ''}
@@ -235,64 +221,58 @@ export default function ProblemPage() {
                 ${status === 'success' ? 'bg-green-light text-green-800 border-green-300' : ''}
               `}>
                 {status === 'success' && <span className="text-xs font-bold">✓</span>}
-                {status === 'error'   && <span className="text-xs font-bold">✕</span>}
-                {status === 'laws'    && <span className="text-xs font-bold">→</span>}
+                {status === 'error' && <span className="text-xs font-bold">✕</span>}
+                {status === 'laws' && <span className="text-xs font-bold">→</span>}
                 {statusMsg}
               </div>
             )}
 
-            {/* Zoom wrapper — scales the entire expression block */}
             <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
-
-            {/* Derivation chain */}
-            {expr && (() => {
-              // Build list of past lines from steps
-              const pastLines = []
-              if (steps.length > 0) {
-                pastLines.push({ text: steps[0].from, isFirst: true, law: null })
-                for (let i = 0; i < steps.length - 1; i++) {
-                  pastLines.push({ text: steps[i].to, isFirst: false, law: steps[i].law })
+              {expr && (() => {
+                const pastLines = []
+                if (steps.length > 0) {
+                  pastLines.push({ text: steps[0].from, isFirst: true, law: null })
+                  for (let i = 0; i < steps.length - 1; i++) {
+                    pastLines.push({ text: steps[i].to, isFirst: false, law: steps[i].law })
+                  }
                 }
-              }
-              const total = pastLines.length
-              return (
-                <div className="flex flex-col gap-1 font-mono text-[22px] font-medium">
-                  {/* Dimmed past lines */}
-                  {pastLines.map((line, i) => {
-                    const age = total - i
-                    const opacity = Math.max(0.12, 0.4 - (age - 1) * 0.07)
-                    return (
-                      <div key={i} className="flex items-baseline gap-3.5 pointer-events-none select-none transition-opacity duration-400 blur-[0.3px]" style={{ opacity }}>
-                        <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
-                          {line.isFirst ? 'F =' : '\u00a0\u00a0='}
-                        </span>
-                        <ExprText text={line.text} className="text-text-1" />
-                      </div>
-                    )
-                  })}
+                const total = pastLines.length
+                return (
+                  <div className="flex flex-col gap-1 font-mono text-[22px] font-medium">
+                    {pastLines.map((line, i) => {
+                      const age = total - i
+                      const opacity = Math.max(0.12, 0.4 - (age - 1) * 0.07)
+                      return (
+                        <div key={i} className="flex items-baseline gap-3.5 pointer-events-none select-none transition-opacity duration-400 blur-[0.3px]" style={{ opacity }}>
+                          <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
+                            {line.isFirst ? 'F =' : '  ='}
+                          </span>
+                          <ExprText text={line.text} className="text-text-1" />
+                        </div>
+                      )
+                    })}
 
-                  {/* Current expression — interactive */}
-                  <div className="flex items-center gap-3.5 flex-wrap">
-                    <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
-                      {steps.length === 0 ? 'F =' : '\u00a0\u00a0='}
-                    </span>
-                    <ExpressionDisplay
-                      expr={expr}
-                      sel={sel}
-                      onClickLit={onClickLit}
-                      onClickNot={onClickNot}
-                      onClickTerm={onClickTerm}
-                      onSwapTerms={onSwapTerms}
-                      activeGuidePaths={activeGuidePaths}
-                      animationPaths={isAnimating ? animationData?.paths : []}
-                      animationLaw={isAnimating ? animationData?.lawId : null}
-                    />
+                    <div className="flex items-center gap-3.5 flex-wrap">
+                      <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
+                        {steps.length === 0 ? 'F =' : '  ='}
+                      </span>
+                      <ExpressionDisplay
+                        expr={expr}
+                        sel={sel}
+                        onClickLit={onClickLit}
+                        onClickNot={onClickNot}
+                        onClickTerm={onClickTerm}
+                        onSwapTerms={onSwapTerms}
+                        activeGuidePaths={activeGuidePaths}
+                        animationPaths={isAnimating ? animationData?.paths : []}
+                        animationLaw={isAnimating ? animationData?.lawId : null}
+                      />
+                    </div>
                   </div>
-                </div>
-              )
-            })()}</div>{/* end zoom wrapper */}
+                )
+              })()}
+            </div>
 
-            {/* Hint bubble */}
             {showHint && (
               <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber rounded-md text-[13px] text-amber-900 max-w-[480px]">
                 <span className="text-base">💡</span>
@@ -302,14 +282,12 @@ export default function ProblemPage() {
           </div>
         </div>
 
-
-        {/* ── APPLICABLE LAWS — below expression ── */}
         <div className="border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0">
           <div className="flex items-center gap-3 mb-2.5">
             <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">APPLICABLE LAWS</span>
             {applicableLaws.length === 0 && (
               <span className="text-xs text-text-3 italic">
-                {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply — try a different selection'}
+                {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply, try a different selection'}
               </span>
             )}
           </div>
@@ -331,12 +309,11 @@ export default function ProblemPage() {
         </div>
       </main>
 
-      {/* ── RIGHT PANEL: Rewards + Stage Info ── */}
       <aside className="w-[280px] min-w-[240px] bg-white border-l border-border flex flex-col overflow-hidden">
         <div className="border-b border-border p-3.5 pt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3">REWARDS</span>
-            <span className="text-xs font-bold text-amber">+10 Points</span>
+            <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3">TOOLS</span>
+            <span className="text-xs font-bold text-text-3">Session</span>
           </div>
           <div className="h-1 bg-border rounded-full mb-3 overflow-hidden">
             <div
@@ -347,31 +324,29 @@ export default function ProblemPage() {
 
           <div className="flex gap-2">
             <button className="flex-1 px-1.5 py-2 rounded-md text-xs font-semibold border-[1.5px] border-border bg-white text-text-2 transition-all hover:bg-bg hover:border-border-dark" onClick={() => setShowLawsDrawer(true)}>
-              📜 Laws
+              Laws
             </button>
             <button className="flex-1 px-1.5 py-2 rounded-md text-xs font-semibold border-[1.5px] border-border bg-white text-text-2 transition-all hover:bg-bg hover:border-border-dark" onClick={handleHint}>
-              💡 Hint
+              Hint
             </button>
             <button
               className="flex-1 px-1.5 py-2 rounded-md text-xs font-semibold border-[1.5px] border-amber bg-amber-light text-amber-600 transition-all shadow-sm hover:-translate-y-px hover:shadow-md hover:bg-amber-100"
               onClick={handleGuide}
             >
-              📖 Guide (20 pts)
+              Guide
             </button>
           </div>
         </div>
 
-        {/* Stage info */}
         <div className="p-4 bg-bg border-t border-border mt-auto shrink-0 flex flex-col gap-1.5">
           <div className="text-[13px] font-bold text-text-1">{level?.name}</div>
           <div className="text-[11px] text-text-3">
             Stage {stageNum + 1} / {level?.puzzles?.length || '?'}
           </div>
-          <div className="text-xs font-semibold text-accent mt-1">Total Points: {progress.points}</div>
+          <div className="text-xs font-semibold text-accent mt-1">Progress saved automatically</div>
         </div>
       </aside>
 
-      {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
       <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
@@ -393,17 +368,15 @@ export default function ProblemPage() {
         </div>
       </div>
 
-      {/* ── SUCCESS OVERLAY ── */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[8px]">
           <div className="bg-white rounded-2xl px-8 py-8 flex flex-col items-center shadow-2xl max-w-[420px] w-full animate-fade-in border border-border">
-            <div className="text-[44px] mb-1 leading-none">🎉</div>
-            <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete!</h2>
-            <p className="text-xs text-text-3 mb-5">Here's how you did across the three metrics</p>
+            <div className="text-[44px] mb-1 leading-none">✓</div>
+            <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete</h2>
+            <p className="text-xs text-text-3 mb-5">Summary of this attempt</p>
 
             {scoreResult ? (
               <div className="w-full flex flex-col gap-3 mb-5">
-                {/* Total score badge */}
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <span className={`text-3xl font-extrabold ${
                     scoreResult.total >= 80 ? 'text-green-600' :
@@ -412,19 +385,30 @@ export default function ProblemPage() {
                   <span className="text-sm text-text-3 font-medium">/ 100</span>
                 </div>
 
-                {/* Metric rows */}
                 {[
-                  { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
+                  {
+                    label: 'Efficiency',
+                    score: scoreResult.efficiency,
+                    max: 40,
                     sub: `${scoreResult.breakdown.stepsUsed} steps (optimal: ${scoreResult.breakdown.optimalSteps})`,
-                    color: 'bg-sky-500' },
-                  { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
+                    color: 'bg-sky-500'
+                  },
+                  {
+                    label: 'Target Laws',
+                    score: scoreResult.targetLaw,
+                    max: 30,
                     sub: scoreResult.breakdown.targetLawsRequired.length === 0
                       ? 'No required laws'
                       : `Used ${scoreResult.breakdown.targetLawsUsed.length} / ${scoreResult.breakdown.targetLawsRequired.length} required`,
-                    color: 'bg-violet-500' },
-                  { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
+                    color: 'bg-violet-500'
+                  },
+                  {
+                    label: 'Hint Use',
+                    score: scoreResult.hintIndependence,
+                    max: 30,
                     sub: `${scoreResult.breakdown.hintsUsed} hint${scoreResult.breakdown.hintsUsed !== 1 ? 's' : ''} used`,
-                    color: 'bg-teal' },
+                    color: 'bg-teal'
+                  },
                 ].map(({ label, score, max, sub, color }) => (
                   <div key={label} className="bg-bg rounded-xl px-4 py-3">
                     <div className="flex justify-between items-baseline mb-1.5">
@@ -441,15 +425,13 @@ export default function ProblemPage() {
                   </div>
                 ))}
 
-                {/* Optimal hint shown if efficiency < max */}
                 {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
                   <div className="text-[12px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full leading-relaxed">
-                    <strong>💡 Tip:</strong> {puzzle.optimalHint}
+                    <strong>Tip:</strong> {puzzle.optimalHint}
                   </div>
                 )}
               </div>
             ) : (
-              // Fallback while score loads (or if backend is down)
               <div className="w-full flex flex-col gap-2.5 mb-5">
                 <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
                   <span className="font-medium">Optimal steps:</span>
@@ -463,10 +445,6 @@ export default function ProblemPage() {
                 </div>
               </div>
             )}
-
-            <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-5">
-              +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
-            </div>
 
             <div className="flex gap-3 w-full">
               {level && stageNum + 1 < level.puzzles.length ? (
