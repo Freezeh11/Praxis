@@ -43,6 +43,8 @@ function buildHintText(law, paths, expr) {
   }
 }
 
+const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
+
 export function useGameState() {
   const [expr, setExpr] = useState(null)
   const [sel, setSel] = useState([])
@@ -234,8 +236,14 @@ export function useGameState() {
         setStatus('success')
         setStatusMsg('Expression simplified! 🎉')
       } else {
-        setStatus('select')
-        setStatusMsg('Step applied. Select next terms to continue.')
+        const remainingHints = scanHints(newExpr, 'R')
+        if (remainingHints.length === 0) {
+          setStatus('error')
+          setStatusMsg(DEAD_END_MSG)
+        } else {
+          setStatus('select')
+          setStatusMsg('Step applied. Select next terms to continue.')
+        }
       }
     }, 2500) // 2.5s duration
   }, [sel, isAnimating])
@@ -303,7 +311,11 @@ export function useGameState() {
     const hints = scanHints(expr, 'R')
     if (hints.length === 0) {
       setStatus('error')
-      setStatusMsg('No simplifications found for the current expression.')
+      setStatusMsg(
+        canonText(expr) === goalCanonRef.current
+          ? 'No simplifications found for the current expression.'
+          : DEAD_END_MSG
+      )
       return false
     }
 
