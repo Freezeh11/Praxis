@@ -80,7 +80,7 @@ export default function RegisterPage() {
             Create your account
           </h1>
           <p className="text-sm text-text-3 font-medium mt-1.5">
-            Set up access to the interactive Boolean algebra workspace
+            Start mastering Boolean expressions today
           </p>
         </div>
 
