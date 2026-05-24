@@ -14,7 +14,7 @@ export default function LoginPage() {
   // Wait for session state to update before navigating
   useEffect(() => {
     if (session) {
-      navigate('/levels', { replace: true })
+      navigate('/', { replace: true })
     }
   }, [session, navigate])
 

@@ -1,13 +1,21 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useSession } from '../lib/auth-client'
+import { useSession, signOut } from '../lib/auth-client'
+import { toast } from 'sonner'
 
 export default function LandingPage() {
+  const navigate = useNavigate()
   const { data: session, isPending } = useSession()
 
-  // If already logged in, skip landing page and go to dashboard
-  if (!isPending && session) {
-    return <Navigate to="/levels" replace />
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.info('You have been securely logged out.')
+      // Wait a moment for Better Auth's global state to clear before routing
+      setTimeout(() => navigate('/'), 100)
+    } catch (err) {
+      toast.error('Failed to log out.')
+    }
   }
 
   // Fade-in animation variants
@@ -33,9 +41,18 @@ export default function LandingPage() {
           <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm font-semibold text-text-2 hover:text-accent transition-colors">
-            Log In
-          </Link>
+          {session ? (
+            <button
+              onClick={handleLogout}
+              className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link to="/login" className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
+              Log In
+            </Link>
+          )}
         </div>
       </header>
 
@@ -66,18 +83,29 @@ export default function LandingPage() {
 
           {/* CTAs */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
-            <Link
-              to="/register"
-              className="w-full sm:w-auto px-8 py-3.5 bg-accent text-white rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-            >
-              Start Learning Free <span>→</span>
-            </Link>
-            <Link
-              to="/login"
-              className="w-full sm:w-auto px-8 py-3.5 bg-white text-text-1 border-[1.5px] border-border rounded-xl font-bold text-[15px] shadow-sm hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all text-center"
-            >
-              I already have an account
-            </Link>
+            {session ? (
+              <Link
+                to="/levels"
+                className="w-full sm:w-auto px-8 py-3.5 bg-accent text-white rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                Go to Level Selection <span>→</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/register"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-accent text-white rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                >
+                  Start Learning Free <span>→</span>
+                </Link>
+                <Link
+                  to="/login"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-white text-text-1 border-[1.5px] border-border rounded-xl font-bold text-[15px] shadow-sm hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all text-center"
+                >
+                  I already have an account
+                </Link>
+              </>
+            )}
           </motion.div>
         </motion.div>
       </main>

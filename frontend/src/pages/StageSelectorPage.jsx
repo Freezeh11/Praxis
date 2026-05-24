@@ -70,7 +70,7 @@ export default function StageSelectorPage() {
     <div className="flex flex-col min-h-screen bg-bg">
       {/* Header */}
       <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all" onClick={() => navigate('/')}>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all" onClick={() => navigate('/levels')}>
           ← Back
         </button>
         <div className="flex items-center gap-2.5">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
@@ -10,9 +10,10 @@ const COMING_SOON = [3]
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
-  const { levels, loading, error } = useApi()
+  const { levels, laws, loading, error } = useApi()
   const { progress, isLevelCompleted, getLevelProgress } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
+  const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
@@ -66,13 +67,12 @@ export default function LevelSelectPage() {
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
       <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
-        <div className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg">⊕</span>
           <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-3">
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference">📖</button>
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Progress">◈</button>
+          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
             className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2" 
@@ -190,6 +190,28 @@ export default function LevelSelectPage() {
         >
           START LEVEL
         </button>
+      </div>
+
+      {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
+      <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
+      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-base font-bold text-text-1">Law Reference</h2>
+          <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {laws && laws.map(law => (
+            <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
+              <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
+              <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-sm">
+                {law.formulas && law.formulas.map((f, idx) => (
+                  <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
+                ))}
+              </div>
+              <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

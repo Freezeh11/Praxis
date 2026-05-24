@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
 from data.levels_data import LEVELS
@@ -24,8 +24,47 @@ class ScoreResponse(BaseModel):
     breakdown: dict
 
 
+def save_score_to_db(user, req: ScoreRequest, efficiency, target_law, hint_independence, total, earned_points):
+    try:
+        from supabase_client import supabase
+
+        # Save to score_history
+        supabase.table("score_history").insert({
+            "user_id": user["id"],
+            "level_id": req.levelId,
+            "stage_idx": req.stageIdx,
+            "steps_used": req.stepsUsed,
+            "laws_used": req.lawsUsed,
+            "hints_used": req.hintsUsed,
+            "efficiency": efficiency,
+            "target_law": target_law,
+            "hint_independence": hint_independence,
+            "total": total,
+            "earned_points": earned_points,
+        }).execute()
+
+        # Update best score in stage_progress
+        existing = supabase.table("stage_progress").select("best_score").eq(
+            "user_id", user["id"]
+        ).eq("level_id", req.levelId).eq("stage_idx", req.stageIdx).execute()
+
+        current_best = existing.data[0]["best_score"] if existing.data else 0
+
+        if total > current_best:
+            supabase.table("stage_progress").upsert({
+                "user_id": user["id"],
+                "level_id": req.levelId,
+                "stage_idx": req.stageIdx,
+                "best_score": total,
+                "completed": True,
+            }).on_conflict("user_id,level_id,stage_idx").execute()
+    except Exception as e:
+        # Don't fail the score computation if DB save fails
+        print(f"Warning: Failed to save score to database: {e}")
+
+
 @router.post("/score", response_model=ScoreResponse)
-async def compute_score(req: ScoreRequest, user: Optional[dict] = Depends(optional_user)):
+async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, user: Optional[dict] = Depends(optional_user)):
     """Compute the three-metric score for a completed puzzle. Optionally saves to DB if authenticated."""
     level = next((lv for lv in LEVELS if lv["id"] == req.levelId), None)
     if not level:
@@ -65,42 +104,10 @@ async def compute_score(req: ScoreRequest, user: Optional[dict] = Depends(option
 
     # ── Save to database if user is authenticated ───────────────────────────
     if user:
-        try:
-            from supabase_client import supabase
-
-            # Save to score_history
-            supabase.table("score_history").insert({
-                "user_id": user["id"],
-                "level_id": req.levelId,
-                "stage_idx": req.stageIdx,
-                "steps_used": req.stepsUsed,
-                "laws_used": req.lawsUsed,
-                "hints_used": req.hintsUsed,
-                "efficiency": efficiency,
-                "target_law": target_law,
-                "hint_independence": hint_independence,
-                "total": total,
-                "earned_points": earned_points,
-            }).execute()
-
-            # Update best score in stage_progress
-            existing = supabase.table("stage_progress").select("best_score").eq(
-                "user_id", user["id"]
-            ).eq("level_id", req.levelId).eq("stage_idx", req.stageIdx).execute()
-
-            current_best = existing.data[0]["best_score"] if existing.data else 0
-
-            if total > current_best:
-                supabase.table("stage_progress").upsert({
-                    "user_id": user["id"],
-                    "level_id": req.levelId,
-                    "stage_idx": req.stageIdx,
-                    "best_score": total,
-                    "completed": True,
-                }).on_conflict("user_id,level_id,stage_idx").execute()
-        except Exception as e:
-            # Don't fail the score computation if DB save fails
-            print(f"Warning: Failed to save score to database: {e}")
+        background_tasks.add_task(
+            save_score_to_db,
+            user, req, efficiency, target_law, hint_independence, total, earned_points
+        )
 
     return ScoreResponse(
         efficiency=efficiency,

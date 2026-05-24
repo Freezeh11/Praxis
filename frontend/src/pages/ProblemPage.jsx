@@ -401,7 +401,7 @@ export default function ProblemPage() {
             <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete!</h2>
             <p className="text-xs text-text-3 mb-5">Here's how you did across the three metrics</p>
 
-            {scoreResult ? (
+            {scoreResult && (
               <div className="w-full flex flex-col gap-3 mb-5">
                 {/* Total score badge */}
                 <div className="flex items-center justify-center gap-2 mb-1">
@@ -447,20 +447,6 @@ export default function ProblemPage() {
                     <strong>💡 Tip:</strong> {puzzle.optimalHint}
                   </div>
                 )}
-              </div>
-            ) : (
-              // Fallback while score loads (or if backend is down)
-              <div className="w-full flex flex-col gap-2.5 mb-5">
-                <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
-                  <span className="font-medium">Optimal steps:</span>
-                  <span className="font-bold">{puzzle?.optimalSteps || '?'}</span>
-                </div>
-                <div className="flex justify-between items-center px-4 py-2 bg-bg rounded-lg text-sm text-text-2">
-                  <span className="font-medium">Your steps:</span>
-                  <span className={`font-bold px-2.5 py-0.5 rounded-full ${
-                    steps.length > (puzzle?.optimalSteps || 0) ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                  }`}>{steps.length}</span>
-                </div>
               </div>
             )}
 
