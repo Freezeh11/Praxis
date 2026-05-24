@@ -4,7 +4,7 @@ Verifies tokens issued by Supabase Auth using the Authorization header.
 """
 
 from fastapi import Request, HTTPException
-from .supabase_client import supabase
+from supabase_client import supabase
 
 async def get_current_user(request: Request) -> dict:
     """
