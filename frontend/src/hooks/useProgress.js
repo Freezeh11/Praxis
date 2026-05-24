@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApi } from './useApi'
-
-const STORAGE_KEY = 'praxis_v1'
+import { useSession } from '../lib/auth-client'
 
 const defaultProgress = {
   points: 0,
@@ -14,19 +13,41 @@ const defaultProgress = {
 
 export function useProgress() {
   const { loadProgress, saveProgress } = useApi()
-  const [progress, setProgress] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? { ...defaultProgress, ...JSON.parse(saved) } : defaultProgress
-    } catch {
-      return defaultProgress
-    }
-  })
+  const { data: session } = useSession()
+  const userId = session?.user?.id || 'guest'
+  const STORAGE_KEY = `praxis_v1_${userId}`
+
+  const [progress, setProgress] = useState(defaultProgress)
   const [serverLoaded, setServerLoaded] = useState(false)
   const saveTimeoutRef = useRef(null)
 
-  // Load progress from server on mount (hydrate from server, fall back to localStorage)
+  // 1. When userId changes, reset progress to local storage for that user
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setProgress({ ...defaultProgress, ...JSON.parse(saved) })
+      } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setProgress(defaultProgress)
+      }
+    } catch {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProgress(defaultProgress)
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setServerLoaded(false)
+  }, [userId, STORAGE_KEY])
+
+  // 2. Load progress from server when user is authenticated
+  useEffect(() => {
+    if (userId === 'guest') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setServerLoaded(true)
+      return
+    }
+
     const hydrateFromServer = async () => {
       const serverData = await loadProgress()
       if (serverData) {
@@ -62,16 +83,16 @@ export function useProgress() {
       setServerLoaded(true)
     }
     hydrateFromServer()
-  }, [])
+  }, [userId, loadProgress])
 
-  // Save to localStorage on every change
+  // 3. Save to localStorage on every change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
-  }, [progress])
+  }, [progress, STORAGE_KEY])
 
-  // Debounced save to server (500ms after last change)
+  // 4. Debounced save to server (500ms after last change)
   useEffect(() => {
-    if (!serverLoaded) return
+    if (!serverLoaded || userId === 'guest') return
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     saveTimeoutRef.current = setTimeout(() => {
       saveProgress(progress)
@@ -79,7 +100,7 @@ export function useProgress() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     }
-  }, [progress, serverLoaded])
+  }, [progress, serverLoaded, userId, saveProgress])
 
   const addPoints = (amount) =>
     setProgress(p => ({

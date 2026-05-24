@@ -2,13 +2,31 @@ services:
   - type: web
     name: praxis-backend
     env: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     rootDir: backend
     envVars:
       - key: FRONTEND_URL
-        value: https://praxis-blush-six.vercel.app
+        value: https://praxis-x.vercel.app
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
+
+  - type: web
+    name: praxis-auth-server
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: auth-server
+    envVars:
+      - key: FRONTEND_URL
+        value: https://praxis-x.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: BETTER_AUTH_URL
+        value: https://praxis-auth-server.onrender.com
