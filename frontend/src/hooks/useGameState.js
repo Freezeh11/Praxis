@@ -45,12 +45,6 @@ function buildHintText(law, paths, expr) {
 
 const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
 
-function isDeadEndExpression(expr, goalCanon) {
-  if (!expr) return false
-  if (canonText(expr) === goalCanon) return false
-  return scanHints(expr, 'R').length === 0
-}
-
 export function useGameState() {
   const [expr, setExpr] = useState(null)
   const [sel, setSel] = useState([])
@@ -95,13 +89,6 @@ export function useGameState() {
   }, [])
 
   const updateLaws = useCallback((nextSel, exprSnapshot) => {
-    if (isDeadEndExpression(exprSnapshot, goalCanonRef.current)) {
-      setApplicableLaws([])
-      setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
-      return
-    }
-
     if (nextSel.length === 2) {
       const laws = analyzeSelection(exprSnapshot, nextSel)
       setApplicableLaws(laws)
@@ -117,13 +104,6 @@ export function useGameState() {
   /* ---- selection handlers ---- */
   const handleClickLit = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
-    if (isDeadEndExpression(exprSnapshot, goalCanonRef.current)) {
-      setApplicableLaws([])
-      setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
-      return
-    }
-
     const node = getNode(exprSnapshot, path)
     // Special case: const (0 or 1) directly inside a product
     if (node && node.type === 'const') {
@@ -159,13 +139,6 @@ export function useGameState() {
 
   const handleClickNot = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
-    if (isDeadEndExpression(exprSnapshot, goalCanonRef.current)) {
-      setApplicableLaws([])
-      setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
-      return
-    }
-
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
       let next
@@ -197,13 +170,6 @@ export function useGameState() {
 
   const handleClickTerm = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
-    if (isDeadEndExpression(exprSnapshot, goalCanonRef.current)) {
-      setApplicableLaws([])
-      setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
-      return
-    }
-
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
       let next
@@ -270,7 +236,8 @@ export function useGameState() {
         setStatus('success')
         setStatusMsg('Expression simplified! 🎉')
       } else {
-        if (isDeadEndExpression(newExpr, goalCanonRef.current)) {
+        const remainingHints = scanHints(newExpr, 'R')
+        if (remainingHints.length === 0) {
           setStatus('error')
           setStatusMsg(DEAD_END_MSG)
         } else {
@@ -341,16 +308,14 @@ export function useGameState() {
 
   const activateGuide = useCallback(() => {
     if (!expr) return false
-    if (isDeadEndExpression(expr, goalCanonRef.current)) {
-      setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
-      return false
-    }
-
     const hints = scanHints(expr, 'R')
     if (hints.length === 0) {
       setStatus('error')
-      setStatusMsg('No simplifications found for the current expression.')
+      setStatusMsg(
+        canonText(expr) === goalCanonRef.current
+          ? 'No simplifications found for the current expression.'
+          : DEAD_END_MSG
+      )
       return false
     }
 

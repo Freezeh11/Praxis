@@ -238,14 +238,7 @@ export function scanHints(node, path) {
       walk(node.child, path + '.0')
       return
     }
-    if (node.type === 'prod') {
-      node.factors.forEach((f, i) => {
-        if (f.type === 'const' && f.val === 1) add('identity-product', [path + '.' + i])
-        if (f.type === 'const' && f.val === 0) add('annulment-product', [path + '.' + i])
-        walk(f, path + '.' + i)
-      })
-      return
-    }
+    if (node.type === 'prod') { node.factors.forEach((f, i) => walk(f, path + '.' + i)); return }
     if (node.type === 'sum') {
       const T = node.terms
       for (let i = 0; i < T.length; i++) {
