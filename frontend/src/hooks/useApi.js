@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabase'
 
+let cachedLevels = null
+let cachedLaws = null
+let fetchAllPromise = null
+const levelCache = new Map()
+const levelRequestCache = new Map()
+
 export function useApi() {
-  const [levels, setLevels] = useState([])
-  const [laws, setLaws] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [levels, setLevels] = useState(cachedLevels || [])
+  const [laws, setLaws] = useState(cachedLaws || [])
+  const [loading, setLoading] = useState(!cachedLevels || !cachedLaws)
   const [error, setError] = useState(null)
 
   const getAuthHeaders = async (baseHeaders = {}) => {
@@ -16,18 +22,34 @@ export function useApi() {
   }
 
   useEffect(() => {
+    if (cachedLevels && cachedLaws) {
+      setLevels(cachedLevels)
+      setLaws(cachedLaws)
+      setLoading(false)
+      return
+    }
+
     const fetchAll = async () => {
       try {
-        const [lvRes, lwRes] = await Promise.all([
-          fetch('/api/levels'),
-          fetch('/api/laws'),
-        ])
-        if (!lvRes.ok || !lwRes.ok) throw new Error('API request failed')
-        const [lvData, lwData] = await Promise.all([lvRes.json(), lwRes.json()])
+        if (!fetchAllPromise) {
+          fetchAllPromise = Promise.all([
+            fetch('/api/levels'),
+            fetch('/api/laws'),
+          ]).then(async ([lvRes, lwRes]) => {
+            if (!lvRes.ok || !lwRes.ok) throw new Error('API request failed')
+            const [lvData, lwData] = await Promise.all([lvRes.json(), lwRes.json()])
+            cachedLevels = lvData
+            cachedLaws = lwData
+            return { lvData, lwData }
+          })
+        }
+
+        const { lvData, lwData } = await fetchAllPromise
         setLevels(lvData)
         setLaws(lwData)
       } catch (err) {
         setError(err.message)
+        fetchAllPromise = null
       } finally {
         setLoading(false)
       }
@@ -36,9 +58,25 @@ export function useApi() {
   }, [])
 
   const fetchLevel = async (levelId) => {
-    const res = await fetch(`/api/levels/${levelId}`)
-    if (!res.ok) throw new Error(`Level ${levelId} not found`)
-    return res.json()
+    if (levelCache.has(levelId)) {
+      return levelCache.get(levelId)
+    }
+
+    if (!levelRequestCache.has(levelId)) {
+      levelRequestCache.set(levelId, (async () => {
+        const res = await fetch(`/api/levels/${levelId}`)
+        if (!res.ok) throw new Error(`Level ${levelId} not found`)
+        const data = await res.json()
+        levelCache.set(levelId, data)
+        levelRequestCache.delete(levelId)
+        return data
+      })().catch(err => {
+        levelRequestCache.delete(levelId)
+        throw err
+      }))
+    }
+
+    return levelRequestCache.get(levelId)
   }
 
   const submitScore = async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
