@@ -5,7 +5,7 @@
 
 -- User game progress (points, streak, etc.)
 CREATE TABLE IF NOT EXISTS user_progress (
-  user_id TEXT PRIMARY KEY,        -- References Better Auth user.id
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,        -- References Supabase auth.users
   points INTEGER DEFAULT 0,
   streak INTEGER DEFAULT 0,
   best_streak INTEGER DEFAULT 0,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
 -- Per-stage completion & best scores
 CREATE TABLE IF NOT EXISTS stage_progress (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL,           -- References Better Auth user.id
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,           -- References Supabase auth.users
   level_id INTEGER NOT NULL,
   stage_idx INTEGER NOT NULL,
   best_score REAL DEFAULT 0,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS stage_progress (
 -- Score submission history (every score ever earned)
 CREATE TABLE IF NOT EXISTS score_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   level_id INTEGER NOT NULL,
   stage_idx INTEGER NOT NULL,
   steps_used INTEGER NOT NULL,

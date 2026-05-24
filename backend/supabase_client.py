@@ -71,5 +71,18 @@ class SupabaseRESTClient:
     def table(self, table_name: str):
         return self.QueryBuilder(self, table_name)
 
+    async def get_user(self, jwt_token: str) -> dict | None:
+        """Fetch the authenticated user from Supabase using their JWT."""
+        url = f"{SUPABASE_URL.rstrip('/')}/auth/v1/user"
+        headers = {
+            "apikey": SUPABASE_SERVICE_KEY,
+            "Authorization": f"Bearer {jwt_token}"
+        }
+        async with httpx.AsyncClient() as c:
+            response = await c.get(url, headers=headers, timeout=5.0)
+            if response.status_code != 200:
+                return None
+            return response.json()
+
 # Expose a singleton instance that mimics the official client interface
 supabase = SupabaseRESTClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)

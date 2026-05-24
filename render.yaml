@@ -14,19 +14,3 @@ services:
       - key: SUPABASE_SERVICE_KEY
         sync: false
 
-  - type: web
-    name: praxis-auth-server
-    env: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm start
-    rootDir: auth-server
-    envVars:
-      - key: FRONTEND_URL
-        value: https://praxis-x.vercel.app
-      - key: DATABASE_URL
-        sync: false
-      - key: BETTER_AUTH_SECRET
-        sync: false
-      - key: BETTER_AUTH_URL
-        value: https://praxis-auth-server.onrender.com
