@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://praxis-backend-2w1i.onrender.com/api/$1"
+      "destination": "https://praxis-backend-5302.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
