@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 
 export const useSession = () => {
-  const [data, setData] = useState({ user: null, session: null });
+  const [data, setData] = useState(null);
   const [isPending, setIsPending] = useState(true);
   const [error, setError] = useState(null);
 
@@ -14,7 +14,7 @@ export const useSession = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (mounted) {
           if (error) throw error;
-          setData({ user: session?.user ?? null, session });
+          setData(session ? { user: session.user, session } : null);
         }
       } catch (err) {
         if (mounted) setError(err);
@@ -27,7 +27,7 @@ export const useSession = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
-        setData({ user: session?.user ?? null, session });
+        setData(session ? { user: session.user, session } : null);
         setIsPending(false);
       }
     });
