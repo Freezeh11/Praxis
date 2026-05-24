@@ -53,6 +53,10 @@ class SupabaseRESTClient:
             self.data = data
             return self
 
+        def on_conflict(self, columns: str):
+            self.filters["on_conflict"] = columns
+            return self
+
         def execute(self):
             url = f"{self.client.base_url}/{self.table}"
             with httpx.Client() as c:
@@ -63,7 +67,8 @@ class SupabaseRESTClient:
                     response = c.post(url, headers=self.client.headers, json=self.data)
                 elif self.action == "upsert":
                     headers = {**self.client.headers, "Prefer": "resolution=merge-duplicates,return=representation"}
-                    response = c.post(url, headers=headers, json=self.data)
+                    params = {"on_conflict": self.filters.get("on_conflict")} if "on_conflict" in self.filters else {}
+                    response = c.post(url, headers=headers, params=params, json=self.data)
                     
                 response.raise_for_status()
                 return type('Response', (), {'data': response.json() if response.content else []})()

@@ -84,6 +84,6 @@ async def save_progress(req: SaveProgressRequest, user: dict = Depends(get_curre
                 "stage_idx": stage_idx,
                 "best_score": best_score,
                 "completed": True,
-            }).execute()
+            }).on_conflict("user_id,level_id,stage_idx").execute()
 
     return {"status": "ok"}

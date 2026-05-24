@@ -97,7 +97,7 @@ async def compute_score(req: ScoreRequest, user: Optional[dict] = Depends(option
                     "stage_idx": req.stageIdx,
                     "best_score": total,
                     "completed": True,
-                }).execute()
+                }).on_conflict("user_id,level_id,stage_idx").execute()
         except Exception as e:
             # Don't fail the score computation if DB save fails
             print(f"Warning: Failed to save score to database: {e}")
