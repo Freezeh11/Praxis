@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../utils/supabase'
 
 export function useApi() {
   const [levels, setLevels] = useState([])
   const [laws, setLaws] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const getAuthHeaders = async (baseHeaders = {}) => {
+    const { data } = await supabase.auth.getSession()
+    const token = data?.session?.access_token
+    return token 
+      ? { ...baseHeaders, 'Authorization': `Bearer ${token}` } 
+      : baseHeaders
+  }
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -34,10 +43,10 @@ export function useApi() {
 
   const submitScore = async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
     try {
+      const headers = await getAuthHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/score', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers,
         body: JSON.stringify({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }),
       })
       if (!res.ok) return null
@@ -50,7 +59,8 @@ export function useApi() {
   /** Load progress from server for the authenticated user */
   const loadProgress = async () => {
     try {
-      const res = await fetch('/api/progress', { credentials: 'include' })
+      const headers = await getAuthHeaders()
+      const res = await fetch('/api/progress', { headers })
       if (!res.ok) return null
       return res.json()
     } catch {
@@ -61,10 +71,10 @@ export function useApi() {
   /** Save progress to server for the authenticated user */
   const saveProgress = async (progressData) => {
     try {
+      const headers = await getAuthHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/progress/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers,
         body: JSON.stringify({ progress: progressData }),
       })
       if (!res.ok) return null
