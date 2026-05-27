@@ -8,8 +8,7 @@ Praxis is an interactive web application designed to help users master Boolean A
 |---|---|
 | **Frontend** | React 19, Vite, Tailwind CSS v3, Framer Motion, Sonner |
 | **Backend** | Python 3, FastAPI, Uvicorn, httpx |
-| **Auth Server** | Node.js, Express, Better Auth |
-| **Database** | PostgreSQL (Supabase) |
+| **Database & Auth** | Supabase (PostgreSQL + Auth) |
 
 ---
 
@@ -23,7 +22,7 @@ Make sure you have these installed before starting:
 
 ## Setup & Running Locally
 
-The application uses a **three-server architecture** in development. You will need to open three separate terminal windows and run the servers simultaneously.
+The application uses a **two-server architecture** in development. You will need to open two separate terminal windows and run the servers simultaneously.
 
 ### 1. Environment Variables (`.env`)
 
@@ -39,34 +38,15 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 ```env
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-AUTH_SERVER_URL=http://localhost:3001
 ```
 
-**`auth-server/.env`**
-```env
-BETTER_AUTH_SECRET=your_random_32_character_secret
-BETTER_AUTH_URL=http://localhost:3001
-DATABASE_URL=your_postgresql_connection_string
-```
+*(Note: Make sure to replace the placeholder values with your actual Supabase project credentials.)*
 
 ---
 
-### 2. Start the Auth Server (Terminal 1)
+### 2. Start the Backend API (Terminal 1)
 
-This Node.js server handles authentication flows, login/register logic, and manages the session cookies using Better Auth.
-
-```bash
-cd auth-server
-npm install
-npm run dev
-```
-> Runs on **http://localhost:3001**
-
----
-
-### 3. Start the Backend API (Terminal 2)
-
-This FastAPI server handles the game logic, scoring algorithms, and persists progress securely to the database by verifying sessions against the Auth Server.
+This FastAPI server handles the game logic, scoring algorithms, and persists progress securely to the database by verifying sessions against Supabase.
 
 ```bash
 cd backend
@@ -75,6 +55,7 @@ python -m venv venv
 # Windows: venv\Scripts\activate
 # Mac/Linux: source venv/bin/activate
 
+# Install dependencies (you can also use the requirements.txt in the root directory)
 pip install -r requirements.txt
 python -m uvicorn main:app --reload
 ```
@@ -82,9 +63,9 @@ python -m uvicorn main:app --reload
 
 ---
 
-### 4. Start the Frontend UI (Terminal 3)
+### 3. Start the Frontend UI (Terminal 2)
 
-The Vite React application proxies API requests cleanly to both the Auth Server and the Backend.
+The Vite React application communicates with the Backend API and directly with Supabase for authentication.
 
 ```bash
 cd frontend
@@ -97,7 +78,7 @@ npm run dev
 
 ## Testing the Application
 
-Once all three servers are running:
+Once both servers are running:
 1. Open your browser and navigate to `http://localhost:5173`.
 2. You will be greeted by the Landing Page.
 3. Click **Start Learning Free** to create an account.
