@@ -1,6 +1,6 @@
 # Praxis
 
-Praxis is an interactive web application designed to help users master Boolean Algebra through step-by-step logic puzzles. The application features a clean, game-like UI, robust authentication, and server-side progress persistence.
+Praxis is an interactive web application designed to help users master Boolean Expression Simplification through step-by-step logic puzzles. The application features a clean, interactive UI, robust authentication, and server-side progress persistence.
 
 ## Tech Stack
 
