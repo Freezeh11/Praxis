@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import logoFull from '../assets/logo-full.png'
+import logoX from '../assets/logo-x.png'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
@@ -36,12 +38,13 @@ function cy(row) { return row * CELL }
 export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
-  const { fetchLevel } = useApi()
+  const { fetchLevel, laws } = useApi()
   const { progress, getStagesCompleted, getLevelProgress } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hoveredStage, setHoveredStage] = useState(null)
+  const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
   useEffect(() => {
     fetchLevel(Number(levelId))
@@ -69,16 +72,15 @@ export default function StageSelectorPage() {
   return (
     <div className="flex flex-col min-h-screen bg-bg">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all" onClick={() => navigate('/levels')}>
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all z-10" onClick={() => navigate('/levels')}>
           ← Back
         </button>
-        <div className="flex items-center gap-2.5">
-          <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg">⊕</span>
-          <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </div>
-        <div className="flex items-center gap-3">
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference">📖</button>
+        <div className="flex items-center gap-3 z-10">
+          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
         </div>
       </header>
 
@@ -152,20 +154,24 @@ export default function StageSelectorPage() {
             })}
 
             {/* Center decoration */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-xl bg-text-1 flex items-center justify-center text-[22px] text-white shadow-md pointer-events-none">
-              <span>⊕</span>
-            </div>
+            <img 
+              src={logoX} 
+              alt="Praxis X" 
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain pointer-events-none drop-shadow-md z-20" 
+            />
           </div>
 
-          {/* ── Level 2 unlock progress (only shown on Level 1) ── */}
-          {Number(levelId) === 1 && puzzles.length > 0 && (() => {
-            const lp = getLevelProgress(1, puzzles.length)
+          {/* ── Next Level unlock progress ── */}
+          {(Number(levelId) === 1 || Number(levelId) === 2) && puzzles.length > 0 && (() => {
+            const currentLvl = Number(levelId)
+            const nextLvl = currentLvl + 1
+            const lp = getLevelProgress(currentLvl, puzzles.length)
             const pct = Math.min(100, lp.avgScore)
             const barColor = lp.unlocked ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
             return (
               <div className="w-full max-w-[380px] bg-bg-card border border-border rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-bold text-text-1">Level 2 Unlock</span>
+                  <span className="text-[13px] font-bold text-text-1">Level {nextLvl} Unlock</span>
                   {lp.unlocked
                     ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🔓 Unlocked!</span>
                     : <span className="text-[11px] font-semibold text-text-3">Need 70% avg across all stages</span>
@@ -196,7 +202,7 @@ export default function StageSelectorPage() {
                 {/* Per-stage score breakdown */}
                 <div className="flex flex-col gap-1.5 text-[11px] text-text-2">
                   {Array.from({ length: puzzles.length }, (_, i) => {
-                    const stageScore = progress.stageScores?.[`1:${i}`] ?? null
+                    const stageScore = progress.stageScores?.[`${currentLvl}:${i}`] ?? null
                     const done = completedSet.has(i)
                     return (
                       <div key={i} className="flex items-center gap-2">
@@ -221,6 +227,28 @@ export default function StageSelectorPage() {
           })()}
         </div>
       )}
+
+      {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
+      <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
+      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-base font-bold text-text-1">Law Reference</h2>
+          <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {laws && laws.map(law => (
+            <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
+              <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
+              <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-sm">
+                {law.formulas && law.formulas.map((f, idx) => (
+                  <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
+                ))}
+              </div>
+              <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

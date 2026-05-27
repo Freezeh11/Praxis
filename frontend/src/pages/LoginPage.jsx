@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import logoX from '../assets/logo-x.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { signIn, useSession } from '../lib/auth-client'
 import { motion } from 'framer-motion'
@@ -56,8 +57,8 @@ export default function LoginPage() {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center w-12 h-12 bg-accent text-white rounded-xl font-bold text-2xl shadow-sm mb-6 hover:scale-105 transition-transform">
-            ⊕
+          <Link to="/" className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-6 hover:scale-105 transition-transform drop-shadow-sm">
+            <img src={logoX} alt="Praxis" className="w-full h-full object-contain" />
           </Link>
           <h1 className="text-[28px] font-extrabold text-text-1 tracking-tight">
             Welcome back

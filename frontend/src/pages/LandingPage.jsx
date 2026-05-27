@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
@@ -36,9 +37,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
       <header className="w-full h-[72px] px-8 flex items-center justify-between z-10 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg shadow-sm">⊕</span>
-          <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
+        <div className="flex items-center">
+          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </div>
         <div className="flex items-center gap-4">
           {session ? (

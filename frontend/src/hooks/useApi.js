@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase'
 
 let cachedLevels = null
@@ -13,13 +13,13 @@ export function useApi() {
   const [loading, setLoading] = useState(!cachedLevels || !cachedLaws)
   const [error, setError] = useState(null)
 
-  const getAuthHeaders = async (baseHeaders = {}) => {
+  const getAuthHeaders = useCallback(async (baseHeaders = {}) => {
     const { data } = await supabase.auth.getSession()
     const token = data?.session?.access_token
     return token 
       ? { ...baseHeaders, 'Authorization': `Bearer ${token}` } 
       : baseHeaders
-  }
+  }, [])
 
   useEffect(() => {
     if (cachedLevels && cachedLaws) {
@@ -57,7 +57,7 @@ export function useApi() {
     fetchAll()
   }, [])
 
-  const fetchLevel = async (levelId) => {
+  const fetchLevel = useCallback(async (levelId) => {
     if (levelCache.has(levelId)) {
       return levelCache.get(levelId)
     }
@@ -77,9 +77,9 @@ export function useApi() {
     }
 
     return levelRequestCache.get(levelId)
-  }
+  }, [])
 
-  const submitScore = async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
+  const submitScore = useCallback(async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
     try {
       const headers = await getAuthHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/score', {
@@ -92,10 +92,10 @@ export function useApi() {
     } catch {
       return null
     }
-  }
+  }, [getAuthHeaders])
 
   /** Load progress from server for the authenticated user */
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     try {
       const headers = await getAuthHeaders()
       const res = await fetch('/api/progress', { headers })
@@ -104,10 +104,10 @@ export function useApi() {
     } catch {
       return null
     }
-  }
+  }, [getAuthHeaders])
 
   /** Save progress to server for the authenticated user */
-  const saveProgress = async (progressData) => {
+  const saveProgress = useCallback(async (progressData) => {
     try {
       const headers = await getAuthHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/progress/save', {
@@ -120,7 +120,7 @@ export function useApi() {
     } catch {
       return null
     }
-  }
+  }, [getAuthHeaders])
 
   return { levels, laws, loading, error, fetchLevel, submitScore, loadProgress, saveProgress }
 }

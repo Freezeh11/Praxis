@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
@@ -67,9 +68,8 @@ export default function LevelSelectPage() {
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
       <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <span className="w-8 h-8 bg-accent text-white rounded-md flex items-center justify-center font-bold text-lg">⊕</span>
-          <span className="font-bold text-[19px] tracking-tight text-accent">Praxis</span>
+        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
