@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import logoX from '../assets/logo-x.png'
+import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { signIn, useSession } from '../lib/auth-client'
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ export default function LoginPage() {
   const { data: session } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // Wait for session state to update before navigating
@@ -56,9 +57,9 @@ export default function LoginPage() {
         className="w-full max-w-[400px] z-10"
       >
         {/* Header */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-6 hover:scale-105 transition-transform drop-shadow-sm">
-            <img src={logoX} alt="Praxis" className="w-full h-full object-contain" />
+        <div className="text-center mb-6">
+          <Link to="/" className="inline-flex items-center justify-center h-12 mb-6 hover:scale-105 transition-transform drop-shadow-sm">
+            <img src={logoFull} alt="Praxis" className="h-full object-contain" />
           </Link>
           <h1 className="text-[28px] font-extrabold text-text-1 tracking-tight">
             Welcome back
@@ -66,6 +67,12 @@ export default function LoginPage() {
           <p className="text-sm text-text-3 font-medium mt-1.5">
             Sign in to continue your progress
           </p>
+        </div>
+
+        <div className="mb-2.5">
+          <Link to="/" className="inline-flex items-center gap-1.5 px-2 py-1 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all -ml-2">
+            ← Back
+          </Link>
         </div>
 
         {/* Card */}
@@ -92,16 +99,30 @@ export default function LoginPage() {
               <label htmlFor="login-password" className="text-[13px] font-semibold text-text-2">
                 Password
               </label>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-sm text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-sm text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text-1 transition-colors flex items-center justify-center"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
