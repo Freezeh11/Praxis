@@ -174,7 +174,7 @@ export function useGameState() {
         const parent = getNode(exprSnapshot, parentPath)
         if (parent && parent.type === 'prod') {
           const laws = analyzeProductConst(exprSnapshot, path, node.val, parentPath)
-          setSel([])
+          setSel([{ path, isTermSel: false }])
           setApplicableLaws(laws)
           setStatus(laws.length ? 'laws' : 'error')
           setStatusMsg(
@@ -338,7 +338,7 @@ export function useGameState() {
       } else {
         syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
       }
-    }, 2500) // 2.5s duration
+    }, 1350) // 1.35s duration
   }, [sel, isAnimating, syncDeadEndStatus])
 
   const undoAction = useCallback(() => {
