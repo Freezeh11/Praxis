@@ -249,44 +249,74 @@ export default function ProblemPage() {
               // Build list of past lines from steps
               const pastLines = []
               if (steps.length > 0) {
-                pastLines.push({ text: steps[0].from, isFirst: true, law: null })
+                pastLines.push({ text: steps[0].from, isFirst: true, law: 'Initial Expression' })
                 for (let i = 0; i < steps.length - 1; i++) {
                   pastLines.push({ text: steps[i].to, isFirst: false, law: steps[i].law })
                 }
               }
               const total = pastLines.length
               return (
-                <div className="flex flex-col gap-1 font-mono text-[22px] font-medium">
+                <div className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start">
                   {/* Dimmed past lines */}
                   {pastLines.map((line, i) => {
                     const age = total - i
-                    const opacity = Math.max(0.12, 0.4 - (age - 1) * 0.07)
+                    const opacity = Math.max(0.18, 0.45 - (age - 1) * 0.08)
                     return (
-                      <div key={i} className="flex items-baseline gap-3.5 pointer-events-none select-none transition-opacity duration-400 blur-[0.3px]" style={{ opacity }}>
-                        <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
-                          {line.isFirst ? 'F =' : '\u00a0\u00a0='}
-                        </span>
-                        <ExprText text={line.text} className="text-text-1" />
+                      <div key={i} className="relative flex items-center pointer-events-none select-none transition-all duration-300" style={{ opacity }}>
+                        {/* Left Annotation: Clean text, anchored directly to the left of the equation */}
+                        <div className="absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end">
+                          <span className="font-sans text-xs font-medium text-text-3 tracking-wide">
+                            {line.law}
+                          </span>
+                          <span className="text-text-3 font-mono text-sm font-light">→</span>
+                        </div>
+
+                        {/* Centered Equation Line */}
+                        <div className="flex items-baseline gap-3.5">
+                          <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
+                            {line.isFirst ? 'F =' : '\u00a0\u00a0='}
+                          </span>
+                          <ExprText text={line.text} className="text-text-1" />
+                        </div>
                       </div>
                     )
                   })}
 
-                  {/* Current expression — interactive */}
-                  <div className="flex items-center gap-3.5 flex-wrap">
-                    <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
-                      {steps.length === 0 ? 'F =' : '\u00a0\u00a0='}
-                    </span>
-                    <ExpressionDisplay
-                      expr={expr}
-                      sel={sel}
-                      onClickLit={onClickLit}
-                      onClickNot={onClickNot}
-                      onClickTerm={onClickTerm}
-                      onSwapTerms={onSwapTerms}
-                      activeGuidePaths={activeGuidePaths}
-                      animationPaths={isAnimating ? animationData?.paths : []}
-                      animationLaw={isAnimating ? animationData?.lawId : null}
-                    />
+                  {/* Current active expression — with staggered left-to-right reveal */}
+                  <div key={`active-row-${steps.length}`} className="relative flex items-center">
+                    {/* Left Annotation: Clean text, animated first, anchored to the left of the equation */}
+                    <div className="absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end">
+                      <span
+                        className={`font-sans text-xs tracking-wide animate-[revealFromLeft_0.4s_ease-out_0.0s_both]
+                        ${steps.length === 0
+                          ? 'font-medium text-text-2'
+                          : 'font-semibold text-teal'
+                        }`}
+                      >
+                        {steps.length === 0 ? 'Initial Expression' : steps[steps.length - 1].law}
+                      </span>
+                      <span className="text-teal font-mono text-sm font-bold animate-[revealFromLeft_0.4s_ease-out_0.2s_both]">
+                        →
+                      </span>
+                    </div>
+
+                    {/* Centered Interactive Equation — animated last */}
+                    <div className="flex items-center gap-3.5 animate-[revealFromLeft_0.45s_ease-out_0.4s_both]">
+                      <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
+                        {steps.length === 0 ? 'F =' : '\u00a0\u00a0='}
+                      </span>
+                      <ExpressionDisplay
+                        expr={expr}
+                        sel={sel}
+                        onClickLit={onClickLit}
+                        onClickNot={onClickNot}
+                        onClickTerm={onClickTerm}
+                        onSwapTerms={onSwapTerms}
+                        activeGuidePaths={activeGuidePaths}
+                        animationPaths={isAnimating ? animationData?.paths : []}
+                        animationLaw={isAnimating ? animationData?.lawId : null}
+                      />
+                    </div>
                   </div>
                 </div>
               )
