@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useApi } from '../hooks/useApi'
@@ -12,7 +12,7 @@ export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
   const navigate = useNavigate()
   const { fetchLevel, laws, submitScore } = useApi()
-  const { progress, addPoints, deductPoints, completeStage, saveScore } = useProgress()
+  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, saveSolution, getSavedSolution } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [puzzle, setPuzzle] = useState(null)
@@ -25,6 +25,9 @@ export default function ProblemPage() {
   const [inspectedStepIdx, setInspectedStepIdx] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
   const [scoreResult, setScoreResult] = useState(null)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
+  const loadedAsSavedRef = useRef(false)
 
   function getLawExplanation(lawName) {
     if (!lawName) return null
@@ -76,50 +79,118 @@ export default function ProblemPage() {
   } = useGameState()
 
   const stageNum = parseInt(stageIdx)
+  const completedSet = new Set(getStagesCompleted(Number(levelId)))
 
-  // Load puzzle data
+  // 1. Fetch level and set current puzzle
   useEffect(() => {
-    fetchLevel(Number(levelId)).then(data => {
-      setLevel(data)
-      const puz = data.puzzles[stageNum]
-      if (puz) {
-        setPuzzle(puz)
-        loadPuzzle(puz)
-      }
-    })
-  }, [levelId, stageNum])
-
-  // Reset overlays when navigating to a new stage
-  useEffect(() => {
+    let isCancelled = false
     setShowSuccess(false)
     setShowHint(false)
     setScoreResult(null)
-  }, [levelId, stageNum])
 
-  // Show success screen when puzzle is done
+    fetchLevel(Number(levelId)).then(data => {
+      if (isCancelled || !data) return
+      setLevel(data)
+      const puz = data.puzzles?.[stageNum]
+      if (puz) {
+        setPuzzle(puz)
+      } else {
+        navigate(`/level/${levelId}/stages`, { replace: true })
+      }
+    }).catch(err => {
+      if (!isCancelled) {
+        console.error('Failed to load level:', err)
+        navigate('/levels', { replace: true })
+      }
+    })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [levelId, stageNum, navigate])
+
+  // 2. Synchronize puzzle derivation with saved solution (reactive to auth hydration)
+  const currentSavedKey = `${levelId}:${stageNum}`
+  const savedSolutionForStage = progress.stageSolutions?.[currentSavedKey]
+
   useEffect(() => {
-    if (isComplete) {
-      addPoints(earnedXp)
-      completeStage(Number(levelId), stageNum)
+    if (!puzzle) return
 
-      // Derive lawsUsed from step history at this moment
+    const savedSteps = getSavedSolution(Number(levelId), stageNum)
+    loadedAsSavedRef.current = Boolean(savedSteps && savedSteps.length > 0)
+    loadPuzzle(puzzle, savedSteps)
+  }, [puzzle, currentSavedKey, savedSolutionForStage])
+
+  // Handle stage completion
+  useEffect(() => {
+    if (!isComplete) return
+
+    // If this stage was simply preloaded from an existing saved solution on visit, do NOT auto-popup
+    if (loadedAsSavedRef.current) {
+      return
+    }
+
+    const isFirstTime = !completedSet.has(stageNum)
+
+    if (isFirstTime) {
+      addPoints(earnedXp)
+    }
+    completeStage(Number(levelId), stageNum)
+    saveSolution(Number(levelId), stageNum, steps)
+
+    // Derive lawsUsed from step history at this moment
+    const lawsUsed = steps.map(s => {
+      const nameToId = {
+        'Absorption Law': 'absorption',
+        'Idempotent Law': 'idempotent',
+        'Complement Law': 'complement',
+        'Identity Law': 'identity',
+        'Annulment Law': 'annulment',
+        'Double Negation': 'double-neg',
+        "De Morgan's (AND\u2192OR)": 'demorgan-and',
+        "De Morgan's (OR\u2192AND)": 'demorgan-or',
+        'Distributive (Factor)': 'distributive',
+      }
+      return nameToId[s.law] || s.law.toLowerCase()
+    })
+
+    // Submit score
+    submitScore({
+      levelId: Number(levelId),
+      stageIdx: stageNum,
+      stepsUsed: steps.length,
+      lawsUsed,
+      hintsUsed,
+    }).then(result => {
+      if (result) {
+        saveScore(Number(levelId), stageNum, result.total)
+        setScoreResult(result)
+      }
+    })
+
+    // ONLY auto-pop the complete modal if the player completed the stage for the first time
+    if (isFirstTime) {
+      const timer = setTimeout(() => setShowSuccess(true), 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [isComplete])
+
+  const handleOpenScoreSummary = () => {
+    if (!scoreResult && isComplete) {
       const lawsUsed = steps.map(s => {
-        // Map law name back to law id via a simple lookup
         const nameToId = {
           'Absorption Law': 'absorption',
           'Idempotent Law': 'idempotent',
+          'Complement Law': 'complement',
           'Identity Law': 'identity',
           'Annulment Law': 'annulment',
-          'Complement Law': 'complement',
-          'Distributive (Factor)': 'distributive',
           'Double Negation': 'double-neg',
           "De Morgan's (AND\u2192OR)": 'demorgan-and',
           "De Morgan's (OR\u2192AND)": 'demorgan-or',
+          'Distributive (Factor)': 'distributive',
         }
-        return nameToId[s.law] || s.law
+        return nameToId[s.law] || s.law.toLowerCase()
       })
-
-      // Submit score and show breakdown after 3s
       submitScore({
         levelId: Number(levelId),
         stageIdx: stageNum,
@@ -131,11 +202,12 @@ export default function ProblemPage() {
           saveScore(Number(levelId), stageNum, result.total)
           setScoreResult(result)
         }
+        setShowSuccess(true)
       })
-
-      setTimeout(() => setShowSuccess(true), 3000)
+    } else {
+      setShowSuccess(true)
     }
-  }, [isComplete])
+  }
 
   const handleHint = () => {
     if (!puzzle) return
@@ -167,18 +239,45 @@ export default function ProblemPage() {
     }
   }
 
-  const handleReset = () => {
+  const handleResetClick = () => {
+    // If the stage is completed and user hasn't opted out in this session
+    const skipPrompt = sessionStorage.getItem('praxis_skip_reset_confirm') === 'true'
+    if (isComplete && !skipPrompt) {
+      setDontAskResetAgain(false)
+      setShowResetConfirm(true)
+    } else {
+      executeReset()
+    }
+  }
+
+  const executeReset = () => {
+    if (dontAskResetAgain) {
+      sessionStorage.setItem('praxis_skip_reset_confirm', 'true')
+    }
+    loadedAsSavedRef.current = false
+    setShowResetConfirm(false)
     setShowSuccess(false)
     setShowHint(false)
     resetPuzzle(puzzle)
+  }
+
+  const handleUndo = () => {
+    loadedAsSavedRef.current = false
+    undoAction()
   }
 
   /* Wrapper functions to pass current expr snapshot to handlers */
   const onClickLit = (path) => expr && handleClickLit(path, expr)
   const onClickNot = (path) => expr && handleClickNot(path, expr)
   const onClickTerm = (path) => expr && handleClickTerm(path, expr)
-  const onApplyLaw = (law) => expr && applyLaw(law, expr, steps, hintsUsed)
-  const onSwapTerms = (sumPath, fromIdx, toIdx) => swapTerms(sumPath, fromIdx, toIdx)
+  const onApplyLaw = (law) => {
+    loadedAsSavedRef.current = false
+    if (expr) applyLaw(law, expr, steps, hintsUsed)
+  }
+  const onSwapTerms = (sumPath, fromIdx, toIdx) => {
+    loadedAsSavedRef.current = false
+    swapTerms(sumPath, fromIdx, toIdx)
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
@@ -250,8 +349,7 @@ export default function ProblemPage() {
             <button
               className="h-7 px-2 rounded border border-border bg-bg text-[10px] font-mono text-text-2 hover:bg-border transition-all"
               onClick={() => setZoom(1)}
-              title="Reset zoom"
-            >{Math.round(zoom * 100)}%</button>
+            >100%</button>
             <button
               className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={() => setZoom(z => Math.min(ZOOM_MAX, parseFloat((z + ZOOM_STEP).toFixed(2))))}
@@ -259,19 +357,26 @@ export default function ProblemPage() {
               title="Zoom in"
             >+</button>
 
-            <div className="w-px h-5 bg-border mx-0.5" />
+            <div className="w-[1px] h-4 bg-border mx-1" />
 
+            {/* Undo button */}
             <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={undoAction}
-              disabled={exprHistory.length === 0}
-              title="Undo"
-            >↩</button>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={handleUndo}
+              disabled={steps.length === 0}
+              title="Undo last step"
+            >
+              <span>↶</span> Undo
+            </button>
+
+            {/* Reset button */}
             <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[15px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={handleReset}
-              title="Reset puzzle"
-            >⟳</button>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
+              onClick={handleResetClick}
+              title="Reset problem to start"
+            >
+              <span>↺</span> Reset
+            </button>
           </div>
         </div>
 
@@ -343,47 +448,36 @@ export default function ProblemPage() {
                         initial={{ opacity: 0.9 }}
                         animate={{ opacity: targetOpacity }}
                         transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
-                        onClick={() => setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))}
-                        className="relative flex items-center cursor-pointer group py-1 rounded-lg select-none transition-all"
+                        className="relative flex items-center group py-1 rounded-lg select-none transition-all"
                       >
-                        {/* Left Annotation: Clean text, anchored directly to the left */}
-                        <div
-                          className="absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer"
-                          onClick={e => {
+                        {/* Left Annotation: Sole trigger to view context card */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
                             e.stopPropagation()
                             setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))
                           }}
+                          className={`absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
+                            isInspected
+                              ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
+                              : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-text-3 hover:text-text-1'
+                          }`}
+                          title="Click to read law context card"
                         >
-                          <span
-                            className={`font-sans text-xs tracking-wide transition-colors ${
-                              isInspected
-                                ? 'font-bold text-sky-700 underline underline-offset-4'
-                                : 'font-medium text-text-3 group-hover:text-teal'
-                            }`}
-                          >
+                          <span className="font-sans text-xs tracking-wide">
                             {line.law}
                           </span>
-                          <span
-                            className={`font-mono text-sm transition-colors ${
-                              isInspected
-                                ? 'font-bold text-sky-700'
-                                : 'font-light text-text-3 group-hover:text-teal'
-                            }`}
-                          >
+                          <span className="font-mono text-sm font-bold">
                             →
                           </span>
-                        </div>
+                        </button>
 
-                        {/* Centered Equation Line — prominently highlighted when inspected */}
+                        {/* Centered Equation Line */}
                         <div
-                          onClick={e => {
-                            e.stopPropagation()
-                            setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))
-                          }}
-                          className={`flex items-baseline gap-3.5 px-3 py-1 rounded-lg border cursor-pointer transition-all ${
+                          className={`flex items-baseline gap-3.5 px-3 py-1 rounded-lg border transition-all ${
                             isInspected
                               ? 'border-sky-400 bg-sky-50 shadow-sm ring-2 ring-sky-200/70'
-                              : 'border-transparent group-hover:border-slate-200 group-hover:bg-slate-50/90'
+                              : 'border-transparent'
                           }`}
                         >
                           <span
@@ -399,7 +493,7 @@ export default function ProblemPage() {
                           />
                         </div>
 
-                        {/* Right-Aligned Context Card (Revealed on click) */}
+                        {/* Right-Aligned Context Card (Revealed on law click) */}
                         {isInspected && (
                           <div
                             className="absolute left-[calc(100%+20px)] flex items-center z-40 pointer-events-auto"
@@ -437,30 +531,31 @@ export default function ProblemPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-                    onClick={() => activeStepKey !== null && setInspectedStepIdx(prev => (prev === activeStepKey ? null : activeStepKey))}
-                    className="relative flex items-center z-10 cursor-pointer"
+                    className="relative flex items-center z-10"
                   >
-                    {/* Left Annotation */}
-                    <div className="absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end">
-                      <span
-                        className={`font-sans text-xs tracking-wide transition-colors ${
-                          isActiveInspected
-                            ? 'font-bold text-sky-700 underline underline-offset-4'
-                            : steps.length === 0
-                            ? 'font-medium text-text-2'
-                            : 'font-semibold text-teal'
-                        }`}
-                      >
+                    {/* Left Annotation: Sole trigger to view active context card */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (activeStepKey !== null) {
+                          setInspectedStepIdx(prev => (prev === activeStepKey ? null : activeStepKey))
+                        }
+                      }}
+                      className={`absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
+                        isActiveInspected
+                          ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
+                          : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-teal hover:text-teal-dark'
+                      }`}
+                      title="Click to view law explanation"
+                    >
+                      <span className="font-sans text-xs tracking-wide">
                         {steps.length === 0 ? 'Initial Expression' : steps[steps.length - 1].law}
                       </span>
-                      <span
-                        className={`font-mono text-sm transition-colors ${
-                          isActiveInspected ? 'font-bold text-sky-700' : 'text-teal font-bold'
-                        }`}
-                      >
+                      <span className="font-mono text-sm font-bold">
                         →
                       </span>
-                    </div>
+                    </button>
 
                     {/* Centered Interactive Equation */}
                     <div
@@ -550,7 +645,7 @@ export default function ProblemPage() {
               <div className="flex items-center gap-2.5">
                 <button
                   className="px-3.5 py-2 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all"
-                  onClick={() => setShowSuccess(true)}
+                  onClick={handleOpenScoreSummary}
                 >
                   📊 Score Summary
                 </button>
@@ -607,12 +702,12 @@ export default function ProblemPage() {
         <div className="border-b border-border p-3.5 pt-4 bg-bg/30">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">LEVEL PROGRESS</span>
-            <span className="text-xs font-bold text-teal">Stage {stageNum + 1} / {level?.puzzles.length ?? '?'}</span>
+            <span className="text-xs font-bold text-teal">{completedSet.size} / {level?.puzzles.length ?? '?'} Completed</span>
           </div>
           <div className="h-1.5 bg-border rounded-full mb-1.5 overflow-hidden">
             <div
               className="h-full bg-teal transition-all duration-300 rounded-full"
-              style={{ width: `${level ? ((stageNum + 1) / level.puzzles.length) * 100 : 0}%` }}
+              style={{ width: `${level && level.puzzles.length > 0 ? (completedSet.size / level.puzzles.length) * 100 : 0}%` }}
             />
           </div>
           <div className="text-[10.5px] text-text-3 font-medium">
@@ -668,13 +763,14 @@ export default function ProblemPage() {
           </button>
         </div>
 
-        {/* Level Puzzles List */}
+        {/* Level Puzzles List (Quick Stage Select) */}
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
           <div className="text-[10px] font-bold tracking-[1px] uppercase text-text-3 mb-1 px-1">STAGES</div>
           {level?.puzzles.map((p, idx) => {
             const isCurrent = idx === stageNum
-            const isCompleted = idx < stageNum
-            const isLocked = idx > stageNum
+            const isCompleted = completedSet.has(idx)
+            const isAvailable = idx === 0 || completedSet.has(idx - 1) || isCompleted
+            const isLocked = !isAvailable && !isCompleted
 
             return (
               <button
@@ -682,14 +778,16 @@ export default function ProblemPage() {
                 disabled={isLocked}
                 onClick={() => {
                   if (!isLocked && levelId) {
-                    navigate(`/level/${levelId}/problem/${idx}`)
+                    navigate(`/level/${levelId}/stage/${idx}`)
                   }
                 }}
                 className={`flex items-center justify-between p-2.5 rounded-lg text-left transition-all border ${
                   isCurrent
-                    ? 'bg-teal/10 border-teal text-teal font-bold'
+                    ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
                     : isCompleted
                     ? 'bg-bg/50 border-transparent text-text-2 hover:bg-bg hover:border-border cursor-pointer'
+                    : isAvailable
+                    ? 'bg-transparent border-border text-text-1 hover:bg-bg cursor-pointer'
                     : 'bg-transparent border-transparent text-text-3 opacity-40 cursor-not-allowed pointer-events-none'
                 }`}
               >
@@ -698,7 +796,6 @@ export default function ProblemPage() {
                   <span className="font-mono text-xs">{p.initial || `Stage ${idx + 1}`}</span>
                 </div>
                 {isCompleted && <span className="text-teal text-xs font-bold">✓</span>}
-                {isCurrent && <span className="text-[10px] uppercase tracking-wider font-bold bg-teal text-white px-1.5 py-0.5 rounded">Active</span>}
                 {isLocked && <span className="text-xs text-text-3 opacity-60">🔒</span>}
               </button>
             )
@@ -706,41 +803,54 @@ export default function ProblemPage() {
         </div>
       </aside>
 
-      {/* ── LAWS QUICK REFERENCE DRAWER ── */}
-      {showLawsDrawer && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] transition-opacity"
-          onClick={() => setShowLawsDrawer(false)}
-        />
-      )}
-      <div className={`fixed top-0 right-0 h-full w-[360px] bg-white border-l border-border z-50 shadow-2xl transition-transform duration-300 flex flex-col ${
-        showLawsDrawer ? 'translate-x-0' : 'translate-x-full'
-      }`}>
-        <div className="p-4 border-b border-border flex items-center justify-between bg-bg">
-          <div className="font-bold text-sm text-text-1 flex items-center gap-2">
-            <span>📖</span> Boolean Laws Reference
-          </div>
-          <button
-            className="w-7 h-7 rounded-md hover:bg-border text-text-3 hover:text-text-1 flex items-center justify-center font-bold text-sm"
-            onClick={() => setShowLawsDrawer(false)}
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-          {laws && laws.map(law => (
-            <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
-              <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
-              <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-sm">
-                {law.formulas && law.formulas.map((f, idx) => (
-                  <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
+      {/* ── LAWS QUICK REFERENCE DRAWER (Smooth 60FPS Framer Motion) ── */}
+      <AnimatePresence>
+        {showLawsDrawer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/25"
+              onClick={() => setShowLawsDrawer(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+              className="fixed top-0 right-0 h-full w-[360px] bg-white border-l border-border z-50 shadow-2xl flex flex-col will-change-transform"
+            >
+              <div className="p-4 border-b border-border flex items-center justify-between bg-bg">
+                <div className="font-bold text-sm text-text-1 flex items-center gap-2">
+                  <span>📖</span> Boolean Laws Reference
+                </div>
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md hover:bg-border text-text-3 hover:text-text-1 flex items-center justify-center font-bold text-sm transition-colors"
+                  onClick={() => setShowLawsDrawer(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+                {laws && laws.map(law => (
+                  <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
+                    <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
+                    <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-xs">
+                      {law.formulas && law.formulas.map((f, idx) => (
+                        <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
+                      ))}
+                    </div>
+                    <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
+                  </div>
                 ))}
               </div>
-              <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── SUCCESS OVERLAY ── */}
       {showSuccess && (
@@ -820,7 +930,7 @@ export default function ProblemPage() {
                     Back to Stages
                   </button>
                 )}
-                <button className="px-5 py-3 border-[1.5px] border-border text-text-2 font-semibold text-sm rounded-lg bg-transparent transition-all hover:bg-bg hover:border-border-dark" onClick={handleReset}>Try Again</button>
+                <button className="px-5 py-3 border-[1.5px] border-border text-text-2 font-semibold text-sm rounded-lg bg-transparent transition-all hover:bg-bg hover:border-border-dark" onClick={executeReset}>Try Again</button>
               </div>
 
               {/* Review Completed Derivation Button */}
@@ -829,6 +939,59 @@ export default function ProblemPage() {
                 onClick={() => setShowSuccess(false)}
               >
                 <span>🔍</span> Review Completed Derivation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── RESET CONFIRMATION MODAL ── */}
+      {showResetConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer"
+          onClick={() => setShowResetConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 flex flex-col shadow-2xl max-w-[380px] w-full border border-border cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold shrink-0">
+                ↺
+              </div>
+              <div>
+                <h3 className="text-[16px] font-bold text-text-1">Reset this stage?</h3>
+                <p className="text-xs text-text-3 mt-0.5">Are you sure you want to reset the stage? This will clear your current derivation so you can solve it from scratch.</p>
+              </div>
+            </div>
+
+            {/* Don't ask me again checkbox */}
+            <label className="flex items-center gap-2.5 mt-2 mb-5 px-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={dontAskResetAgain}
+                onChange={e => setDontAskResetAgain(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
+              />
+              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
+            </label>
+
+            {/* Action buttons: Go back & Reset */}
+            <div className="flex items-center gap-3 w-full mt-1">
+              <button
+                type="button"
+                className="flex-1 py-2.5 px-4 text-xs font-bold text-text-2 bg-bg hover:bg-border/70 hover:text-text-1 border border-border rounded-xl transition-all shadow-xs"
+                onClick={() => setShowResetConfirm(false)}
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                className="flex-1 py-2.5 px-4 text-xs font-bold text-white bg-red hover:opacity-90 rounded-xl transition-all shadow-sm active:scale-[0.98]"
+                style={{ backgroundColor: '#ef4444', color: '#ffffff' }}
+                onClick={executeReset}
+              >
+                Reset Stage
               </button>
             </div>
           </div>

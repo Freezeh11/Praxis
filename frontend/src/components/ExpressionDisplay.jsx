@@ -20,11 +20,16 @@ function isSelected(sel, path) {
   return sel.some(s => s.path === path)
 }
 
+function isNodeAnimatingHide(path, animationPaths, animationLaw) {
+  if (!animationLaw || !animationPaths || animationPaths.length === 0) return false
+  return animationPaths.some(p => path === p || path.startsWith(p + '.') || p.startsWith(path + '.'))
+}
+
 /* ── Literal node (variable or constant) ── */
 function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   return (
     <motion.span
       layout
@@ -33,7 +38,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
         ${selected ? 'bg-teal-light border-teal text-teal' : 'border-transparent hover:bg-teal-light hover:border-teal hover:text-teal'}
         ${node.type === 'const' ? 'text-text-3' : ''}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal shadow-[0_0_0_6px_rgba(46,196,182,0)] animate-[guidePulse_2s_infinite] z-10' : ''}
-        ${isAnimatingHide ? 'opacity-0' : ''}
+        ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickLit(path) }}
@@ -51,7 +56,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
 function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   return (
     <motion.span
       layout
@@ -59,7 +64,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
       className={`inline-flex items-baseline px-1 py-[3px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
         ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light hover:border-amber'}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
-        ${isAnimatingHide ? 'opacity-0' : ''}
+        ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
@@ -92,9 +97,9 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
 /* ── Product (AND): juxtaposition ── */
 function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   return (
-    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-center ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0' : ''}`}>
+    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-center ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.factors.map((f, i) => {
         const fPath = `${path}.${i}`
         const prevIsConst = i > 0 && node.factors[i - 1].type === 'const'
@@ -178,14 +183,15 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
     dragSrc.current.idx = null
   }
 
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
 
   return (
-    <motion.span layout transition={transitionConfig} className={`inline-flex flex-wrap items-center gap-0.5 ${isAnimatingHide ? 'opacity-0' : ''}`}>
+    <motion.span layout transition={transitionConfig} className={`inline-flex flex-wrap items-center gap-0.5 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.terms.map((t, i) => {
         const tPath = `${path}.${i}`
         const termSel = sel.some(s => s.path === tPath)
         const isGuide = activeGuidePaths?.includes(tPath)
+        const termAnimatingHide = isNodeAnimatingHide(tPath, animationPaths, animationLaw)
 
         return (
           <motion.span layout transition={transitionConfig} key={i} className="inline-flex items-center">
@@ -202,7 +208,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                     : 'border-transparent hover:border-slate-300 hover:bg-slate-50/70 border-dashed'
                   }
                   ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
-                  ${animationPaths?.includes(tPath) && ['annulment','identity','idempotent','complement'].includes(animationLaw) ? 'opacity-0' : ''}
+                  ${termAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
                 `}
                 draggable={true}
                 onDoubleClick={e => { e.stopPropagation(); onClickTerm(tPath) }}

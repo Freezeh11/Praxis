@@ -90,26 +90,52 @@ export function useGameState() {
     return false
   }, [])
 
-  const loadPuzzle = useCallback((puzzle) => {
+  const loadPuzzle = useCallback((puzzle, savedSteps = null) => {
     const parsedExpr = parseExpr(puzzle.expr)
     const gCanon = canonText(parseExpr(puzzle.goal))
     goalCanonRef.current = gCanon
-    setExpr(parsedExpr)
+
+    if (savedSteps && Array.isArray(savedSteps) && savedSteps.length > 0) {
+      try {
+        const lastStep = savedSteps[savedSteps.length - 1]
+        const finalExpr = parseExpr(lastStep.to)
+        setExpr(finalExpr)
+        setSteps(savedSteps)
+        setExprHistory([])
+        setIsComplete(true)
+        setStatus('success')
+        setStatusMsg('Stage completed! Click steps to review derivation')
+      } catch (err) {
+        console.warn('Failed to parse saved derivation, resetting to initial expr:', err)
+        setExpr(parsedExpr)
+        setSteps([])
+        setExprHistory([])
+        setIsComplete(false)
+        setStatus('select')
+        setStatusMsg('Select a term or variable to begin')
+        syncDeadEndStatus(parsedExpr)
+      }
+    } else {
+      setExpr(parsedExpr)
+      setSteps([])
+      setExprHistory([])
+      setIsComplete(false)
+      setStatus('select')
+      setStatusMsg('Select a term or variable to begin')
+      syncDeadEndStatus(parsedExpr)
+    }
+
     setGoalText(puzzle.goal)
     setGoalCanon(gCanon)
     setSel([])
-    setSteps([])
-    setExprHistory([])
     setHintIdx(0)
     setHintsUsed(0)
     setApplicableLaws([])
     setActiveGuidePaths([])
-    setIsComplete(false)
     setIsDeadEnd(false)
     setIsAnimating(false)
     setAnimationData(null)
     setEarnedXp(0)
-    syncDeadEndStatus(parsedExpr)
   }, [syncDeadEndStatus])
 
   const updateLaws = useCallback((nextSel, exprSnapshot) => {

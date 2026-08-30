@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 
 /**
- * AnimationOverlay — renders rich DOM-level physical transformation animations.
+ * AnimationOverlay — renders clean, distinct DOM-level physical transformation animations.
  *
  * Laws Handled:
- *   1. Distributive (Factoring): Common factors detach, slide forward, and merge into front factor.
- *   2. De Morgan's: The overline bar splits and lands on sub-terms while the operator rotates and flips.
- *   3. Absorption: Shorter term pulses magnetically and pulls in the longer redundant term, dissolving it.
- *   4. Complement: Dual terms slide to center, collide, and burst into 1 (or 0).
- *   5. Idempotent / Identity / Annulment: Snappy slide-merge with accent glow.
+ *   1. De Morgan's (AND→OR & OR→AND): Overbar snaps in two and lands on subterms while operator transforms.
+ *   2. Distributive (Factoring): Shared literal lifts forward to become common front factor.
+ *   3. Double Negation: Dual overbars cross-cancel and dissolve.
+ *   4. Absorption: Shorter term pulls in and dissolves longer term.
+ *   5. Complement: Dual literals collide and burst into constant (1 or 0).
+ *   6. Annulment: Variable slides into dominant constant (1 or 0).
+ *   7. Idempotent / Identity: Snappy slide-merge / fade.
  */
 export default function AnimationOverlay({ data }) {
   const [rects, setRects] = useState(null)
@@ -50,8 +52,9 @@ export default function AnimationOverlay({ data }) {
 
   return (
     <div className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none">
+      {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} data={data} lawId={lawId} />}
       {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} />}
-      {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} lawId={lawId} />}
+      {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} />}
       {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} />}
       {lawId === 'complement' && <ComplementBurstAnimation rects={rects} />}
       {lawId.startsWith('annulment') && <AnnulmentAnimation rects={rects} lawId={lawId} />}
@@ -72,8 +75,8 @@ const tokenBaseStyle = (r) => ({
   alignItems: 'center',
   justifyContent: 'center',
   fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-  fontSize: r.fontSize,
-  fontWeight: r.fontWeight,
+  fontSize: r.fontSize || '22px',
+  fontWeight: r.fontWeight || '600',
   color: '#1a2035',
   background: '#ffffff',
   border: '1.5px solid #0ea5e9',
@@ -83,16 +86,96 @@ const tokenBaseStyle = (r) => ({
 })
 
 /* ─────────────────────────────────────────────
-   1. Distributive Factoring Animation
-   Common variable lifts and merges to the front,
-   while parentheses form around the remaining terms
+   1. De Morgan's Law Animation
+   The continuous overline bar snaps in half,
+   descends on subterms, and the operator flips.
+   ───────────────────────────────────────────── */
+function DeMorganSplitAnimation({ rects, data, lawId }) {
+  const r = rects[0]
+  if (!r) return null
+
+  const isAndToOr = lawId === 'demorgan-and'
+  const halfW = (r.width - 12) / 2
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: r.left,
+        top: r.top,
+        width: r.width,
+        height: r.height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: r.fontSize || '22px',
+        fontWeight: 'bold',
+        zIndex: 9999,
+      }}
+    >
+      {/* Left sub-term with its own overbar */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '12%',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          animation: 'barSplitLeft 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ width: `${halfW}px`, height: '2.5px', background: '#8b5cf6', marginBottom: '2px', borderRadius: '1px' }} />
+        <span className="text-text-1">A</span>
+      </div>
+
+      {/* Center Operator: + emerges for AND→OR, dissolves for OR→AND */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: '1.25rem',
+          color: '#8b5cf6',
+          fontWeight: 'bold',
+          animation: 'opFlip 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        }}
+      >
+        {isAndToOr ? '+' : '·'}
+      </div>
+
+      {/* Right sub-term with its own overbar */}
+      <div
+        style={{
+          position: 'absolute',
+          right: '12%',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          animation: 'barSplitRight 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ width: `${halfW}px`, height: '2.5px', background: '#8b5cf6', marginBottom: '2px', borderRadius: '1px' }} />
+        <span className="text-text-1">B</span>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   2. Distributive Factoring Animation
+   Shared factor lifts out and moves to the front.
    ───────────────────────────────────────────── */
 function DistributiveFactoringAnimation({ rects }) {
   const valid = rects.filter(Boolean)
   if (valid.length < 2) return null
   const [r1, r2] = valid
 
-  // Target factoring point: slightly in front/left of r1
   const targetX = Math.min(r1.left, r2.left) - 28
   const targetY = (r1.top + r2.top) / 2
 
@@ -103,11 +186,11 @@ function DistributiveFactoringAnimation({ rects }) {
 
   return (
     <>
-      {/* First factor slides to front */}
+      {/* First factor slides forward */}
       <div
         style={{
           ...tokenBaseStyle(r1),
-          animation: 'factorPullOut1 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          animation: 'factorPullOut1 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           '--fact-dx1': `${dx1}px`,
           '--fact-dy1': `${dy1}px`,
         }}
@@ -115,11 +198,11 @@ function DistributiveFactoringAnimation({ rects }) {
         {r1.text}
       </div>
 
-      {/* Second factor slides and merges into the first */}
+      {/* Second factor merges into the first */}
       <div
         style={{
           ...tokenBaseStyle(r2),
-          animation: 'factorPullOut2 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          animation: 'factorPullOut2 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           '--fact-dx2': `${dx2}px`,
           '--fact-dy2': `${dy2}px`,
         }}
@@ -131,57 +214,29 @@ function DistributiveFactoringAnimation({ rects }) {
 }
 
 /* ─────────────────────────────────────────────
-   2. De Morgan's Law Animation
-   Overline bar splits, operator flips
+   3. Double Negation Animation
+   (A')' = A — dual bars cancel and dissolve
    ───────────────────────────────────────────── */
-function DeMorganSplitAnimation({ rects, lawId }) {
+function DoubleNegationAnimation({ rects }) {
   const r = rects[0]
   if (!r) return null
 
-  const isAndToOr = lawId === 'demorgan-and'
-
   return (
-    <>
-      {/* Highlighting the group */}
-      <div
-        style={{
-          position: 'fixed',
-          left: r.left - 4,
-          top: r.top - 4,
-          width: r.width + 8,
-          height: r.height + 8,
-          border: '2px dashed #8b5cf6',
-          borderRadius: '8px',
-          background: 'rgba(139, 92, 246, 0.08)',
-          pointerEvents: 'none',
-          zIndex: 9998,
-          animation: 'fadeOut 1.2s 0.2s ease forwards',
-        }}
-      />
-
-      {/* Center Operator Flip Animation */}
-      <div
-        style={{
-          position: 'fixed',
-          left: r.cx,
-          top: r.cy,
-          transform: 'translate(-50%, -50%)',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '1.4rem',
-          fontWeight: 'bold',
-          color: '#8b5cf6',
-          zIndex: 10000,
-          animation: 'opFlip 1.1s ease forwards',
-        }}
-      >
-        {isAndToOr ? '+' : '·'}
-      </div>
-    </>
+    <div
+      style={{
+        ...tokenBaseStyle(r),
+        animation: 'doubleNegCancel 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        border: '1.5px solid #8b5cf6',
+        color: '#8b5cf6',
+      }}
+    >
+      {r.text}
+    </div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   3. Absorption Suction Animation
+   4. Absorption Suction Animation
    Shorter term draws in and dissolves longer term
    ───────────────────────────────────────────── */
 function AbsorptionSuctionAnimation({ rects }) {
@@ -189,7 +244,6 @@ function AbsorptionSuctionAnimation({ rects }) {
   if (valid.length < 2) return null
   const [r1, r2] = valid
 
-  // Smart detect: Shorter term is ALWAYS the absorber/survivor
   const survivor = r1.text.length <= r2.text.length ? r1 : r2
   const absorbed = r1.text.length <= r2.text.length ? r2 : r1
 
@@ -198,24 +252,24 @@ function AbsorptionSuctionAnimation({ rects }) {
 
   return (
     <>
-      {/* Absorber (Shorter term) pulses with attractive aura */}
+      {/* Absorber (Shorter term) pulses green */}
       <div
         style={{
           ...tokenBaseStyle(survivor),
           border: '2px solid #10b981',
           background: 'rgba(16, 185, 129, 0.1)',
-          animation: 'absorbPulse 1.2s ease-in-out infinite',
+          animation: 'absorbPulse 1.1s ease-in-out infinite',
         }}
       >
         {survivor.text}
       </div>
 
-      {/* Absorbed (Longer term) slides into absorber and dissolves */}
+      {/* Absorbed (Longer term) slides into absorber and fades */}
       <div
         style={{
           ...tokenBaseStyle(absorbed),
           border: '1.5px solid #10b981',
-          animation: 'absorbSlideDissolve 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          animation: 'absorbSlideDissolve 0.95s cubic-bezier(0.4, 0, 0.2, 1) forwards',
           '--abs-dx': `${dx}px`,
           '--abs-dy': `${dy}px`,
         }}
@@ -227,8 +281,8 @@ function AbsorptionSuctionAnimation({ rects }) {
 }
 
 /* ─────────────────────────────────────────────
-   4. Complement Burst Animation
-   A and A' collide at midpoint and burst into 1
+   5. Complement Burst Animation
+   A and A' collide at midpoint and burst into 1 (or 0)
    ───────────────────────────────────────────── */
 function ComplementBurstAnimation({ rects }) {
   const valid = rects.filter(Boolean)
@@ -245,7 +299,6 @@ function ComplementBurstAnimation({ rects }) {
 
   return (
     <>
-      {/* r1 slides toward midpoint */}
       <div
         style={{
           ...tokenBaseStyle(r1),
@@ -257,7 +310,6 @@ function ComplementBurstAnimation({ rects }) {
         {r1.text}
       </div>
 
-      {/* r2 slides toward midpoint */}
       <div
         style={{
           ...tokenBaseStyle(r2),
@@ -269,7 +321,7 @@ function ComplementBurstAnimation({ rects }) {
         {r2.text}
       </div>
 
-      {/* "1" bursts out at collision point */}
+      {/* Resulting 1 bursts out cleanly */}
       <div
         style={{
           position: 'fixed',
@@ -282,9 +334,8 @@ function ComplementBurstAnimation({ rects }) {
           color: '#f59e0b',
           pointerEvents: 'none',
           zIndex: 10000,
-          animation: 'complementBurst 1.1s 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          animation: 'complementBurst 1.0s 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           opacity: 0,
-          textShadow: '0 0 20px rgba(245, 158, 11, 0.8)',
         }}
       >
         1
@@ -294,19 +345,18 @@ function ComplementBurstAnimation({ rects }) {
 }
 
 /* ─────────────────────────────────────────────
-   5. Merge Animation (Idempotent / Identity)
+   6. Merge Animation (Idempotent / Identity)
    ───────────────────────────────────────────── */
 function MergeAnimation({ rects, lawId }) {
   const valid = rects.filter(Boolean)
   if (valid.length === 0) return null
 
-  // Single element case (e.g. A · 1 = A)
   if (valid.length === 1) {
     return (
       <div
         style={{
           ...tokenBaseStyle(valid[0]),
-          animation: 'singleFade 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          animation: 'singleFade 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
         }}
       >
         {valid[0].text}
@@ -315,13 +365,10 @@ function MergeAnimation({ rects, lawId }) {
   }
 
   const [r1, r2] = valid
-
-  // Smart detect survivor vs dissolved element
   let survivor = r1
   let absorbed = r2
 
   if (lawId === 'identity') {
-    // 0 is always the dissolved element; variable is survivor
     survivor = r1.text === '0' ? r2 : r1
     absorbed = r1.text === '0' ? r1 : r2
   }
@@ -331,14 +378,14 @@ function MergeAnimation({ rects, lawId }) {
 
   return (
     <>
-      <div style={{ ...tokenBaseStyle(survivor), animation: 'mergeGlow 0.5s 0.6s ease forwards' }}>
+      <div style={{ ...tokenBaseStyle(survivor), animation: 'mergeGlow 0.5s 0.5s ease forwards' }}>
         {survivor.text}
       </div>
 
       <div
         style={{
           ...tokenBaseStyle(absorbed),
-          animation: 'slideMerge 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          animation: 'slideMerge 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
           '--slide-dx': `${dx}px`,
           '--slide-dy': `${dy}px`,
         }}
@@ -350,9 +397,8 @@ function MergeAnimation({ rects, lawId }) {
 }
 
 /* ─────────────────────────────────────────────
-   6. Annulment Animation (A + 1 = 1 and A · 0 = 0)
-   The variable slides into the dominant constant (1 or 0),
-   and the constant glows powerfully in gold/amber.
+   7. Annulment Animation (A + 1 = 1 and A · 0 = 0)
+   Variable slides into the dominant constant.
    ───────────────────────────────────────────── */
 function AnnulmentAnimation({ rects, lawId }) {
   const valid = rects.filter(Boolean)
@@ -361,7 +407,6 @@ function AnnulmentAnimation({ rects, lawId }) {
   const isProduct = lawId.includes('product') || valid.some(r => r.text === '0' || r.text.includes('0'))
   const dominantConst = isProduct ? '0' : '1'
 
-  // Single element (e.g. A · 0 = 0 on product constant)
   if (valid.length === 1) {
     return (
       <div
@@ -386,7 +431,6 @@ function AnnulmentAnimation({ rects, lawId }) {
 
   return (
     <>
-      {/* Dominant Constant ("1" or "0") stands firm and glows gold */}
       <div
         style={{
           ...tokenBaseStyle(constRect),
@@ -399,11 +443,10 @@ function AnnulmentAnimation({ rects, lawId }) {
         {dominantConst}
       </div>
 
-      {/* Variable slides into the constant and dissolves */}
       <div
         style={{
           ...tokenBaseStyle(varRect),
-          animation: 'slideMerge 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          animation: 'slideMerge 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
           '--slide-dx': `${dx}px`,
           '--slide-dy': `${dy}px`,
         }}
