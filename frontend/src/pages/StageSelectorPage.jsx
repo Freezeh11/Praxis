@@ -161,21 +161,32 @@ export default function StageSelectorPage() {
             />
           </div>
 
-          {/* ── Next Level unlock progress ── */}
-          {(Number(levelId) === 1 || Number(levelId) === 2) && puzzles.length > 0 && (() => {
+          {/* ── Level Progress / Next Level unlock progress ── */}
+          {Number(levelId) >= 1 && puzzles.length > 0 && (() => {
             const currentLvl = Number(levelId)
             const nextLvl = currentLvl + 1
+            const isMaxLevel = currentLvl >= 3
             const lp = getLevelProgress(currentLvl, puzzles.length)
             const pct = Math.min(100, lp.avgScore)
-            const barColor = lp.unlocked ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
+            const isMastered = lp.avgScore >= 70 && lp.completed === puzzles.length
+            const barColor = (lp.unlocked || isMastered) ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
             return (
               <div className="w-full max-w-[380px] bg-bg-card border border-border rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-bold text-text-1">Level {nextLvl} Unlock</span>
-                  {lp.unlocked
-                    ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🔓 Unlocked!</span>
-                    : <span className="text-[11px] font-semibold text-text-3">Need 70% avg across all stages</span>
-                  }
+                  <span className="text-[13px] font-bold text-text-1">
+                    {isMaxLevel ? `Level ${currentLvl} Mastery` : `Level ${nextLvl} Unlock`}
+                  </span>
+                  {isMaxLevel ? (
+                    isMastered
+                      ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🏆 Mastered!</span>
+                      : lp.completed === puzzles.length
+                        ? <span className="text-[11px] font-bold text-amber bg-amber-light px-2.5 py-0.5 rounded-full">✓ Completed</span>
+                        : <span className="text-[11px] font-semibold text-text-3">Target: 70% avg score</span>
+                  ) : (
+                    lp.unlocked
+                      ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🔓 Unlocked!</span>
+                      : <span className="text-[11px] font-semibold text-text-3">Need 70% avg across all stages</span>
+                  )}
                 </div>
 
                 {/* Avg score bar */}

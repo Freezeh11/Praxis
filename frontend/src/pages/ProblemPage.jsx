@@ -179,6 +179,19 @@ export default function ProblemPage() {
     }
   }, [isComplete])
 
+  // Global click-away listener for derivation step inspection
+  useEffect(() => {
+    if (inspectedStepIdx === null) return
+    const handlePointerDown = (e) => {
+      if (e.target.closest('[data-inspect-card]') || e.target.closest('[data-inspect-trigger]')) {
+        return
+      }
+      setInspectedStepIdx(null)
+    }
+    window.addEventListener('pointerdown', handlePointerDown)
+    return () => window.removeEventListener('pointerdown', handlePointerDown)
+  }, [inspectedStepIdx])
+
   const handleOpenScoreSummary = () => {
     if (!scoreResult && isComplete) {
       const lawsUsed = steps.map(s => {
@@ -335,13 +348,13 @@ export default function ProblemPage() {
                   <span className="text-text-3 mr-1">F =</span> <ExprText text={s.to} />
                 </div>
                 <div
-                  className={`mt-1.5 inline-flex items-center gap-1 text-[10px] font-sans font-semibold rounded px-2 py-0.5 transition-colors ${
+                  className={`mt-1.5 inline-flex items-center text-[10px] font-sans font-semibold rounded px-2 py-0.5 transition-colors ${
                     isInspected
                       ? 'bg-sky-600 text-white shadow-xs'
                       : 'text-teal bg-white border border-teal'
                   }`}
                 >
-                  <span>✦</span> {s.law}
+                  {s.law}
                 </div>
               </div>
             )
@@ -423,220 +436,181 @@ export default function ProblemPage() {
             <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
               {/* Derivation chain — clean FIFO top-to-bottom queue */}
             {expr && (() => {
-              // Build list of past lines from steps
-              const pastLines = []
-              if (steps.length > 0) {
-                // Line 0 is the starting expression, transformed by steps[0].law
-                pastLines.push({
-                  text: steps[0].from,
+              const totalSteps = steps.length
+
+              // Build unified list of derivation lines
+              const lines = []
+              if (totalSteps === 0) {
+                lines.push({
+                  key: 'active-0',
                   isFirst: true,
-                  law: 'Initial Expression',
-                  cardLaw: steps[0].law,
-                  stepKey: -1,
+                  isActive: true,
+                  text: null,
+                  stepIdx: null,
+                  law: null,
                 })
-                for (let i = 0; i < steps.length - 1; i++) {
-                  pastLines.push({
-                    text: steps[i].to,
+              } else {
+                // Line 0: Starting problem
+                lines.push({
+                  key: 'past-0',
+                  isFirst: true,
+                  isActive: false,
+                  text: steps[0].from,
+                  stepIdx: 0,
+                  law: steps[0].law,
+                })
+                // Intermediate lines
+                for (let i = 1; i < totalSteps; i++) {
+                  lines.push({
+                    key: `past-${i}`,
                     isFirst: false,
+                    isActive: false,
+                    text: steps[i - 1].to,
+                    stepIdx: i,
                     law: steps[i].law,
-                    cardLaw: steps[i].law,
-                    stepKey: i,
                   })
                 }
+                // Active bottom line
+                lines.push({
+                  key: `active-${totalSteps}`,
+                  isFirst: false,
+                  isActive: true,
+                  text: null,
+                  stepIdx: null,
+                  law: null,
+                })
               }
-              const total = pastLines.length
-              const activeStepKey = steps.length > 0 ? steps.length - 1 : null
-              const isActiveInspected = activeStepKey !== null && inspectedStepIdx === activeStepKey
-              const activeCardLaw = steps.length > 0 ? steps[steps.length - 1].law : null
 
               return (
                 <motion.div
                   layout
-                  className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start"
+                  className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start select-none"
+                  onClick={() => setInspectedStepIdx(null)}
                 >
-                  {/* Top-down past lines queue */}
-                  {pastLines.map((line, i) => {
-                    const age = total - i
-                    const isInspected = inspectedStepIdx === line.stepKey
-                    const targetOpacity = isInspected ? 1 : Math.max(0.25, 0.55 - (age - 1) * 0.08)
+                  {lines.map((line, idx) => {
+                    const isFromInspected = line.stepIdx !== null && inspectedStepIdx === line.stepIdx
+                    const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
+                    const isLineHighlighted = isFromInspected || isToInspected
+                    const age = lines.length - 1 - idx
+                    const targetOpacity = isLineHighlighted || line.isActive ? 1 : Math.max(0.35, 0.6 - (age - 1) * 0.08)
 
                     return (
                       <motion.div
                         layout
-                        key={`past-${i}-${line.text}`}
-                        initial={{ opacity: 0.9 }}
-                        animate={{ opacity: targetOpacity }}
-                        transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
-                        className="relative flex items-center group py-1 rounded-lg select-none transition-all"
+                        key={line.key}
+                        initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
+                        animate={{ opacity: targetOpacity, y: 0 }}
+                        transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                        className="relative flex items-center min-h-[44px] gap-2.5"
                       >
-                        {/* Left Annotation Group: Context Card (on the left) + Law Button */}
-                        <div className="absolute right-full mr-5 flex items-center gap-3 justify-end pointer-events-none">
-                          {/* Left-Aligned Context Card (Revealed on law click) */}
-                          {isInspected && (
-                            <div
-                              className="pointer-events-auto"
-                              onClick={e => e.stopPropagation()}
+                        {/* Stepper Left Rail: Dot + Symmetrical Connector Line (Independent Column with z-30) */}
+                        <div className="relative flex items-center justify-center w-6 self-stretch shrink-0 select-none z-30">
+                          {/* Downward connector line centered exactly between node i and node i+1 */}
+                          {line.stepIdx !== null && (
+                            <button
+                              type="button"
+                              data-inspect-trigger="true"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
+                              }}
+                              className="group absolute top-[calc(50%+8px)] left-1/2 -translate-x-1/2 w-6 h-[calc(100%-4px)] flex items-center justify-center cursor-pointer p-0 bg-transparent border-0 z-30"
+                              title={`Click to inspect ${line.law}`}
                             >
-                              <motion.div
-                                initial={{ opacity: 0, x: 6, scale: 0.97 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
-                                className="bg-white border border-sky-400 shadow-lg rounded-xl px-3.5 py-2.5 text-left w-[250px]"
-                              >
-                                <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-sky-800 uppercase tracking-wide">
-                                  <span>✦ {line.cardLaw}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setInspectedStepIdx(null)}
-                                    className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                                <div className="text-[11px] text-slate-600 mt-1 leading-snug font-sans font-normal">
-                                  {getLawExplanation(line.cardLaw)}
-                                </div>
-                              </motion.div>
-                            </div>
+                              {/* Symmetrical vertical line */}
+                              <div
+                                className={`w-[2px] h-full rounded-full transition-all duration-200 ${
+                                  inspectedStepIdx === line.stepIdx
+                                    ? 'bg-teal w-[3px] shadow-sm'
+                                    : 'bg-slate-300 group-hover:bg-teal group-hover:w-[3px]'
+                                }`}
+                              />
+                            </button>
                           )}
 
-                          {/* Law Annotation Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))
-                            }}
-                            className={`pointer-events-auto flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
-                              isInspected
-                                ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
-                                : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-text-3 hover:text-text-1'
-                            }`}
-                            title="Click to read law context card"
-                          >
-                            <span className="font-sans text-xs tracking-wide">
-                              {line.law}
-                            </span>
-                            <span className="font-mono text-sm font-bold">
-                              →
-                            </span>
-                          </button>
+                          {/* Node Dot */}
+                          {isLineHighlighted ? (
+                            <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200" />
+                          ) : line.isActive ? (
+                            <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-white shadow-xs transition-all">
+                              <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
+                            </div>
+                          ) : (
+                            <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-slate-300 transition-all duration-200" />
+                          )}
+
+                          {/* Floating Law Context Card anchored at the exact midpoint of the transition */}
+                          <AnimatePresence>
+                            {line.stepIdx !== null && inspectedStepIdx === line.stepIdx && (
+                              <div
+                                data-inspect-card="true"
+                                className="absolute right-full top-[calc(100%+6px)] -translate-y-1/2 mr-4 z-40 pointer-events-auto"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <motion.div
+                                  initial={{ opacity: 0, x: -6, scale: 0.96 }}
+                                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                                  exit={{ opacity: 0, x: -6, scale: 0.96 }}
+                                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                                  className="bg-white border border-teal/40 shadow-xl rounded-xl p-3.5 text-left w-[260px] select-none"
+                                >
+                                  <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide border-b border-slate-100 pb-1.5 mb-1.5">
+                                    <span>{line.law}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setInspectedStepIdx(null)}
+                                      className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 w-5 h-5 rounded flex items-center justify-center font-bold text-xs transition-colors"
+                                      title="Close explanation"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                  <div className="text-[12px] text-slate-600 leading-relaxed font-sans font-normal">
+                                    {getLawExplanation(line.law)}
+                                  </div>
+                                </motion.div>
+                              </div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
-                        {/* Centered Equation Line */}
+                        {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                         <div
-                          className={`flex items-baseline gap-3.5 px-3 py-1 rounded-lg border transition-all ${
-                            isInspected
-                              ? 'border-sky-400 bg-sky-50 shadow-sm ring-2 ring-sky-200/70'
+                          className={`flex items-baseline gap-3 px-3 py-1 rounded-xl transition-all border ${
+                            isLineHighlighted
+                              ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
                               : 'border-transparent'
                           }`}
                         >
                           <span
-                            className={`font-mono text-[22px] whitespace-pre shrink-0 min-w-[2.4em] transition-colors ${
-                              isInspected ? 'text-sky-800 font-semibold' : 'text-text-2 font-medium'
+                            className={`font-mono text-[22px] whitespace-pre shrink-0 min-w-[2.2em] transition-colors ${
+                              isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
                             }`}
                           >
                             {line.isFirst ? 'F =' : '\u00a0\u00a0='}
                           </span>
-                          <ExprText
-                            text={line.text}
-                            className={isInspected ? 'text-sky-950 font-semibold' : 'text-text-1'}
-                          />
+                          {line.isActive ? (
+                            <ExpressionDisplay
+                              expr={expr}
+                              sel={sel}
+                              onClickLit={onClickLit}
+                              onClickNot={onClickNot}
+                              onClickTerm={onClickTerm}
+                              onSwapTerms={onSwapTerms}
+                              activeGuidePaths={activeGuidePaths}
+                              animationPaths={isAnimating ? animationData?.paths : []}
+                              animationLaw={isAnimating ? animationData?.lawId : null}
+                            />
+                          ) : (
+                            <ExprText
+                              text={line.text}
+                              className={isLineHighlighted ? 'text-slate-900 font-semibold' : 'text-text-1'}
+                            />
+                          )}
                         </div>
                       </motion.div>
                     )
                   })}
-
-                  {/* Current active expression at the bottom of the queue */}
-                  <motion.div
-                    layout
-                    key={`active-step-${steps.length}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-                    className="relative flex items-center z-10"
-                  >
-                    {/* Left Annotation Group: Context Card + Active Law Button */}
-                    <div className="absolute right-full mr-5 flex items-center gap-3 justify-end pointer-events-none">
-                      {/* Left-Aligned Context Card (only when active line is explicitly inspected) */}
-                      {isActiveInspected && (
-                        <div
-                          className="pointer-events-auto"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <motion.div
-                            initial={{ opacity: 0, x: 6, scale: 0.97 }}
-                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                            exit={{ opacity: 0, x: 6 }}
-                            className="bg-white border border-teal shadow-md rounded-lg px-3.5 py-2.5 text-left w-[250px]"
-                          >
-                            <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide">
-                              <span>✦ {animationData?.lawName || activeCardLaw || 'Applying Law'}</span>
-                              {isActiveInspected && (
-                                <button
-                                  type="button"
-                                  onClick={() => setInspectedStepIdx(null)}
-                                  className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                            <div className="text-[11px] text-slate-700 mt-1 leading-snug font-sans font-normal">
-                              {getLawExplanation(animationData?.lawName || activeCardLaw)}
-                            </div>
-                          </motion.div>
-                        </div>
-                      )}
-
-                      {/* Active Law Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (activeStepKey !== null) {
-                            setInspectedStepIdx(prev => (prev === activeStepKey ? null : activeStepKey))
-                          }
-                        }}
-                        className={`pointer-events-auto flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
-                          isActiveInspected
-                            ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
-                            : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-teal hover:text-teal-dark'
-                        }`}
-                        title="Click to view law explanation"
-                      >
-                        <span className="font-sans text-xs tracking-wide">
-                          {steps.length === 0 ? 'Initial Expression' : steps[steps.length - 1].law}
-                        </span>
-                        <span className="font-mono text-sm font-bold">
-                          →
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Centered Interactive Equation */}
-                    <div
-                      className={`flex items-center gap-3.5 px-3 py-1 rounded-lg border transition-all ${
-                        isActiveInspected
-                          ? 'border-sky-400 bg-sky-50 shadow-sm ring-2 ring-sky-200/70'
-                          : 'border-transparent'
-                      }`}
-                    >
-                      <span className="font-mono text-[22px] font-medium text-text-2 whitespace-pre shrink-0 min-w-[2.4em]">
-                        {steps.length === 0 ? 'F =' : '\u00a0\u00a0='}
-                      </span>
-                      <ExpressionDisplay
-                        expr={expr}
-                        sel={sel}
-                        onClickLit={onClickLit}
-                        onClickNot={onClickNot}
-                        onClickTerm={onClickTerm}
-                        onSwapTerms={onSwapTerms}
-                        activeGuidePaths={activeGuidePaths}
-                        animationPaths={isAnimating ? animationData?.paths : []}
-                        animationLaw={isAnimating ? animationData?.lawId : null}
-                      />
-                    </div>
-                  </motion.div>
                 </motion.div>
               )
             })()}

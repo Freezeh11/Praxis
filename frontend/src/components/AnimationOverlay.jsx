@@ -24,7 +24,8 @@ export default function AnimationOverlay({ data }) {
     }
 
     const id = requestAnimationFrame(() => {
-      const measured = data.paths.map(path => {
+      const pathsToMeasure = data.measurePaths || data.paths
+      const measured = pathsToMeasure.map(path => {
         const el = document.querySelector(`[data-path="${path}"]`)
         if (!el) return null
         // If el is a term container with a ⠿ handle as its first child, measure the inner expression
@@ -71,13 +72,12 @@ export default function AnimationOverlay({ data }) {
     <div className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none">
       {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} data={data} lawId={lawId} />}
       {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} data={data} />}
-      {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} />}
-      {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} />}
-      {lawId === 'complement' && <ComplementBurstAnimation rects={rects} />}
-      {lawId.startsWith('annulment') && <AnnulmentAnimation rects={rects} lawId={lawId} />}
-      {['idempotent', 'identity'].includes(lawId) && (
-        <MergeAnimation rects={rects} lawId={lawId} />
-      )}
+      {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} data={data} />}
+      {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} data={data} />}
+      {lawId === 'complement' && <ComplementBurstAnimation rects={rects} data={data} />}
+      {lawId.startsWith('annulment') && <AnnulmentAnimation rects={rects} lawId={lawId} data={data} />}
+      {lawId === 'idempotent' && <IdempotentAnimation rects={rects} data={data} />}
+      {lawId === 'identity' && <IdentityAnimation rects={rects} data={data} />}
     </div>
   )
 }
@@ -294,24 +294,34 @@ function DeMorganSplitAnimation({ rects, data, lawId }) {
    ───────────────────────────────────────────── */
 function DistributiveFactoringAnimation({ rects, data }) {
   const valid = rects.filter(Boolean)
-  if (valid.length < 2) return null
-  const [r1, r2] = valid
+  if (valid.length === 0) return null
+  const r1 = valid[0]
+  const r2 = valid[1] || r1
 
   const factoredVar = data?.factoredVar || 'x'
   const rem1 = data?.rem1 || '1'
   const rem2 = data?.rem2 || 'y'
+  const outerPrefix = data?.outerPrefix || ''
+  const outerSuffix = data?.outerSuffix || ''
 
-  const minLeft = Math.min(r1.left, r2.left)
-  const dx2 = minLeft - r2.left
+  const minLeft = outerPrefix ? r1.left : Math.min(r1.left, r2.left)
+  const ghostRect = valid[3] || valid[1] || r2
+  const ghostStartLeft = ghostRect.left
+
+  // If outerPrefix exists, factor target lands right after the prefix characters
+  const fontSizeNum = parseFloat(r1.fontSize || '22')
+  const charWidth = fontSizeNum * 0.58
+  const targetX = outerPrefix ? minLeft + (outerPrefix.length * charWidth) : minLeft
+  const dx2 = targetX - ghostStartLeft
 
   return (
     <>
-      {/* Ghost variable from term 2 sliding and merging into the leading factor */}
+      {/* Ghost variable from term 2 sliding and merging into the factored variable position */}
       <div
         style={{
           position: 'fixed',
-          left: r2.left,
-          top: r2.top,
+          left: ghostStartLeft,
+          top: ghostRect.top,
           display: 'inline-flex',
           alignItems: 'baseline',
           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -327,7 +337,7 @@ function DistributiveFactoringAnimation({ rects, data }) {
         <ExprText text={factoredVar} />
       </div>
 
-      {/* Unified correctly-typeset formula: x(1 + y) */}
+      {/* Unified correctly-typeset formula: outerPrefix + x(rem1 + rem2) + outerSuffix */}
       <div
         style={{
           position: 'fixed',
@@ -345,7 +355,14 @@ function DistributiveFactoringAnimation({ rects, data }) {
           lineHeight: 1,
         }}
       >
-        {/* Leading factored variable (e.g. x) */}
+        {/* Outer prefix if nested inside a parent product (e.g. x in x(y'z + yz)) */}
+        {outerPrefix && (
+          <span style={{ color: '#1a2035', fontWeight: '600' }}>
+            <ExprText text={outerPrefix} />
+          </span>
+        )}
+
+        {/* Factored variable (e.g. z) */}
         <span
           style={{
             color: '#0ea5e9',
@@ -362,13 +379,15 @@ function DistributiveFactoringAnimation({ rects, data }) {
             color: '#64748b',
             fontWeight: 'normal',
             margin: '0 0.05em',
-            animation: 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+            animation: outerPrefix
+              ? 'none'
+              : 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
           }}
         >
           (
         </span>
 
-        {/* First remainder (e.g. 1 in gold) */}
+        {/* First remainder (e.g. 1 in gold or y') */}
         <span
           style={{
             color: rem1 === '1' ? '#f59e0b' : '#1a2035',
@@ -412,11 +431,20 @@ function DistributiveFactoringAnimation({ rects, data }) {
             color: '#64748b',
             fontWeight: 'normal',
             margin: '0 0.05em',
-            animation: 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+            animation: outerPrefix
+              ? 'none'
+              : 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
           }}
         >
           )
         </span>
+
+        {/* Outer suffix if any */}
+        {outerSuffix && (
+          <span style={{ color: '#1a2035', fontWeight: '600' }}>
+            <ExprText text={outerSuffix} />
+          </span>
+        )}
       </div>
     </>
   )
@@ -426,20 +454,64 @@ function DistributiveFactoringAnimation({ rects, data }) {
    3. Double Negation Animation
    (A')' = A — dual bars cancel and dissolve
    ───────────────────────────────────────────── */
-function DoubleNegationAnimation({ rects }) {
+function DoubleNegationAnimation({ rects, data }) {
   const r = rects[0]
   if (!r) return null
+
+  const coreText = data?.coreText || r.text.replace(/['()]/g, '')
 
   return (
     <div
       style={{
-        ...tokenBaseStyle(r),
-        animation: 'doubleNegCancel 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-        border: '1.5px solid #8b5cf6',
-        color: '#8b5cf6',
+        position: 'fixed',
+        left: r.left,
+        top: r.top,
+        display: 'inline-flex',
+        alignItems: 'baseline',
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        fontSize: r.fontSize || '22px',
+        fontWeight: '600',
+        padding: '2px 6px',
+        borderRadius: '6px',
+        zIndex: 9999,
+        pointerEvents: 'none',
       }}
     >
-      <ExprText text={r.astText || r.text} />
+      {/* Outer parentheses fade out */}
+      <span style={{ color: '#94a3b8', animation: 'parenFadeOut 0.6s forwards' }}>(</span>
+
+      {/* Core variable with dissolving overbar and prime */}
+      <span
+        style={{
+          display: 'inline-flex',
+          position: 'relative',
+          animation: 'doubleNegCorePop 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        }}
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: '-2px',
+            left: '0',
+            right: '0',
+            height: '2px',
+            background: '#8b5cf6',
+            animation: 'doubleNegBarDissolveUp 0.7s forwards',
+          }}
+        />
+        <ExprText text={coreText} />
+        <span
+          style={{
+            color: '#8b5cf6',
+            fontWeight: 'bold',
+            animation: 'doubleNegBarDissolveDown 0.7s forwards',
+          }}
+        >
+          '
+        </span>
+      </span>
+
+      <span style={{ color: '#94a3b8', animation: 'parenFadeOut 0.6s forwards' }}>)'</span>
     </div>
   )
 }
@@ -448,44 +520,105 @@ function DoubleNegationAnimation({ rects }) {
    4. Absorption Suction Animation
    Shorter term draws in and dissolves longer term
    ───────────────────────────────────────────── */
-function AbsorptionSuctionAnimation({ rects }) {
+function AbsorptionSuctionAnimation({ rects, data }) {
   const valid = rects.filter(Boolean)
   if (valid.length < 2) return null
   const [r1, r2] = valid
 
-  const text1 = r1.astText || r1.text
-  const text2 = r2.astText || r2.text
-  const survivor = text1.length <= text2.length ? r1 : r2
-  const absorbed = text1.length <= text2.length ? r2 : r1
+  const isR1Survivor = data?.survivorPath
+    ? data.survivorPath === data?.paths?.[0]
+    : (r1.astText || r1.text).length <= (r2.astText || r2.text).length
+
+  const survivor = isR1Survivor ? r1 : r2
+  const absorbed = isR1Survivor ? r2 : r1
+
+  const survivorText = data?.survivorText || (survivor.astText || survivor.text)
+  const absorbedText = data?.absorbedText || (absorbed.astText || absorbed.text)
+
+  const survivorLits = survivorText.match(/[a-zA-Z]'?/g) || [survivorText]
+  const absorbedLits = absorbedText.match(/[a-zA-Z]'?/g) || [absorbedText]
 
   const dx = survivor.cx - absorbed.cx
   const dy = survivor.cy - absorbed.cy
 
   return (
     <>
-      {/* Absorber (Shorter term) pulses green */}
+      {/* Expanding emerald shockwave on absorption impact */}
       <div
         style={{
-          ...tokenBaseStyle(survivor),
-          border: '2px solid #10b981',
-          background: 'rgba(16, 185, 129, 0.1)',
-          animation: 'absorbPulse 1.1s ease-in-out infinite',
+          position: 'fixed',
+          left: survivor.cx,
+          top: survivor.cy,
+          width: Math.max(survivor.width, 36) + 16,
+          height: Math.max(survivor.height, 36) + 16,
+          borderRadius: '9999px',
+          pointerEvents: 'none',
+          zIndex: 9998,
+          animation: 'absorbShockwave 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        }}
+      />
+
+      {/* Survivor (Absorber) — glowing emerald container with energy pulse */}
+      <div
+        style={{
+          position: 'fixed',
+          left: survivor.left,
+          top: survivor.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: survivor.fontSize || '22px',
+          fontWeight: '600',
+          color: '#059669',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          border: '1.5px solid #10b981',
+          background: 'rgba(16, 185, 129, 0.08)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'absorbSurvivorPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        <ExprText text={survivor.astText || survivor.text} />
+        <ExprText text={survivorText} />
       </div>
 
-      {/* Absorbed (Longer term) slides into absorber and fades */}
+      {/* Absorbed Term (Victim) — split into evaporating extras and gliding core payload */}
       <div
         style={{
-          ...tokenBaseStyle(absorbed),
-          border: '1.5px solid #10b981',
-          animation: 'absorbSlideDissolve 0.95s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          position: 'fixed',
+          left: absorbed.left,
+          top: absorbed.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: absorbed.fontSize || '22px',
+          fontWeight: '600',
+          padding: '2px 6px',
+          zIndex: 10000,
+          pointerEvents: 'none',
           '--abs-dx': `${dx}px`,
           '--abs-dy': `${dy}px`,
         }}
       >
-        <ExprText text={absorbed.astText || absorbed.text} />
+        {absorbedLits.map((lit, idx) => {
+          const isShared = survivorLits.includes(lit)
+          return (
+            <span
+              key={idx}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'baseline',
+                color: isShared ? '#10b981' : '#f59e0b',
+                fontWeight: 'bold',
+                animation: isShared
+                  ? 'absorbCoreGlide 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                  : 'absorbExtraEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+              }}
+            >
+              <ExprText text={lit} />
+            </span>
+          )
+        })}
       </div>
     </>
   )
@@ -495,7 +628,7 @@ function AbsorptionSuctionAnimation({ rects }) {
    5. Complement Burst Animation
    A and A' collide at midpoint and burst into 1 (or 0)
    ───────────────────────────────────────────── */
-function ComplementBurstAnimation({ rects }) {
+function ComplementBurstAnimation({ rects, data }) {
   const valid = rects.filter(Boolean)
   if (valid.length < 2) return null
   const [r1, r2] = valid
@@ -508,100 +641,278 @@ function ComplementBurstAnimation({ rects }) {
   const dx2 = midX - r2.cx
   const dy2 = midY - r2.cy
 
+  const lit1 = data?.lit1Text || (r1.astText || r1.text)
+  const lit2 = data?.lit2Text || (r2.astText || r2.text)
+  const resultConst = data?.resultConst || '1'
+  const isOne = resultConst === '1'
+  const burstColor = isOne ? '#f59e0b' : '#6366f1'
+
   return (
     <>
+      {/* Literal 1 sliding with particle trail to collision center */}
       <div
         style={{
-          ...tokenBaseStyle(r1),
-          animation: 'complementSlide1 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          position: 'fixed',
+          left: r1.left,
+          top: r1.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: r1.fontSize || '22px',
+          fontWeight: '700',
+          color: '#0ea5e9',
+          padding: '2px 6px',
+          zIndex: 9999,
+          pointerEvents: 'none',
           '--cdx': `${dx1}px`,
           '--cdy': `${dy1}px`,
+          animation: 'complementCollide1 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        <ExprText text={r1.astText || r1.text} />
+        <ExprText text={lit1} />
       </div>
 
+      {/* Literal 2 (Complement) sliding from the other side */}
       <div
         style={{
-          ...tokenBaseStyle(r2),
-          animation: 'complementSlide2 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          position: 'fixed',
+          left: r2.left,
+          top: r2.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: r2.fontSize || '22px',
+          fontWeight: '700',
+          color: '#8b5cf6',
+          padding: '2px 6px',
+          zIndex: 9999,
+          pointerEvents: 'none',
           '--cdx': `${dx2}px`,
           '--cdy': `${dy2}px`,
+          animation: 'complementCollide2 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        <ExprText text={r2.astText || r2.text} />
+        <ExprText text={lit2} />
       </div>
 
-      {/* Resulting 1 bursts out cleanly */}
+      {/* High-energy collision fusion shockwave */}
+      <div
+        style={{
+          position: 'fixed',
+          left: midX,
+          top: midY,
+          width: '50px',
+          height: '50px',
+          borderRadius: '9999px',
+          pointerEvents: 'none',
+          zIndex: 9998,
+          animation: 'complementShockwave 1.1s 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          opacity: 0,
+        }}
+      />
+
+      {/* Resulting 1 or 0 bursting out */}
       <div
         style={{
           position: 'fixed',
           left: midX,
           top: midY,
           transform: 'translate(-50%, -50%)',
+          display: 'inline-flex',
+          alignItems: 'baseline',
           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: '2rem',
-          fontWeight: '700',
-          color: '#f59e0b',
+          fontSize: '28px',
+          fontWeight: '800',
+          color: burstColor,
+          padding: '2px 10px',
+          borderRadius: '6px',
+          border: `1.5px solid ${burstColor}`,
+          background: isOne ? 'rgba(245, 158, 11, 0.12)' : 'rgba(99, 102, 241, 0.12)',
           pointerEvents: 'none',
           zIndex: 10000,
-          animation: 'complementBurst 1.0s 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          animation: 'complementBurst 1.0s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           opacity: 0,
         }}
       >
-        1
+        <ExprText text={resultConst} />
       </div>
     </>
   )
 }
 
 /* ─────────────────────────────────────────────
-   6. Merge Animation (Idempotent / Identity)
+   6. Idempotent Animation (A + A = A and A · A = A)
+   Duplicate term slides into survivor and harmonizes.
    ───────────────────────────────────────────── */
-function MergeAnimation({ rects, lawId }) {
+function IdempotentAnimation({ rects, data }) {
+  const valid = rects.filter(Boolean)
+  if (valid.length < 2) return null
+  const [r1, r2] = valid
+
+  const isR1Survivor = data?.survivorPath ? data.survivorPath === data?.paths?.[0] : true
+  const survivor = isR1Survivor ? r1 : r2
+  const duplicate = isR1Survivor ? r2 : r1
+  const termText = data?.termText || (survivor.astText || survivor.text)
+
+  const dx = survivor.cx - duplicate.cx
+  const dy = survivor.cy - duplicate.cy
+
+  return (
+    <>
+      {/* Expanding harmonic shockwave on merge */}
+      <div
+        style={{
+          position: 'fixed',
+          left: survivor.cx,
+          top: survivor.cy,
+          width: Math.max(survivor.width, 36) + 16,
+          height: Math.max(survivor.height, 36) + 16,
+          borderRadius: '9999px',
+          pointerEvents: 'none',
+          zIndex: 9998,
+          animation: 'idempotentShockwave 1.2s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          opacity: 0,
+        }}
+      />
+
+      {/* Survivor Term receiving the harmonic unification */}
+      <div
+        style={{
+          position: 'fixed',
+          left: survivor.left,
+          top: survivor.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: survivor.fontSize || '22px',
+          fontWeight: '600',
+          color: '#4f46e5',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          border: '1.5px solid #6366f1',
+          background: 'rgba(99, 102, 241, 0.08)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'idempotentSurvivorPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        }}
+      >
+        <ExprText text={termText} />
+      </div>
+
+      {/* Duplicate Term sliding into survivor */}
+      <div
+        style={{
+          position: 'fixed',
+          left: duplicate.left,
+          top: duplicate.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: duplicate.fontSize || '22px',
+          fontWeight: '600',
+          color: '#6366f1',
+          padding: '2px 6px',
+          zIndex: 10000,
+          pointerEvents: 'none',
+          '--idem-dx': `${dx}px`,
+          '--idem-dy': `${dy}px`,
+          animation: 'idempotentGlideMerge 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        }}
+      >
+        <ExprText text={termText} />
+      </div>
+    </>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   7. Identity Animation (A + 0 = A and A · 1 = A)
+   Inert identity constant dissolves away.
+   ───────────────────────────────────────────── */
+function IdentityAnimation({ rects, data }) {
   const valid = rects.filter(Boolean)
   if (valid.length === 0) return null
 
+  // Single const factor in product e.g. A · 1 = A
   if (valid.length === 1) {
+    const r = valid[0]
+    const constText = data?.constText || '1'
     return (
       <div
         style={{
-          ...tokenBaseStyle(valid[0]),
-          animation: 'singleFade 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          position: 'fixed',
+          left: r.left,
+          top: r.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: r.fontSize || '22px',
+          fontWeight: '600',
+          color: '#94a3b8',
+          padding: '2px 6px',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'identityConstEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
         }}
       >
-        <ExprText text={valid[0].astText || valid[0].text} />
+        <ExprText text={constText} />
       </div>
     )
   }
 
+  // Sum terms e.g. A + 0 = A
   const [r1, r2] = valid
-  let survivor = r1
-  let absorbed = r2
-
-  if (lawId === 'identity') {
-    survivor = (r1.astText || r1.text) === '0' ? r2 : r1
-    absorbed = (r1.astText || r1.text) === '0' ? r1 : r2
-  }
-
-  const dx = survivor.cx - absorbed.cx
-  const dy = survivor.cy - absorbed.cy
+  const isR1Const = data?.constPath ? data.constPath === data?.paths?.[0] : (r1.astText || r1.text) === '0'
+  const constRect = isR1Const ? r1 : r2
+  const activeRect = isR1Const ? r2 : r1
+  const activeText = data?.activeText || (activeRect.astText || activeRect.text)
+  const constText = data?.constText || '0'
 
   return (
     <>
-      <div style={{ ...tokenBaseStyle(survivor), animation: 'mergeGlow 0.5s 0.5s ease forwards' }}>
-        <ExprText text={survivor.astText || survivor.text} />
-      </div>
-
+      {/* Active Term stays stable and confirms */}
       <div
         style={{
-          ...tokenBaseStyle(absorbed),
-          animation: 'slideMerge 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-          '--slide-dx': `${dx}px`,
-          '--slide-dy': `${dy}px`,
+          position: 'fixed',
+          left: activeRect.left,
+          top: activeRect.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: activeRect.fontSize || '22px',
+          fontWeight: '600',
+          color: '#0284c7',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          border: '1.5px solid #0ea5e9',
+          background: 'rgba(14, 165, 233, 0.08)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'identityActivePulse 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        <ExprText text={absorbed.astText || absorbed.text} />
+        <ExprText text={activeText} />
+      </div>
+
+      {/* Inert Identity Constant (0) dropping and evaporating */}
+      <div
+        style={{
+          position: 'fixed',
+          left: constRect.left,
+          top: constRect.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: constRect.fontSize || '22px',
+          fontWeight: '600',
+          color: '#94a3b8',
+          padding: '2px 6px',
+          zIndex: 10000,
+          pointerEvents: 'none',
+          animation: 'identityConstEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        }}
+      >
+        <ExprText text={constText} />
       </div>
     </>
   )
@@ -611,58 +922,135 @@ function MergeAnimation({ rects, lawId }) {
    7. Annulment Animation (A + 1 = 1 and A · 0 = 0)
    Variable slides into the dominant constant.
    ───────────────────────────────────────────── */
-function AnnulmentAnimation({ rects, lawId }) {
+function AnnulmentAnimation({ rects, lawId, data }) {
   const valid = rects.filter(Boolean)
   if (valid.length === 0) return null
 
   const isProduct = lawId.includes('product') || valid.some(r => (r.astText || r.text) === '0' || (r.astText || r.text).includes('0'))
-  const dominantConst = isProduct ? '0' : '1'
+  const dominantConst = data?.dominantConst || (isProduct ? '0' : '1')
+  const isOne = dominantConst === '1'
+
+  const themeColor = isOne ? '#d97706' : '#6366f1'
+  const shockColor = isOne ? '#f59e0b' : '#818cf8'
+  const bgColor = isOne ? 'rgba(245, 158, 11, 0.12)' : 'rgba(99, 102, 241, 0.12)'
+  const borderColor = isOne ? '#f59e0b' : '#6366f1'
 
   if (valid.length === 1) {
+    const r = valid[0]
     return (
-      <div
-        style={{
-          ...tokenBaseStyle(valid[0]),
-          border: '2px solid #f59e0b',
-          color: '#b45309',
-          animation: 'mergeGlow 0.6s 0.2s ease forwards',
-        }}
-      >
-        {dominantConst}
-      </div>
+      <>
+        <div
+          style={{
+            position: 'fixed',
+            left: r.cx,
+            top: r.cy,
+            width: Math.max(r.width, 36) + 16,
+            height: Math.max(r.height, 36) + 16,
+            borderRadius: '9999px',
+            pointerEvents: 'none',
+            zIndex: 9998,
+            animation: 'annulmentShockwave 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          }}
+        />
+        <div
+          style={{
+            position: 'fixed',
+            left: r.left,
+            top: r.top,
+            display: 'inline-flex',
+            alignItems: 'baseline',
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            fontSize: r.fontSize || '22px',
+            fontWeight: '700',
+            color: themeColor,
+            padding: '2px 8px',
+            borderRadius: '6px',
+            border: `1.5px solid ${borderColor}`,
+            background: bgColor,
+            zIndex: 9999,
+            pointerEvents: 'none',
+            animation: 'annulmentDominantSurge 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          }}
+        >
+          <ExprText text={dominantConst} />
+        </div>
+      </>
     )
   }
 
   const [r1, r2] = valid
-  const constRect = ((r1.astText || r1.text) === dominantConst || (r1.astText || r1.text).includes(dominantConst)) ? r1 : r2
-  const varRect = (r1 === constRect) ? r2 : r1
+  const isR1Const = data?.constPath
+    ? data.constPath === data?.paths?.[0]
+    : ((r1.astText || r1.text) === dominantConst || (r1.astText || r1.text).includes(dominantConst))
+
+  const constRect = isR1Const ? r1 : r2
+  const varRect = isR1Const ? r2 : r1
+  const varText = data?.varText || (varRect.astText || varRect.text)
 
   const dx = constRect.cx - varRect.cx
   const dy = constRect.cy - varRect.cy
 
   return (
     <>
+      {/* Expanding Singularity Shockwave */}
       <div
         style={{
-          ...tokenBaseStyle(constRect),
-          border: '2px solid #f59e0b',
-          background: '#fef3c7',
-          color: '#b45309',
-          animation: 'mergeGlow 0.6s 0.3s ease forwards',
+          position: 'fixed',
+          left: constRect.cx,
+          top: constRect.cy,
+          width: Math.max(constRect.width, 36) + 16,
+          height: Math.max(constRect.height, 36) + 16,
+          borderRadius: '9999px',
+          pointerEvents: 'none',
+          zIndex: 9998,
+          animation: 'annulmentShockwave 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        }}
+      />
+
+      {/* Dominant Constant (1 or 0) surging with gravitational power */}
+      <div
+        style={{
+          position: 'fixed',
+          left: constRect.left,
+          top: constRect.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: constRect.fontSize || '22px',
+          fontWeight: '700',
+          color: themeColor,
+          padding: '2px 8px',
+          borderRadius: '6px',
+          border: `1.5px solid ${borderColor}`,
+          background: bgColor,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'annulmentDominantSurge 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        {dominantConst}
+        <ExprText text={dominantConst} />
       </div>
 
+      {/* Variable / Term being drawn in and swallowed */}
       <div
         style={{
-          ...tokenBaseStyle(varRect),
-          animation: 'slideMerge 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-          '--slide-dx': `${dx}px`,
-          '--slide-dy': `${dy}px`,
+          position: 'fixed',
+          left: varRect.left,
+          top: varRect.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: varRect.fontSize || '22px',
+          fontWeight: '600',
+          padding: '2px 6px',
+          zIndex: 10000,
+          pointerEvents: 'none',
+          '--annul-dx': `${dx}px`,
+          '--annul-dy': `${dy}px`,
+          animation: 'annulmentSwallowed 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
       >
-        <ExprText text={varRect.astText || varRect.text} />
+        <ExprText text={varText} />
       </div>
     </>
   )
