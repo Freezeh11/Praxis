@@ -6,8 +6,8 @@ import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
 
-// Level 3+ are permanently "coming soon" (no puzzles yet)
-const COMING_SOON = [3]
+// Level 4+ are permanently "coming soon" (no puzzles yet)
+const COMING_SOON = []
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
@@ -19,23 +19,25 @@ export default function LevelSelectPage() {
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
    * that hasn't been satisfied yet.
-   * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
+   * Level 2 requires Level 1 avg score >= 70% across all stages.
+   * Level 3 requires Level 2 avg score >= 70% across all stages.
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
-    if (lv.id === 2) {
-      // Find Level 1 in the levels array to get its stage count
-      const lvl1 = levels.find(l => l.id === 1)
-      const totalStages = lvl1?.puzzles?.length ?? 6
-      const p = getLevelProgress(1, totalStages)
+    if (lv.id === 2 || lv.id === 3) {
+      const prevLevelId = lv.id - 1
+      const prevLvl = levels.find(l => l.id === prevLevelId)
+      const totalStages = prevLvl?.puzzles?.length ?? 6
+      const p = getLevelProgress(prevLevelId, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
         locked: true,
         reason: 'score-gate',
         progress: p,
         totalStages,
+        prevLevelName: `Level ${prevLevelId}`,
       }
     }
 
@@ -152,7 +154,7 @@ export default function LevelSelectPage() {
                     </div>
                     {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
-                      Need 70% avg across all Level 1 stages
+                      Need 70% avg across all {lockState.prevLevelName || 'previous level'} stages
                     </div>
                   </div>
                 )}

@@ -85,7 +85,7 @@ LEVELS = [
                     "Absorption Law: A + AB = A — select x and xy to apply it.",
                 ],
                 "optimalSteps": 1,
-                "optimalHint": "Did you take a longer route? The Absorption Law (A + AB = A) can solve this in a single step.",
+                "optimalHint": "Look for a shorter term that shares its variables with a longer term — Absorption can simplify this in a single move.",
             },
             # Stage 2 — Idempotent -> Distributive (Order of Operations)
             {
@@ -98,7 +98,7 @@ LEVELS = [
                     "Factor out the common variable, then look for a pair that cancels to 1.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "If you took more steps, remember to remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive) to avoid creating a massive equation.",
+                "optimalHint": "Try eliminating duplicate terms with Idempotent Law before factoring to keep your equation compact.",
             },
             # Stage 3 — De Morgan's OR -> Idempotent (double-neg auto-handled)
             {
@@ -111,7 +111,7 @@ LEVELS = [
                     "Use Idempotent Law to remove the duplicate term.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "There is no workaround here! De Morgan's Law (OR→AND) breaks apart the negated group, then Idempotent removes the duplicate — just 2 steps.",
+                "optimalHint": "Breaking the negated group with De Morgan's Law first reveals identical terms that can be removed quickly.",
             },
             # Stage 4 — De Morgan's AND -> Absorption (The Detour)
             {
@@ -124,7 +124,7 @@ LEVELS = [
                     "After expanding, look for a shorter term that swallows a longer one containing it.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "After expanding with De Morgan's Law, look for the Absorption Law instead of blindly factoring. Factoring here is a detour!",
+                "optimalHint": "After expanding with De Morgan's, check if Absorption can eliminate longer products before attempting to factor.",
             },
             # Stage 5 — Distributive Trap (The Undo Dead End)
             {
@@ -137,7 +137,7 @@ LEVELS = [
                     "Factor out y, turn x'+x into 1, and you're left with x + y·1 — then remove the 1.",
                 ],
                 "optimalSteps": 3,
-                "optimalHint": "The optimal path is 3 steps: Distributive (factor y from x'y + xy), Complement (x' + x = 1), then Identity (y·1 = y). Don't try Absorption on x and xy — it leads to a dead end!",
+                "optimalHint": "Look for common factors that leave complementary variables (like x + x' = 1) inside the parentheses.",
             },
             # Stage 6 — De Morgan's -> Complement -> Annulment (The Nuke)
             {
@@ -150,7 +150,7 @@ LEVELS = [
                     "When you find a complementary pair (A + A' = 1), use Annulment — 1 + anything = 1!",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "The optimal path is 4 steps: De Morgan's on both groups, then Complement (x + x' = 1), then Annulment (1 + anything = 1).",
+                "optimalHint": "Expanding negated groups first can reveal complementary pairs that trigger Annulment.",
             },
         ],
     },
@@ -171,7 +171,7 @@ LEVELS = [
                     "After removing xyz, look at y and yz. The same law applies again.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "Both absorptions can be done in either order — just 2 steps. Watch out for factoring z from xz+yz first; it creates a dead end.",
+                "optimalHint": "Scan for standalone or shorter terms — Absorption can eliminate multi-variable products without factoring.",
             },
             # Stage 2 — Factor & Collapse (3-variable terms)
             {
@@ -183,8 +183,8 @@ LEVELS = [
                     "Factor yz out of x'yz and xyz — you'll get a complementary pair inside the brackets: x' + x.",
                     "After the complement gives you yz, compare it with the standalone z. One of them absorbs the other.",
                 ],
-                "optimalSteps": 4,
-                "optimalHint": "The optimal path is 4 steps: Distributive (factor yz from x'yz + xyz), Complement (x' + x = 1), Identity (yz · 1 = yz), then Absorption (z absorbs yz, since yz contains z).",
+                "optimalSteps": 2,
+                "optimalHint": "Check if a shorter variable can directly absorb longer multi-variable products that contain it.",
             },
             # Stage 3 — De Morgan Reveals 3-Var Absorption
             {
@@ -197,7 +197,7 @@ LEVELS = [
                     "A shorter term absorbs any longer term that contains all its literals — even a 3-variable one.",
                 ],
                 "optimalSteps": 2,
-                "optimalHint": "De Morgan's reveals x, which instantly absorbs xyz (since xyz contains x) — just 2 steps. The 3-variable term gets eliminated in a single move!",
+                "optimalHint": "De Morgan's Law reveals single literals that can immediately absorb longer products.",
             },
             # Stage 4 — Nested Factoring
             {
@@ -210,7 +210,7 @@ LEVELS = [
                     "The inner expression now has a complementary pair. Simplify it, then remove the 1.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "The optimal path factors twice — first x from the outer terms, then z from the inner sum — creating y'+y=1. Then Identity removes the 1.",
+                "optimalHint": "Focus on factoring out common variables that leave an opposing complementary pair (like y' + y = 1).",
             },
             # Stage 5 — Double De Morgan (3-variable group) → Collapse
             {
@@ -223,7 +223,7 @@ LEVELS = [
                     "Once you have a 1 in the sum, select it with any other term — Annulment collapses everything instantly.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "After two De Morgan's, you'll see x', y' (from the first group) and x, y', z' (from the 3-var group). Apply Complement on x'+x to get 1, then immediately Annul — 4 steps total.",
+                "optimalHint": "Expanding both groups exposes single variables that cancel to 1 with Complement Law.",
             },
             # Stage 6 — The Three-Law Chain
             {
@@ -236,15 +236,94 @@ LEVELS = [
                     "Now check: does the shorter term appear (with the same sign) inside the longer term? Use Absorption.",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "The optimal path: Distributive → Complement → Identity (creates y), then Absorption (y absorbs x'yz, since y appears inside x'yz). All 3 law types must be used.",
+                "optimalHint": "Combine factoring to reduce the first two terms, then look for an Absorption with the remaining product.",
             },
         ],
     },
     {
         "id": 3,
-        "name": "Level 3 \u2014 Boss",
+        "name": "Level 3 — Boss",
         "desc": "Four-variable challenge",
         "varCount": 4,
-        "puzzles": [],  # Unlocked in future release
+        "puzzles": [
+            # Stage 1 — The 4-Variable Absorption Web
+            {
+                "expr": "wxyz + wxz + wxy + wx",
+                "goal": "wx",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Scan all 4 terms: which term is the shortest?",
+                    "wx contains all the variables of wxy, wxz, and wxyz.",
+                    "Use Absorption Law (A + AB = A) repeatedly to collapse all longer terms into wx.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "The 2-variable root term wx can absorb all longer products containing it.",
+            },
+            # Stage 2 — 4-Variable Factoring & Reduction
+            {
+                "expr": "w'xyz + wxyz + wx'y + wx'y'",
+                "goal": "wx' + xyz",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "Group terms in pairs: w'xyz with wxyz, and wx'y with wx'y'.",
+                    "Factor xyz out of the first pair, and wx' out of the second pair.",
+                    "Simplify the complementary brackets (w'+w=1 and y+y'=1) and remove the 1 factors.",
+                ],
+                "optimalSteps": 6,
+                "optimalHint": "Pair terms sharing 3 common variables to cancel out complementary opposites.",
+            },
+            # Stage 3 — 4-Variable De Morgan Group Collapse
+            {
+                "expr": "(w+x+y+z)' + w'x'",
+                "goal": "w'x'",
+                "targetLaws": ["demorgan-or", "absorption"],
+                "hints": [
+                    "Click the large 4-variable (w+x+y+z)' group to apply De Morgan's Law.",
+                    "After expanding to w'x'y'z', compare it with the shorter term w'x'.",
+                    "Use Absorption Law to eliminate the 4-variable product.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "Expanding the 4-variable sum reveals an absorption opportunity with the 2-variable term.",
+            },
+            # Stage 4 — Symmetric Factoring Cascade
+            {
+                "expr": "w'xyz + w'xyz' + wxyz + wxyz'",
+                "goal": "xy",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "Factor w'xy from the first two terms (z+z'=1), and wxy from the second two terms (z+z'=1).",
+                    "After removing the 1 factors, you will have w'xy + wxy.",
+                    "Now factor xy from the remaining terms — you'll get w'+w=1, leaving just xy!",
+                ],
+                "optimalSteps": 8,
+                "optimalHint": "Factor in symmetrical pairs to eliminate opposing literals (z and z') first.",
+            },
+            # Stage 5 — Dual Group Complement to Constant
+            {
+                "expr": "(wx)' + (w'+x')' + yz",
+                "goal": "1",
+                "targetLaws": ["demorgan-or", "complement", "annulment"],
+                "hints": [
+                    "Apply De Morgan's Law to (w'+x')' to reveal wx.",
+                    "Now you have (wx)' and wx — a variable group paired with its exact complement!",
+                    "Apply Complement Law to get 1, then use Annulment to collapse everything.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "De Morgan's can transform the second group into the exact complement of the first group.",
+            },
+            # Stage 6 — The Grand Master Boss Stage
+            {
+                "expr": "w'x'y'z + w'x'yz + wx'y'z + wx'yz + z",
+                "goal": "z",
+                "targetLaws": ["distributive", "complement", "identity", "absorption"],
+                "hints": [
+                    "Pair w'x'y'z with w'x'yz, and wx'y'z with wx'yz — factor out y/y' from each pair.",
+                    "After simplifying, you'll have w'x'z + wx'z. Factor x'z to get (w'+w=1).",
+                    "Finally, compare x'z with the standalone z — Absorption collapses the entire formula into z!",
+                ],
+                "optimalSteps": 8,
+                "optimalHint": "Reduce 4-variable terms into 3-variable terms, then look for the ultimate absorption with z.",
+            },
+        ],
     },
 ]
