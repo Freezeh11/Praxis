@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
-import { parseExpr, cloneN, canonText, nodeText, getNode } from '../lib/expr.js'
-import { analyzeSelection, analyzeNot, analyzeProductConst, scanHints } from '../lib/laws.js'
+import { parseExpr, cloneN, canonText, nodeText, getNode, findCommonProd } from '../lib/expr.js'
+import { analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints } from '../lib/laws.js'
 import { findOptimalPath } from '../lib/solver.js'
 
 const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
@@ -13,44 +13,72 @@ const DEAD_END_MSG = 'This expression is simplified, but it is not the final tar
  */
 function buildHintText(law, paths, expr) {
   try {
+    const n1 = paths[0] ? getNode(expr, paths[0]) : null
+    const n2 = paths[1] ? getNode(expr, paths[1]) : null
+
+    let isProdContext = false
+    if (paths.length >= 2) {
+      const cp = findCommonProd(expr, paths[0], paths[1])
+      if (cp) isProdContext = true
+    } else if (paths.length === 1) {
+      const parts = paths[0].split('.')
+      if (parts.length > 1) {
+        const parentPath = parts.slice(0, -1).join('.')
+        const parent = getNode(expr, parentPath)
+        if (parent?.type === 'prod') isProdContext = true
+      }
+    }
+
     switch (law) {
       case 'double-neg':
-        return `There's a term with two negations stacked on top of each other. Double Negation can clean that up.`
+        return `There's a term with two negations stacked on top of each other. Double Negation can clean that up: (A')' = A.`
       case 'demorgan':
       case 'demorgan-and':
       case 'demorgan-or':
         return `There's a negated group in the expression. Try applying De Morgan's Law to expand it.`
       case 'absorption':
-        return `One term already contains all the variables of another. Absorption Law can eliminate the longer one.`
+        return isProdContext
+          ? `One clause absorbs another: A(A + B) = A. Absorption Law eliminates the longer clause.`
+          : `One term absorbs another: A + AB = A. Absorption Law eliminates the longer term.`
       case 'idempotent':
-        return `The same term appears more than once. Idempotent Law lets you remove the duplicate.`
+        return isProdContext
+          ? `Duplicate clauses appear in a product: (A)(A) = A. Idempotent Law removes the duplicate.`
+          : `Duplicate terms appear in a sum: A + A = A. Idempotent Law removes the duplicate.`
       case 'complement':
-        return `There's a variable and its complement in the expression. Complement Law turns them into 1.`
+        return isProdContext
+          ? `A variable meets its complement in a product: A · A' = 0.`
+          : `A variable meets its complement in a sum: A + A' = 1.`
       case 'annulment': {
-        const n1 = getNode(expr, paths[0])
-        const n2 = paths[1] ? getNode(expr, paths[1]) : null
         const hasOne = (n1?.type === 'const' && n1.val === 1) || (n2?.type === 'const' && n2.val === 1)
         return hasOne
-          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 - the whole sum collapses.`
-          : `There's a 0 in a product. Annulment Law says A · 0 = 0.`
+          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 — the whole sum collapses to 1.`
+          : `There's a 0 in a product. Annulment Law says A · 0 = 0 — the product collapses to 0.`
       }
-      case 'identity':
-        return `There's a 0 in a sum that isn't doing anything. Identity Law lets you remove it.`
+      case 'identity': {
+        const hasZero = (n1?.type === 'const' && n1.val === 0) || (n2?.type === 'const' && n2.val === 0)
+        return hasZero
+          ? `There's a 0 in a sum that has no effect. Identity Law says A + 0 = A.`
+          : `There's a 1 in a product that has no effect. Identity Law says A · 1 = A.`
+      }
       case 'distributive':
-        return `Two or more terms share a common variable. Try Distributive Law to factor it out.`
+        return isProdContext
+          ? `Two clauses share a common variable. Try POS Distributive Law: (A+B)(A+C) = A + BC.`
+          : `Two terms share a common variable. Try Distributive Law to factor it out: AB + AC = A(B+C).`
       default:
-        return `Look at the current expression - a simplification is available.`
+        return `Look at the current expression — a simplification is available.`
     }
   } catch {
-    return `A simplification is available in the current expression - look carefully.`
+    return `A simplification is available in the current expression — look carefully.`
   }
 }
 
 export function useGameState() {
-  const [expr, setExpr] = useState(null)
+  const [history, setHistory] = useState([]) // Array of { expr, step }
+  const expr = history.length > 0 ? history[history.length - 1].expr : null
+  const steps = history.length > 1 ? history.slice(1).map(h => h.step) : []
+  const exprHistory = history.length > 1 ? history.slice(0, -1).map(h => h.expr) : []
+
   const [sel, setSel] = useState([])
-  const [steps, setSteps] = useState([])
-  const [exprHistory, setExprHistory] = useState([])
   const [goalText, setGoalText] = useState('')
   const [goalCanon, setGoalCanon] = useState('')
   const [hintIdx, setHintIdx] = useState(0)
@@ -67,7 +95,7 @@ export function useGameState() {
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationData, setAnimationData] = useState(null)
 
-  // Keep goalCanon in a ref so applyLaw can always read the latest value
+  const animationTimerRef = useRef(null)
   const goalCanonRef = useRef('')
 
   const syncDeadEndStatus = useCallback((exprSnapshot, fallbackMsg = 'Select a term or variable to begin') => {
@@ -94,6 +122,11 @@ export function useGameState() {
   }, [])
 
   const loadPuzzle = useCallback((puzzle, savedSteps = null) => {
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current)
+      animationTimerRef.current = null
+    }
+
     const parsedExpr = parseExpr(puzzle.expr)
     const gCanon = canonText(parseExpr(puzzle.goal))
     goalCanonRef.current = gCanon
@@ -115,28 +148,24 @@ export function useGameState() {
 
     if (savedSteps && Array.isArray(savedSteps) && savedSteps.length > 0) {
       try {
-        const lastStep = savedSteps[savedSteps.length - 1]
-        const finalExpr = parseExpr(lastStep.to)
-        setExpr(finalExpr)
-        setSteps(savedSteps)
-        setExprHistory([])
+        const hist = [{ expr: parsedExpr, step: null }]
+        for (const s of savedSteps) {
+          hist.push({ expr: parseExpr(s.to), step: s })
+        }
+        setHistory(hist)
         setIsComplete(true)
         setStatus('success')
         setStatusMsg('Stage completed! Click steps to review derivation')
       } catch (err) {
         console.warn('Failed to parse saved derivation, resetting to initial expr:', err)
-        setExpr(parsedExpr)
-        setSteps([])
-        setExprHistory([])
+        setHistory([{ expr: parsedExpr, step: null }])
         setIsComplete(false)
         setStatus('select')
         setStatusMsg('Select a term or variable to begin')
         syncDeadEndStatus(parsedExpr)
       }
     } else {
-      setExpr(parsedExpr)
-      setSteps([])
-      setExprHistory([])
+      setHistory([{ expr: parsedExpr, step: null }])
       setIsComplete(false)
       setStatus('select')
       setStatusMsg('Select a term or variable to begin')
@@ -174,10 +203,23 @@ export function useGameState() {
         setStatusMsg('No simplification for these selected items — try different terms or variables')
       }
     } else if (nextSel.length === 1) {
-      setApplicableLaws([])
-      setStatus('select')
       const item = nextSel[0]
       const node = getNode(exprSnapshot, item.path)
+
+      // If the selected item is a NOT node (either by clicking the NOT capsule or the term handle),
+      // check if unary laws (De Morgan / Double Negation) apply immediately!
+      if (node?.type === 'not') {
+        const laws = analyzeNot(exprSnapshot, item.path)
+        if (laws.length > 0) {
+          setApplicableLaws(laws)
+          setStatus('laws')
+          setStatusMsg(`Applicable: Choose a law below (${laws.map(l => l.name).join(', ')}) or select another term`)
+          return
+        }
+      }
+
+      setApplicableLaws([])
+      setStatus('select')
       if (item.isTermSel) {
         setStatusMsg(`Selected entire term [${nodeText(node)}]. Now select a second term to combine.`)
       } else if (node?.type === 'lit') {
@@ -210,7 +252,7 @@ export function useGameState() {
     }
 
     const node = getNode(exprSnapshot, path)
-    // Special case: const (0 or 1) directly inside a product
+    // Special case: const (0 or 1) directly inside a product or sum
     if (node && node.type === 'const') {
       const parts = path.split('.')
       if (parts.length > 1) {
@@ -218,6 +260,18 @@ export function useGameState() {
         const parent = getNode(exprSnapshot, parentPath)
         if (parent && parent.type === 'prod') {
           const laws = analyzeProductConst(exprSnapshot, path, node.val, parentPath)
+          setSel([{ path, isTermSel: false }])
+          setApplicableLaws(laws)
+          setStatus(laws.length ? 'laws' : 'error')
+          setStatusMsg(
+            laws.length
+              ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
+              : 'No law applies here — try different terms'
+          )
+          return
+        }
+        if (parent && parent.type === 'sum') {
+          const laws = analyzeSumConst(exprSnapshot, path, node.val, parentPath)
           setSel([{ path, isTermSel: false }])
           setApplicableLaws(laws)
           setStatus(laws.length ? 'laws' : 'error')
@@ -237,9 +291,14 @@ export function useGameState() {
       if (existing >= 0) {
         next = prev.filter((_, i) => i !== existing)
       } else {
-        next = prev.length >= 2
-          ? [prev[1], { path, isTermSel: false }]
-          : [...prev, { path, isTermSel: false }]
+        const hasNotNode = prev.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
+        if (hasNotNode) {
+          next = [{ path, isTermSel: false }]
+        } else {
+          next = prev.length >= 2
+            ? [prev[1], { path, isTermSel: false }]
+            : [...prev, { path, isTermSel: false }]
+        }
       }
       updateLaws(next, exprSnapshot)
       return next
@@ -251,11 +310,7 @@ export function useGameState() {
     if (isDeadEnd) {
       setSel(prev => {
         const existing = prev.findIndex(s => s.path === path)
-        return existing >= 0
-          ? prev.filter((_, i) => i !== existing)
-          : prev.length >= 2
-            ? [prev[1], { path, isTermSel: false }]
-            : [...prev, { path, isTermSel: false }]
+        return existing >= 0 ? [] : [{ path, isTermSel: false }]
       })
       setApplicableLaws([])
       return
@@ -263,37 +318,23 @@ export function useGameState() {
 
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
-      let next
       if (existing >= 0) {
-        next = prev.filter((_, i) => i !== existing)
         setApplicableLaws([])
         setStatus('select')
         setStatusMsg('Select a term or variable to begin')
-        return next
+        return []
       }
-      next = prev.length >= 2
-        ? [prev[1], { path, isTermSel: false }]
-        : [...prev, { path, isTermSel: false }]
 
-      if (next.length === 2) {
-        const laws = analyzeSelection(exprSnapshot, next)
-        setApplicableLaws(laws)
-        setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(
-          laws.length
-            ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-            : 'No simplification here — try different terms'
-        )
-      } else {
-        const laws = analyzeNot(exprSnapshot, path)
-        setApplicableLaws(laws)
-        setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(
-          laws.length
-            ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-            : 'No law applies — try a different element'
-        )
-      }
+      // Clicking a NOT container focuses solely on this NOT node for De Morgan / Double Negation
+      const next = [{ path, isTermSel: false }]
+      const laws = analyzeNot(exprSnapshot, path)
+      setApplicableLaws(laws)
+      setStatus(laws.length ? 'laws' : 'error')
+      setStatusMsg(
+        laws.length
+          ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
+          : 'No law applies — try a different element'
+      )
       return next
     })
   }, [isAnimating, isDeadEnd])
@@ -323,19 +364,26 @@ export function useGameState() {
         setStatusMsg('Select a term or variable to begin')
         return next
       }
-      next = prev.length >= 2
-        ? [prev[1], { path, isTermSel: true }]
-        : [...prev, { path, isTermSel: true }]
+      const hasNotNode = prev.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
+      if (hasNotNode) {
+        next = [{ path, isTermSel: true }]
+      } else {
+        next = prev.length >= 2
+          ? [prev[1], { path, isTermSel: true }]
+          : [...prev, { path, isTermSel: true }]
+      }
 
       updateLaws(next, exprSnapshot)
       return next
     })
   }, [isAnimating, isDeadEnd, updateLaws])
 
-  const applyLaw = useCallback((law, currentExpr, currentSteps) => {
+  const applyLaw = useCallback((law, currentExpr = expr, currentSteps = steps) => {
     if (isAnimating) return
+    const activeExpr = currentExpr || expr
+    if (!activeExpr) return
 
-    const before = nodeText(currentExpr)
+    const before = nodeText(activeExpr)
     const newExpr = law.apply()
     const after = nodeText(newExpr)
 
@@ -346,6 +394,10 @@ export function useGameState() {
       setStatus('select')
       setStatusMsg('That law didn\'t change the expression. Try a different one.')
       return
+    }
+
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current)
     }
 
     // Trigger Animation Phase
@@ -380,18 +432,15 @@ export function useGameState() {
       rawChildText: law.rawChildText,
       deMorganTerms: law.deMorganTerms,
       isAndToOr: law.isAndToOr,
-      exprBefore: currentExpr,
+      exprBefore: activeExpr,
       exprAfter: newExpr
     })
     setStatus('select')
     setStatusMsg(`Applying ${law.name}...`)
 
-    // Wait 2.5 seconds for animation to play, then update AST
-    setTimeout(() => {
-      setExprHistory(h => [...h, currentExpr])
-      setExpr(newExpr)
-      const newSteps = [...currentSteps, { law: law.name, from: before, to: after }]
-      setSteps(newSteps)
+    animationTimerRef.current = setTimeout(() => {
+      animationTimerRef.current = null
+      setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])
       setSel([])
       setApplicableLaws([])
       setActiveGuidePaths([])
@@ -409,24 +458,36 @@ export function useGameState() {
         syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
       }
     }, 1350) // 1.35s duration
-  }, [sel, isAnimating, syncDeadEndStatus])
+  }, [expr, steps, isAnimating, sel, syncDeadEndStatus])
 
   const undoAction = useCallback(() => {
-    setExprHistory(h => {
-      if (h.length === 0) return h
-      const prev = h[h.length - 1]
-      setExpr(prev)
-      setSteps(s => s.slice(0, -1))
-      setSel([])
-      setApplicableLaws([])
-      setActiveGuidePaths([])
-      setIsComplete(false)
-      syncDeadEndStatus(prev, 'Undone. Select terms to continue.')
-      return h.slice(0, -1)
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current)
+      animationTimerRef.current = null
+    }
+    setIsAnimating(false)
+    setAnimationData(null)
+    setSel([])
+    setApplicableLaws([])
+    setActiveGuidePaths([])
+    setIsComplete(false)
+
+    setHistory(h => {
+      if (h.length <= 1) return h
+      const nextH = h.slice(0, -1)
+      const prevEntry = nextH[nextH.length - 1]
+      syncDeadEndStatus(prevEntry.expr, 'Undone. Select terms to continue.')
+      return nextH
     })
   }, [syncDeadEndStatus])
 
   const resetPuzzle = useCallback((puzzle) => {
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current)
+      animationTimerRef.current = null
+    }
+    setIsAnimating(false)
+    setAnimationData(null)
     if (puzzle) loadPuzzle(puzzle)
   }, [loadPuzzle])
 
@@ -449,33 +510,41 @@ export function useGameState() {
     return hint
   }, [expr, hintIdx])
 
-  /** Drag-and-drop element reorder (terms in sum, or clauses in prod) */
-  const swapTerms = useCallback((nodePath, fromIdx, toIdx) => {
+  /** Drag-and-drop term or factor reorder - no law applied, no step recorded */
+  const swapTerms = useCallback((parentPath, fromIdx, toIdx) => {
     if (fromIdx === toIdx) return
     let nextExpr = null
-    setExpr(prevExpr => {
-      const tree = cloneN(prevExpr)
-      const n = getNode(tree, nodePath)
-      if (!n) return prevExpr
-      if (n.type === 'sum') {
-        const tmp = n.terms[fromIdx]
-        n.terms[fromIdx] = n.terms[toIdx]
-        n.terms[toIdx] = tmp
-      } else if (n.type === 'prod') {
-        const tmp = n.factors[fromIdx]
-        n.factors[fromIdx] = n.factors[toIdx]
-        n.factors[toIdx] = tmp
+
+    setHistory(prev => {
+      if (!prev || prev.length === 0) return prev
+      const currentEntry = prev[prev.length - 1]
+      const tree = cloneN(currentEntry.expr)
+      const node = getNode(tree, parentPath)
+      if (!node) return prev
+
+      if (node.type === 'sum') {
+        const tmp = node.terms[fromIdx]
+        node.terms[fromIdx] = node.terms[toIdx]
+        node.terms[toIdx] = tmp
+      } else if (node.type === 'prod') {
+        const tmp = node.factors[fromIdx]
+        node.factors[fromIdx] = node.factors[toIdx]
+        node.factors[toIdx] = tmp
       } else {
-        return prevExpr
+        return prev
       }
+
       nextExpr = tree
-      return tree
+      const nextH = [...prev]
+      nextH[nextH.length - 1] = { ...currentEntry, expr: tree }
+      return nextH
     })
+
     setSel([])
     setApplicableLaws([])
     setActiveGuidePaths([])
     if (nextExpr) {
-      syncDeadEndStatus(nextExpr, 'Elements reordered. Select elements to continue.')
+      syncDeadEndStatus(nextExpr, 'Elements reordered. Select terms to continue.')
     }
   }, [syncDeadEndStatus])
 

@@ -19,8 +19,8 @@ export default function LevelSelectPage() {
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
    * that hasn't been satisfied yet.
-   * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
-   * Level 3 requires Level 2 avg score >= 70% across all 6 stages.
+   * Level 2 requires Level 1 avg score >= 80% across all stages.
+   * Level 3 requires Level 2 avg score >= 80% across all stages.
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
@@ -28,7 +28,7 @@ export default function LevelSelectPage() {
 
     if (lv.id === 2) {
       const lvl1 = levels.find(l => l.id === 1)
-      const totalStages = lvl1?.puzzles?.length ?? 6
+      const totalStages = lvl1?.puzzles?.length ?? 12
       const p = getLevelProgress(1, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -42,7 +42,7 @@ export default function LevelSelectPage() {
 
     if (lv.id === 3) {
       const lvl2 = levels.find(l => l.id === 2)
-      const totalStages = lvl2?.puzzles?.length ?? 6
+      const totalStages = lvl2?.puzzles?.length ?? 12
       const p = getLevelProgress(2, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -144,7 +144,7 @@ export default function LevelSelectPage() {
                 <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
                 <div className="text-[13px] text-text-3 text-center">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2 */}
+                {/* Score gate progress for Level 2/3 */}
                 {isScoreGated && isActive && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
@@ -157,9 +157,9 @@ export default function LevelSelectPage() {
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(100, lockState.progress.avgScore)}%`,
-                          background: lockState.progress.avgScore >= 70
+                          background: lockState.progress.avgScore >= 80
                             ? '#22c55e'
-                            : lockState.progress.avgScore >= 40
+                            : lockState.progress.avgScore >= 50
                               ? '#f59e0b'
                               : '#ef4444',
                         }}
@@ -167,17 +167,30 @@ export default function LevelSelectPage() {
                     </div>
                     {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
-                      Need 70% avg across all Level {lockState.reqLevel || (lv.id - 1)} stages
+                      Need 80% avg across all Level {lockState.reqLevel || (lv.id - 1)} stages
                     </div>
                   </div>
                 )}
+
+                {/* Level star badge if unlocked & played */}
+                {!locked && !isComingSoon && (() => {
+                  const lp = getLevelProgress(lv.id, lv.puzzles?.length || 12)
+                  if (lp.totalStars > 0) {
+                    return (
+                      <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 mt-auto flex items-center gap-1">
+                        <span>★</span> {lp.totalStars} / {lp.maxStars} Stars
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 {/* Tags */}
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
                 )}
                 {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 70% avg required</div>
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 80% avg required</div>
                 )}
               </div>
             )

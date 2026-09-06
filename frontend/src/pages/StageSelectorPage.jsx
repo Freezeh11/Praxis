@@ -1,10 +1,30 @@
-import { useState, useEffect } from 'react'
-import logoFull from '../assets/logo-full.png'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import logoFull from '../assets/logo-full.png'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
 import ExprText from '../components/ExprText'
-import { motion } from 'framer-motion'
+
+// Star Rating display helper
+function StarRating({ stars = 0 }) {
+  return (
+    <div className="flex items-center gap-0.5" title={`${stars} of 3 Stars`}>
+      {[1, 2, 3].map((s) => (
+        <span
+          key={s}
+          className={`text-sm leading-none select-none transition-all ${
+            s <= stars
+              ? 'text-amber-400 drop-shadow-[0_1px_2px_rgba(245,158,11,0.4)]'
+              : 'text-slate-200'
+          }`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export default function StageSelectorPage() {
   const { levelId } = useParams()
@@ -14,19 +34,24 @@ export default function StageSelectorPage() {
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('all') // 'all' | 'sop' | 'pos'
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
+  const numLevelId = Number(levelId)
+
   useEffect(() => {
-    fetchLevel(Number(levelId))
-      .then(data => { setLevel(data); setLoading(false) })
+    fetchLevel(numLevelId)
+      .then((data) => {
+        setLevel(data)
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
-  }, [levelId])
+  }, [numLevelId, fetchLevel])
 
-  const puzzles = level?.puzzles || []
-  const completedSet = new Set(getStagesCompleted(Number(levelId)))
+  const puzzles = useMemo(() => level?.puzzles || [], [level])
+  const completedStages = getStagesCompleted(numLevelId)
+  const completedSet = useMemo(() => new Set(completedStages), [completedStages])
 
-  // A stage is available if it's stage 0 OR the previous stage is completed
+  // A stage is available if it's stage 0 OR previous stage is completed
   const isAvailable = (idx) => idx === 0 || completedSet.has(idx - 1)
 
   const getStageStatus = (idx) => {
@@ -35,361 +60,331 @@ export default function StageSelectorPage() {
     return 'locked'
   }
 
+  const getStageScore = (idx) => {
+    return progress.stageScores?.[`${numLevelId}:${idx}`] ?? null
+  }
+
+  const getStageStars = (idx) => {
+    const isDone = completedSet.has(idx)
+    const score = getStageScore(idx)
+    if (!isDone && score === null) return 0
+    if (score !== null) {
+      if (score >= 90) return 3
+      if (score >= 75) return 2
+      if (score > 0) return 1
+    }
+    return isDone ? 1 : 0
+  }
+
   const handleStageClick = (idx) => {
     if (!isAvailable(idx)) return
-    navigate(`/level/${levelId}/stage/${idx}`)
+    navigate(`/level/${numLevelId}/stage/${idx}`)
   }
 
-  const currentLvl = Number(levelId)
-  const nextLvl = currentLvl + 1
-  const isMaxLevel = currentLvl >= 3
-  const lp = getLevelProgress(currentLvl, puzzles.length)
-  const pct = Math.min(100, lp.avgScore)
-  const isMastered = lp.avgScore >= 70 && lp.completed === puzzles.length
-  const barColor = (lp.unlocked || isMastered) ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444'
-
-  // Partition into SOP (0..5) and POS (6..11)
-  const sopPuzzles = puzzles.slice(0, 6)
-  const posPuzzles = puzzles.slice(6, 12)
-
-  const sopCompletedCount = sopPuzzles.filter((_, i) => completedSet.has(i)).length
-  const posCompletedCount = posPuzzles.filter((_, i) => completedSet.has(i + 6)).length
-
-  const renderStageCard = (puz, globalIdx) => {
-    const status = getStageStatus(globalIdx)
-    const isCompleted = status === 'completed'
-    const isAvail = status === 'available'
-    const isLocked = status === 'locked'
-    const isPos = globalIdx >= 6
-    const stageScore = progress.stageScores?.[`${currentLvl}:${globalIdx}`] ?? null
-
-    return (
-      <motion.button
-        key={globalIdx}
-        layout
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={() => handleStageClick(globalIdx)}
-        disabled={isLocked}
-        className={`group relative text-left rounded-2xl p-5 transition-all duration-200 flex flex-col justify-between border select-none
-          ${isCompleted
-            ? 'bg-white border-emerald-200/80 hover:border-emerald-400 hover:shadow-lg hover:-translate-y-0.5'
-            : isAvail
-              ? 'bg-white border-teal/50 ring-2 ring-teal/20 hover:border-teal hover:shadow-xl hover:-translate-y-1'
-              : 'bg-slate-50/70 border-slate-200 opacity-60 cursor-not-allowed'
-          }
-        `}
-      >
-        {/* Top bar: Stage Number & Status Badge */}
-        <div className="flex items-center justify-between gap-2 mb-3.5">
-          <div className="flex items-center gap-2">
-            <span className={`w-8 h-8 rounded-xl font-mono text-xs font-black flex items-center justify-center border shadow-xs
-              ${isCompleted
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : isAvail
-                  ? 'bg-teal text-white border-teal shadow-teal/20 shadow-md'
-                  : 'bg-slate-100 text-slate-400 border-slate-200'
-              }
-            `}>
-              {String(globalIdx + 1).padStart(2, '0')}
-            </span>
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border
-              ${isPos
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                : 'bg-teal-light text-teal border-teal/20'
-              }
-            `}>
-              {isPos ? 'POS' : 'SOP'}
-            </span>
-          </div>
-
-          <div>
-            {isCompleted && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-xs">
-                <span>✓</span>
-                {stageScore !== null ? `${stageScore} pts` : 'Done'}
-              </span>
-            )}
-            {isAvail && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-teal bg-teal-50 border border-teal/30 px-2.5 py-0.5 rounded-full group-hover:bg-teal group-hover:text-white transition-colors shadow-xs">
-                <span>▶</span> PLAY
-              </span>
-            )}
-            {isLocked && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                <span>🔒</span> Locked
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Expression Box */}
-        <div className="bg-slate-50/80 group-hover:bg-white transition-colors border border-slate-100 rounded-xl p-3 mb-3.5 flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between text-[11px]">
-            <span className="text-text-3 font-semibold uppercase tracking-wider text-[9px]">Initial</span>
-            <span className="font-mono text-[14px] font-bold text-text-1 tracking-wide">
-              <ExprText text={puz.expr} />
-            </span>
-          </div>
-          <div className="h-[1px] bg-slate-200/60 w-full" />
-          <div className="flex items-baseline justify-between text-[11px]">
-            <span className="text-text-3 font-semibold uppercase tracking-wider text-[9px]">Target</span>
-            <span className="font-mono text-[13px] font-extrabold text-teal">
-              <ExprText text={puz.goal} />
-            </span>
-          </div>
-        </div>
-
-        {/* Footer Meta: Target Laws & Optimal Steps */}
-        <div className="flex items-center justify-between text-[11px] pt-1">
-          <div className="flex flex-wrap gap-1 items-center">
-            {puz.targetLaws && puz.targetLaws.slice(0, 2).map((lawId, lIdx) => (
-              <span key={lIdx} className="text-[10px] font-medium text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
-                {lawId.replace('-pos', '').replace('-', ' ')}
-              </span>
-            ))}
-          </div>
-          <span className="text-[10px] font-medium text-text-3 whitespace-nowrap">
-            {puz.optimalSteps} {puz.optimalSteps === 1 ? 'step' : 'steps'}
-          </span>
-        </div>
-      </motion.button>
-    )
-  }
+  // Level progress metrics
+  const lp = getLevelProgress(numLevelId, puzzles.length || 12)
+  const isMaxLevel = numLevelId >= 3
+  const nextLevelId = numLevelId + 1
+  const isMastered = lp.allDone && lp.avgScore >= 80
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f8fafc] text-text-1">
-      {/* Header */}
-      <header className="sticky top-0 w-full h-[70px] px-8 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-border z-30 shrink-0 shadow-xs">
-        <Link
-          to="/levels"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-bold text-text-2 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl transition-all"
+    <div className="flex flex-col min-h-screen bg-bg relative overflow-x-hidden selection:bg-teal selection:text-white">
+      {/* ── HEADER ── */}
+      <header className="relative w-full h-[64px] px-6 md:px-10 flex items-center justify-between bg-bg-card/85 backdrop-blur-md border-b border-border z-20 shrink-0">
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-text-2 hover:text-text-1 bg-transparent hover:bg-border/60 rounded-xl transition-all"
+          onClick={() => navigate('/levels')}
         >
-          ← Levels
+          <span>←</span>
+          <span>Levels</span>
+        </button>
+
+        <Link to="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center hover:opacity-85 transition-opacity">
+          <img src={logoFull} alt="Praxis" className="h-7 object-contain" />
         </Link>
-        <div className="flex items-center">
-          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
-        </div>
+
         <div className="flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50/80 border border-amber/30 rounded-full text-xs font-bold text-amber-700">
+            <span>⭐ {progress.points || 0}</span>
+            <span className="opacity-40">•</span>
+            <span>🔥 {progress.streak || 0}</span>
+          </div>
           <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-text-2 bg-slate-100/80 hover:bg-slate-200/80 transition-all"
-            title="Law Reference"
+            className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-text-2 bg-white border border-border hover:border-text-1 hover:text-text-1 transition-all shadow-xs"
+            title="Open Law Reference"
             onClick={() => setShowLawsDrawer(true)}
           >
             <span>📖</span>
-            <span className="hidden sm:inline">Laws Reference</span>
+            <span className="hidden sm:inline">Laws</span>
           </button>
         </div>
       </header>
 
+      {/* ── LOADING STATE ── */}
       {loading && (
-        <div className="flex-1 flex items-center justify-center p-12 text-text-3 text-sm">
-          Loading stages…
+        <div className="flex-1 flex flex-col items-center justify-center p-12 gap-3">
+          <div className="w-8 h-8 border-3 border-teal border-t-transparent rounded-full animate-spin" />
+          <p className="text-text-3 text-xs font-semibold">Loading stages…</p>
         </div>
       )}
 
+      {/* ── MAIN CONTENT ── */}
       {!loading && level && (
-        <main className="flex-1 max-w-6xl w-full mx-auto px-5 py-8 flex flex-col gap-8">
-          {/* Level Header & Progress Hero */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex flex-col gap-1.5 max-w-xl">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-xs font-black uppercase tracking-widest text-teal bg-teal-50 border border-teal/20 px-3 py-1 rounded-full">
-                  Level {level.id}
-                </span>
-                <span className="text-xs font-semibold text-slate-500">
-                  {level.varCount} Variables
-                </span>
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-12 flex flex-col gap-6">
+          {/* ── LEVEL HERO BANNER ── */}
+          <section className="bg-bg-card border border-border rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col gap-5 relative overflow-hidden">
+            {/* Top row: Title, Subtitle, Description + Badges */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase bg-accent text-white tracking-wider">
+                    {level.name}
+                  </span>
+                  <span className="text-xs font-semibold text-text-3">
+                    {level.varCount}-Variable Logic
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text-1 tracking-tight">
+                  Dual-Track Stage Matrix
+                </h1>
+                <p className="text-xs sm:text-sm text-text-3 mt-1.5 max-w-2xl leading-relaxed">
+                  {level.desc}. Every Boolean theorem exists as a dual pair — practice both <span className="font-semibold text-teal">Sum of Products (SOP)</span> and <span className="font-semibold text-indigo-600">Product of Sums (POS)</span>.
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                {level.name}
-              </h1>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                {level.desc}
-              </p>
+
+              {/* Stat Cards Grid */}
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                {/* Stages Done */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Stages</span>
+                  <span className="text-base sm:text-lg font-extrabold text-text-1 mt-0.5">
+                    {completedSet.size} <span className="text-[11px] font-semibold text-text-3">/ {puzzles.length}</span>
+                  </span>
+                </div>
+
+                {/* Stars Done */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Stars</span>
+                  <span className="text-base sm:text-lg font-extrabold text-amber-500 mt-0.5 flex items-center gap-0.5">
+                    <span>★</span> {lp.totalStars} <span className="text-[11px] font-semibold text-text-3">/ {lp.maxStars}</span>
+                  </span>
+                </div>
+
+                {/* Avg Score */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Avg Score</span>
+                  <span className={`text-base sm:text-lg font-extrabold mt-0.5 ${
+                    lp.avgScore >= 80 ? 'text-green' : lp.avgScore >= 50 ? 'text-amber' : 'text-text-1'
+                  }`}>
+                    {lp.avgScore}<span className="text-[11px] font-semibold text-text-3">/100</span>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Level Score & Unlock Metrics */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 min-w-[300px] flex flex-col gap-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className="text-slate-700">
-                  {isMaxLevel ? `Mastery Progress` : `Level ${nextLvl} Unlock`}
-                </span>
-                {isMaxLevel ? (
-                  isMastered ? (
-                    <span className="text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full text-[11px]">🏆 Mastered</span>
-                  ) : lp.completed === puzzles.length ? (
-                    <span className="text-amber-700 bg-amber-100/80 px-2.5 py-0.5 rounded-full text-[11px]">✓ Completed</span>
+            {/* Target & Lock Gate Progress Bar Container */}
+            <div className="bg-bg rounded-2xl p-4 border border-border flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold">
+                <div className="flex items-center gap-1.5 text-text-2">
+                  <span className="font-extrabold text-text-1">
+                    {isMaxLevel ? `Level ${numLevelId} Mastery` : `Level ${nextLevelId} Unlock Gate`}
+                  </span>
+                  <span className="text-text-3 font-normal">
+                    (Target: 80% Average Score across all {puzzles.length} stages)
+                  </span>
+                </div>
+                <div>
+                  {isMaxLevel ? (
+                    isMastered ? (
+                      <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
+                        🏆 Level Mastered!
+                      </span>
+                    ) : lp.allDone ? (
+                      <span className="text-xs font-bold text-amber bg-amber-light px-2.5 py-0.5 rounded-full border border-amber/30">
+                        ✓ All Done • Need 80% for Mastery
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-text-3">
+                        {lp.completed} / {puzzles.length} completed
+                      </span>
+                    )
+                  ) : lp.unlocked ? (
+                    <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
+                      🔓 Level {nextLevelId} Unlocked!
+                    </span>
                   ) : (
-                    <span className="text-slate-500 font-semibold text-[11px]">Target: 70% avg</span>
-                  )
-                ) : lp.unlocked ? (
-                  <span className="text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full text-[11px]">🔓 Unlocked</span>
-                ) : (
-                  <span className="text-slate-500 font-semibold text-[11px]">Need 70% avg</span>
-                )}
-              </div>
-
-              {/* Progress Bar with 70% Goal Marker */}
-              <div className="flex flex-col gap-1.5">
-                <div className="relative w-full h-3 bg-slate-200 rounded-full overflow-visible">
-                  <div
-                    className="h-full rounded-full transition-all duration-500 shadow-xs"
-                    style={{ width: `${pct}%`, background: barColor }}
-                  />
-                  {/* 70% marker */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-[2.5px] h-5 bg-slate-700 rounded-full shadow-xs"
-                    style={{ left: '70%' }}
-                    title="70% Unlock Threshold"
-                  />
-                </div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-slate-500">
-                  <span>{lp.completed} / {puzzles.length} completed</span>
-                  <span className="text-slate-700 font-bold">{lp.avgScore} / 100 avg score</span>
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30">
+                      🔒 Need 80% avg to unlock Level {nextLevelId}
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'all'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                All Stages ({puzzles.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('sop')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'sop'
-                    ? 'bg-white text-teal shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>Sum of Products</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal border border-teal/20 font-mono">
-                  {sopCompletedCount}/{sopPuzzles.length}
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab('pos')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'pos'
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>Product of Sums</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 font-mono">
-                  {posCompletedCount}/{posPuzzles.length}
-                </span>
-              </button>
-            </div>
+              {/* Progress bar with 80% threshold notch */}
+              <div className="relative w-full h-2.5 bg-border rounded-full overflow-visible my-0.5">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, lp.avgScore)}%`,
+                    background: lp.unlocked || isMastered ? '#22c55e' : lp.avgScore >= 50 ? '#f59e0b' : '#ef4444',
+                  }}
+                />
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-1 rounded-full shadow-xs"
+                  style={{ left: '80%' }}
+                  title="80% Target Gate"
+                />
+              </div>
 
-            <div className="text-xs text-slate-500 font-medium">
-              Click any unlocked stage to begin simplifying
+              <div className="flex justify-between items-center text-[10px] text-text-3 font-semibold px-0.5">
+                <span>0%</span>
+                <span className="text-text-2 font-bold">80% Unlock Threshold</span>
+                <span>100%</span>
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Stage Cards Content */}
-          <div className="flex flex-col gap-10">
-            {/* 1. Sum of Products Track */}
-            {(activeTab === 'all' || activeTab === 'sop') && (
-              <section className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-teal shadow-xs" />
-                    <h2 className="text-lg font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
-                      Sum of Products (SOP)
-                      <span className="text-xs font-bold text-slate-400 font-normal">
-                        — Stages 1 to 6
+          {/* ── STAGES GRID (4 Columns × 3 Rows) ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {puzzles.map((puz, idx) => {
+              const status = getStageStatus(idx)
+              const isLocked = status === 'locked'
+              const isCompleted = status === 'completed'
+              const isCurrent = status === 'available'
+              const score = getStageScore(idx)
+              const stars = getStageStars(idx)
+
+              return (
+                <motion.button
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: idx * 0.025 }}
+                  onClick={() => handleStageClick(idx)}
+                  disabled={isLocked}
+                  className={`relative rounded-2xl p-4 border text-left flex flex-col justify-between gap-3 transition-all select-none ${
+                    isLocked
+                      ? 'bg-bg/40 border-border/70 opacity-45 cursor-not-allowed'
+                      : isCompleted
+                        ? 'bg-white border-border hover:border-teal hover:shadow-md hover:-translate-y-0.5 cursor-pointer group'
+                        : 'bg-white border-amber/50 hover:border-amber hover:shadow-md hover:-translate-y-0.5 ring-2 ring-amber/20 cursor-pointer group'
+                  }`}
+                >
+                  {/* Card Top: Stage Number + Stars */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono font-extrabold border ${
+                          isCompleted
+                            ? 'bg-green-light text-green border-green/40'
+                            : isCurrent
+                              ? 'bg-accent text-white border-accent'
+                              : 'bg-bg text-text-3 border-border'
+                        }`}
+                      >
+                        {isCompleted ? '✓' : idx + 1}
                       </span>
-                    </h2>
-                  </div>
-                  <span className="text-xs font-bold text-teal bg-teal-50 border border-teal/20 px-3 py-1 rounded-full">
-                    {sopCompletedCount} / {sopPuzzles.length} Completed
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sopPuzzles.map((puz, idx) => renderStageCard(puz, idx))}
-                </div>
-              </section>
-            )}
-
-            {/* 2. Product of Sums Track */}
-            {(activeTab === 'all' || activeTab === 'pos') && (
-              <section className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-indigo-600 shadow-xs" />
-                    <h2 className="text-lg font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
-                      Product of Sums (POS)
-                      <span className="text-xs font-bold text-slate-400 font-normal">
-                        — Stages 7 to 12
+                      <span className="text-xs font-bold text-text-1">
+                        Stage {idx + 1}
                       </span>
-                    </h2>
-                  </div>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
-                    {posCompletedCount} / {posPuzzles.length} Completed
-                  </span>
-                </div>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {posPuzzles.map((puz, idx) => renderStageCard(puz, idx + 6))}
-                </div>
-              </section>
-            )}
+                    <StarRating stars={stars} />
+                  </div>
+
+                  {/* Card Middle: Expression Box */}
+                  <div className="bg-bg/80 rounded-xl p-2.5 border border-border/80 flex flex-col gap-1 text-center">
+                    <div className="font-mono text-sm sm:text-base font-bold text-text-1 truncate py-0.5">
+                      <ExprText text={puz?.expr} />
+                    </div>
+                    <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-text-3 border-t border-border/60 pt-1">
+                      <span>Goal:</span>
+                      <span className="font-mono font-extrabold text-teal">
+                        <ExprText text={puz?.goal} />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Score or Action Pill */}
+                  <div className="flex items-center justify-between pt-0.5">
+                    {isCompleted && score !== null ? (
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                          score >= 80
+                            ? 'bg-green-light text-green border-green/30'
+                            : score >= 50
+                              ? 'bg-amber-light text-amber border-amber/30'
+                              : 'bg-red-50 text-red-600 border-red-200'
+                        }`}
+                      >
+                        {score} pts
+                      </span>
+                    ) : isCurrent ? (
+                      <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber/30">
+                        Ready
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-text-3 font-semibold">
+                        Locked
+                      </span>
+                    )}
+
+                    <span
+                      className={`text-xs font-bold transition-transform ${
+                        isLocked
+                          ? 'text-text-3'
+                          : isCompleted
+                            ? 'text-text-2 group-hover:text-teal group-hover:translate-x-0.5'
+                            : 'text-accent group-hover:translate-x-0.5'
+                      }`}
+                    >
+                      {isLocked ? '🔒' : isCompleted ? 'Replay →' : 'Start →'}
+                    </span>
+                  </div>
+                </motion.button>
+              )
+            })}
           </div>
         </main>
       )}
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div
-        className={`fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[100] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${
           showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowLawsDrawer(false)}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[360px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-[340px] max-w-[90vw] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${
           showLawsDrawer ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-slate-50">
-          <div>
-            <h2 className="text-base font-extrabold text-slate-900">Laws Reference</h2>
-            <p className="text-xs text-slate-500">Dual Boolean Algebra Laws</p>
-          </div>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-base font-bold text-text-1">Law Reference</h2>
           <button
-            className="w-8 h-8 rounded-full bg-white border border-slate-200 text-sm text-slate-500 flex items-center justify-center hover:bg-slate-100 transition-all"
+            className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all"
             onClick={() => setShowLawsDrawer(false)}
           >
             ✕
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3.5">
-          {laws && laws.map(law => (
-            <div key={law.id} className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left shadow-xs">
-              <div className="text-[13px] font-extrabold text-slate-800 mb-1.5">{law.name}</div>
-              <div className="flex flex-col gap-1.5 my-2 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 shadow-xs">
-                {law.formulas && law.formulas.map((f, idx) => (
-                  <div key={idx} className="font-mono text-xs font-bold text-slate-700">
-                    <ExprText text={f} />
-                  </div>
-                ))}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {laws &&
+            laws.map((law) => (
+              <div key={law.id} className="bg-bg border border-border rounded-xl p-3.5 text-left">
+                <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
+                <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded-lg px-3 py-2 shadow-xs">
+                  {law.formulas &&
+                    law.formulas.map((f, idx) => (
+                      <div key={idx} className="font-mono text-xs font-semibold text-text-1">
+                        {f}
+                      </div>
+                    ))}
+                </div>
+                <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
               </div>
-              <div className="text-[12px] text-slate-500 leading-relaxed mt-2">{law.desc}</div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>

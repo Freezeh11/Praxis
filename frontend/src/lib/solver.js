@@ -1,6 +1,6 @@
 import {
   cloneN, getNode, nodeText, canonText,
-  isEquivalent, getClauseLits
+  isEquivalent, getSumLits
 } from './expr.js'
 import {
   analyzeNot,
@@ -71,14 +71,14 @@ export function getLegalTransitions(tree) {
       return
     }
 
-    // 2. Product laws (Constants, Idempotent, Absorption, Dual Distributive, Complement)
+    // 2. Product Constant & Product Clause laws (Dual Distributive, Dual Absorption, Dual Complement, Identity, Annulment)
     if (node.type === 'prod') {
       const factors = node.factors
       for (let i = 0; i < factors.length; i++) {
-        const fPath = path + '.' + i
+        const p1 = path + '.' + i
         const f1 = factors[i]
         if (f1.type === 'const') {
-          const laws = analyzeProductConst(tree, fPath, f1.val, path)
+          const laws = analyzeProductConst(tree, p1, f1.val, path)
           laws.forEach(l => addTransition(l, tree))
         }
 
@@ -86,19 +86,19 @@ export function getLegalTransitions(tree) {
           const p2 = path + '.' + j
           const f2 = factors[j]
 
-          // A. Factor-level selections (Idempotent, Absorption)
-          const factorLaws = analyzeSelection(tree, [
-            { path: fPath, isTermSel: true },
+          // A. Factor/Clause level selections (Dual Idempotent, Dual Absorption)
+          const clauseLaws = analyzeSelection(tree, [
+            { path: p1, isTermSel: true },
             { path: p2, isTermSel: true },
           ])
-          factorLaws.forEach(l => addTransition(l, tree))
+          clauseLaws.forEach(l => addTransition(l, tree))
 
-          // B. Literal-level selections (Complement, Dual Distributive)
-          const lits1 = getClauseLits(f1)
-          const lits2 = getClauseLits(f2)
+          // B. Literal-level selections (Dual Distributive, Dual Complement)
+          const lits1 = getSumLits(f1)
+          const lits2 = getSumLits(f2)
           for (const l1 of lits1) {
             for (const l2 of lits2) {
-              const lp1 = findLitPath(f1, fPath, l1.v, l1.n)
+              const lp1 = findLitPath(f1, p1, l1.v, l1.n)
               const lp2 = findLitPath(f2, p2, l2.v, l2.n)
               if (lp1 && lp2) {
                 const litLaws = analyzeSelection(tree, [
@@ -110,7 +110,7 @@ export function getLegalTransitions(tree) {
             }
           }
         }
-        walk(f1, fPath)
+        walk(f1, p1)
       }
       return
     }

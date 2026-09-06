@@ -9,8 +9,9 @@
  *   everything else → plain text
  */
 export default function ExprText({ text, className = '' }) {
-  if (!text) return null
-  return <span className={className}>{renderTokens(tokenize(text))}</span>
+  if (text === null || text === undefined || text === '') return null
+  const str = typeof text === 'string' ? text : String(text)
+  return <span className={className}>{renderTokens(tokenize(str))}</span>
 }
 
 function renderTokens(tokens) {

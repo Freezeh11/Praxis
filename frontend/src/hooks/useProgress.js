@@ -182,24 +182,32 @@ export function useProgress() {
   const getStagesCompleted = (levelId) => progress.stageProgress[String(levelId)] || []
 
   /**
-   * Returns progress info for a given level, used for the lock gate.
+   * Returns progress info for a given level, used for the lock gate and star mastery.
    * @param {number} levelId
    * @param {number} totalStages  total number of stages in the level
-   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean }}
+   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean, totalStars: number, maxStars: number }}
    */
   const getLevelProgress = (levelId, totalStages) => {
     const scores = []
+    let totalStars = 0
     for (let i = 0; i < totalStages; i++) {
       const key = `${levelId}:${i}`
-      scores.push(progress.stageScores[key] ?? null)
+      const sc = progress.stageScores[key] ?? null
+      scores.push(sc)
+      const isDone = (progress.stageProgress[String(levelId)] || []).includes(i) || sc !== null
+      if (isDone) {
+        if (sc !== null && sc >= 90) totalStars += 3
+        else if (sc !== null && sc >= 75) totalStars += 2
+        else totalStars += 1
+      }
     }
     const completed = scores.filter(s => s !== null).length
     const avgScore = completed === 0
       ? 0
       : Math.round(scores.reduce((sum, s) => sum + (s ?? 0), 0) / totalStages)
     const allDone = completed === totalStages
-    const unlocked = allDone && avgScore >= 70
-    return { completed, avgScore, allDone, unlocked }
+    const unlocked = allDone && avgScore >= 80
+    return { completed, avgScore, allDone, unlocked, totalStars, maxStars: totalStages * 3 }
   }
 
   return {

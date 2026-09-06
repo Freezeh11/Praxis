@@ -71,7 +71,7 @@ export default function AnimationOverlay({ data }) {
   return (
     <div className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none">
       {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} data={data} lawId={lawId} />}
-      {(lawId === 'distributive' || lawId === 'distributive-pos') && <DistributiveFactoringAnimation rects={rects} data={data} />}
+      {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} data={data} />}
       {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} data={data} />}
       {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} data={data} />}
       {lawId === 'complement' && <ComplementBurstAnimation rects={rects} data={data} />}
@@ -355,7 +355,7 @@ function DistributiveFactoringAnimation({ rects, data }) {
           lineHeight: 1,
         }}
       >
-        {/* Outer prefix if nested inside a parent product (e.g. x in x(y'z + yz)) */}
+        {/* Outer prefix if nested inside a parent product */}
         {outerPrefix && (
           <span style={{ color: '#1a2035', fontWeight: '600' }}>
             <ExprText text={outerPrefix} />
@@ -373,9 +373,9 @@ function DistributiveFactoringAnimation({ rects, data }) {
           <ExprText text={factoredVar} />
         </span>
 
-        {data?.lawId === 'distributive-pos' ? (
+        {data?.formula?.includes('A + BC') || data?.lawName?.includes('POS') ? (
           <>
-            {/* POS Distributive: A + BC */}
+            {/* POS Dual Distributive: A + (rem1)(rem2) */}
             <span
               style={{
                 color: '#64748b',
@@ -388,27 +388,18 @@ function DistributiveFactoringAnimation({ rects, data }) {
             </span>
             <span
               style={{
-                color: rem1 === '0' ? '#f59e0b' : '#1a2035',
-                fontWeight: rem1 === '0' ? 'bold' : '600',
+                color: '#1a2035',
+                fontWeight: '600',
                 animation: 'remainderSlide 0.6s 0.35s ease both',
               }}
             >
-              <ExprText text={rem1} />
-            </span>
-            <span
-              style={{
-                color: rem2 === '0' ? '#f59e0b' : '#1a2035',
-                fontWeight: rem2 === '0' ? 'bold' : '600',
-                animation: 'remainderSlide 0.6s 0.4s ease both',
-              }}
-            >
-              <ExprText text={rem2} />
+              <ExprText text={rem1 && rem2 && (rem1.includes('+') || rem1.length > 1) ? `(${rem1})` : rem1} />
+              <ExprText text={rem1 && rem2 && (rem2.includes('+') || rem2.length > 1) ? `(${rem2})` : rem2} />
             </span>
           </>
         ) : (
           <>
-            {/* SOP Distributive: A(B + C) */}
-            {/* Opening parenthesis `(` */}
+            {/* SOP Distributive: A(rem1 + rem2) */}
             <span
               style={{
                 color: '#64748b',
