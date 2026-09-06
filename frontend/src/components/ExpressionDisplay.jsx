@@ -22,7 +22,7 @@ function isSelected(sel, path) {
 
 function isNodeAnimatingHide(path, animationPaths, animationLaw) {
   if (!animationLaw || !animationPaths || animationPaths.length === 0) return false
-  return animationPaths.some(p => path === p || path.startsWith(p + '.') || p.startsWith(path + '.'))
+  return animationPaths.some(p => path === p || path.startsWith(p + '.'))
 }
 
 /* ── Literal node (variable or constant) ── */
@@ -195,7 +195,11 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
 
         return (
           <motion.span layout transition={transitionConfig} key={i} className="inline-flex items-center">
-            {i > 0 && <span className="text-text-2 font-normal"> + </span>}
+            {i > 0 && (
+              <span className={`text-text-2 font-normal ${termAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}>
+                {' '}+{' '}
+              </span>
+            )}
 
             {hasMultiple ? (
               <motion.span

@@ -57,6 +57,10 @@ export function analyzeSelection(expr, sel) {
           id: 'distributive',
           formula: 'AB + AC = A(B+C)',
           desc: `Factor out ${vLabel} → ${vLabel}(${nodeText(r1)} + ${nodeText(r2)})`,
+          animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
+          factoredVar: vLabel,
+          rem1: nodeText(r1),
+          rem2: nodeText(r2),
           apply: () => {
             const tree = cloneN(expr)
             const sn = getNode(tree, cs.sumPath)
@@ -81,6 +85,7 @@ export function analyzeSelection(expr, sel) {
           id: 'complement',
           formula: "A + A' = 1",
           desc: `${vLabel1} + ${vLabel2} = 1`,
+          animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
           apply: () => {
             const tree = cloneN(expr)
             const sn = getNode(tree, cs.sumPath)
@@ -130,6 +135,7 @@ export function analyzeSelection(expr, sel) {
         id: 'annulment',
         formula: 'A + 1 = 1',
         desc: 'A + 1 = 1 — whole sum collapses to 1',
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -147,6 +153,7 @@ export function analyzeSelection(expr, sel) {
         id: 'idempotent',
         formula: 'A + A = A',
         desc: `${nodeText(t1)} + ${nodeText(t2)} = ${nodeText(t1)}`,
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -163,6 +170,7 @@ export function analyzeSelection(expr, sel) {
         id: 'absorption',
         formula: 'A + AB = A',
         desc: `${nodeText(t1)} absorbs ${nodeText(t2)}`,
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -177,6 +185,7 @@ export function analyzeSelection(expr, sel) {
         id: 'absorption',
         formula: 'A + AB = A',
         desc: `${nodeText(t2)} absorbs ${nodeText(t1)}`,
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -193,6 +202,7 @@ export function analyzeSelection(expr, sel) {
         id: 'identity',
         formula: 'A + 0 = A',
         desc: 'Remove the 0 term',
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -207,6 +217,7 @@ export function analyzeSelection(expr, sel) {
         id: 'identity',
         formula: 'A + 0 = A',
         desc: 'Remove the 0 term',
+        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
@@ -260,6 +271,18 @@ export function analyzeNot(expr, path) {
 
   // 2. De Morgan's AND: (ABCD...)' = A' + B' + C' + D'...
   if (child.type === 'prod') {
+    const deMorganTerms = child.factors.map(f => {
+      if (f.type === 'lit') {
+        return { v: f.v, hadBar: f.n, willHaveBar: !f.n }
+      }
+      const t = nodeText(f)
+      const hadBar = f.type === 'not' || t.endsWith("'")
+      return {
+        v: hadBar && f.type === 'not' ? nodeText(f.child) : t.replace(/'$/, ''),
+        hadBar,
+        willHaveBar: !hadBar,
+      }
+    })
     const expanded = sum(
       ...child.factors.map(f => (f.type === 'lit' ? lit(f.v, !f.n) : neg(cloneN(f))))
     )
@@ -268,6 +291,9 @@ export function analyzeNot(expr, path) {
       id: 'demorgan-and',
       formula: "(AB)' = A' + B'",
       desc: `${nodeText(node)} = ${nodeText(expanded)}`,
+      animPaths: [path],
+      deMorganTerms,
+      isAndToOr: true,
       apply: () => {
         const tree = cloneN(expr)
         return normalize(setNode(tree, path, cloneN(expanded)))
@@ -277,6 +303,18 @@ export function analyzeNot(expr, path) {
 
   // 3. De Morgan's OR: (A+B+C+D...)' = A'B'C'D'...
   if (child.type === 'sum') {
+    const deMorganTerms = child.terms.map(t => {
+      if (t.type === 'lit') {
+        return { v: t.v, hadBar: t.n, willHaveBar: !t.n }
+      }
+      const text = nodeText(t)
+      const hadBar = t.type === 'not' || text.endsWith("'")
+      return {
+        v: hadBar && t.type === 'not' ? nodeText(t.child) : text.replace(/'$/, ''),
+        hadBar,
+        willHaveBar: !hadBar,
+      }
+    })
     const expanded = prod(
       ...child.terms.map(t => (t.type === 'lit' ? lit(t.v, !t.n) : neg(cloneN(t))))
     )
@@ -285,6 +323,9 @@ export function analyzeNot(expr, path) {
       id: 'demorgan-or',
       formula: "(A+B)' = A'B'",
       desc: `${nodeText(node)} = ${nodeText(expanded)}`,
+      animPaths: [path],
+      deMorganTerms,
+      isAndToOr: false,
       apply: () => {
         const tree = cloneN(expr)
         return normalize(setNode(tree, path, cloneN(expanded)))

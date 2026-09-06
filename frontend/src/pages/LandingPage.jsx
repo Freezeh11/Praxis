@@ -36,7 +36,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </div>

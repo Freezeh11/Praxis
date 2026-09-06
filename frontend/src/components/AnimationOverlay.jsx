@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { getNode, nodeText } from '../lib/expr.js'
+import ExprText from './ExprText.jsx'
 
 /**
  * AnimationOverlay — renders clean, distinct DOM-level physical transformation animations.
@@ -25,9 +27,23 @@ export default function AnimationOverlay({ data }) {
       const measured = data.paths.map(path => {
         const el = document.querySelector(`[data-path="${path}"]`)
         if (!el) return null
-        const r = el.getBoundingClientRect()
+        // If el is a term container with a ⠿ handle as its first child, measure the inner expression
+        const targetEl = (el.children && el.children.length >= 2 && el.children[0].innerText?.includes('⠿'))
+          ? el.children[1]
+          : el
+        const r = targetEl.getBoundingClientRect()
         // Strip out handle icons and extra whitespace to get clean token text
-        const cleanText = el.innerText.replace(/[⠿\s]+/g, ' ').trim()
+        const cleanText = targetEl.innerText.replace(/[⠿\s]+/g, ' ').trim()
+
+        // Extract true mathematical text from AST if available so overbars/primes are preserved
+        let astText = cleanText
+        if (data.exprBefore) {
+          const node = getNode(data.exprBefore, path)
+          if (node) {
+            astText = nodeText(node)
+          }
+        }
+
         return {
           left: r.left,
           top: r.top,
@@ -36,9 +52,10 @@ export default function AnimationOverlay({ data }) {
           cx: r.left + r.width / 2,
           cy: r.top + r.height / 2,
           text: cleanText,
-          fontSize: window.getComputedStyle(el).fontSize,
-          fontWeight: window.getComputedStyle(el).fontWeight,
-          fontFamily: window.getComputedStyle(el).fontFamily,
+          astText: astText,
+          fontSize: window.getComputedStyle(targetEl).fontSize,
+          fontWeight: window.getComputedStyle(targetEl).fontWeight,
+          fontFamily: window.getComputedStyle(targetEl).fontFamily,
         }
       })
       setRects(measured)
@@ -53,7 +70,7 @@ export default function AnimationOverlay({ data }) {
   return (
     <div className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none">
       {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} data={data} lawId={lawId} />}
-      {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} />}
+      {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} data={data} />}
       {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} />}
       {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} />}
       {lawId === 'complement' && <ComplementBurstAnimation rects={rects} />}
@@ -87,15 +104,54 @@ const tokenBaseStyle = (r) => ({
 
 /* ─────────────────────────────────────────────
    1. De Morgan's Law Animation
-   The continuous overline bar snaps in half,
-   descends on subterms, and the operator flips.
+   Top group overbar dissolves away, old operator dissolves,
+   existing overbars cancel/vanish, new overbars drop onto
+   unbarred terms, and the new operator emerges.
    ───────────────────────────────────────────── */
 function DeMorganSplitAnimation({ rects, data, lawId }) {
   const r = rects[0]
   if (!r) return null
 
-  const isAndToOr = lawId === 'demorgan-and'
-  const halfW = (r.width - 12) / 2
+  const isAndToOr = lawId === 'demorgan-and' || data?.isAndToOr
+  let subterms = data?.deMorganTerms
+
+  // Fallback if deMorganTerms wasn't passed directly: extract from AST exprBefore
+  if (!subterms || subterms.length === 0) {
+    if (data?.exprBefore && data?.paths?.[0]) {
+      const targetNode = getNode(data.exprBefore, data.paths[0])
+      if (targetNode?.type === 'not' && targetNode.child) {
+        const child = targetNode.child
+        const list = child.type === 'prod' ? child.factors : child.type === 'sum' ? child.terms : [child]
+        subterms = list.map(item => {
+          if (item.type === 'lit') {
+            return {
+              v: item.v,
+              hadBar: item.n,
+              willHaveBar: !item.n,
+            }
+          }
+          const text = nodeText(item)
+          const hadBar = item.type === 'not' || text.endsWith("'")
+          return {
+            v: hadBar && item.type === 'not' ? nodeText(item.child) : text.replace(/'$/, ''),
+            hadBar,
+            willHaveBar: !hadBar,
+          }
+        })
+      }
+    }
+  }
+
+  // Final fallback if AST lookup failed
+  if (!subterms || subterms.length === 0) {
+    subterms = [
+      { v: 'x', hadBar: false, willHaveBar: true },
+      { v: 'y', hadBar: false, willHaveBar: true },
+    ]
+  }
+
+  const oldOp = isAndToOr ? '·' : '+'
+  const newOp = isAndToOr ? '+' : '·'
 
   return (
     <div
@@ -105,109 +161,262 @@ function DeMorganSplitAnimation({ rects, data, lawId }) {
         top: r.top,
         width: r.width,
         height: r.height,
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
         fontSize: r.fontSize || '22px',
-        fontWeight: 'bold',
+        fontWeight: '600',
         zIndex: 9999,
+        pointerEvents: 'none',
       }}
     >
-      {/* Left sub-term with its own overbar */}
+      {/* Top Group Overbar spanning the whole expression — dissolves away */}
       <div
         style={{
           position: 'absolute',
-          left: '12%',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          animation: 'barSplitLeft 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          top: '-2px',
+          left: '4%',
+          right: '4%',
+          height: '2.5px',
+          background: '#8b5cf6',
+          borderRadius: '1.5px',
+          animation: 'topBarDissolve 0.55s ease-out forwards',
+        }}
+      />
+
+      {/* Opening paren (dissolves) */}
+      <span
+        style={{
+          color: '#64748b',
+          marginRight: '2px',
+          animation: 'parenFadeOut 0.5s ease-out forwards',
         }}
       >
-        <span style={{ width: `${halfW}px`, height: '2.5px', background: '#8b5cf6', marginBottom: '2px', borderRadius: '1px' }} />
-        <span className="text-text-1">A</span>
+        (
+      </span>
+
+      {/* Inner Subterms and Operators */}
+      <div className="inline-flex items-center">
+        {subterms.map((item, idx) => (
+          <div key={idx} className="inline-flex items-center">
+            {/* Operator between terms */}
+            {idx > 0 && (
+              <span className="relative inline-flex items-center justify-center px-1.5" style={{ minWidth: '1.2em' }}>
+                {/* Old operator dissolving */}
+                <span
+                  style={{
+                    position: 'absolute',
+                    color: '#64748b',
+                    animation: 'oldOpFadeOut 0.4s ease-out forwards',
+                  }}
+                >
+                  {oldOp}
+                </span>
+
+                {/* New operator emerging */}
+                <span
+                  style={{
+                    color: '#8b5cf6',
+                    fontWeight: 'bold',
+                    animation: 'newOpEmerge 0.65s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                  }}
+                >
+                  {newOp}
+                </span>
+              </span>
+            )}
+
+            {/* Subterm with dynamic individual overbar */}
+            <div className="inline-flex flex-col items-center relative px-0.5">
+              {/* If hadBar was true: Existing overbar cancels and vanishes */}
+              {item.hadBar && (
+                <span
+                  style={{
+                    width: '100%',
+                    minWidth: '14px',
+                    height: '2px',
+                    background: '#8b5cf6',
+                    borderRadius: '1px',
+                    marginBottom: '2px',
+                    animation: 'barCancelDissolve 0.6s 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                  }}
+                />
+              )}
+
+              {/* If willHaveBar is true: New overbar drops in */}
+              {item.willHaveBar && (
+                <span
+                  style={{
+                    width: '100%',
+                    minWidth: '14px',
+                    height: '2px',
+                    background: '#8b5cf6',
+                    borderRadius: '1px',
+                    marginBottom: '2px',
+                    animation: 'barDropIn 0.65s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                  }}
+                />
+              )}
+
+              {/* If neither (e.g. double negated subterm resolved): empty spacer */}
+              {!item.hadBar && !item.willHaveBar && (
+                <span style={{ height: '2px', marginBottom: '2px' }} />
+              )}
+
+              {/* Literal Text */}
+              <span className="text-text-1 font-semibold">
+                {item.v}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Center Operator: + emerges for AND→OR, dissolves for OR→AND */}
-      <div
+      {/* Closing paren (dissolves) */}
+      <span
         style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '1.25rem',
-          color: '#8b5cf6',
-          fontWeight: 'bold',
-          animation: 'opFlip 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          color: '#64748b',
+          marginLeft: '2px',
+          animation: 'parenFadeOut 0.5s ease-out forwards',
         }}
       >
-        {isAndToOr ? '+' : '·'}
-      </div>
-
-      {/* Right sub-term with its own overbar */}
-      <div
-        style={{
-          position: 'absolute',
-          right: '12%',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          animation: 'barSplitRight 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <span style={{ width: `${halfW}px`, height: '2.5px', background: '#8b5cf6', marginBottom: '2px', borderRadius: '1px' }} />
-        <span className="text-text-1">B</span>
-      </div>
+        )
+      </span>
     </div>
   )
 }
 
 /* ─────────────────────────────────────────────
    2. Distributive Factoring Animation
-   Shared factor lifts out and moves to the front.
+   Shared factor lifts out to front, parentheses
+   materialize, and remainders (with 1) form.
    ───────────────────────────────────────────── */
-function DistributiveFactoringAnimation({ rects }) {
+function DistributiveFactoringAnimation({ rects, data }) {
   const valid = rects.filter(Boolean)
   if (valid.length < 2) return null
   const [r1, r2] = valid
 
-  const targetX = Math.min(r1.left, r2.left) - 28
-  const targetY = (r1.top + r2.top) / 2
+  const factoredVar = data?.factoredVar || 'x'
+  const rem1 = data?.rem1 || '1'
+  const rem2 = data?.rem2 || 'y'
 
-  const dx1 = targetX - r1.left
-  const dy1 = targetY - r1.top
-  const dx2 = targetX - r2.left
-  const dy2 = targetY - r2.top
+  const minLeft = Math.min(r1.left, r2.left)
+  const dx2 = minLeft - r2.left
 
   return (
     <>
-      {/* First factor slides forward */}
+      {/* Ghost variable from term 2 sliding and merging into the leading factor */}
       <div
         style={{
-          ...tokenBaseStyle(r1),
-          animation: 'factorPullOut1 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-          '--fact-dx1': `${dx1}px`,
-          '--fact-dy1': `${dy1}px`,
+          position: 'fixed',
+          left: r2.left,
+          top: r2.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: r1.fontSize || '22px',
+          fontWeight: '600',
+          color: '#0ea5e9',
+          zIndex: 10000,
+          pointerEvents: 'none',
+          animation: 'factorSlideIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          '--fact-dx2': `${dx2}px`,
         }}
       >
-        {r1.text}
+        <ExprText text={factoredVar} />
       </div>
 
-      {/* Second factor merges into the first */}
+      {/* Unified correctly-typeset formula: x(1 + y) */}
       <div
         style={{
-          ...tokenBaseStyle(r2),
-          animation: 'factorPullOut2 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-          '--fact-dx2': `${dx2}px`,
-          '--fact-dy2': `${dy2}px`,
+          position: 'fixed',
+          left: minLeft,
+          top: r1.top,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          fontSize: r1.fontSize || '22px',
+          fontWeight: '600',
+          color: '#1a2035',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          lineHeight: 1,
         }}
       >
-        {r2.text}
+        {/* Leading factored variable (e.g. x) */}
+        <span
+          style={{
+            color: '#0ea5e9',
+            fontWeight: 'bold',
+            animation: 'factorLeadPop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+          }}
+        >
+          <ExprText text={factoredVar} />
+        </span>
+
+        {/* Opening parenthesis `(` */}
+        <span
+          style={{
+            color: '#64748b',
+            fontWeight: 'normal',
+            margin: '0 0.05em',
+            animation: 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+          }}
+        >
+          (
+        </span>
+
+        {/* First remainder (e.g. 1 in gold) */}
+        <span
+          style={{
+            color: rem1 === '1' ? '#f59e0b' : '#1a2035',
+            fontWeight: rem1 === '1' ? 'bold' : '600',
+            animation: rem1 === '1'
+              ? 'oneEmerge 0.7s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+              : 'remainderSlide 0.6s 0.35s ease both',
+          }}
+        >
+          <ExprText text={rem1} />
+        </span>
+
+        {/* Plus operator ` + ` */}
+        <span
+          style={{
+            color: '#64748b',
+            fontWeight: 'normal',
+            margin: '0 0.25em',
+            animation: 'remainderSlide 0.6s 0.35s ease both',
+          }}
+        >
+          +
+        </span>
+
+        {/* Second remainder (e.g. y) */}
+        <span
+          style={{
+            color: rem2 === '1' ? '#f59e0b' : '#1a2035',
+            fontWeight: rem2 === '1' ? 'bold' : '600',
+            animation: rem2 === '1'
+              ? 'oneEmerge 0.7s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+              : 'remainderSlide 0.6s 0.4s ease both',
+          }}
+        >
+          <ExprText text={rem2} />
+        </span>
+
+        {/* Closing parenthesis `)` */}
+        <span
+          style={{
+            color: '#64748b',
+            fontWeight: 'normal',
+            margin: '0 0.05em',
+            animation: 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+          }}
+        >
+          )
+        </span>
       </div>
     </>
   )
@@ -230,7 +439,7 @@ function DoubleNegationAnimation({ rects }) {
         color: '#8b5cf6',
       }}
     >
-      {r.text}
+      <ExprText text={r.astText || r.text} />
     </div>
   )
 }
@@ -244,8 +453,10 @@ function AbsorptionSuctionAnimation({ rects }) {
   if (valid.length < 2) return null
   const [r1, r2] = valid
 
-  const survivor = r1.text.length <= r2.text.length ? r1 : r2
-  const absorbed = r1.text.length <= r2.text.length ? r2 : r1
+  const text1 = r1.astText || r1.text
+  const text2 = r2.astText || r2.text
+  const survivor = text1.length <= text2.length ? r1 : r2
+  const absorbed = text1.length <= text2.length ? r2 : r1
 
   const dx = survivor.cx - absorbed.cx
   const dy = survivor.cy - absorbed.cy
@@ -261,7 +472,7 @@ function AbsorptionSuctionAnimation({ rects }) {
           animation: 'absorbPulse 1.1s ease-in-out infinite',
         }}
       >
-        {survivor.text}
+        <ExprText text={survivor.astText || survivor.text} />
       </div>
 
       {/* Absorbed (Longer term) slides into absorber and fades */}
@@ -274,7 +485,7 @@ function AbsorptionSuctionAnimation({ rects }) {
           '--abs-dy': `${dy}px`,
         }}
       >
-        {absorbed.text}
+        <ExprText text={absorbed.astText || absorbed.text} />
       </div>
     </>
   )
@@ -307,7 +518,7 @@ function ComplementBurstAnimation({ rects }) {
           '--cdy': `${dy1}px`,
         }}
       >
-        {r1.text}
+        <ExprText text={r1.astText || r1.text} />
       </div>
 
       <div
@@ -318,7 +529,7 @@ function ComplementBurstAnimation({ rects }) {
           '--cdy': `${dy2}px`,
         }}
       >
-        {r2.text}
+        <ExprText text={r2.astText || r2.text} />
       </div>
 
       {/* Resulting 1 bursts out cleanly */}
@@ -359,7 +570,7 @@ function MergeAnimation({ rects, lawId }) {
           animation: 'singleFade 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
         }}
       >
-        {valid[0].text}
+        <ExprText text={valid[0].astText || valid[0].text} />
       </div>
     )
   }
@@ -369,8 +580,8 @@ function MergeAnimation({ rects, lawId }) {
   let absorbed = r2
 
   if (lawId === 'identity') {
-    survivor = r1.text === '0' ? r2 : r1
-    absorbed = r1.text === '0' ? r1 : r2
+    survivor = (r1.astText || r1.text) === '0' ? r2 : r1
+    absorbed = (r1.astText || r1.text) === '0' ? r1 : r2
   }
 
   const dx = survivor.cx - absorbed.cx
@@ -379,7 +590,7 @@ function MergeAnimation({ rects, lawId }) {
   return (
     <>
       <div style={{ ...tokenBaseStyle(survivor), animation: 'mergeGlow 0.5s 0.5s ease forwards' }}>
-        {survivor.text}
+        <ExprText text={survivor.astText || survivor.text} />
       </div>
 
       <div
@@ -390,7 +601,7 @@ function MergeAnimation({ rects, lawId }) {
           '--slide-dy': `${dy}px`,
         }}
       >
-        {absorbed.text}
+        <ExprText text={absorbed.astText || absorbed.text} />
       </div>
     </>
   )
@@ -404,7 +615,7 @@ function AnnulmentAnimation({ rects, lawId }) {
   const valid = rects.filter(Boolean)
   if (valid.length === 0) return null
 
-  const isProduct = lawId.includes('product') || valid.some(r => r.text === '0' || r.text.includes('0'))
+  const isProduct = lawId.includes('product') || valid.some(r => (r.astText || r.text) === '0' || (r.astText || r.text).includes('0'))
   const dominantConst = isProduct ? '0' : '1'
 
   if (valid.length === 1) {
@@ -423,7 +634,7 @@ function AnnulmentAnimation({ rects, lawId }) {
   }
 
   const [r1, r2] = valid
-  const constRect = (r1.text === dominantConst || r1.text.includes(dominantConst)) ? r1 : r2
+  const constRect = ((r1.astText || r1.text) === dominantConst || (r1.astText || r1.text).includes(dominantConst)) ? r1 : r2
   const varRect = (r1 === constRect) ? r2 : r1
 
   const dx = constRect.cx - varRect.cx
@@ -451,7 +662,7 @@ function AnnulmentAnimation({ rects, lawId }) {
           '--slide-dy': `${dy}px`,
         }}
       >
-        {varRect.text}
+        <ExprText text={varRect.astText || varRect.text} />
       </div>
     </>
   )

@@ -76,6 +76,7 @@ export default function ProblemPage() {
     handleClickLit, handleClickNot, handleClickTerm,
     applyLaw, undoAction, resetPuzzle, useHint, swapTerms, activateGuide,
     hintsUsed,
+    optimalSteps, optimalPath,
   } = useGameState()
 
   const stageNum = parseInt(stageIdx)
@@ -154,6 +155,8 @@ export default function ProblemPage() {
       return nameToId[s.law] || s.law.toLowerCase()
     })
 
+    const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
+
     // Submit score
     submitScore({
       levelId: Number(levelId),
@@ -161,6 +164,7 @@ export default function ProblemPage() {
       stepsUsed: steps.length,
       lawsUsed,
       hintsUsed,
+      optimalSteps: effectiveOptimal,
     }).then(result => {
       if (result) {
         saveScore(Number(levelId), stageNum, result.total)
@@ -191,12 +195,14 @@ export default function ProblemPage() {
         }
         return nameToId[s.law] || s.law.toLowerCase()
       })
+      const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
       submitScore({
         levelId: Number(levelId),
         stageIdx: stageNum,
         stepsUsed: steps.length,
         lawsUsed,
         hintsUsed,
+        optimalSteps: effectiveOptimal,
       }).then(result => {
         if (result) {
           saveScore(Number(levelId), stageNum, result.total)
@@ -254,6 +260,7 @@ export default function ProblemPage() {
     if (dontAskResetAgain) {
       sessionStorage.setItem('praxis_skip_reset_confirm', 'true')
     }
+    setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
     setShowResetConfirm(false)
     setShowSuccess(false)
@@ -262,19 +269,31 @@ export default function ProblemPage() {
   }
 
   const handleUndo = () => {
+    setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
     undoAction()
   }
 
   /* Wrapper functions to pass current expr snapshot to handlers */
-  const onClickLit = (path) => expr && handleClickLit(path, expr)
-  const onClickNot = (path) => expr && handleClickNot(path, expr)
-  const onClickTerm = (path) => expr && handleClickTerm(path, expr)
+  const onClickLit = (path) => {
+    setInspectedStepIdx(null)
+    if (expr) handleClickLit(path, expr)
+  }
+  const onClickNot = (path) => {
+    setInspectedStepIdx(null)
+    if (expr) handleClickNot(path, expr)
+  }
+  const onClickTerm = (path) => {
+    setInspectedStepIdx(null)
+    if (expr) handleClickTerm(path, expr)
+  }
   const onApplyLaw = (law) => {
+    setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
     if (expr) applyLaw(law, expr, steps, hintsUsed)
   }
   const onSwapTerms = (sumPath, fromIdx, toIdx) => {
+    setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
     swapTerms(sumPath, fromIdx, toIdx)
   }
@@ -450,27 +469,58 @@ export default function ProblemPage() {
                         transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
                         className="relative flex items-center group py-1 rounded-lg select-none transition-all"
                       >
-                        {/* Left Annotation: Sole trigger to view context card */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))
-                          }}
-                          className={`absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
-                            isInspected
-                              ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
-                              : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-text-3 hover:text-text-1'
-                          }`}
-                          title="Click to read law context card"
-                        >
-                          <span className="font-sans text-xs tracking-wide">
-                            {line.law}
-                          </span>
-                          <span className="font-mono text-sm font-bold">
-                            →
-                          </span>
-                        </button>
+                        {/* Left Annotation Group: Context Card (on the left) + Law Button */}
+                        <div className="absolute right-full mr-5 flex items-center gap-3 justify-end pointer-events-none">
+                          {/* Left-Aligned Context Card (Revealed on law click) */}
+                          {isInspected && (
+                            <div
+                              className="pointer-events-auto"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <motion.div
+                                initial={{ opacity: 0, x: 6, scale: 0.97 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                className="bg-white border border-sky-400 shadow-lg rounded-xl px-3.5 py-2.5 text-left w-[250px]"
+                              >
+                                <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-sky-800 uppercase tracking-wide">
+                                  <span>✦ {line.cardLaw}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setInspectedStepIdx(null)}
+                                    className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <div className="text-[11px] text-slate-600 mt-1 leading-snug font-sans font-normal">
+                                  {getLawExplanation(line.cardLaw)}
+                                </div>
+                              </motion.div>
+                            </div>
+                          )}
+
+                          {/* Law Annotation Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setInspectedStepIdx(prev => (prev === line.stepKey ? null : line.stepKey))
+                            }}
+                            className={`pointer-events-auto flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
+                              isInspected
+                                ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
+                                : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-text-3 hover:text-text-1'
+                            }`}
+                            title="Click to read law context card"
+                          >
+                            <span className="font-sans text-xs tracking-wide">
+                              {line.law}
+                            </span>
+                            <span className="font-mono text-sm font-bold">
+                              →
+                            </span>
+                          </button>
+                        </div>
 
                         {/* Centered Equation Line */}
                         <div
@@ -492,34 +542,6 @@ export default function ProblemPage() {
                             className={isInspected ? 'text-sky-950 font-semibold' : 'text-text-1'}
                           />
                         </div>
-
-                        {/* Right-Aligned Context Card (Revealed on law click) */}
-                        {isInspected && (
-                          <div
-                            className="absolute left-[calc(100%+20px)] flex items-center z-40 pointer-events-auto"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <motion.div
-                              initial={{ opacity: 0, x: -6, scale: 0.97 }}
-                              animate={{ opacity: 1, x: 0, scale: 1 }}
-                              className="bg-white border border-sky-400 shadow-lg rounded-xl px-3.5 py-2.5 text-left w-[250px]"
-                            >
-                              <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-sky-800 uppercase tracking-wide">
-                                <span>✦ {line.cardLaw}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setInspectedStepIdx(null)}
-                                  className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                              <div className="text-[11px] text-slate-600 mt-1 leading-snug font-sans font-normal">
-                                {getLawExplanation(line.cardLaw)}
-                              </div>
-                            </motion.div>
-                          </div>
-                        )}
                       </motion.div>
                     )
                   })}
@@ -533,29 +555,63 @@ export default function ProblemPage() {
                     transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
                     className="relative flex items-center z-10"
                   >
-                    {/* Left Annotation: Sole trigger to view active context card */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (activeStepKey !== null) {
-                          setInspectedStepIdx(prev => (prev === activeStepKey ? null : activeStepKey))
-                        }
-                      }}
-                      className={`absolute right-full mr-5 flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
-                        isActiveInspected
-                          ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
-                          : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-teal hover:text-teal-dark'
-                      }`}
-                      title="Click to view law explanation"
-                    >
-                      <span className="font-sans text-xs tracking-wide">
-                        {steps.length === 0 ? 'Initial Expression' : steps[steps.length - 1].law}
-                      </span>
-                      <span className="font-mono text-sm font-bold">
-                        →
-                      </span>
-                    </button>
+                    {/* Left Annotation Group: Context Card + Active Law Button */}
+                    <div className="absolute right-full mr-5 flex items-center gap-3 justify-end pointer-events-none">
+                      {/* Left-Aligned Context Card (only when active line is explicitly inspected) */}
+                      {isActiveInspected && (
+                        <div
+                          className="pointer-events-auto"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, x: 6, scale: 0.97 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 6 }}
+                            className="bg-white border border-teal shadow-md rounded-lg px-3.5 py-2.5 text-left w-[250px]"
+                          >
+                            <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide">
+                              <span>✦ {animationData?.lawName || activeCardLaw || 'Applying Law'}</span>
+                              {isActiveInspected && (
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectedStepIdx(null)}
+                                  className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-700 mt-1 leading-snug font-sans font-normal">
+                              {getLawExplanation(animationData?.lawName || activeCardLaw)}
+                            </div>
+                          </motion.div>
+                        </div>
+                      )}
+
+                      {/* Active Law Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (activeStepKey !== null) {
+                            setInspectedStepIdx(prev => (prev === activeStepKey ? null : activeStepKey))
+                          }
+                        }}
+                        className={`pointer-events-auto flex items-center gap-2.5 whitespace-nowrap justify-end cursor-pointer px-2.5 py-1 rounded-lg border transition-all ${
+                          isActiveInspected
+                            ? 'border-sky-400 bg-sky-100 text-sky-800 font-bold shadow-xs'
+                            : 'border-transparent hover:border-slate-200 hover:bg-slate-100 text-teal hover:text-teal-dark'
+                        }`}
+                        title="Click to view law explanation"
+                      >
+                        <span className="font-sans text-xs tracking-wide">
+                          {steps.length === 0 ? 'Initial Expression' : steps[steps.length - 1].law}
+                        </span>
+                        <span className="font-mono text-sm font-bold">
+                          →
+                        </span>
+                      </button>
+                    </div>
 
                     {/* Centered Interactive Equation */}
                     <div
@@ -580,37 +636,6 @@ export default function ProblemPage() {
                         animationLaw={isAnimating ? animationData?.lawId : null}
                       />
                     </div>
-
-                    {/* Right-Aligned Context Card while animation is actively playing OR active line is inspected */}
-                    {(isAnimating || isActiveInspected) && (
-                      <div
-                        className="absolute left-[calc(100%+20px)] flex items-center z-40 pointer-events-auto"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <motion.div
-                          initial={{ opacity: 0, x: -8, scale: 0.97 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          exit={{ opacity: 0, x: -6 }}
-                          className="bg-white border border-teal shadow-md rounded-lg px-3.5 py-2.5 text-left w-[250px]"
-                        >
-                          <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide">
-                            <span>✦ {animationData?.lawName || activeCardLaw || 'Applying Law'}</span>
-                            {isActiveInspected && (
-                              <button
-                                type="button"
-                                onClick={() => setInspectedStepIdx(null)}
-                                className="text-[11px] text-slate-400 font-bold hover:text-slate-700 px-1 rounded hover:bg-slate-100 transition-colors"
-                              >
-                                ✕
-                              </button>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-slate-700 mt-1 leading-snug font-sans font-normal">
-                            {getLawExplanation(animationData?.lawName || activeCardLaw)}
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
                   </motion.div>
                 </motion.div>
               )

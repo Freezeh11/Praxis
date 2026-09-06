@@ -105,39 +105,60 @@
 }
 
 /* ── Distributive Factoring Animation ── */
-@keyframes factorPullOut1 {
-  0%   { transform: translate(0, 0) scale(1); }
-  40%  { transform: translate(0, -28px) scale(1.15); box-shadow: 0 4px 14px rgba(14,165,233,0.3); }
-  100% { transform: translate(var(--fact-dx1), var(--fact-dy1)) scale(1.05); }
+@keyframes factorLeadPop {
+  0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
+  40%  { transform: scale(1.2) translateY(-4px); opacity: 1; filter: drop-shadow(0 2px 8px rgba(14,165,233,0.5)); }
+  70%  { transform: scale(1.05) translateY(0); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }
-@keyframes factorPullOut2 {
+@keyframes factorSlideIn {
   0%   { transform: translate(0, 0) scale(1); opacity: 1; }
-  40%  { transform: translate(0, -28px) scale(1.15); opacity: 1; }
-  85%  { transform: translate(var(--fact-dx2), var(--fact-dy2)) scale(0.8); opacity: 0.6; }
-  100% { transform: translate(var(--fact-dx2), var(--fact-dy2)) scale(0.2); opacity: 0; }
+  50%  { transform: translate(calc(var(--fact-dx2) * 0.5), -14px) scale(1.15); opacity: 0.9; }
+  100% { transform: translate(var(--fact-dx2), 0) scale(0.4); opacity: 0; }
 }
-@keyframes parenReveal {
-  0%   { opacity: 0; transform: scale(0.6); }
-  100% { opacity: 1; transform: scale(1); }
+@keyframes parenPop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes oneEmerge {
+  0%   { transform: scale(0.2); opacity: 0; }
+  55%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes remainderSlide {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-/* ── De Morgan Bar Split & Operator Flip ── */
-@keyframes barSplitLeft {
-  0%   { transform: translate(0, 0); opacity: 1; }
-  35%  { transform: translate(0, -6px); opacity: 1; }
-  75%  { transform: translate(-12px, 0); opacity: 1; }
-  100% { transform: translate(-16px, 0); opacity: 1; }
+/* ── De Morgan Bar Dissolve, Cancel, Drop & Operator Transition ── */
+@keyframes topBarDissolve {
+  0%   { opacity: 1; transform: scaleX(1) translateY(0); }
+  35%  { opacity: 0.9; transform: scaleX(1.02) translateY(-2px); }
+  100% { opacity: 0; transform: scaleX(0.75) translateY(-8px); filter: blur(1px); }
 }
-@keyframes barSplitRight {
-  0%   { transform: translate(0, 0); opacity: 1; }
-  35%  { transform: translate(0, -6px); opacity: 1; }
-  75%  { transform: translate(12px, 0); opacity: 1; }
-  100% { transform: translate(16px, 0); opacity: 1; }
+@keyframes barCancelDissolve {
+  0%   { opacity: 1; transform: scale(1); }
+  35%  { opacity: 1; transform: scale(1.25); filter: brightness(1.4); }
+  100% { opacity: 0; transform: scale(0.3) translateY(-6px); }
 }
-@keyframes opFlip {
-  0%   { transform: scale(0.5); opacity: 0; }
-  40%  { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes barDropIn {
+  0%   { opacity: 0; transform: translateY(-12px) scaleX(0.2); }
+  60%  { opacity: 1; transform: translateY(1.5px) scaleX(1.15); }
+  100% { opacity: 1; transform: translateY(0) scaleX(1); }
+}
+@keyframes oldOpFadeOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+@keyframes newOpEmerge {
+  0%   { opacity: 0; transform: scale(0.2); }
+  60%  { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes parenFadeOut {
+  0%   { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
 }
 @keyframes doubleNegCancel {
   0%   { opacity: 1; transform: scale(1); }

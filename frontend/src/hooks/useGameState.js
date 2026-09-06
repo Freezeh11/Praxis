@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { parseExpr, cloneN, canonText, nodeText, getNode } from '../lib/expr.js'
 import { analyzeSelection, analyzeNot, analyzeProductConst, scanHints } from '../lib/laws.js'
+import { findOptimalPath } from '../lib/solver.js'
 
 const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
 
@@ -54,6 +55,8 @@ export function useGameState() {
   const [goalCanon, setGoalCanon] = useState('')
   const [hintIdx, setHintIdx] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
+  const [optimalSteps, setOptimalSteps] = useState(0)
+  const [optimalPath, setOptimalPath] = useState([])
   const [applicableLaws, setApplicableLaws] = useState([])
   const [status, setStatus] = useState('select') // 'select' | 'laws' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('Select a term or variable to begin')
@@ -94,6 +97,21 @@ export function useGameState() {
     const parsedExpr = parseExpr(puzzle.expr)
     const gCanon = canonText(parseExpr(puzzle.goal))
     goalCanonRef.current = gCanon
+
+    // Compute dynamic optimal path via BFS
+    try {
+      const solverRes = findOptimalPath(parsedExpr, gCanon)
+      if (solverRes.found && solverRes.optimalSteps > 0) {
+        setOptimalSteps(solverRes.optimalSteps)
+        setOptimalPath(solverRes.path)
+      } else {
+        setOptimalSteps(puzzle.optimalSteps || 0)
+        setOptimalPath([])
+      }
+    } catch {
+      setOptimalSteps(puzzle.optimalSteps || 0)
+      setOptimalPath([])
+    }
 
     if (savedSteps && Array.isArray(savedSteps) && savedSteps.length > 0) {
       try {
@@ -335,7 +353,12 @@ export function useGameState() {
     setAnimationData({
       lawId: law.id,
       lawName: law.name,
-      paths: sel.map(s => s.path),
+      paths: law.animPaths || sel.map(s => s.path),
+      factoredVar: law.factoredVar,
+      rem1: law.rem1,
+      rem2: law.rem2,
+      deMorganTerms: law.deMorganTerms,
+      isAndToOr: law.isAndToOr,
       exprBefore: currentExpr,
       exprAfter: newExpr
     })
@@ -474,6 +497,7 @@ export function useGameState() {
     expr, sel, steps, exprHistory,
     goalText, goalCanon,
     hintIdx, hintsUsed,
+    optimalSteps, optimalPath,
     applicableLaws,
     isComplete, earnedXp,
     status, statusMsg,
