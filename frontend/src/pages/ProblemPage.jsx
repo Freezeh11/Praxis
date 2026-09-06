@@ -205,6 +205,7 @@ export default function ProblemPage() {
           "De Morgan's (AND\u2192OR)": 'demorgan-and',
           "De Morgan's (OR\u2192AND)": 'demorgan-or',
           'Distributive (Factor)': 'distributive',
+          'Distributive Law (POS)': 'distributive-pos',
         }
         return nameToId[s.law] || s.law.toLowerCase()
       })
@@ -367,8 +368,17 @@ export default function ProblemPage() {
         {/* Center header */}
         <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <div>
-            <div className="text-[15px] font-bold text-text-1">Simplify Expression</div>
-            <div className="text-[11px] text-text-3 mt-0.5">Reduce to its simplest form</div>
+            <div className="text-[15px] font-bold text-text-1 flex items-center gap-2">
+              <span>Simplify Expression</span>
+              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                stageNum >= 6 ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-teal-light text-teal'
+              }`}>
+                {stageNum >= 6 ? 'Product of Sums' : 'Sum of Products'}
+              </span>
+            </div>
+            <div className="text-[11px] text-text-3 mt-0.5">
+              {stageNum >= 6 ? 'Product of Sums — reduce using dual laws' : 'Sum of Products — reduce to simplest form'}
+            </div>
           </div>
           <div className="flex gap-1.5 items-center">
             {/* Zoom controls */}

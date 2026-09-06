@@ -71,7 +71,7 @@ export default function AnimationOverlay({ data }) {
   return (
     <div className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none">
       {lawId.startsWith('demorgan') && <DeMorganSplitAnimation rects={rects} data={data} lawId={lawId} />}
-      {lawId === 'distributive' && <DistributiveFactoringAnimation rects={rects} data={data} />}
+      {(lawId === 'distributive' || lawId === 'distributive-pos') && <DistributiveFactoringAnimation rects={rects} data={data} />}
       {lawId === 'double-neg' && <DoubleNegationAnimation rects={rects} data={data} />}
       {lawId === 'absorption' && <AbsorptionSuctionAnimation rects={rects} data={data} />}
       {lawId === 'complement' && <ComplementBurstAnimation rects={rects} data={data} />}
@@ -362,7 +362,7 @@ function DistributiveFactoringAnimation({ rects, data }) {
           </span>
         )}
 
-        {/* Factored variable (e.g. z) */}
+        {/* Factored variable (e.g. z or x) */}
         <span
           style={{
             color: '#0ea5e9',
@@ -373,71 +373,108 @@ function DistributiveFactoringAnimation({ rects, data }) {
           <ExprText text={factoredVar} />
         </span>
 
-        {/* Opening parenthesis `(` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.05em',
-            animation: outerPrefix
-              ? 'none'
-              : 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-          }}
-        >
-          (
-        </span>
+        {data?.lawId === 'distributive-pos' ? (
+          <>
+            {/* POS Distributive: A + BC */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.25em',
+                animation: 'remainderSlide 0.6s 0.25s ease both',
+              }}
+            >
+              +
+            </span>
+            <span
+              style={{
+                color: rem1 === '0' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem1 === '0' ? 'bold' : '600',
+                animation: 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              <ExprText text={rem1} />
+            </span>
+            <span
+              style={{
+                color: rem2 === '0' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem2 === '0' ? 'bold' : '600',
+                animation: 'remainderSlide 0.6s 0.4s ease both',
+              }}
+            >
+              <ExprText text={rem2} />
+            </span>
+          </>
+        ) : (
+          <>
+            {/* SOP Distributive: A(B + C) */}
+            {/* Opening parenthesis `(` */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.05em',
+                animation: outerPrefix
+                  ? 'none'
+                  : 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            >
+              (
+            </span>
 
-        {/* First remainder (e.g. 1 in gold or y') */}
-        <span
-          style={{
-            color: rem1 === '1' ? '#f59e0b' : '#1a2035',
-            fontWeight: rem1 === '1' ? 'bold' : '600',
-            animation: rem1 === '1'
-              ? 'oneEmerge 0.7s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both'
-              : 'remainderSlide 0.6s 0.35s ease both',
-          }}
-        >
-          <ExprText text={rem1} />
-        </span>
+            {/* First remainder (e.g. 1 in gold or y') */}
+            <span
+              style={{
+                color: rem1 === '1' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem1 === '1' ? 'bold' : '600',
+                animation: rem1 === '1'
+                  ? 'oneEmerge 0.7s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+                  : 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              <ExprText text={rem1} />
+            </span>
 
-        {/* Plus operator ` + ` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.25em',
-            animation: 'remainderSlide 0.6s 0.35s ease both',
-          }}
-        >
-          +
-        </span>
+            {/* Plus operator ` + ` */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.25em',
+                animation: 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              +
+            </span>
 
-        {/* Second remainder (e.g. y) */}
-        <span
-          style={{
-            color: rem2 === '1' ? '#f59e0b' : '#1a2035',
-            fontWeight: rem2 === '1' ? 'bold' : '600',
-            animation: rem2 === '1'
-              ? 'oneEmerge 0.7s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
-              : 'remainderSlide 0.6s 0.4s ease both',
-          }}
-        >
-          <ExprText text={rem2} />
-        </span>
+            {/* Second remainder (e.g. y) */}
+            <span
+              style={{
+                color: rem2 === '1' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem2 === '1' ? 'bold' : '600',
+                animation: rem2 === '1'
+                  ? 'oneEmerge 0.7s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+                  : 'remainderSlide 0.6s 0.4s ease both',
+              }}
+            >
+              <ExprText text={rem2} />
+            </span>
 
-        {/* Closing parenthesis `)` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.05em',
-            animation: outerPrefix
-              ? 'none'
-              : 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-          }}
-        >
-          )
-        </span>
+            {/* Closing parenthesis `)` */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.05em',
+                animation: outerPrefix
+                  ? 'none'
+                  : 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            >
+              )
+            </span>
+          </>
+        )}
 
         {/* Outer suffix if any */}
         {outerSuffix && (

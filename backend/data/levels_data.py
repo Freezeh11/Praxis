@@ -8,20 +8,20 @@ LAWS = [
     {
         "id": "complement",
         "name": "Complement Law",
-        "formulas": ["A + A' = 1"],
-        "desc": "A variable OR its complement equals 1.",
+        "formulas": ["A + A' = 1", "A · A' = 0"],
+        "desc": "A variable OR its complement equals 1 (or ANDed equals 0).",
     },
     {
         "id": "idempotent",
         "name": "Idempotent Law",
-        "formulas": ["A + A = A"],
-        "desc": "Duplicate terms can be removed.",
+        "formulas": ["A + A = A", "(A+B)(A+B) = A+B"],
+        "desc": "Duplicate terms or clauses can be removed.",
     },
     {
         "id": "absorption",
         "name": "Absorption Law",
-        "formulas": ["A + AB = A"],
-        "desc": "A shorter term absorbs a longer one containing it.",
+        "formulas": ["A + AB = A", "A(A+B) = A", "(A+B)(A+B+C) = A+B"],
+        "desc": "A shorter term/clause absorbs a longer one containing it.",
     },
     {
         "id": "identity",
@@ -33,13 +33,13 @@ LAWS = [
         "id": "annulment",
         "name": "Annulment Law",
         "formulas": ["A + 1 = 1", "A · 0 = 0"],
-        "desc": "OR with 1 is always 1.",
+        "desc": "OR with 1 is 1; AND with 0 is 0.",
     },
     {
         "id": "distributive",
-        "name": "Distributive (Factor)",
-        "formulas": ["AB + AC = A(B+C)"],
-        "desc": "Factor out common variables from terms.",
+        "name": "Distributive Law",
+        "formulas": ["AB + AC = A(B+C)", "(A+B)(A+C) = A + BC"],
+        "desc": "Factor out common variables from terms or clauses.",
     },
     {
         "id": "double-neg",
@@ -152,6 +152,84 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "The optimal path is 4 steps: De Morgan's on both groups, then Complement (x + x' = 1), then Annulment (1 + anything = 1).",
             },
+            # Stage 7 — POS Dual Absorption (Product of Sums Intro)
+            {
+                "expr": "x(x + y)",
+                "goal": "x",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "This expression is in Product of Sums (POS) form — terms and clauses are multiplied together.",
+                    "Look at the standalone variable x and the clause (x + y).",
+                    "Dual Absorption Law: A(A + B) = A — select the variable and the clause to apply it.",
+                ],
+                "optimalSteps": 1,
+                "optimalHint": "In Product of Sums, a standalone literal absorbs any larger clause containing it — A(A + B) = A in a single step!",
+            },
+            # Stage 8 — POS Deduplication & Distributive
+            {
+                "expr": "(x + y)(x + y)(x + y')",
+                "goal": "x",
+                "targetLaws": ["distributive-pos", "complement", "absorption"],
+                "hints": [
+                    "Two of the clauses share a common variable x with opposite y complements.",
+                    "Apply Distributive Law (POS): (A+B)(A+C) = A + BC by selecting x in both clauses.",
+                    "Turn y·y' into 0 using Complement Law, then use Absorption.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Factoring x yields (x + y)(x + yy') → (x + y)(x + 0) → x in 3 optimal steps.",
+            },
+            # Stage 9 — POS Distributive Core
+            {
+                "expr": "(x + y)(x + y')",
+                "goal": "x",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Both clauses share the common literal x.",
+                    "Apply Distributive Law (POS): (A+B)(A+C) = A + BC by selecting x in both clauses.",
+                    "Simplify the resulting product y·y' to 0, then remove 0 using Identity Law.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Dual Distributive produces x + yy', then Complement and Identity complete the reduction to x.",
+            },
+            # Stage 10 — Level 1 POS Boss (De Morgan OR to POS)
+            {
+                "expr": "(x'y')'(x + y)",
+                "goal": "x + y",
+                "targetLaws": ["demorgan-and", "idempotent"],
+                "hints": [
+                    "Start by expanding the negated group (x'y')' using De Morgan's Law.",
+                    "After expanding, notice the two identical clauses in the product.",
+                    "Use Idempotent Law on the duplicate clauses: (A+B)(A+B) = A+B.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "De Morgan's expands (x'y')' into (x + y), which duplicates the second clause — solved in 2 steps!",
+            },
+            # Stage 11 — POS Factoring with Complements
+            {
+                "expr": "(x' + y)(x' + y')",
+                "goal": "x'",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Both clauses share x'. Factor out x' using Distributive Law (POS).",
+                    "Complement Law simplifies y·y' to 0.",
+                    "Identity Law removes the 0 to leave x'.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Dual Distributive produces x' + yy' → x' + 0 → x' in 3 optimal steps.",
+            },
+            # Stage 12 — Level 1 POS Grand Finale
+            {
+                "expr": "(x + y')(x + y)(x' + y)(x' + y')",
+                "goal": "0",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Group pairs of clauses sharing common variables: (x + y')(x + y) and (x' + y)(x' + y').",
+                    "Factor x from the first pair and x' from the second pair.",
+                    "After simplifying to x · x', Complement Law yields 0!",
+                ],
+                "optimalSteps": 6,
+                "optimalHint": "Factoring both complementary pairs collapses the expression to x · x' = 0 in 6 steps.",
+            },
         ],
     },
     {
@@ -238,6 +316,84 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "The optimal path: Distributive → Complement → Identity (creates y), then Absorption (y absorbs x'yz, since y appears inside x'yz). All 3 law types must be used.",
             },
+            # Stage 7 — 3-Var POS Factoring
+            {
+                "expr": "(x + y + z)(x + y + z')",
+                "goal": "x + y",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Both 3-variable clauses share the common sub-clause x + y.",
+                    "Select x in both clauses to apply Distributive Law (POS).",
+                    "Continue factoring common literals until you isolate z·z' = 0.",
+                ],
+                "optimalSteps": 4,
+                "optimalHint": "Factoring x and y isolates z·z' = 0, leaving x + y in 4 steps.",
+            },
+            # Stage 8 — 3-Var Multi-Clause Absorption
+            {
+                "expr": "(x + y)(x + y + z)(x' + z)",
+                "goal": "(x + y)(x' + z)",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Compare the 2-variable clause (x + y) with the 3-variable clause (x + y + z).",
+                    "All literals in (x + y) appear inside (x + y + z).",
+                    "In POS, shorter clauses absorb longer clauses containing them.",
+                ],
+                "optimalSteps": 1,
+                "optimalHint": "The 2-literal clause (x + y) directly absorbs (x + y + z) in a single step!",
+            },
+            # Stage 9 — Cascading POS Factoring
+            {
+                "expr": "(x + y)(x + y')(x + z)",
+                "goal": "x",
+                "targetLaws": ["distributive-pos", "complement", "absorption"],
+                "hints": [
+                    "Look at the first two clauses: (x + y) and (x + y'). They form a complementary pair.",
+                    "Factor out x to get x + yy' → x + 0 = x.",
+                    "Then the resulting x absorbs (x + z).",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Factoring the first two clauses collapses them to x, which then absorbs (x + z) in 3 total steps.",
+            },
+            # Stage 10 — Level 2 POS Boss (De Morgan + Dual Factoring)
+            {
+                "expr": "((x'y')' + z)(x + y + z')",
+                "goal": "x + y",
+                "targetLaws": ["demorgan-and", "distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Expand the inner negated group (x'y')' using De Morgan's Law.",
+                    "This reveals (x + y + z)(x + y + z').",
+                    "Factor out x and y, then cancel the z·z' complementary pair.",
+                ],
+                "optimalSteps": 5,
+                "optimalHint": "De Morgan's reveals the dual factoring structure, reducing to x + y in 5 steps.",
+            },
+            # Stage 11 — 3-Var Quad POS Factoring
+            {
+                "expr": "(x + y + z)(x + y + z')(x + y' + z)(x + y' + z')",
+                "goal": "x",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Pair the first two clauses (sharing x + y) and the last two clauses (sharing x + y').",
+                    "Factor z and z' out to reduce both pairs to 2-variable clauses.",
+                    "Factor x from the remaining pair (x + y)(x + y') to reach x.",
+                ],
+                "optimalSteps": 10,
+                "optimalHint": "Quad POS factoring systematically cancels z first, then y, leaving the single variable x in 10 steps.",
+            },
+            # Stage 12 — Level 2 POS Grand Finale
+            {
+                "expr": "(x' + y' + z)(x' + y' + z')(x + y' + z)(x + y' + z')",
+                "goal": "y'",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "All 4 clauses share the common literal y'.",
+                    "Pair the first two clauses (sharing x') and the second two clauses (sharing x).",
+                    "After eliminating z from both pairs, factor y' to cancel x' · x to 0.",
+                ],
+                "optimalSteps": 10,
+                "optimalHint": "Dual factoring eliminates z from both pairs, then factoring y' yields y' + x'x = y' in 10 steps.",
+            },
         ],
     },
     {
@@ -323,6 +479,84 @@ LEVELS = [
                 ],
                 "optimalSteps": 14,
                 "optimalHint": "Factoring pairs of minterms systematically eliminates y and then x, leaving the clean 2-variable core wz.",
+            },
+            # Stage 7 — 4-Var Absorption Chain (POS)
+            {
+                "expr": "(w + x)(w + x + y)(w + x + y + z)",
+                "goal": "w + x",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Notice the cascading clause sizes: 2 literals, 3 literals, 4 literals.",
+                    "The shortest clause (w + x) contains variables shared by all larger clauses.",
+                    "Apply Absorption sequentially to eliminate the larger clauses.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "Absorption Law (POS) eliminates both the 4-variable and 3-variable clauses in just 2 steps!",
+            },
+            # Stage 8 — 4-Var POS Factoring
+            {
+                "expr": "(w + x + y + z)(w + x + y + z')",
+                "goal": "w + x + y",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Both 4-variable clauses share w, x, and y.",
+                    "Factor out common variables step by step to isolate z and z'.",
+                    "Cancel z·z' to 0 and remove 0 using Identity Law.",
+                ],
+                "optimalSteps": 5,
+                "optimalHint": "Systematically factoring w, x, and y isolates z·z'=0, yielding w + x + y in 5 steps.",
+            },
+            # Stage 9 — 4-Var De Morgan to POS
+            {
+                "expr": "(w'x'y')'(w + x + y + z)",
+                "goal": "w + x + y",
+                "targetLaws": ["demorgan-and", "absorption"],
+                "hints": [
+                    "Apply De Morgan's Law to expand the 3-variable negated group (w'x'y')'.",
+                    "The expanded clause (w + x + y) shares all its variables with (w + x + y + z).",
+                    "Use Absorption to eliminate the longer clause.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "De Morgan's unlocks (w + x + y), which instantly absorbs the 4-variable clause in 2 steps.",
+            },
+            # Stage 10 — 4-Var Multi-Clause POS Factoring
+            {
+                "expr": "(w + x + y + z)(w + x + y + z')(w + x + y' + z)(w + x + y' + z')",
+                "goal": "w + x",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "The 4-term maxterm reduction: 4 clauses of 4 variables each.",
+                    "Pair and factor the first two clauses and the last two clauses.",
+                    "Continue factoring the resulting 3-variable clauses to isolate and eliminate y and z.",
+                ],
+                "optimalSteps": 13,
+                "optimalHint": "Dual factoring pairs of 4-variable maxterms systematically reduces down to the 2-variable core w + x.",
+            },
+            # Stage 11 — 4-Var 3-Tier POS Factoring
+            {
+                "expr": "(w + x + y)(w + x + y')(w + x' + z)(w + x' + z')",
+                "goal": "w",
+                "targetLaws": ["distributive-pos", "complement", "identity"],
+                "hints": [
+                    "Pair (w + x + y)(w + x + y') to eliminate y, and pair (w + x' + z)(w + x' + z') to eliminate z.",
+                    "This simplifies the expression to (w + x)(w + x').",
+                    "Factor w from the remaining pair to cancel x · x' = 0.",
+                ],
+                "optimalSteps": 10,
+                "optimalHint": "Pairwise factoring resolves the 3-variable clauses to (w + x)(w + x'), which reduces directly to w in 10 steps.",
+            },
+            # Stage 12 — Grand POS Master Boss (De Morgan + Quad Reduction)
+            {
+                "expr": "((w'x')' + y + z)(w + x + y + z')(w + x + y' + z)(w + x + y' + z')",
+                "goal": "w + x",
+                "targetLaws": ["demorgan-and", "distributive-pos", "complement", "identity"],
+                "hints": [
+                    "The Grand Boss: Expand the negated group ((w'x')' + y + z) using De Morgan's Law to reveal (w + x + y + z).",
+                    "Now you have 4 maxterms sharing w and x.",
+                    "Pair and factor the clauses systematically to eliminate z and y.",
+                ],
+                "optimalSteps": 14,
+                "optimalHint": "De Morgan's expands the first clause, unlocking a quad maxterm factoring chain that resolves cleanly to w + x in 14 steps.",
             },
         ],
     },

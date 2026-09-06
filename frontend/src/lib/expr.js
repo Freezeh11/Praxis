@@ -326,6 +326,25 @@ export function findCommonSum(root, p1, p2) {
   return null
 }
 
+export function findCommonProd(root, p1, p2) {
+  const a = p1.split('.'), b = p2.split('.')
+  let common = []
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] === b[i]) common.push(a[i]); else break
+  }
+  const cp = common.join('.')
+  const node = getNode(root, cp)
+  if (node && node.type === 'prod') {
+    return {
+      prodPath: cp,
+      prodNode: node,
+      fi1: parseInt(a[common.length], 10),
+      fi2: parseInt(b[common.length], 10)
+    }
+  }
+  return null
+}
+
 export function removeLitFromNode(node, v, n) {
   if (node.type === 'lit' && node.v === v && node.n === n) return con(1)
   if (node.type === 'prod') {
@@ -345,10 +364,51 @@ export function removeLitFromNode(node, v, n) {
   return cloneN(node)
 }
 
+export function removeLitFromClause(node, v, n) {
+  if (!node) return con(0)
+  if (node.type === 'lit' && node.v === v && node.n === n) return con(0)
+  if (node.type === 'sum') {
+    let removed = false
+    const nt = []
+    for (const t of node.terms) {
+      if (!removed && t.type === 'lit' && t.v === v && t.n === n) {
+        removed = true
+      } else {
+        nt.push(cloneN(t))
+      }
+    }
+    if (nt.length === 0) return con(0)
+    if (nt.length === 1) return nt[0]
+    return { type: 'sum', terms: nt }
+  }
+  return cloneN(node)
+}
+
 export function termContainsLit(node, v, n) {
   if (node.type === 'lit') return node.v === v && node.n === n
   if (node.type === 'prod') return node.factors.some(f => f.type === 'lit' && f.v === v && f.n === n)
   return false
+}
+
+export function clauseContainsLit(node, v, n) {
+  if (!node) return false
+  if (node.type === 'lit') return node.v === v && node.n === n
+  if (node.type === 'sum') return node.terms.some(t => t.type === 'lit' && t.v === v && t.n === n)
+  return false
+}
+
+export function getClauseLits(node) {
+  if (!node) return []
+  if (node.type === 'lit') return [node]
+  if (node.type === 'sum') return node.terms.filter(t => t.type === 'lit')
+  return []
+}
+
+export function isClauseSub(shorter, longer) {
+  const sLits = getClauseLits(shorter)
+  const lLits = getClauseLits(longer)
+  if (sLits.length === 0 || sLits.length >= lLits.length) return false
+  return sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
 }
 
 /* ===== TRUTH TABLE & MATHEMATICAL EQUIVALENCE ===== */

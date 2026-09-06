@@ -449,17 +449,25 @@ export function useGameState() {
     return hint
   }, [expr, hintIdx])
 
-  /** Drag-and-drop term reorder - no law applied, no step recorded */
-  const swapTerms = useCallback((sumPath, fromIdx, toIdx) => {
+  /** Drag-and-drop element reorder (terms in sum, or clauses in prod) */
+  const swapTerms = useCallback((nodePath, fromIdx, toIdx) => {
     if (fromIdx === toIdx) return
     let nextExpr = null
     setExpr(prevExpr => {
       const tree = cloneN(prevExpr)
-      const sn = getNode(tree, sumPath)
-      if (!sn || sn.type !== 'sum') return prevExpr
-      const tmp = sn.terms[fromIdx]
-      sn.terms[fromIdx] = sn.terms[toIdx]
-      sn.terms[toIdx] = tmp
+      const n = getNode(tree, nodePath)
+      if (!n) return prevExpr
+      if (n.type === 'sum') {
+        const tmp = n.terms[fromIdx]
+        n.terms[fromIdx] = n.terms[toIdx]
+        n.terms[toIdx] = tmp
+      } else if (n.type === 'prod') {
+        const tmp = n.factors[fromIdx]
+        n.factors[fromIdx] = n.factors[toIdx]
+        n.factors[toIdx] = tmp
+      } else {
+        return prevExpr
+      }
       nextExpr = tree
       return tree
     })
@@ -467,7 +475,7 @@ export function useGameState() {
     setApplicableLaws([])
     setActiveGuidePaths([])
     if (nextExpr) {
-      syncDeadEndStatus(nextExpr, 'Terms reordered. Select terms to continue.')
+      syncDeadEndStatus(nextExpr, 'Elements reordered. Select elements to continue.')
     }
   }, [syncDeadEndStatus])
 
