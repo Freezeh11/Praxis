@@ -21,9 +21,10 @@ export default function App() {
           {/* Global Toast Notifications */}
           <Toaster position="top-center" richColors />
 
-          {/* Global Survey Button — hidden while automated tests drive the app
-              (e2e harness sets localStorage 'praxis_hide_survey' = 'true') */}
-          {!(() => {
+          {/* Global Survey Button — only in the production build.
+              Hidden in local development (vite dev) while we build/test,
+              and hidden in automated runs via the localStorage flag. */}
+          {import.meta.env.PROD && !(() => {
             try { return localStorage.getItem('praxis_hide_survey') === 'true' } catch { return false }
           })() && (
             <a
