@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
@@ -15,6 +15,28 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const [showTutorialWelcome, setShowTutorialWelcome] = useState(false)
+
+  // First visit: offer the interactive tutorial once
+  useEffect(() => {
+    let seen = false
+    try {
+      seen = localStorage.getItem('praxis_tutorial_seen') === 'true'
+    } catch {
+      // ignore — storage may be unavailable
+    }
+    if (!seen) setShowTutorialWelcome(true)
+  }, [])
+
+  const handleTutorialWelcome = (choice) => {
+    try {
+      localStorage.setItem('praxis_tutorial_seen', 'true')
+    } catch {
+      // ignore
+    }
+    setShowTutorialWelcome(false)
+    if (choice === 'start') navigate('/tutorial')
+  }
 
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
@@ -87,6 +109,9 @@ export default function LevelSelectPage() {
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
+          <Link to="/practice" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Random practice problems">🎲 Practice</Link>
+          <Link to="/sandbox" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Simplify your own equation">🧪 Sandbox</Link>
+          <Link to="/tutorial" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Interactive tutorial">▶ Tutorial</Link>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
@@ -241,6 +266,38 @@ export default function LevelSelectPage() {
           ))}
         </div>
       </div>
+      {/* ── FIRST-VISIT TUTORIAL WELCOME MODAL ── */}
+      {showTutorialWelcome && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
+          onClick={() => handleTutorialWelcome('skip')}
+        >
+          <div
+            className="bg-white rounded-2xl p-7 flex flex-col items-center shadow-2xl max-w-[420px] w-[92%] border border-border"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-[44px] mb-2 leading-none">👋</div>
+            <h2 className="text-[22px] font-extrabold text-text-1 mb-2 text-center">New to Praxis?</h2>
+            <p className="text-[13px] text-text-3 text-center leading-relaxed mb-6">
+              Take the 2-minute interactive tutorial and solve your first expression step-by-step — no math background needed.
+            </p>
+            <div className="flex flex-col gap-2.5 w-full">
+              <button
+                className="w-full py-3 bg-accent text-white rounded-xl font-bold text-sm shadow-sm hover:bg-text-1 transition-all"
+                onClick={() => handleTutorialWelcome('start')}
+              >
+                ▶ Start Interactive Tutorial
+              </button>
+              <button
+                className="w-full py-2.5 text-text-3 text-xs font-bold hover:text-text-1 transition-all"
+                onClick={() => handleTutorialWelcome('skip')}
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
