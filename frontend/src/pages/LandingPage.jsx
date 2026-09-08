@@ -72,7 +72,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Headline */}
-          <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-6">
+          <motion.h1 variants={itemVariants} className="text-[30px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-6">
             Master Boolean Algebra<br className="hidden md:block" /> Without the Headache.
           </motion.h1>
 
