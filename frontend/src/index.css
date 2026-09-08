@@ -112,3 +112,16 @@
 @keyframes svgFadeIn {
   to { opacity: 1; }
 }
+
+/* ── Left-to-Right Step Cascade Animations ── */
+@keyframes revealFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
