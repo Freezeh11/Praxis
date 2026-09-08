@@ -242,9 +242,88 @@ LEVELS = [
     },
     {
         "id": 3,
-        "name": "Level 3 \u2014 Boss",
+        "name": "Level 3 — Boss",
         "desc": "Four-variable challenge",
         "varCount": 4,
-        "puzzles": [],  # Unlocked in future release
+        "puzzles": [
+            # Stage 1 — Multi-Variable Absorption
+            {
+                "expr": "wxyz + wxz + wyz + w",
+                "goal": "wxz + w",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Scan for shorter terms that appear inside longer 4-variable terms.",
+                    "The standalone term w absorbs any product containing w, such as wyz and wxyz.",
+                    "After applying Absorption, verify which terms remain.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "The Absorption Law (A + AB = A) eliminates both 4-variable and 3-variable terms in just 2 quick steps!",
+            },
+            # Stage 2 — 4-Var Nested Factoring
+            {
+                "expr": "wxy'z + wxyz",
+                "goal": "wxz",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "Both 4-variable terms share three common variables: w, x, and z.",
+                    "Factor out common variables until you isolate the complementary pair y' + y inside the parentheses.",
+                    "Apply Complement Law (y' + y = 1), then remove the 1 with Identity Law.",
+                ],
+                "optimalSteps": 5,
+                "optimalHint": "Factoring w, x, and z systematically isolates y' + y = 1, giving wxz in 5 steps.",
+            },
+            # Stage 3 — Dual 4-Var De Morgan + Absorption
+            {
+                "expr": "(w'x)' + (y'z)' + wxyz",
+                "goal": "w + x' + y + z'",
+                "targetLaws": ["demorgan-and", "absorption"],
+                "hints": [
+                    "Start by expanding the first negated group (w'x)' using De Morgan's Law.",
+                    "The resulting terms reveal single variables that absorb the 4-variable product wxyz.",
+                    "Expand the remaining negated group (y'z)' to complete the simplification.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Expanding (w'x)' unlocks literals that absorb the 4-variable product in a single step!",
+            },
+            # Stage 4 — 4-Variable 3-Law Chain
+            {
+                "expr": "wx'y + wxy + wx'yz",
+                "goal": "wy",
+                "targetLaws": ["distributive", "complement", "absorption"],
+                "hints": [
+                    "Look at the first two terms: wx'y and wxy. They share the common factor wy.",
+                    "Factor wy to create x' + x inside the parentheses, which cancels to 1.",
+                    "After simplifying to wy, notice that wy appears inside the 4-variable term wx'yz. Use Absorption!",
+                ],
+                "optimalSteps": 4,
+                "optimalHint": "Distributive → Complement creates wy, which then directly absorbs wx'yz — 4 steps total.",
+            },
+            # Stage 5 — 4-Var Double De Morgan → Annulment
+            {
+                "expr": "(wx)' + (w'xyz)' + z",
+                "goal": "1",
+                "targetLaws": ["demorgan-and", "complement", "annulment"],
+                "hints": [
+                    "Expand the 4-variable negated group (w'xyz)' using De Morgan's Law.",
+                    "Scan the resulting expression for a complementary pair like z' and z.",
+                    "Once z' + z = 1, use Annulment — 1 + anything = 1!",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Expanding the 4-var group reveals z', creating z'+z=1, which allows an instant Annulment collapse to 1.",
+            },
+            # Stage 6 — The Grand Boss (Quad Factoring Reduction)
+            {
+                "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
+                "goal": "wz",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "All 4 terms are 4-variable minterms sharing w and z.",
+                    "Group and factor the first two terms (sharing wx'z) and the last two terms (sharing wxz).",
+                    "Continue simplifying the complementary pairs until only wz remains.",
+                ],
+                "optimalSteps": 14,
+                "optimalHint": "Factoring pairs of minterms systematically eliminates y and then x, leaving the clean 2-variable core wz.",
+            },
+        ],
     },
 ]

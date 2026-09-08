@@ -9,6 +9,7 @@ const defaultProgress = {
   levelsCompleted: [],        // [1, 2, 3]
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5, "1:3": 62.0 } → best total score per stage
+  stageSolutions: {},         // { "1:0": [{ law, from, to }] } → saved derivation steps
 }
 
 export function useProgress() {
@@ -17,7 +18,19 @@ export function useProgress() {
   const userId = session?.user?.id || 'guest'
   const STORAGE_KEY = `praxis_v1_${userId}`
 
-  const [progress, setProgress] = useState(defaultProgress)
+  // Synchronous state initialization from localStorage
+  const [progress, setProgress] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return { ...defaultProgress, ...JSON.parse(saved) }
+      }
+    } catch {
+      // fallback to default
+    }
+    return defaultProgress
+  })
+
   const [serverLoaded, setServerLoaded] = useState(false)
   const saveTimeoutRef = useRef(null)
 
@@ -26,24 +39,19 @@ export function useProgress() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress({ ...defaultProgress, ...JSON.parse(saved) })
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress(defaultProgress)
       }
     } catch {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(defaultProgress)
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setServerLoaded(false)
   }, [userId, STORAGE_KEY])
 
   // 2. Load progress from server when user is authenticated
   useEffect(() => {
     if (userId === 'guest') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setServerLoaded(true)
       return
     }
@@ -76,6 +84,12 @@ export function useProgress() {
             mergedScores[key] = Math.max(mergedScores[key] || 0, score)
           }
           merged.stageScores = mergedScores
+
+          // Merge stageSolutions
+          merged.stageSolutions = {
+            ...(serverData.stageSolutions || {}),
+            ...(prev.stageSolutions || {}),
+          }
 
           return merged
         })
@@ -141,6 +155,23 @@ export function useProgress() {
       return { ...p, stageScores: { ...p.stageScores, [key]: score } }
     })
 
+  const saveSolution = (levelId, stageIdx, steps) =>
+    setProgress(p => {
+      const key = `${levelId}:${stageIdx}`
+      return {
+        ...p,
+        stageSolutions: {
+          ...(p.stageSolutions || {}),
+          [key]: steps,
+        }
+      }
+    })
+
+  const getSavedSolution = (levelId, stageIdx) => {
+    const key = `${levelId}:${stageIdx}`
+    return progress.stageSolutions?.[key] || null
+  }
+
   const resetStreak = () => setProgress(p => ({ ...p, streak: 0 }))
 
   const isStageCompleted = (levelId, stageIdx) =>
@@ -179,6 +210,8 @@ export function useProgress() {
     completeLevel,
     resetStreak,
     saveScore,
+    saveSolution,
+    getSavedSolution,
     getLevelProgress,
     isStageCompleted,
     isLevelCompleted,

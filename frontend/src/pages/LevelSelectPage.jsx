@@ -6,8 +6,8 @@ import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
 
-// Level 3+ are permanently "coming soon" (no puzzles yet)
-const COMING_SOON = [3]
+// Level 4+ are permanently "coming soon" (no puzzles yet)
+const COMING_SOON = []
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
@@ -20,13 +20,13 @@ export default function LevelSelectPage() {
    * A level is locked if it's "coming soon" OR it requires a prerequisite
    * that hasn't been satisfied yet.
    * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
+   * Level 3 requires Level 2 avg score >= 70% across all 6 stages.
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
     if (lv.id === 2) {
-      // Find Level 1 in the levels array to get its stage count
       const lvl1 = levels.find(l => l.id === 1)
       const totalStages = lvl1?.puzzles?.length ?? 6
       const p = getLevelProgress(1, totalStages)
@@ -36,6 +36,21 @@ export default function LevelSelectPage() {
         reason: 'score-gate',
         progress: p,
         totalStages,
+        reqLevel: 1,
+      }
+    }
+
+    if (lv.id === 3) {
+      const lvl2 = levels.find(l => l.id === 2)
+      const totalStages = lvl2?.puzzles?.length ?? 6
+      const p = getLevelProgress(2, totalStages)
+      if (p.unlocked) return { locked: false, reason: '' }
+      return {
+        locked: true,
+        reason: 'score-gate',
+        progress: p,
+        totalStages,
+        reqLevel: 2,
       }
     }
 
@@ -67,7 +82,7 @@ export default function LevelSelectPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
         <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
@@ -152,7 +167,7 @@ export default function LevelSelectPage() {
                     </div>
                     {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
-                      Need 70% avg across all Level 1 stages
+                      Need 70% avg across all Level {lockState.reqLevel || (lv.id - 1)} stages
                     </div>
                   </div>
                 )}
