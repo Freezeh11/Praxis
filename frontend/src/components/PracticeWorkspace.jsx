@@ -93,53 +93,53 @@ export default function PracticeWorkspace({
   return (
     <div className="flex flex-col bg-white border border-border rounded-xl shadow-sm overflow-hidden h-full min-h-0">
       {/* ── HEADER ── */}
-      <div className="px-5 py-3.5 border-b border-border flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded-lg transition-all shrink-0"
+            className="flex items-center gap-1 px-2.5 py-2 min-tap text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded-lg transition-all shrink-0"
             onClick={onExit}
           >
             ← {exitLabel}
           </button>
           <div className="min-w-0">
-            <div className="text-[15px] font-bold text-text-1 truncate">{title}</div>
+            <div className="text-[14px] sm:text-[15px] font-bold text-text-1 truncate">{title}</div>
             <div className="text-[11px] text-text-3 mt-0.5 truncate">{subtitle}</div>
           </div>
         </div>
 
-        <div className="flex gap-1.5 items-center shrink-0">
+        <div className="flex gap-1 sm:gap-1.5 items-center shrink-0">
           {enableHint && (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={handleHint}
               disabled={isComplete}
               title={isComplete ? 'Expression is already simplified' : 'Get a hint for the next step'}
             >
-              <span>💡</span> Hint
+              <span>💡</span><span className="hidden sm:inline">Hint</span>
             </button>
           )}
           <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
             onClick={undoAction}
             disabled={steps.length === 0}
             title="Undo last step"
           >
-            <span>↶</span> Undo
+            <span>↶</span><span className="hidden sm:inline">Undo</span>
           </button>
           <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
             onClick={handleReset}
             title="Reset problem to start"
           >
-            <span>↺</span> Reset
+            <span>↺</span><span className="hidden sm:inline">Reset</span>
           </button>
           {typeof onNewPuzzle === 'function' && (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-white text-xs font-bold transition-all hover:bg-text-1 shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md bg-accent text-white text-xs font-bold transition-all hover:bg-text-1 shadow-sm"
               onClick={onNewPuzzle}
               title="Generate a new random problem"
             >
-              <span>🎲</span> New problem
+              <span>🎲</span><span className="hidden sm:inline">New problem</span>
             </button>
           )}
         </div>

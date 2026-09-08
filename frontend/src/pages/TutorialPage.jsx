@@ -138,7 +138,7 @@ export default function TutorialPage() {
           <img src={logoFull} alt="Praxis" className="h-7 object-contain" />
         </Link>
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold">
+          <span className="hidden sm:inline-flex px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold">
             Interactive Tutorial
           </span>
           <button
@@ -150,9 +150,10 @@ export default function TutorialPage() {
         </div>
       </header>
 
-      {/* Body: workspace + instruction panel */}
-      <main className="flex-1 min-h-0 flex gap-4 p-3 sm:p-4">
-        <div className="flex-1 min-w-0">
+      {/* Body: workspace + instruction panel — stacked on phones/tablets,
+          side-by-side on large screens */}
+      <main className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-2 sm:p-4">
+        <div className="flex-1 min-w-0 min-h-[45vh] lg:min-h-0">
           <PracticeWorkspace
             key={TUTORIAL_PUZZLE.expr}
             puzzle={TUTORIAL_PUZZLE}
@@ -165,7 +166,7 @@ export default function TutorialPage() {
         </div>
 
         {/* Instruction panel */}
-        <aside className="w-[340px] shrink-0 bg-white border border-border rounded-xl shadow-sm flex flex-col overflow-hidden">
+        <aside className="w-full lg:w-[340px] shrink-0 bg-white border border-border rounded-xl shadow-sm flex flex-col overflow-hidden max-h-[42vh] lg:max-h-none">
           {/* Progress bar */}
           <div className="h-1.5 bg-border shrink-0">
             <div
