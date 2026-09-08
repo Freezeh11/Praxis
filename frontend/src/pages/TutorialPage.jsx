@@ -96,11 +96,21 @@ export default function TutorialPage() {
   const handleStateChange = useCallback((snapshot) => {
     if (!started) return
 
-    // Catch-up: user already applied a law or finished
+    // Completion: jump to the "you did it" step, then to the finale.
+    // (Completion is the last snapshot the workspace emits, so schedule the
+    // final advance here rather than waiting for another state change.)
     if (snapshot.isComplete) {
-      goToStep(4)
+      if (stepIdx < 4) goToStep(4)
+      if (stepIdx < 5) {
+        setAdvanceTimer(setTimeout(() => {
+          markCompleted()
+          goToStep(5)
+        }, 1500))
+      }
       return
     }
+
+    // Catch-up: user already applied a law before the tutorial expected it
     if (snapshot.stepsCount >= 1 && stepIdx < 4) {
       goToStep(4)
       return
@@ -112,11 +122,6 @@ export default function TutorialPage() {
       setAdvanceTimer(setTimeout(() => goToStep(3), 500))
     } else if (stepIdx === 3 && snapshot.stepsCount >= 1) {
       setAdvanceTimer(setTimeout(() => goToStep(4), 600))
-    } else if (stepIdx === 4 && snapshot.isComplete) {
-      setAdvanceTimer(setTimeout(() => {
-        markCompleted()
-        goToStep(5)
-      }, 800))
     }
   }, [started, stepIdx, goToStep, markCompleted])
 
