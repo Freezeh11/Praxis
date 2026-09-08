@@ -196,24 +196,34 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
-                className={`inline-flex items-center px-1.5 py-[3px] pl-0.5 rounded-md border-[1.5px] border-dashed transition-all gap-0.5 cursor-default group
-                  ${termSel ? 'border-teal bg-teal-light !border-solid' : 'border-transparent hover:border-border-dark hover:bg-bg'}
+                className={`inline-flex items-center px-1.5 py-[2px] rounded-lg border-[1.5px] transition-all gap-1 cursor-default group
+                  ${termSel
+                    ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid'
+                    : 'border-transparent hover:border-slate-300 hover:bg-slate-50/70 border-dashed'
+                  }
                   ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
                   ${animationPaths?.includes(tPath) && ['annulment','identity','idempotent','complement'].includes(animationLaw) ? 'opacity-0' : ''}
                 `}
                 draggable={true}
+                onDoubleClick={e => { e.stopPropagation(); onClickTerm(tPath) }}
                 onDragStart={e => handleDragStart(path, i, e)}
                 onDragEnd={handleDragEnd}
                 onDragOver={e => handleDragOver(path, i, e)}
                 onDragLeave={handleDragLeave}
                 onDrop={e => handleDrop(path, i, e)}
               >
-                {/* Invisible zone — click to select term, drag to reorder */}
+                {/* Visible term handle — click to select whole term */}
                 <span
-                  className="w-2 h-full min-h-[1.6em] shrink-0 cursor-grab rounded-[3px] transition-colors group-hover:bg-sky-500/10 active:cursor-grabbing"
-                  title="Click to select term · Drag to reorder"
+                  className={`text-[13px] font-sans px-1 py-0.5 rounded cursor-pointer select-none transition-all
+                    ${termSel
+                      ? 'text-indigo-600 font-bold bg-indigo-100/70'
+                      : 'text-slate-400 opacity-40 group-hover:opacity-100 hover:text-indigo-600 hover:bg-slate-200/60'
+                    }`}
+                  title="Click to select entire term (Absorption / Idempotent)"
                   onClick={e => { e.stopPropagation(); onClickTerm(tPath) }}
-                />
+                >
+                  ⠿
+                </span>
 
                 <ExprNode
                   node={t}

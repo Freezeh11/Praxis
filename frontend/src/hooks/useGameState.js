@@ -124,11 +124,28 @@ export function useGameState() {
       const laws = analyzeSelection(exprSnapshot, nextSel)
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
-      setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No simplification here - try different terms')
+      if (laws.length) {
+        setStatusMsg(`Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`)
+      } else {
+        setStatusMsg('No simplification for these selected items — try different terms or variables')
+      }
+    } else if (nextSel.length === 1) {
+      setApplicableLaws([])
+      setStatus('select')
+      const item = nextSel[0]
+      const node = getNode(exprSnapshot, item.path)
+      if (item.isTermSel) {
+        setStatusMsg(`Selected entire term [${nodeText(node)}]. Now select a second term to combine.`)
+      } else if (node?.type === 'lit') {
+        const vLabel = node.n ? node.v + "'" : node.v
+        setStatusMsg(`Selected variable "${vLabel}". Select another variable to factor or pair.`)
+      } else {
+        setStatusMsg('Now select a second item to apply a law')
+      }
     } else {
       setApplicableLaws([])
       setStatus('select')
-      setStatusMsg(nextSel.length === 1 ? 'Now select a second term or variable' : 'Select a term or variable to begin')
+      setStatusMsg('Select a term or variable to begin')
     }
   }, [isDeadEnd])
 
@@ -160,7 +177,11 @@ export function useGameState() {
           setSel([])
           setApplicableLaws(laws)
           setStatus(laws.length ? 'laws' : 'error')
-          setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No law applies here - try different terms')
+          setStatusMsg(
+            laws.length
+              ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
+              : 'No law applies here — try different terms'
+          )
           return
         }
       }
@@ -214,12 +235,20 @@ export function useGameState() {
         const laws = analyzeSelection(exprSnapshot, next)
         setApplicableLaws(laws)
         setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No simplification here - try different terms')
+        setStatusMsg(
+          laws.length
+            ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
+            : 'No simplification here — try different terms'
+        )
       } else {
         const laws = analyzeNot(exprSnapshot, path)
         setApplicableLaws(laws)
         setStatus(laws.length ? 'laws' : 'error')
-        setStatusMsg(laws.length ? 'Choose an applicable law ->' : 'No law applies - try a different element')
+        setStatusMsg(
+          laws.length
+            ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
+            : 'No law applies — try a different element'
+        )
       }
       return next
     })
