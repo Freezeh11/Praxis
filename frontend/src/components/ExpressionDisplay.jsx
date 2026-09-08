@@ -14,6 +14,15 @@ import { motion } from 'framer-motion'
 
 const transitionConfig = { type: 'spring', bounce: 0.15, duration: 0.5 }
 
+/**
+ * True on phones/tablets. Touch devices can't hover (grips stay visible via
+ * CSS) and can't HTML5-drag, so the grip tap becomes a swap-with-next action.
+ */
+function isTouchDevice() {
+  return typeof window !== 'undefined' &&
+    ('ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0)
+}
+
 // Module-level drag state removed in favor of useRef inside SumNode to fix linting.
 
 function isSelected(sel, path) {
@@ -172,7 +181,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                   ${isFactorGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
                   ${factorAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
                 `}
-                draggable={true}
+                draggable={!isTouchDevice()}
                 title="Click clause grip to select whole clause, or click variable inside"
                 onClick={e => { e.stopPropagation(); onClickTerm(fPath) }}
                 onDragStart={e => handleDragStart(i, e)}
@@ -181,19 +190,26 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 onDragLeave={() => handleDragLeave(i)}
                 onDrop={e => handleDrop(i, e)}
               >
-                {/* Floating Top Grip Badge on Hover / Selected */}
+                {/* Floating Top Grip Badge on Hover / Selected — always visible
+                    on touch screens; tapping it on touch swaps with the next
+                    factor (touch fallback for drag reorder) */}
                 <button
                   type="button"
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
+                  className={`term-grip absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
                     ${factorSel
                       ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
                       : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'
                     }
                   `}
-                  title="Select entire clause (Dual Absorption / Idempotent)"
+                  title={isTouchDevice() ? 'Tap to swap with the next factor' : 'Select entire clause (Dual Absorption / Idempotent)'}
                   onClick={e => {
                     e.stopPropagation()
-                    onClickTerm(fPath)
+                    if (isTouchDevice() && typeof onSwapTerms === 'function') {
+                      const nextIdx = i + 1 < node.factors.length ? i + 1 : 0
+                      onSwapTerms(path, i, nextIdx)
+                    } else {
+                      onClickTerm(fPath)
+                    }
                   }}
                 >
                   ⠿
@@ -328,7 +344,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                   ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
                   ${termAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
                 `}
-                draggable={true}
+                draggable={!isTouchDevice()}
                 title="Click term grip to select whole term, or click variable inside"
                 onClick={e => { e.stopPropagation(); onClickTerm(tPath) }}
                 onDragStart={e => handleDragStart(i, e)}
@@ -337,19 +353,26 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 onDragLeave={() => handleDragLeave(i)}
                 onDrop={e => handleDrop(i, e)}
               >
-                {/* Floating Top Grip Badge on Hover / Selected */}
+                {/* Floating Top Grip Badge on Hover / Selected — always visible
+                    on touch screens; tapping it on touch swaps with the next
+                    term (touch fallback for drag reorder) */}
                 <button
                   type="button"
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
+                  className={`term-grip absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
                     ${termSel
                       ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
                       : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'
                     }
                   `}
-                  title="Select entire term (Absorption / Idempotent)"
+                  title={isTouchDevice() ? 'Tap to swap with the next term' : 'Select entire term (Absorption / Idempotent)'}
                   onClick={e => {
                     e.stopPropagation()
-                    onClickTerm(tPath)
+                    if (isTouchDevice() && typeof onSwapTerms === 'function') {
+                      const nextIdx = i + 1 < node.terms.length ? i + 1 : 0
+                      onSwapTerms(path, i, nextIdx)
+                    } else {
+                      onClickTerm(tPath)
+                    }
                   }}
                 >
                   ⠿
