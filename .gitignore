@@ -2,3 +2,4 @@ __pycache__/
 venv/
 .env
 auth-server/node_modules/
+.e2e/
