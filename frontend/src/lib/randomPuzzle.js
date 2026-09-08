@@ -1,8 +1,8 @@
 import {
-  lit, prod, sum, neg,
-  cloneN, nodeText, parseExpr, normalizeFlat, extractVariables,
+  lit, prod, sum,
+  cloneN, nodeText, parseExpr, canonText, normalizeFlat, extractVariables,
 } from './expr.js'
-import { findSimplestForm } from './solver.js'
+import { findSimplestForm, findOptimalPath } from './solver.js'
 
 /** Variable pool used to generate practice problems. */
 const VAR_POOL = ['x', 'y', 'z', 'w']
@@ -84,31 +84,33 @@ function expandOnce(tree, vars) {
   )
   if (eligible.length === 0) return tree
 
-  const rules = ['absorb', 'dual-absorb', 'complement-split', 'dual-complement', 'double-neg']
+  const rules = ['absorb', 'dual-absorb', 'complement-split', 'dual-complement']
   const start = randInt(0, rules.length - 1)
 
-  for (let attempt = 0; attempt < rules.length; attempt++) {
+  for (let attempt = 0; attempt < rules.length * 2; attempt++) {
     const rule = rules[(start + attempt) % rules.length]
     const target = pick(eligible)
     const node = cloneN(target.node)
     const used = new Set(extractVariables(node))
     const freeVars = vars.filter(v => !used.has(v))
-    const bPool = freeVars.length > 0 ? freeVars : vars
-    const b = pick(bPool)
+
+    // Every operand must use variables NOT already in the target node:
+    // reusing a variable produces degenerate duplicates (x + xx, xy + xxy)
+    // that clutter the UI and blow up the BFS solver's state space.
+    if (freeVars.length === 0) continue
+    const b = pick(freeVars)
     const bLit = lit(b, Math.random() < 0.4)
     const bNot = lit(b, !bLit.n)
 
     let replacement = null
     if (rule === 'absorb') {
-      replacement = sum(node, prod(node, randomTerm(vars, 1)))
+      replacement = sum(node, prod(node, randomTerm(freeVars, 1)))
     } else if (rule === 'dual-absorb') {
-      replacement = prod(node, sum(node, randomTerm(vars, 1)))
+      replacement = prod(node, sum(node, randomTerm(freeVars, 1)))
     } else if (rule === 'complement-split') {
       replacement = sum(prod(node, bLit), prod(node, bNot))
     } else if (rule === 'dual-complement') {
       replacement = prod(sum(node, bLit), sum(node, bNot))
-    } else if (rule === 'double-neg') {
-      replacement = neg(neg(node))
     }
 
     if (!replacement) continue
@@ -163,17 +165,29 @@ export function generateRandomPuzzle(difficulty = 'medium') {
     }
     tree = normalizeFlat(tree)
 
-    const simplest = findSimplestForm(tree)
+    // Round-trip through the string form: the game always starts from
+    // parseExpr(exprString), so verify the EXACT tree the game will see.
+    const exprStr = nodeText(tree)
+    const rtTree = parseExpr(exprStr)
+    if (canonText(rtTree) !== canonText(tree)) continue
+
+    // Compute the fully simplified target and verify it with the SAME
+    // target-directed BFS the game uses (findOptimalPath), so the stored
+    // optimal step count always matches what the UI reports.
+    const simplest = findSimplestForm(rtTree)
+    if (!simplest.found || simplest.optimalSteps === 0) continue
+
+    const sol = findOptimalPath(rtTree, simplest.canon)
     if (
-      simplest.found &&
-      simplest.optimalSteps >= preset.minSteps &&
-      simplest.text !== nodeText(tree)
+      sol.found &&
+      sol.optimalSteps >= preset.minSteps &&
+      simplest.text !== exprStr
     ) {
       return {
-        expr: nodeText(tree),
+        expr: exprStr,
         goal: simplest.text,
-        optimalSteps: simplest.optimalSteps,
-        solutionPath: simplest.path,
+        optimalSteps: sol.optimalSteps,
+        solutionPath: sol.path,
       }
     }
   }
