@@ -1,6 +1,5 @@
 import {
-  cloneN, getNode, nodeText, canonText,
-  isEquivalent, getSumLits
+  cloneN, nodeText, canonText, getSumLits,
 } from './expr.js'
 import {
   analyzeNot,
