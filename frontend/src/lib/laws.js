@@ -1,6 +1,7 @@
 import {
-  cloneN, getNode, setNode, findCommonSum,
-  removeLitFromNode, termContainsLit,
+  cloneN, getNode, setNode, findCommonSum, findCommonProd,
+  removeLitFromNode, removeLitFromSumNode, termContainsLit, sumContainsLit,
+  getSumLits, isSubSum,
   nodeText, normalize, normalizeFlat,
   con, lit, prod, sum, neg,
 } from './expr.js'
@@ -39,67 +40,75 @@ export function analyzeSelection(expr, sel) {
   if (!n1 || !n2) return []
 
   const cs = findCommonSum(expr, p1, p2)
-  if (!cs) return []
-
-  const t1 = cs.sumNode.terms[cs.ti1]
-  const t2 = cs.sumNode.terms[cs.ti2]
+  const cp = findCommonProd(expr, p1, p2)
   const laws = []
 
-  if (!bothTermSel) {
-    // 1. DISTRIBUTIVE (FACTOR): Common literal in both terms
-    if (n1.type === 'lit' && n2.type === 'lit' && n1.v === n2.v && n1.n === n2.n) {
-      if (termContainsLit(t1, n1.v, n1.n) && termContainsLit(t2, n2.v, n2.n)) {
-        const vLabel = n1.n ? n1.v + "'" : n1.v
-        const r1 = removeLitFromNode(t1, n1.v, n1.n)
-        const r2 = removeLitFromNode(t2, n2.v, n2.n)
+  // ──────────────────────────────────────────────────────────
+  // 1. SUM-LEVEL LAWS (SOP terms & literals in sum)
+  // ──────────────────────────────────────────────────────────
+  if (cs && cs.sumNode?.terms?.[cs.ti1] && cs.sumNode?.terms?.[cs.ti2]) {
+    const t1 = cs.sumNode.terms[cs.ti1]
+    const t2 = cs.sumNode.terms[cs.ti2]
 
-        // Check if cs.sumNode is nested inside a parent prod
-        let parentPath = null
-        let outerPrefix = ''
-        let outerSuffix = ''
-        let animPaths = [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`]
-        let measurePaths = [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`, p1, p2]
+        // 1. DISTRIBUTIVE (FACTOR): Common literal in both terms (neither term is a bare single literal)
+        if (!bothTermSel && n1.type === 'lit' && n2.type === 'lit' && n1.v === n2.v && n1.n === n2.n) {
+          if (termContainsLit(t1, n1.v, n1.n) && termContainsLit(t2, n2.v, n2.n)) {
+            const r1 = removeLitFromNode(t1, n1.v, n1.n)
+            const r2 = removeLitFromNode(t2, n2.v, n2.n)
+            const isT1Bare = r1.type === 'const' && r1.val === 1
+            const isT2Bare = r2.type === 'const' && r2.val === 1
 
-        if (cs.sumPath !== 'R' && cs.sumNode.terms.length === 2) {
-          const lastDot = cs.sumPath.lastIndexOf('.')
-          parentPath = lastDot > 0 ? cs.sumPath.slice(0, lastDot) : 'R'
-          const parent = getNode(expr, parentPath)
-          if (parent && parent.type === 'prod') {
-            const sumIndexInParent = parseInt(cs.sumPath.slice(lastDot + 1), 10)
-            const prefixFactors = parent.factors.slice(0, sumIndexInParent)
-            const suffixFactors = parent.factors.slice(sumIndexInParent + 1)
-            outerPrefix = prefixFactors.map(f => (f.type === 'sum' ? '(' + nodeText(f) + ')' : nodeText(f))).join('')
-            outerSuffix = suffixFactors.map(f => (f.type === 'sum' ? '(' + nodeText(f) + ')' : nodeText(f))).join('')
-            animPaths = [parentPath]
-            measurePaths = [parentPath, `${cs.sumPath}.${cs.ti2}`, p1, p2]
+            if (!isT1Bare && !isT2Bare) {
+              const vLabel = n1.n ? n1.v + "'" : n1.v
+
+              // Check if cs.sumNode is nested inside a parent prod
+              let parentPath = null
+              let outerPrefix = ''
+              let outerSuffix = ''
+              let animPaths = [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`]
+              let measurePaths = [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`, p1, p2]
+
+              if (cs.sumPath !== 'R' && cs.sumNode.terms.length === 2) {
+                const lastDot = cs.sumPath.lastIndexOf('.')
+                parentPath = lastDot > 0 ? cs.sumPath.slice(0, lastDot) : 'R'
+                const parent = getNode(expr, parentPath)
+                if (parent && parent.type === 'prod') {
+                  const sumIndexInParent = parseInt(cs.sumPath.slice(lastDot + 1), 10)
+                  const prefixFactors = parent.factors.slice(0, sumIndexInParent)
+                  const suffixFactors = parent.factors.slice(sumIndexInParent + 1)
+                  outerPrefix = prefixFactors.map(f => (f.type === 'sum' ? '(' + nodeText(f) + ')' : nodeText(f))).join('')
+                  outerSuffix = suffixFactors.map(f => (f.type === 'sum' ? '(' + nodeText(f) + ')' : nodeText(f))).join('')
+                  animPaths = [parentPath]
+                  measurePaths = [parentPath, `${cs.sumPath}.${cs.ti2}`, p1, p2]
+                }
+              }
+
+              laws.push({
+                name: 'Distributive (Factor)',
+                id: 'distributive',
+                formula: 'AB + AC = A(B+C)',
+                desc: `Factor out ${vLabel} → ${outerPrefix}${vLabel}(${nodeText(r1)} + ${nodeText(r2)})${outerSuffix}`,
+                animPaths,
+                measurePaths,
+                factoredVar: vLabel,
+                rem1: nodeText(r1),
+                rem2: nodeText(r2),
+                outerPrefix,
+                outerSuffix,
+                apply: () => {
+                  const tree = cloneN(expr)
+                  const sn = getNode(tree, cs.sumPath)
+                  const newTerms = sn.terms.filter((_, k) => k !== cs.ti1 && k !== cs.ti2)
+                  const nr1 = removeLitFromNode(cloneN(t1), n1.v, n1.n)
+                  const nr2 = removeLitFromNode(cloneN(t2), n2.v, n2.n)
+                  newTerms.push(prod(lit(n1.v, n1.n), sum(nr1, nr2)))
+                  sn.terms = newTerms
+                  return normalizeFlat(tree)
+                },
+              })
+            }
           }
         }
-
-        laws.push({
-          name: 'Distributive (Factor)',
-          id: 'distributive',
-          formula: 'AB + AC = A(B+C)',
-          desc: `Factor out ${vLabel} → ${outerPrefix}${vLabel}(${nodeText(r1)} + ${nodeText(r2)})${outerSuffix}`,
-          animPaths,
-          measurePaths,
-          factoredVar: vLabel,
-          rem1: nodeText(r1),
-          rem2: nodeText(r2),
-          outerPrefix,
-          outerSuffix,
-          apply: () => {
-            const tree = cloneN(expr)
-            const sn = getNode(tree, cs.sumPath)
-            const newTerms = sn.terms.filter((_, k) => k !== cs.ti1 && k !== cs.ti2)
-            const nr1 = removeLitFromNode(cloneN(t1), n1.v, n1.n)
-            const nr2 = removeLitFromNode(cloneN(t2), n2.v, n2.n)
-            newTerms.push(prod(lit(n1.v, n1.n), sum(nr1, nr2)))
-            sn.terms = newTerms
-            return normalizeFlat(tree)
-          },
-        })
-      }
-    }
 
     // 2. COMPLEMENT: Both terms are complementary single literals (e.g. A + A' = 1)
     if (n1.type === 'lit' && n2.type === 'lit' && n1.v === n2.v && n1.n !== n2.n) {
@@ -169,19 +178,20 @@ export function analyzeSelection(expr, sel) {
       })
     }
 
-    // 4. ANNULMENT (OR with 1)
+    // 4. ANNULMENT (OR with 1) — pairwise absorption of selected term
     if ((t1.type === 'const' && t1.val === 1) || (t2.type === 'const' && t2.val === 1)) {
       const isT1Const = t1.type === 'const' && t1.val === 1
       const varTerm = isT1Const ? t2 : t1
       const constPath = isT1Const ? `${cs.sumPath}.${cs.ti1}` : `${cs.sumPath}.${cs.ti2}`
       const varPath = isT1Const ? `${cs.sumPath}.${cs.ti2}` : `${cs.sumPath}.${cs.ti1}`
       const varText = nodeText(varTerm)
+      const varIndex = isT1Const ? cs.ti2 : cs.ti1
 
       laws.push({
         name: 'Annulment Law',
         id: 'annulment',
         formula: 'A + 1 = 1',
-        desc: `${varText} + 1 = 1 — collapses to 1`,
+        desc: `${varText} + 1 = 1 — ${varText} absorbed by 1`,
         animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
         dominantConst: '1',
         constPath,
@@ -190,14 +200,13 @@ export function analyzeSelection(expr, sel) {
         apply: () => {
           const tree = cloneN(expr)
           const sn = getNode(tree, cs.sumPath)
-          sn.terms = [con(1)]
+          sn.terms = sn.terms.filter((_, k) => k !== varIndex)
           return normalizeFlat(tree)
         },
       })
     }
-  } else {
-    // TERM-LEVEL LAWS (When selecting entire terms)
-    // 1. IDEMPOTENT (A + A = A)
+
+    // 5. IDEMPOTENT (A + A = A)
     if (termsEq(t1, t2)) {
       const termText = nodeText(t1)
       laws.push({
@@ -218,7 +227,7 @@ export function analyzeSelection(expr, sel) {
       })
     }
 
-    // 2. ABSORPTION (A + AB = A)
+    // 6. ABSORPTION (A + AB = A)
     if (isSubT(t1, t2)) {
       const sLits = getLits(t1)
       const lLits = getLits(t2)
@@ -273,72 +282,169 @@ export function analyzeSelection(expr, sel) {
         },
       })
     }
+  }
 
-    // 3. IDENTITY
-    if (t1.type === 'const' && t1.val === 0) {
-      const activeText = nodeText(t2)
+  // ──────────────────────────────────────────────────────────
+  // 2. PRODUCT-LEVEL LAWS (POS maxterm clauses & literals in product)
+  // ──────────────────────────────────────────────────────────
+  if (cp && cp.prodNode?.factors?.[cp.fi1] && cp.prodNode?.factors?.[cp.fi2]) {
+    const f1 = cp.prodNode.factors[cp.fi1]
+    const f2 = cp.prodNode.factors[cp.fi2]
+
+    // 1. DUAL DISTRIBUTIVE: Common literal in both sum clauses ((A+B)(A+C) = A + BC)
+    if (!bothTermSel && n1.type === 'lit' && n2.type === 'lit' && n1.v === n2.v && n1.n === n2.n) {
+      if (f1.type === 'sum' && f2.type === 'sum' && sumContainsLit(f1, n1.v, n1.n) && sumContainsLit(f2, n2.v, n2.n)) {
+        const r1 = removeLitFromSumNode(f1, n1.v, n1.n)
+        const r2 = removeLitFromSumNode(f2, n2.v, n2.n)
+        const isF1Bare = r1.type === 'const' && r1.val === 0
+        const isF2Bare = r2.type === 'const' && r2.val === 0
+
+        if (!isF1Bare && !isF2Bare) {
+          const vLabel = n1.n ? n1.v + "'" : n1.v
+          const rem1Text = nodeText(r1)
+          const rem2Text = nodeText(r2)
+
+          laws.push({
+            name: 'Distributive (POS)',
+            id: 'distributive',
+            formula: '(A+B)(A+C) = A + BC',
+            desc: `Factor out ${vLabel} → ${vLabel} + (${rem1Text})(${rem2Text})`,
+            animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+            measurePaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`, p1, p2],
+            factoredVar: vLabel,
+            rem1: rem1Text,
+            rem2: rem2Text,
+            apply: () => {
+              const tree = cloneN(expr)
+              const pn = getNode(tree, cp.prodPath)
+              const newFactors = pn.factors.filter((_, k) => k !== cp.fi1 && k !== cp.fi2)
+              const nr1 = removeLitFromSumNode(cloneN(f1), n1.v, n1.n)
+              const nr2 = removeLitFromSumNode(cloneN(f2), n2.v, n2.n)
+              const combined = prod(nr1, nr2)
+              newFactors.push(sum(lit(n1.v, n1.n), combined))
+              pn.factors = newFactors
+              return normalizeFlat(tree)
+            },
+          })
+        }
+      }
+    }
+
+    // 2. DUAL COMPLEMENT IN PRODUCT: A · A' = 0
+    if (n1.type === 'lit' && n2.type === 'lit' && n1.v === n2.v && n1.n !== n2.n) {
+      if (f1.type === 'lit' && f2.type === 'lit') {
+        const vLabel1 = n1.n ? n1.v + "'" : n1.v
+        const vLabel2 = n2.n ? n2.v + "'" : n2.v
+        laws.push({
+          name: 'Complement Law (Product)',
+          id: 'complement',
+          formula: "A · A' = 0",
+          desc: `${vLabel1} · ${vLabel2} = 0`,
+          animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+          lit1Text: vLabel1,
+          lit2Text: vLabel2,
+          resultConst: '0',
+          apply: () => {
+            const tree = cloneN(expr)
+            const pn = getNode(tree, cp.prodPath)
+            const newFactors = pn.factors.filter((_, k) => k !== cp.fi1 && k !== cp.fi2)
+            newFactors.push(con(0))
+            pn.factors = newFactors
+            return normalizeFlat(tree)
+          },
+        })
+      }
+    }
+
+    // 3. DUAL IDEMPOTENT: (A+B)(A+B) = A+B or A · A = A
+    if (termsEq(f1, f2)) {
+      const factorText = nodeText(f1)
       laws.push({
-        name: 'Identity Law',
-        id: 'identity',
-        formula: 'A + 0 = A',
-        desc: `0 + ${activeText} = ${activeText} — remove 0`,
-        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
-        survivorPath: `${cs.sumPath}.${cs.ti2}`,
-        constPath: `${cs.sumPath}.${cs.ti1}`,
-        activeText,
-        constText: '0',
+        name: 'Idempotent Law (Product)',
+        id: 'idempotent',
+        formula: 'A · A = A',
+        desc: `(${factorText})(${factorText}) = ${factorText}`,
+        animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+        survivorPath: `${cp.prodPath}.${cp.fi1}`,
+        duplicatePath: `${cp.prodPath}.${cp.fi2}`,
+        termText: factorText,
         apply: () => {
           const tree = cloneN(expr)
-          const sn = getNode(tree, cs.sumPath)
-          sn.terms = sn.terms.filter((_, k) => k !== cs.ti1)
+          const pn = getNode(tree, cp.prodPath)
+          pn.factors = pn.factors.filter((_, k) => k !== cp.fi2)
           return normalize(tree)
         },
       })
     }
-    if (t2.type === 'const' && t2.val === 0) {
-      const activeText = nodeText(t1)
+
+    // 4. DUAL ABSORPTION: A(A+B) = A or (A+B)(A+B+C) = A+B
+    if (isSubSum(f1, f2)) {
+      const survivorText = nodeText(f1)
+      const absorbedText = nodeText(f2)
       laws.push({
-        name: 'Identity Law',
-        id: 'identity',
-        formula: 'A + 0 = A',
-        desc: `${activeText} + 0 = ${activeText} — remove 0`,
-        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
-        survivorPath: `${cs.sumPath}.${cs.ti1}`,
-        constPath: `${cs.sumPath}.${cs.ti2}`,
-        activeText,
-        constText: '0',
+        name: 'Absorption Law (Product)',
+        id: 'absorption',
+        formula: 'A(A+B) = A',
+        desc: `${survivorText} absorbs (${absorbedText}) → ${survivorText}`,
+        animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+        survivorPath: `${cp.prodPath}.${cp.fi1}`,
+        absorbedPath: `${cp.prodPath}.${cp.fi2}`,
+        survivorText,
+        absorbedText,
         apply: () => {
           const tree = cloneN(expr)
-          const sn = getNode(tree, cs.sumPath)
-          sn.terms = sn.terms.filter((_, k) => k !== cs.ti2)
+          const pn = getNode(tree, cp.prodPath)
+          pn.factors = pn.factors.filter((_, k) => k !== cp.fi2)
+          return normalize(tree)
+        },
+      })
+    }
+    if (isSubSum(f2, f1)) {
+      const survivorText = nodeText(f2)
+      const absorbedText = nodeText(f1)
+      laws.push({
+        name: 'Absorption Law (Product)',
+        id: 'absorption',
+        formula: 'A(A+B) = A',
+        desc: `${survivorText} absorbs (${absorbedText}) → ${survivorText}`,
+        animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+        survivorPath: `${cp.prodPath}.${cp.fi2}`,
+        absorbedPath: `${cp.prodPath}.${cp.fi1}`,
+        survivorText,
+        absorbedText,
+        apply: () => {
+          const tree = cloneN(expr)
+          const pn = getNode(tree, cp.prodPath)
+          pn.factors = pn.factors.filter((_, k) => k !== cp.fi1)
           return normalize(tree)
         },
       })
     }
 
-    // 4. ANNULMENT
-    if ((t1.type === 'const' && t1.val === 1) || (t2.type === 'const' && t2.val === 1)) {
-      const isT1Const = t1.type === 'const' && t1.val === 1
-      const varTerm = isT1Const ? t2 : t1
-      const constPath = isT1Const ? `${cs.sumPath}.${cs.ti1}` : `${cs.sumPath}.${cs.ti2}`
-      const varPath = isT1Const ? `${cs.sumPath}.${cs.ti2}` : `${cs.sumPath}.${cs.ti1}`
-      const varText = nodeText(varTerm)
+    // 5. DUAL ANNULMENT: A · 0 = 0 — pairwise absorption by 0
+    if ((f1.type === 'const' && f1.val === 0) || (f2.type === 'const' && f2.val === 0)) {
+      const isF1Const = f1.type === 'const' && f1.val === 0
+      const varFactor = isF1Const ? f2 : f1
+      const constPath = isF1Const ? `${cp.prodPath}.${cp.fi1}` : `${cp.prodPath}.${cp.fi2}`
+      const varPath = isF1Const ? `${cp.prodPath}.${cp.fi2}` : `${cp.prodPath}.${cp.fi1}`
+      const varText = nodeText(varFactor)
+      const varIndex = isF1Const ? cp.fi2 : cp.fi1
 
       laws.push({
-        name: 'Annulment Law',
+        name: 'Annulment Law (Product)',
         id: 'annulment',
-        formula: 'A + 1 = 1',
-        desc: `${varText} + 1 = 1 — collapses to 1`,
-        animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
-        dominantConst: '1',
+        formula: 'A · 0 = 0',
+        desc: `${varText} · 0 = 0 — ${varText} eliminated by 0`,
+        animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
+        dominantConst: '0',
         constPath,
         varPath,
         varText,
         apply: () => {
           const tree = cloneN(expr)
-          const sn = getNode(tree, cs.sumPath)
-          sn.terms = [con(1)]
-          return normalize(tree)
+          const pn = getNode(tree, cp.prodPath)
+          pn.factors = pn.factors.filter((_, k) => k !== varIndex)
+          return normalizeFlat(tree)
         },
       })
     }
@@ -440,6 +546,52 @@ export function analyzeNot(expr, path) {
   return laws
 }
 
+/* ===== ANALYZE SUM CONSTANT ===== */
+export function analyzeSumConst(expr, constPath, constVal, sumPath) {
+  const laws = []
+  const idx = parseInt(constPath.split('.').pop(), 10)
+  if (constVal === 0) {
+    const parentSum = getNode(expr, sumPath)
+    const activeTerms = parentSum ? parentSum.terms.filter((_, i) => i !== idx) : []
+    const activeText = activeTerms.map(t => nodeText(t)).join(' + ')
+    laws.push({
+      name: 'Identity Law',
+      id: 'identity',
+      formula: 'A + 0 = A',
+      desc: `${activeText || 'A'} + 0 = ${activeText || 'A'} — remove 0`,
+      animPaths: [constPath],
+      activeText,
+      constText: '0',
+      apply: () => {
+        const tree = cloneN(expr)
+        const s = getNode(tree, sumPath)
+        const nt = s.terms.filter((_, i) => i !== idx)
+        const result = nt.length === 1 ? nt[0] : { type: 'sum', terms: nt }
+        if (sumPath === 'R') return normalizeFlat(result)
+        setNode(tree, sumPath, result)
+        return normalizeFlat(tree)
+      },
+    })
+  }
+  if (constVal === 1) {
+    laws.push({
+      name: 'Annulment Law',
+      id: 'annulment',
+      formula: 'A + 1 = 1',
+      desc: 'A + 1 = 1 — anything OR 1 is 1',
+      animPaths: [sumPath],
+      dominantConst: '1',
+      apply: () => {
+        const tree = cloneN(expr)
+        if (sumPath === 'R') return con(1)
+        setNode(tree, sumPath, con(1))
+        return normalize(tree)
+      },
+    })
+  }
+  return laws
+}
+
 /* ===== ANALYZE PRODUCT CONSTANT ===== */
 export function analyzeProductConst(expr, constPath, constVal, prodPath) {
   const laws = []
@@ -495,6 +647,12 @@ function findLitPath(node, base, v, n) {
         return base + '.' + i
     }
   }
+  if (node.type === 'sum') {
+    for (let i = 0; i < node.terms.length; i++) {
+      if (node.terms[i].type === 'lit' && node.terms[i].v === v && node.terms[i].n === n)
+        return base + '.' + i
+    }
+  }
   return null
 }
 
@@ -518,11 +676,37 @@ export function scanHints(node, path) {
       return
     }
     if (n.type === 'prod') {
-      n.factors.forEach((f, i) => {
-        if (f.type === 'const' && f.val === 1) add('identity', [p + '.' + i])
-        if (f.type === 'const' && f.val === 0) add('annulment', [p + '.' + i])
-        walk(f, p + '.' + i)
-      })
+      const F = n.factors
+      for (let i = 0; i < F.length; i++) {
+        const p1 = p + '.' + i
+        const f1 = F[i]
+        if (f1.type === 'const' && f1.val === 1) add('identity', [p1])
+        if (f1.type === 'const' && f1.val === 0) add('annulment', [p1])
+        for (let j = i + 1; j < F.length; j++) {
+          const p2 = p + '.' + j
+          const f2 = F[j]
+          if (termsEq(f1, f2)) add('idempotent', [p1, p2])
+          if (isSubSum(f1, f2)) add('absorption', [p1, p2])
+          if (isSubSum(f2, f1)) add('absorption', [p2, p1])
+          if (f1.type === 'lit' && f2.type === 'lit' && f1.v === f2.v && f1.n !== f2.n) {
+            add('complement', [p1, p2])
+          }
+          if (f1.type === 'sum' && f2.type === 'sum') {
+            const done = new Set()
+            for (const l1 of getSumLits(f1)) {
+              for (const l2 of getSumLits(f2)) {
+                if (l1.v === l2.v && l1.n === l2.n && !done.has(l1.v + l1.n)) {
+                  done.add(l1.v + l1.n)
+                  const lp1 = findLitPath(f1, p1, l1.v, l1.n)
+                  const lp2 = findLitPath(f2, p2, l2.v, l2.n)
+                  if (lp1 && lp2) add('distributive', [lp1, lp2])
+                }
+              }
+            }
+          }
+        }
+        walk(f1, p1)
+      }
       return
     }
     if (n.type === 'sum') {
@@ -530,6 +714,8 @@ export function scanHints(node, path) {
       for (let i = 0; i < T.length; i++) {
         const p1 = p + '.' + i
         const t1 = T[i]
+        if (t1.type === 'const' && t1.val === 0) add('identity', [p1])
+        if (t1.type === 'const' && t1.val === 1) add('annulment', [p1])
         for (let j = i + 1; j < T.length; j++) {
           const p2 = p + '.' + j
           const t2 = T[j]
@@ -545,14 +731,16 @@ export function scanHints(node, path) {
           if ((t1.type === 'const' && t1.val === 0) || (t2.type === 'const' && t2.val === 0)) {
             add('identity', [p1, p2])
           }
-          const done = new Set()
-          for (const l1 of getLits(t1)) {
-            for (const l2 of getLits(t2)) {
-              if (l1.v === l2.v && l1.n === l2.n && !done.has(l1.v + l1.n)) {
-                done.add(l1.v + l1.n)
-                const lp1 = findLitPath(t1, p1, l1.v, l1.n)
-                const lp2 = findLitPath(t2, p2, l2.v, l2.n)
-                if (lp1 && lp2) add('distributive', [lp1, lp2])
+          if (t1.type === 'prod' && t2.type === 'prod') {
+            const done = new Set()
+            for (const l1 of getLits(t1)) {
+              for (const l2 of getLits(t2)) {
+                if (l1.v === l2.v && l1.n === l2.n && !done.has(l1.v + l1.n)) {
+                  done.add(l1.v + l1.n)
+                  const lp1 = findLitPath(t1, p1, l1.v, l1.n)
+                  const lp2 = findLitPath(t2, p2, l2.v, l2.n)
+                  if (lp1 && lp2) add('distributive', [lp1, lp2])
+                }
               }
             }
           }

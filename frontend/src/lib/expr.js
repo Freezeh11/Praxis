@@ -1,18 +1,22 @@
+let _nodeSeq = 0
+export const nextNodeId = () => ++_nodeSeq
+
 /* ===== TREE NODE CONSTRUCTORS ===== */
-export const lit = (v, n = false) => ({ type: 'lit', v, n })
-export const con = (val) => ({ type: 'const', val: Number(val) })
-export const prod = (...f) => ({ type: 'prod', factors: f })
-export const sum = (...t) => ({ type: 'sum', terms: t })
-export const neg = (child) => ({ type: 'not', child })
+export const lit = (v, n = false) => ({ _id: nextNodeId(), type: 'lit', v, n })
+export const con = (val) => ({ _id: nextNodeId(), type: 'const', val: Number(val) })
+export const prod = (...f) => ({ _id: nextNodeId(), type: 'prod', factors: f })
+export const sum = (...t) => ({ _id: nextNodeId(), type: 'sum', terms: t })
+export const neg = (child) => ({ _id: nextNodeId(), type: 'not', child })
 
 export function cloneN(n) {
   if (!n) return null
-  if (n.type === 'lit') return { ...n }
-  if (n.type === 'const') return { ...n }
-  if (n.type === 'prod') return { type: 'prod', factors: n.factors.map(cloneN) }
-  if (n.type === 'sum') return { type: 'sum', terms: n.terms.map(cloneN) }
-  if (n.type === 'not') return { type: 'not', child: cloneN(n.child) }
-  return { ...n }
+  const baseId = n._id || nextNodeId()
+  if (n.type === 'lit') return { ...n, _id: baseId }
+  if (n.type === 'const') return { ...n, _id: baseId }
+  if (n.type === 'prod') return { type: 'prod', _id: baseId, factors: n.factors.map(cloneN) }
+  if (n.type === 'sum') return { type: 'sum', _id: baseId, terms: n.terms.map(cloneN) }
+  if (n.type === 'not') return { type: 'not', _id: baseId, child: cloneN(n.child) }
+  return { ...n, _id: baseId }
 }
 
 /* ===== RECURSIVE DESCENT TOKENIZER & PARSER ===== */
@@ -174,14 +178,28 @@ class BooleanParser {
   }
 }
 
+export function ensureNodeId(n) {
+  if (!n) return n
+  if (!n._id) n._id = nextNodeId()
+  if (n.type === 'prod' && Array.isArray(n.factors)) {
+    n.factors.forEach(ensureNodeId)
+  } else if (n.type === 'sum' && Array.isArray(n.terms)) {
+    n.terms.forEach(ensureNodeId)
+  } else if (n.type === 'not' && n.child) {
+    ensureNodeId(n.child)
+  }
+  return n
+}
+
 export function parseExpr(str) {
   if (!str || typeof str !== 'string') return con(0)
   const tokens = tokenize(str.trim())
   const parser = new BooleanParser(tokens)
-  return parser.parse()
+  const tree = parser.parse()
+  return ensureNodeId(tree)
 }
 
-/* ===== TREE → TEXT ===== */
+/* ===== STRING RENDERING ===== */
 export function nodeText(n) {
   if (!n) return ''
   if (n.type === 'lit') return n.n ? n.v + "'" : n.v
@@ -221,7 +239,8 @@ export function canonText(n) {
 /* ===== NORMALIZE ===== */
 export function normalize(n) {
   if (!n) return con(0)
-  if (n.type === 'lit' || n.type === 'const') return n
+  const baseId = n._id || nextNodeId()
+  if (n.type === 'lit' || n.type === 'const') return n._id ? n : { ...n, _id: baseId }
   if (n.type === 'prod') {
     let fs = n.factors.map(normalize)
     let flat = []
@@ -230,7 +249,7 @@ export function normalize(n) {
     if (flat.some(f => f.type === 'const' && f.val === 0)) return con(0)
     if (flat.length === 0) return con(1)
     if (flat.length === 1) return flat[0]
-    return { type: 'prod', factors: flat }
+    return { type: 'prod', _id: baseId, factors: flat }
   }
   if (n.type === 'sum') {
     let ts = n.terms.map(normalize)
@@ -240,28 +259,29 @@ export function normalize(n) {
     if (flat.some(t => t.type === 'const' && t.val === 1)) return con(1)
     if (flat.length === 0) return con(0)
     if (flat.length === 1) return flat[0]
-    return { type: 'sum', terms: flat }
+    return { type: 'sum', _id: baseId, terms: flat }
   }
   if (n.type === 'not') {
     const child = normalize(n.child)
     if (child.type === 'const') return con(1 - child.val)
     if (child.type === 'not') return normalize(child.child)
-    return { type: 'not', child }
+    return { type: 'not', _id: baseId, child }
   }
   return n
 }
 
 export function normalizeFlat(n) {
   if (!n) return con(0)
-  if (n.type === 'lit' || n.type === 'const') return n
-  if (n.type === 'not') return { type: 'not', child: normalizeFlat(n.child) }
+  const baseId = n._id || nextNodeId()
+  if (n.type === 'lit' || n.type === 'const') return n._id ? n : { ...n, _id: baseId }
+  if (n.type === 'not') return { type: 'not', _id: baseId, child: normalizeFlat(n.child) }
   if (n.type === 'prod') {
     let fs = n.factors.map(normalizeFlat)
     let flat = []
     fs.forEach(f => f.type === 'prod' ? flat.push(...f.factors) : flat.push(f))
     if (flat.length === 0) return con(1)
     if (flat.length === 1) return flat[0]
-    return { type: 'prod', factors: flat }
+    return { type: 'prod', _id: baseId, factors: flat }
   }
   if (n.type === 'sum') {
     let ts = n.terms.map(normalizeFlat)
@@ -269,7 +289,7 @@ export function normalizeFlat(n) {
     ts.forEach(t => t.type === 'sum' ? flat.push(...t.terms) : flat.push(t))
     if (flat.length === 0) return con(0)
     if (flat.length === 1) return flat[0]
-    return { type: 'sum', terms: flat }
+    return { type: 'sum', _id: baseId, terms: flat }
   }
   return n
 }
@@ -313,14 +333,18 @@ export function findCommonSum(root, p1, p2) {
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
     if (a[i] === b[i]) common.push(a[i]); else break
   }
+  if (a.length <= common.length || b.length <= common.length) return null
   const cp = common.join('.')
   const node = getNode(root, cp)
   if (node && node.type === 'sum') {
+    const ti1 = parseInt(a[common.length], 10)
+    const ti2 = parseInt(b[common.length], 10)
+    if (isNaN(ti1) || isNaN(ti2) || !node.terms[ti1] || !node.terms[ti2]) return null
     return {
       sumPath: cp,
       sumNode: node,
-      ti1: parseInt(a[common.length], 10),
-      ti2: parseInt(b[common.length], 10)
+      ti1,
+      ti2
     }
   }
   return null
@@ -349,6 +373,68 @@ export function termContainsLit(node, v, n) {
   if (node.type === 'lit') return node.v === v && node.n === n
   if (node.type === 'prod') return node.factors.some(f => f.type === 'lit' && f.v === v && f.n === n)
   return false
+}
+
+export function findCommonProd(root, p1, p2) {
+  const a = p1.split('.'), b = p2.split('.')
+  let common = []
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] === b[i]) common.push(a[i]); else break
+  }
+  if (a.length <= common.length || b.length <= common.length) return null
+  const cp = common.join('.')
+  const node = getNode(root, cp)
+  if (node && node.type === 'prod') {
+    const fi1 = parseInt(a[common.length], 10)
+    const fi2 = parseInt(b[common.length], 10)
+    if (isNaN(fi1) || isNaN(fi2) || !node.factors[fi1] || !node.factors[fi2]) return null
+    return {
+      prodPath: cp,
+      prodNode: node,
+      fi1,
+      fi2
+    }
+  }
+  return null
+}
+
+export function removeLitFromSumNode(node, v, n) {
+  if (node.type === 'lit' && node.v === v && node.n === n) return con(0)
+  if (node.type === 'sum') {
+    let removed = false
+    const nt = []
+    for (const t of node.terms) {
+      if (!removed && t.type === 'lit' && t.v === v && t.n === n) {
+        removed = true
+      } else {
+        nt.push(cloneN(t))
+      }
+    }
+    if (nt.length === 0) return con(0)
+    if (nt.length === 1) return nt[0]
+    return { type: 'sum', terms: nt }
+  }
+  return cloneN(node)
+}
+
+export function sumContainsLit(node, v, n) {
+  if (node.type === 'lit') return node.v === v && node.n === n
+  if (node.type === 'sum') return node.terms.some(t => t.type === 'lit' && t.v === v && t.n === n)
+  return false
+}
+
+export function getSumLits(node) {
+  if (!node) return []
+  if (node.type === 'lit') return [node]
+  if (node.type === 'sum') return node.terms.filter(t => t.type === 'lit')
+  return []
+}
+
+export function isSubSum(shorter, longer) {
+  const sLits = getSumLits(shorter)
+  const lLits = getSumLits(longer)
+  if (sLits.length === 0 || sLits.length >= lLits.length) return false
+  return sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
 }
 
 /* ===== TRUTH TABLE & MATHEMATICAL EQUIVALENCE ===== */

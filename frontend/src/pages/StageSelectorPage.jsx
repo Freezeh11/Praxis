@@ -1,39 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useParams, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import logoFull from '../assets/logo-full.png'
-import logoX from '../assets/logo-x.png'
-import { useNavigate, useParams } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
+import ExprText from '../components/ExprText'
 
-/*
-  Stage layout for 6 stages arranged in concentric squares (light theme).
-  Outer ring: stages 0,1,2,3 at top, right, bottom, left
-  Inner ring: stages 4,5 at top-right, bottom-left
-  Center:    decorative lock node
-*/
-const STAGE_POSITIONS = [
-  // [col, row] in a 5×5 grid (0-indexed), index = stageIdx
-  { col: 2, row: 0 }, // Stage 1 — top center
-  { col: 4, row: 2 }, // Stage 2 — right center
-  { col: 2, row: 4 }, // Stage 3 — bottom center
-  { col: 0, row: 2 }, // Stage 4 — left center
-  { col: 3, row: 1 }, // Stage 5 — inner top-right
-  { col: 1, row: 3 }, // Stage 6 — inner bottom-left
-]
-
-// SVG connector paths between sequential stages (col,row) pairs
-const CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], [3, 0], // outer ring
-  [0, 4], [4, 1], [2, 5], [5, 3], // outer to inner
-  [4, 5],                           // inner connection
-]
-
-const CELL = 80  // px per grid cell
-const GRID = 5   // 5×5 grid
-const SIZE = CELL * (GRID - 1) // total svg width/height = 320
-
-function cx(col) { return col * CELL }
-function cy(row) { return row * CELL }
+// Star Rating display helper
+function StarRating({ stars = 0 }) {
+  return (
+    <div className="flex items-center gap-0.5" title={`${stars} of 3 Stars`}>
+      {[1, 2, 3].map((s) => (
+        <span
+          key={s}
+          className={`text-sm leading-none select-none transition-all ${
+            s <= stars
+              ? 'text-amber-400 drop-shadow-[0_1px_2px_rgba(245,158,11,0.4)]'
+              : 'text-slate-200'
+          }`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export default function StageSelectorPage() {
   const { levelId } = useParams()
@@ -43,19 +34,24 @@ export default function StageSelectorPage() {
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [hoveredStage, setHoveredStage] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
+  const numLevelId = Number(levelId)
+
   useEffect(() => {
-    fetchLevel(Number(levelId))
-      .then(data => { setLevel(data); setLoading(false) })
+    fetchLevel(numLevelId)
+      .then((data) => {
+        setLevel(data)
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
-  }, [levelId])
+  }, [numLevelId, fetchLevel])
 
-  const puzzles = level?.puzzles || []
-  const completedSet = new Set(getStagesCompleted(Number(levelId)))
+  const puzzles = useMemo(() => level?.puzzles || [], [level])
+  const completedStages = getStagesCompleted(numLevelId)
+  const completedSet = useMemo(() => new Set(completedStages), [completedStages])
 
-  // A stage is available if it's stage 0 OR the previous stage is completed
+  // A stage is available if it's stage 0 OR previous stage is completed
   const isAvailable = (idx) => idx === 0 || completedSet.has(idx - 1)
 
   const getStageStatus = (idx) => {
@@ -64,200 +60,331 @@ export default function StageSelectorPage() {
     return 'locked'
   }
 
-  const handleStageClick = (idx) => {
-    if (!isAvailable(idx)) return
-    navigate(`/level/${levelId}/stage/${idx}`)
+  const getStageScore = (idx) => {
+    return progress.stageScores?.[`${numLevelId}:${idx}`] ?? null
   }
 
+  const getStageStars = (idx) => {
+    const isDone = completedSet.has(idx)
+    const score = getStageScore(idx)
+    if (!isDone && score === null) return 0
+    if (score !== null) {
+      if (score >= 90) return 3
+      if (score >= 75) return 2
+      if (score > 0) return 1
+    }
+    return isDone ? 1 : 0
+  }
+
+  const handleStageClick = (idx) => {
+    if (!isAvailable(idx)) return
+    navigate(`/level/${numLevelId}/stage/${idx}`)
+  }
+
+  // Level progress metrics
+  const lp = getLevelProgress(numLevelId, puzzles.length || 12)
+  const isMaxLevel = numLevelId >= 3
+  const nextLevelId = numLevelId + 1
+  const isMastered = lp.allDone && lp.avgScore >= 80
+
   return (
-    <div className="flex flex-col min-h-screen bg-bg">
-      {/* Header */}
-      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all z-10" onClick={() => navigate('/levels')}>
-          ← Back
+    <div className="flex flex-col min-h-screen bg-bg relative overflow-x-hidden selection:bg-teal selection:text-white">
+      {/* ── HEADER ── */}
+      <header className="relative w-full h-[64px] px-6 md:px-10 flex items-center justify-between bg-bg-card/85 backdrop-blur-md border-b border-border z-20 shrink-0">
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-text-2 hover:text-text-1 bg-transparent hover:bg-border/60 rounded-xl transition-all"
+          onClick={() => navigate('/levels')}
+        >
+          <span>←</span>
+          <span>Levels</span>
         </button>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
-          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
-        </div>
-        <div className="flex items-center gap-3 z-10">
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
+
+        <Link to="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center hover:opacity-85 transition-opacity">
+          <img src={logoFull} alt="Praxis" className="h-7 object-contain" />
+        </Link>
+
+        <div className="flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50/80 border border-amber/30 rounded-full text-xs font-bold text-amber-700">
+            <span>⭐ {progress.points || 0}</span>
+            <span className="opacity-40">•</span>
+            <span>🔥 {progress.streak || 0}</span>
+          </div>
+          <button
+            className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-text-2 bg-white border border-border hover:border-text-1 hover:text-text-1 transition-all shadow-xs"
+            title="Open Law Reference"
+            onClick={() => setShowLawsDrawer(true)}
+          >
+            <span>📖</span>
+            <span className="hidden sm:inline">Laws</span>
+          </button>
         </div>
       </header>
 
-      {loading && <div className="p-10 text-text-3 text-sm text-center">Loading stages…</div>}
-
-      {!loading && level && (
-        <div className="flex-1 flex flex-col items-center px-5 pt-10 pb-[60px] gap-10">
-          <div className="text-center">
-            <h2 className="text-[26px] font-extrabold text-text-1 tracking-[-0.5px] mb-1.5">{level.name}</h2>
-            <p className="text-sm text-text-3 mb-3">{level.desc}</p>
-            <div className="inline-block text-xs font-semibold text-teal bg-teal-light px-3.5 py-1 rounded-full">
-              {completedSet.size} / {puzzles.length} stages completed
-            </div>
-          </div>
-
-          {/* Concentric squares map */}
-          <div className="relative w-[340px] h-[340px]">
-            {/* Concentric square rings */}
-            <div className="absolute inset-0 border-[1.5px] border-border rounded-xl pointer-events-none" />
-            <div className="absolute inset-[64px] border-[1.5px] border-border-dark border-dashed rounded-xl pointer-events-none" />
-
-            {/* SVG connectors */}
-            <svg
-              className="absolute -inset-6 w-[388px] h-[388px] pointer-events-none"
-              viewBox={`-24 -24 ${SIZE + 48} ${SIZE + 48}`}
-            >
-              {CONNECTIONS.map(([a, b], i) => {
-                const aPos = STAGE_POSITIONS[a]
-                const bPos = STAGE_POSITIONS[b]
-                if (!aPos || !bPos) return null
-                const bothDone = completedSet.has(a) && completedSet.has(b)
-                return (
-                  <line
-                    key={i}
-                    x1={cx(aPos.col)} y1={cy(aPos.row)}
-                    x2={cx(bPos.col)} y2={cy(bPos.row)}
-                    className="stroke-[1.5px]"
-                    stroke={bothDone ? 'var(--color-teal)' : 'var(--color-border-dark)'}
-                    strokeDasharray="6 4"
-                  />
-                )
-              })}
-            </svg>
-
-            {/* Stage nodes */}
-            {STAGE_POSITIONS.slice(0, puzzles.length).map((pos, idx) => {
-              const st = getStageStatus(idx)
-              
-              let colors = 'bg-bg text-text-3 border-border opacity-45 cursor-not-allowed'
-              if (st === 'completed') colors = 'bg-green-light text-green border-green'
-              if (st === 'available') colors = 'bg-amber-light text-amber border-amber'
-
-              return (
-                <button
-                  key={idx}
-                  className={`absolute w-11 h-11 rounded-[10px] flex items-center justify-center text-[15px] font-bold border-2 shadow-sm transition-all z-10 
-                    -translate-x-1/2 -translate-y-1/2
-                    hover:not:disabled:scale-110 hover:not:disabled:shadow-md
-                    ${colors}`}
-                  style={{
-                    left: cx(pos.col),
-                    top: cy(pos.row),
-                  }}
-                  onClick={() => handleStageClick(idx)}
-                  disabled={st === 'locked'}
-                  title={st === 'locked' ? 'Complete previous stage first' : `Stage ${idx + 1}`}
-                >
-                  {st === 'completed' ? '✓' : idx + 1}
-                </button>
-              )
-            })}
-
-            {/* Center decoration */}
-            <img 
-              src={logoX} 
-              alt="Praxis X" 
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain pointer-events-none drop-shadow-md z-20" 
-            />
-          </div>
-
-          {/* ── Level Progress / Next Level unlock progress ── */}
-          {Number(levelId) >= 1 && puzzles.length > 0 && (() => {
-            const currentLvl = Number(levelId)
-            const nextLvl = currentLvl + 1
-            const isMaxLevel = currentLvl >= 3
-            const lp = getLevelProgress(currentLvl, puzzles.length)
-            const pct = Math.min(100, lp.avgScore)
-            const isMastered = lp.avgScore >= 70 && lp.completed === puzzles.length
-            const barColor = (lp.unlocked || isMastered) ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
-            return (
-              <div className="w-full max-w-[380px] bg-bg-card border border-border rounded-2xl px-5 py-4 flex flex-col gap-3 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-bold text-text-1">
-                    {isMaxLevel ? `Level ${currentLvl} Mastery` : `Level ${nextLvl} Unlock`}
-                  </span>
-                  {isMaxLevel ? (
-                    isMastered
-                      ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🏆 Mastered!</span>
-                      : lp.completed === puzzles.length
-                        ? <span className="text-[11px] font-bold text-amber bg-amber-light px-2.5 py-0.5 rounded-full">✓ Completed</span>
-                        : <span className="text-[11px] font-semibold text-text-3">Target: 70% avg score</span>
-                  ) : (
-                    lp.unlocked
-                      ? <span className="text-[11px] font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full">🔓 Unlocked!</span>
-                      : <span className="text-[11px] font-semibold text-text-3">Need 70% avg across all stages</span>
-                  )}
-                </div>
-
-                {/* Avg score bar */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between text-[11px] font-semibold text-text-2">
-                    <span>{lp.completed} / {puzzles.length} stages attempted</span>
-                    <span>{lp.avgScore} / 100 avg score</span>
-                  </div>
-                  <div className="relative w-full h-2.5 bg-border rounded-full overflow-visible">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%`, background: barColor }}
-                    />
-                    {/* 70% threshold marker */}
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-2 rounded-full"
-                      style={{ left: '70%' }}
-                      title="70% threshold"
-                    />
-                  </div>
-                  <div className="text-[10px] text-text-3 text-right">Target: 70%</div>
-                </div>
-
-                {/* Per-stage score breakdown */}
-                <div className="flex flex-col gap-1.5 text-[11px] text-text-2">
-                  {Array.from({ length: puzzles.length }, (_, i) => {
-                    const stageScore = progress.stageScores?.[`${currentLvl}:${i}`] ?? null
-                    const done = completedSet.has(i)
-                    return (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold border ${
-                          done ? 'bg-green-light text-green border-green' : 'bg-bg text-text-3 border-border'
-                        }`}>{done ? '✓' : i + 1}</span>
-                        <span className="flex-1 text-text-2">Stage {i + 1}</span>
-                        {stageScore !== null
-                          ? <span className={`font-bold px-1.5 py-0.5 rounded ${
-                              stageScore >= 70 ? 'text-green bg-green-light' :
-                              stageScore >= 40 ? 'text-amber bg-amber-light' :
-                              'text-red-600 bg-red-50'
-                            }`}>{stageScore}/100</span>
-                          : <span className="text-text-3 italic">not yet attempted</span>
-                        }
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })()}
+      {/* ── LOADING STATE ── */}
+      {loading && (
+        <div className="flex-1 flex flex-col items-center justify-center p-12 gap-3">
+          <div className="w-8 h-8 border-3 border-teal border-t-transparent rounded-full animate-spin" />
+          <p className="text-text-3 text-xs font-semibold">Loading stages…</p>
         </div>
       )}
 
+      {/* ── MAIN CONTENT ── */}
+      {!loading && level && (
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-12 flex flex-col gap-6">
+          {/* ── LEVEL HERO BANNER ── */}
+          <section className="bg-bg-card border border-border rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col gap-5 relative overflow-hidden">
+            {/* Top row: Title, Subtitle, Description + Badges */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase bg-accent text-white tracking-wider">
+                    {level.name}
+                  </span>
+                  <span className="text-xs font-semibold text-text-3">
+                    {level.varCount}-Variable Logic
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text-1 tracking-tight">
+                  Dual-Track Stage Matrix
+                </h1>
+                <p className="text-xs sm:text-sm text-text-3 mt-1.5 max-w-2xl leading-relaxed">
+                  {level.desc}. Every Boolean theorem exists as a dual pair — practice both <span className="font-semibold text-teal">Sum of Products (SOP)</span> and <span className="font-semibold text-indigo-600">Product of Sums (POS)</span>.
+                </p>
+              </div>
+
+              {/* Stat Cards Grid */}
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                {/* Stages Done */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Stages</span>
+                  <span className="text-base sm:text-lg font-extrabold text-text-1 mt-0.5">
+                    {completedSet.size} <span className="text-[11px] font-semibold text-text-3">/ {puzzles.length}</span>
+                  </span>
+                </div>
+
+                {/* Stars Done */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Stars</span>
+                  <span className="text-base sm:text-lg font-extrabold text-amber-500 mt-0.5 flex items-center gap-0.5">
+                    <span>★</span> {lp.totalStars} <span className="text-[11px] font-semibold text-text-3">/ {lp.maxStars}</span>
+                  </span>
+                </div>
+
+                {/* Avg Score */}
+                <div className="bg-bg rounded-2xl px-4 py-3 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
+                  <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Avg Score</span>
+                  <span className={`text-base sm:text-lg font-extrabold mt-0.5 ${
+                    lp.avgScore >= 80 ? 'text-green' : lp.avgScore >= 50 ? 'text-amber' : 'text-text-1'
+                  }`}>
+                    {lp.avgScore}<span className="text-[11px] font-semibold text-text-3">/100</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Target & Lock Gate Progress Bar Container */}
+            <div className="bg-bg rounded-2xl p-4 border border-border flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold">
+                <div className="flex items-center gap-1.5 text-text-2">
+                  <span className="font-extrabold text-text-1">
+                    {isMaxLevel ? `Level ${numLevelId} Mastery` : `Level ${nextLevelId} Unlock Gate`}
+                  </span>
+                  <span className="text-text-3 font-normal">
+                    (Target: 80% Average Score across all {puzzles.length} stages)
+                  </span>
+                </div>
+                <div>
+                  {isMaxLevel ? (
+                    isMastered ? (
+                      <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
+                        🏆 Level Mastered!
+                      </span>
+                    ) : lp.allDone ? (
+                      <span className="text-xs font-bold text-amber bg-amber-light px-2.5 py-0.5 rounded-full border border-amber/30">
+                        ✓ All Done • Need 80% for Mastery
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-text-3">
+                        {lp.completed} / {puzzles.length} completed
+                      </span>
+                    )
+                  ) : lp.unlocked ? (
+                    <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
+                      🔓 Level {nextLevelId} Unlocked!
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30">
+                      🔒 Need 80% avg to unlock Level {nextLevelId}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar with 80% threshold notch */}
+              <div className="relative w-full h-2.5 bg-border rounded-full overflow-visible my-0.5">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, lp.avgScore)}%`,
+                    background: lp.unlocked || isMastered ? '#22c55e' : lp.avgScore >= 50 ? '#f59e0b' : '#ef4444',
+                  }}
+                />
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-1 rounded-full shadow-xs"
+                  style={{ left: '80%' }}
+                  title="80% Target Gate"
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-[10px] text-text-3 font-semibold px-0.5">
+                <span>0%</span>
+                <span className="text-text-2 font-bold">80% Unlock Threshold</span>
+                <span>100%</span>
+              </div>
+            </div>
+          </section>
+
+          {/* ── STAGES GRID (4 Columns × 3 Rows) ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {puzzles.map((puz, idx) => {
+              const status = getStageStatus(idx)
+              const isLocked = status === 'locked'
+              const isCompleted = status === 'completed'
+              const isCurrent = status === 'available'
+              const score = getStageScore(idx)
+              const stars = getStageStars(idx)
+
+              return (
+                <motion.button
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: idx * 0.025 }}
+                  onClick={() => handleStageClick(idx)}
+                  disabled={isLocked}
+                  className={`relative rounded-2xl p-4 border text-left flex flex-col justify-between gap-3 transition-all select-none ${
+                    isLocked
+                      ? 'bg-bg/40 border-border/70 opacity-45 cursor-not-allowed'
+                      : isCompleted
+                        ? 'bg-white border-border hover:border-teal hover:shadow-md hover:-translate-y-0.5 cursor-pointer group'
+                        : 'bg-white border-amber/50 hover:border-amber hover:shadow-md hover:-translate-y-0.5 ring-2 ring-amber/20 cursor-pointer group'
+                  }`}
+                >
+                  {/* Card Top: Stage Number + Stars */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono font-extrabold border ${
+                          isCompleted
+                            ? 'bg-green-light text-green border-green/40'
+                            : isCurrent
+                              ? 'bg-accent text-white border-accent'
+                              : 'bg-bg text-text-3 border-border'
+                        }`}
+                      >
+                        {isCompleted ? '✓' : idx + 1}
+                      </span>
+                      <span className="text-xs font-bold text-text-1">
+                        Stage {idx + 1}
+                      </span>
+                    </div>
+
+                    <StarRating stars={stars} />
+                  </div>
+
+                  {/* Card Middle: Expression Box */}
+                  <div className="bg-bg/80 rounded-xl p-2.5 border border-border/80 flex flex-col gap-1 text-center">
+                    <div className="font-mono text-sm sm:text-base font-bold text-text-1 truncate py-0.5">
+                      <ExprText text={puz?.expr} />
+                    </div>
+                    <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-text-3 border-t border-border/60 pt-1">
+                      <span>Goal:</span>
+                      <span className="font-mono font-extrabold text-teal">
+                        <ExprText text={puz?.goal} />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Score or Action Pill */}
+                  <div className="flex items-center justify-between pt-0.5">
+                    {isCompleted && score !== null ? (
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                          score >= 80
+                            ? 'bg-green-light text-green border-green/30'
+                            : score >= 50
+                              ? 'bg-amber-light text-amber border-amber/30'
+                              : 'bg-red-50 text-red-600 border-red-200'
+                        }`}
+                      >
+                        {score} pts
+                      </span>
+                    ) : isCurrent ? (
+                      <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber/30">
+                        Ready
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-text-3 font-semibold">
+                        Locked
+                      </span>
+                    )}
+
+                    <span
+                      className={`text-xs font-bold transition-transform ${
+                        isLocked
+                          ? 'text-text-3'
+                          : isCompleted
+                            ? 'text-text-2 group-hover:text-teal group-hover:translate-x-0.5'
+                            : 'text-accent group-hover:translate-x-0.5'
+                      }`}
+                    >
+                      {isLocked ? '🔒' : isCompleted ? 'Replay →' : 'Start →'}
+                    </span>
+                  </div>
+                </motion.button>
+              )
+            })}
+          </div>
+        </main>
+      )}
+
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
-      <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
-      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${
+          showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setShowLawsDrawer(false)}
+      />
+      <div
+        className={`fixed top-0 right-0 h-full w-[340px] max-w-[90vw] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${
+          showLawsDrawer ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-base font-bold text-text-1">Law Reference</h2>
-          <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
+          <button
+            className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all"
+            onClick={() => setShowLawsDrawer(false)}
+          >
+            ✕
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-          {laws && laws.map(law => (
-            <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
-              <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
-              <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-sm">
-                {law.formulas && law.formulas.map((f, idx) => (
-                  <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
-                ))}
+          {laws &&
+            laws.map((law) => (
+              <div key={law.id} className="bg-bg border border-border rounded-xl p-3.5 text-left">
+                <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
+                <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded-lg px-3 py-2 shadow-xs">
+                  {law.formulas &&
+                    law.formulas.map((f, idx) => (
+                      <div key={idx} className="font-mono text-xs font-semibold text-text-1">
+                        {f}
+                      </div>
+                    ))}
+                </div>
+                <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
               </div>
-              <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>

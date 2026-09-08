@@ -31,33 +31,33 @@ export default function ProblemPage() {
 
   function getLawExplanation(lawName) {
     if (!lawName) return null
-    const lower = lawName.toLowerCase()
+    const lower = String(lawName).toLowerCase()
     if (lower.includes('initial')) {
       return 'Starting problem expression.'
     }
     if (lower.includes('distributive')) {
-      return 'Factored out common variable into parentheses.'
+      return 'Factored out a common variable (AB + AC = A(B+C)) or applied POS dual distribution ((A+B)(A+C) = A + BC).'
     }
     if (lower.includes('absorption')) {
-      return 'Shorter term absorbs redundant longer term.'
+      return 'Redundant term absorbed: A + AB = A in sums, and A(A + B) = A in products.'
     }
     if (lower.includes('complement')) {
-      return 'Opposites cancel: A + A\' = 1 and A · A\' = 0.'
+      return 'Opposites evaluated: A + A\' = 1 in sums, and A · A\' = 0 in products.'
     }
     if (lower.includes('idempotent')) {
-      return 'Duplicate terms combine: A + A = A.'
+      return 'Duplicate terms combined: A + A = A in sums, and A · A = A in products.'
     }
     if (lower.includes('identity')) {
-      return 'Neutral element dropped: A · 1 = A and A + 0 = A.'
+      return 'Neutral element dropped: A + 0 = A in sums, and A · 1 = A in products.'
     }
     if (lower.includes('annulment')) {
-      return 'Dominant value takes over: A + 1 = 1 and A · 0 = 0.'
+      return 'Dominant value takes over: A + 1 = 1 in sums, and A · 0 = 0 in products.'
     }
     if (lower.includes('double neg')) {
       return 'Double NOT cancels out: (A\')\' = A.'
     }
     if (lower.includes('demorgan')) {
-      return 'Break the bar, flip the operator (+ ↔ ·).'
+      return 'Negated group expanded: (AB)\' = A\' + B\' or (A+B)\' = A\'B\'.'
     }
     return `Applied ${lawName}.`
   }
@@ -112,15 +112,13 @@ export default function ProblemPage() {
 
   // 2. Synchronize puzzle derivation with saved solution (reactive to auth hydration)
   const currentSavedKey = `${levelId}:${stageNum}`
-  const savedSolutionForStage = progress.stageSolutions?.[currentSavedKey]
-
   useEffect(() => {
     if (!puzzle) return
 
     const savedSteps = getSavedSolution(Number(levelId), stageNum)
     loadedAsSavedRef.current = Boolean(savedSteps && savedSteps.length > 0)
     loadPuzzle(puzzle, savedSteps)
-  }, [puzzle, currentSavedKey, savedSolutionForStage])
+  }, [puzzle, levelId, stageNum])
 
   // Handle stage completion
   useEffect(() => {
@@ -140,20 +138,24 @@ export default function ProblemPage() {
     saveSolution(Number(levelId), stageNum, steps)
 
     // Derive lawsUsed from step history at this moment
-    const lawsUsed = steps.map(s => {
-      const nameToId = {
-        'Absorption Law': 'absorption',
-        'Idempotent Law': 'idempotent',
-        'Complement Law': 'complement',
-        'Identity Law': 'identity',
-        'Annulment Law': 'annulment',
-        'Double Negation': 'double-neg',
-        "De Morgan's (AND\u2192OR)": 'demorgan-and',
-        "De Morgan's (OR\u2192AND)": 'demorgan-or',
-        'Distributive (Factor)': 'distributive',
-      }
-      return nameToId[s.law] || s.law.toLowerCase()
-    })
+    const nameToId = {
+      'Absorption Law': 'absorption',
+      'Absorption Law (Product)': 'absorption',
+      'Idempotent Law': 'idempotent',
+      'Idempotent Law (Product)': 'idempotent',
+      'Complement Law': 'complement',
+      'Complement Law (Product)': 'complement',
+      'Identity Law': 'identity',
+      'Identity Law (Product)': 'identity',
+      'Annulment Law': 'annulment',
+      'Annulment Law (Product)': 'annulment',
+      'Double Negation': 'double-neg',
+      "De Morgan's (AND\u2192OR)": 'demorgan-and',
+      "De Morgan's (OR\u2192AND)": 'demorgan-or',
+      'Distributive (Factor)': 'distributive',
+      'Distributive (POS)': 'distributive',
+    }
+    const lawsUsed = steps.map(s => nameToId[s?.law] || s?.law?.toLowerCase() || 'unknown')
 
     const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
 
@@ -194,20 +196,24 @@ export default function ProblemPage() {
 
   const handleOpenScoreSummary = () => {
     if (!scoreResult && isComplete) {
-      const lawsUsed = steps.map(s => {
-        const nameToId = {
-          'Absorption Law': 'absorption',
-          'Idempotent Law': 'idempotent',
-          'Complement Law': 'complement',
-          'Identity Law': 'identity',
-          'Annulment Law': 'annulment',
-          'Double Negation': 'double-neg',
-          "De Morgan's (AND\u2192OR)": 'demorgan-and',
-          "De Morgan's (OR\u2192AND)": 'demorgan-or',
-          'Distributive (Factor)': 'distributive',
-        }
-        return nameToId[s.law] || s.law.toLowerCase()
-      })
+      const nameToId = {
+        'Absorption Law': 'absorption',
+        'Absorption Law (Product)': 'absorption',
+        'Idempotent Law': 'idempotent',
+        'Idempotent Law (Product)': 'idempotent',
+        'Complement Law': 'complement',
+        'Complement Law (Product)': 'complement',
+        'Identity Law': 'identity',
+        'Identity Law (Product)': 'identity',
+        'Annulment Law': 'annulment',
+        'Annulment Law (Product)': 'annulment',
+        'Double Negation': 'double-neg',
+        "De Morgan's (AND\u2192OR)": 'demorgan-and',
+        "De Morgan's (OR\u2192AND)": 'demorgan-or',
+        'Distributive (Factor)': 'distributive',
+        'Distributive (POS)': 'distributive',
+      }
+      const lawsUsed = steps.map(s => nameToId[s?.law] || s?.law?.toLowerCase() || 'unknown')
       const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
       submitScore({
         levelId: Number(levelId),
@@ -229,7 +235,7 @@ export default function ProblemPage() {
   }
 
   const handleHint = () => {
-    if (!puzzle) return
+    if (!puzzle || isComplete) return
     const hint = useHint(puzzle)
     if (hint) {
       setCurrentHint(hint)
@@ -248,6 +254,7 @@ export default function ProblemPage() {
   }
 
   const handleGuide = () => {
+    if (isComplete) return
     if (progress.points >= 20) {
       const activated = activateGuide()
       if (activated) {
@@ -309,6 +316,20 @@ export default function ProblemPage() {
     setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
     swapTerms(sumPath, fromIdx, toIdx)
+  }
+
+  if (!level || !puzzle) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-bg">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-7 w-7 text-accent" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm font-semibold text-text-3">Loading stage...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -576,14 +597,14 @@ export default function ProblemPage() {
 
                         {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                         <div
-                          className={`flex items-baseline gap-3 px-3 py-1 rounded-xl transition-all border ${
+                          className={`flex items-baseline gap-1.5 px-2.5 py-1 rounded-xl transition-all border ${
                             isLineHighlighted
                               ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
                               : 'border-transparent'
                           }`}
                         >
                           <span
-                            className={`font-mono text-[22px] whitespace-pre shrink-0 min-w-[2.2em] transition-colors ${
+                            className={`font-mono text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors ${
                               isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
                             }`}
                           >
@@ -596,7 +617,7 @@ export default function ProblemPage() {
                               onClickLit={onClickLit}
                               onClickNot={onClickNot}
                               onClickTerm={onClickTerm}
-                              onSwapTerms={onSwapTerms}
+                              onSwapTerms={swapTerms}
                               activeGuidePaths={activeGuidePaths}
                               animationPaths={isAnimating ? animationData?.paths : []}
                               animationLaw={isAnimating ? animationData?.lawId : null}
@@ -737,16 +758,18 @@ export default function ProblemPage() {
           {/* Hint & Guide Action Buttons */}
           <div className="flex gap-2">
             <button
-              className="flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs"
+              className="flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-bg disabled:hover:text-text-2"
               onClick={handleHint}
-              title="Get a hint for the next step"
+              disabled={isComplete}
+              title={isComplete ? "Expression is already simplified" : "Get a hint for the next step"}
             >
               <span>💡</span> Hint
             </button>
             <button
-              className="flex-1 py-2 px-2 rounded-lg text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs"
+              className="flex-1 py-2 px-2 rounded-lg text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:border-amber/50"
               onClick={handleGuide}
-              title="Highlight terms for the next move (Costs 20 pts)"
+              disabled={isComplete || (progress.points ?? 0) < 20}
+              title={isComplete ? "Expression is already simplified" : "Highlight terms for the next move (Costs 20 pts)"}
             >
               <span>🎯</span> Guide <span className="text-[10px] text-amber-700 font-normal">(20p)</span>
             </button>

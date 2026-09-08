@@ -7,12 +7,12 @@ export default defineConfig({
     proxy: {
       // Auth requests → Better Auth server (must come BEFORE /api)
       '/api/auth': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
       // All other API requests → FastAPI backend
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

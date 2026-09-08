@@ -355,14 +355,14 @@ function DistributiveFactoringAnimation({ rects, data }) {
           lineHeight: 1,
         }}
       >
-        {/* Outer prefix if nested inside a parent product (e.g. x in x(y'z + yz)) */}
+        {/* Outer prefix if nested inside a parent product */}
         {outerPrefix && (
           <span style={{ color: '#1a2035', fontWeight: '600' }}>
             <ExprText text={outerPrefix} />
           </span>
         )}
 
-        {/* Factored variable (e.g. z) */}
+        {/* Factored variable (e.g. z or x) */}
         <span
           style={{
             color: '#0ea5e9',
@@ -373,71 +373,99 @@ function DistributiveFactoringAnimation({ rects, data }) {
           <ExprText text={factoredVar} />
         </span>
 
-        {/* Opening parenthesis `(` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.05em',
-            animation: outerPrefix
-              ? 'none'
-              : 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-          }}
-        >
-          (
-        </span>
+        {data?.formula?.includes('A + BC') || data?.lawName?.includes('POS') ? (
+          <>
+            {/* POS Dual Distributive: A + (rem1)(rem2) */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.25em',
+                animation: 'remainderSlide 0.6s 0.25s ease both',
+              }}
+            >
+              +
+            </span>
+            <span
+              style={{
+                color: '#1a2035',
+                fontWeight: '600',
+                animation: 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              <ExprText text={rem1 && rem2 && (rem1.includes('+') || rem1.length > 1) ? `(${rem1})` : rem1} />
+              <ExprText text={rem1 && rem2 && (rem2.includes('+') || rem2.length > 1) ? `(${rem2})` : rem2} />
+            </span>
+          </>
+        ) : (
+          <>
+            {/* SOP Distributive: A(rem1 + rem2) */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.05em',
+                animation: outerPrefix
+                  ? 'none'
+                  : 'parenPop 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            >
+              (
+            </span>
 
-        {/* First remainder (e.g. 1 in gold or y') */}
-        <span
-          style={{
-            color: rem1 === '1' ? '#f59e0b' : '#1a2035',
-            fontWeight: rem1 === '1' ? 'bold' : '600',
-            animation: rem1 === '1'
-              ? 'oneEmerge 0.7s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both'
-              : 'remainderSlide 0.6s 0.35s ease both',
-          }}
-        >
-          <ExprText text={rem1} />
-        </span>
+            {/* First remainder (e.g. 1 in gold or y') */}
+            <span
+              style={{
+                color: rem1 === '1' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem1 === '1' ? 'bold' : '600',
+                animation: rem1 === '1'
+                  ? 'oneEmerge 0.7s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+                  : 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              <ExprText text={rem1} />
+            </span>
 
-        {/* Plus operator ` + ` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.25em',
-            animation: 'remainderSlide 0.6s 0.35s ease both',
-          }}
-        >
-          +
-        </span>
+            {/* Plus operator ` + ` */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.25em',
+                animation: 'remainderSlide 0.6s 0.35s ease both',
+              }}
+            >
+              +
+            </span>
 
-        {/* Second remainder (e.g. y) */}
-        <span
-          style={{
-            color: rem2 === '1' ? '#f59e0b' : '#1a2035',
-            fontWeight: rem2 === '1' ? 'bold' : '600',
-            animation: rem2 === '1'
-              ? 'oneEmerge 0.7s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
-              : 'remainderSlide 0.6s 0.4s ease both',
-          }}
-        >
-          <ExprText text={rem2} />
-        </span>
+            {/* Second remainder (e.g. y) */}
+            <span
+              style={{
+                color: rem2 === '1' ? '#f59e0b' : '#1a2035',
+                fontWeight: rem2 === '1' ? 'bold' : '600',
+                animation: rem2 === '1'
+                  ? 'oneEmerge 0.7s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+                  : 'remainderSlide 0.6s 0.4s ease both',
+              }}
+            >
+              <ExprText text={rem2} />
+            </span>
 
-        {/* Closing parenthesis `)` */}
-        <span
-          style={{
-            color: '#64748b',
-            fontWeight: 'normal',
-            margin: '0 0.05em',
-            animation: outerPrefix
-              ? 'none'
-              : 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-          }}
-        >
-          )
-        </span>
+            {/* Closing parenthesis `)` */}
+            <span
+              style={{
+                color: '#64748b',
+                fontWeight: 'normal',
+                margin: '0 0.05em',
+                animation: outerPrefix
+                  ? 'none'
+                  : 'parenPop 0.6s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            >
+              )
+            </span>
+          </>
+        )}
 
         {/* Outer suffix if any */}
         {outerSuffix && (
