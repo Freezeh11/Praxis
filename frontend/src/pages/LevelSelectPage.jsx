@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
@@ -15,6 +15,7 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const touchStartX = useRef(null)
   // First visit: offer the interactive tutorial once (lazy init avoids a setState-in-effect)
   const [showTutorialWelcome, setShowTutorialWelcome] = useState(() => {
     try {
@@ -125,13 +126,24 @@ export default function LevelSelectPage() {
         <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
       </div>
 
-      {/* Carousel */}
-      <div className="flex items-center justify-center gap-8 mt-10 flex-1">
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
+      {/* Carousel — on phones only the active card shows and the arrows
+          overlay its edges; swipe left/right also navigates */}
+      <div
+        className="relative flex items-center justify-center gap-2 sm:gap-5 md:gap-8 mt-10 flex-1 w-full max-w-full px-14 sm:px-2"
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+        onTouchEnd={e => {
+          if (touchStartX.current === null) return
+          const dx = e.changedTouches[0].clientX - touchStartX.current
+          touchStartX.current = null
+          if (dx > 48) prev()
+          else if (dx < -48) next()
+        }}
+      >
+        <button className="absolute left-0 z-10 md:static md:z-auto w-10 h-10 min-tap rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
           <span>‹</span>
         </button>
 
-        <div className="flex items-center justify-center gap-5 [perspective:1000px]">
+        <div className="flex items-center justify-center gap-5 [perspective:1000px] overflow-hidden">
           {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
           {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
           {!loading && !error && levels.map((lv, i) => {
@@ -146,7 +158,7 @@ export default function LevelSelectPage() {
             return (
               <div
                 key={lv.id}
-                className={`w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
+                className={`${!isActive ? 'hidden md:block ' : ''}w-[220px] sm:w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
                   ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-1 opacity-70 shadow-sm'}
                   ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                   ${!locked && !isActive ? 'hover:opacity-90 hover:scale-95 hover:translate-y-0.5' : ''}
@@ -218,7 +230,7 @@ export default function LevelSelectPage() {
           })}
         </div>
 
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
+        <button className="absolute right-0 z-10 md:static md:z-auto w-10 h-10 min-tap rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
           <span>›</span>
         </button>
       </div>
@@ -243,7 +255,7 @@ export default function LevelSelectPage() {
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
-      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-[min(340px,92vw)] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 pb-safe ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-base font-bold text-text-1">Law Reference</h2>
           <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
