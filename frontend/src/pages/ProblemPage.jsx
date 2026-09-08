@@ -27,6 +27,8 @@ export default function ProblemPage() {
   const [scoreResult, setScoreResult] = useState(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
+  const [showStepsPanel, setShowStepsPanel] = useState(false)
+  const [showStagesPanel, setShowStagesPanel] = useState(false)
   const loadedAsSavedRef = useRef(false)
 
   function getLawExplanation(lawName) {
@@ -333,13 +335,23 @@ export default function ProblemPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg">
-      {/* ── LEFT PANEL: Step History ── */}
-      <aside className="w-[260px] min-w-[200px] max-w-[300px] bg-white border-r border-border flex flex-col overflow-hidden">
+    <div className="flex flex-col xl:flex-row h-screen overflow-hidden bg-bg">
+      {/* ── LEFT PANEL: Step History ──
+          On phones/tablets (<1280px) it becomes a slide-in drawer toggled
+          from the workspace header; on desktop it is a fixed column. ── */}
+      {showStepsPanel && (
+        <div className="fixed inset-0 z-40 bg-black/25 xl:hidden" onClick={() => setShowStepsPanel(false)} />
+      )}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[300px] max-w-[85vw] bg-white border-r border-border flex flex-col overflow-hidden transition-transform duration-300 pb-safe xl:static xl:z-auto xl:translate-x-0 xl:pb-0 xl:w-[260px] xl:min-w-[200px] xl:max-w-[300px] ${showStepsPanel ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="px-4 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-2">
-          <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all w-fit" onClick={() => navigate(`/level/${levelId}/stages`)}>
-            ← Stages
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all w-fit" onClick={() => { setShowStepsPanel(false); navigate(`/level/${levelId}/stages`) }}>
+              ← Stages
+            </button>
+            <button className="xl:hidden w-8 h-8 min-tap rounded-md hover:bg-border text-text-3 hover:text-text-1 flex items-center justify-center font-bold text-sm transition-colors" onClick={() => setShowStepsPanel(false)} title="Close">
+              ✕
+            </button>
+          </div>
           <div className="text-[13px] font-bold text-text-2 tracking-[0.5px] uppercase">Step History</div>
         </div>
         <div className="flex-1 overflow-y-auto px-3.5 py-3 flex flex-col gap-2.5">
@@ -384,37 +396,49 @@ export default function ProblemPage() {
       </aside>
 
       {/* ── CENTER PANEL: Expression Workspace ── */}
-      <main className="flex-1 flex flex-col bg-white border border-border m-3 rounded-xl shadow-sm overflow-hidden">
+      <main className="flex-1 min-h-0 flex flex-col bg-white border border-border m-2 sm:m-3 rounded-xl shadow-sm overflow-hidden">
         {/* Center header */}
-        <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
-          <div>
-            <div className="text-[15px] font-bold text-text-1">Simplify Expression</div>
-            <div className="text-[11px] text-text-3 mt-0.5">Reduce to its simplest form</div>
+        <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-border flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Mobile: panel toggle buttons */}
+            <button
+              className="xl:hidden w-9 h-9 min-tap rounded-md border border-border bg-bg text-sm font-bold text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 shrink-0"
+              onClick={() => setShowStepsPanel(true)}
+              title="Step history"
+            >
+              ☰
+            </button>
+            <div className="min-w-0">
+              <div className="text-[15px] font-bold text-text-1 truncate">Simplify Expression</div>
+              <div className="text-[11px] text-text-3 mt-0.5 truncate hidden sm:block">Reduce to its simplest form</div>
+            </div>
           </div>
-          <div className="flex gap-1.5 items-center">
-            {/* Zoom controls */}
-            <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={() => setZoom(z => Math.max(ZOOM_MIN, parseFloat((z - ZOOM_STEP).toFixed(2))))}
-              disabled={zoom <= ZOOM_MIN}
-              title="Zoom out"
-            >−</button>
-            <button
-              className="h-7 px-2 rounded border border-border bg-bg text-[10px] font-mono text-text-2 hover:bg-border transition-all"
-              onClick={() => setZoom(1)}
-            >100%</button>
-            <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={() => setZoom(z => Math.min(ZOOM_MAX, parseFloat((z + ZOOM_STEP).toFixed(2))))}
-              disabled={zoom >= ZOOM_MAX}
-              title="Zoom in"
-            >+</button>
+          <div className="flex gap-1 sm:gap-1.5 items-center shrink-0">
+            {/* Zoom controls — hidden on very small screens to save space */}
+            <div className="hidden sm:flex gap-1.5 items-center">
+              <button
+                className="w-9 h-9 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => setZoom(z => Math.max(ZOOM_MIN, parseFloat((z - ZOOM_STEP).toFixed(2))))}
+                disabled={zoom <= ZOOM_MIN}
+                title="Zoom out"
+              >−</button>
+              <button
+                className="h-9 px-2 rounded border border-border bg-bg text-[10px] font-mono text-text-2 hover:bg-border transition-all"
+                onClick={() => setZoom(1)}
+              >100%</button>
+              <button
+                className="w-9 h-9 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => setZoom(z => Math.min(ZOOM_MAX, parseFloat((z + ZOOM_STEP).toFixed(2))))}
+                disabled={zoom >= ZOOM_MAX}
+                title="Zoom in"
+              >+</button>
 
-            <div className="w-[1px] h-4 bg-border mx-1" />
+              <div className="w-[1px] h-4 bg-border mx-1" />
+            </div>
 
             {/* Undo button */}
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={handleUndo}
               disabled={steps.length === 0}
               title="Undo last step"
@@ -424,37 +448,47 @@ export default function ProblemPage() {
 
             {/* Reset button */}
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
               onClick={handleResetClick}
               title="Reset problem to start"
             >
               <span>↺</span> Reset
+            </button>
+
+            {/* Mobile: stages drawer toggle */}
+            <button
+              className="xl:hidden w-9 h-9 min-tap rounded-md border border-border bg-bg text-sm font-bold text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 shrink-0"
+              onClick={() => setShowStagesPanel(true)}
+              title="Level progress and stages"
+            >
+              ▦
             </button>
           </div>
         </div>
 
 
         {/* Expression workspace — grid bg + derivation chain */}
-        <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
+        <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[320px] sm:min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
           <div className="relative w-full h-full flex flex-col justify-center items-center">
             {isAnimating && <AnimationOverlay data={animationData} />}
 
             {/* Status pill — absolutely pinned to top, outside zoom wrapper so it stays fixed size */}
             {status !== 'select' && (
-              <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-20 transition-all duration-200
+              <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-20 transition-all duration-200 max-w-[94%] overflow-hidden
                 ${status === 'error' ? 'bg-red-100 text-red-700 border-red-300' : ''}
                 ${status === 'laws' ? 'bg-teal-light text-sky-700 border-sky-300' : ''}
                 ${status === 'success' ? 'bg-green-light text-green-800 border-green-300' : ''}
               `}>
-                {status === 'success' && <span className="text-xs font-bold">✓</span>}
-                {status === 'error'   && <span className="text-xs font-bold">✕</span>}
-                {status === 'laws'    && <span className="text-xs font-bold">→</span>}
-                {statusMsg}
+                {status === 'success' && <span className="text-xs font-bold shrink-0">✓</span>}
+                {status === 'error'   && <span className="text-xs font-bold shrink-0">✕</span>}
+                {status === 'laws'    && <span className="text-xs font-bold shrink-0">→</span>}
+                <span className="truncate">{statusMsg}</span>
               </div>
             )}
 
-            {/* Zoom wrapper — scales the entire expression block */}
-            <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
+            {/* Zoom wrapper — scales the entire expression block; long
+                expressions can scroll horizontally on narrow screens */}
+            <div className="max-w-full overflow-x-auto" style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
               {/* Derivation chain — clean FIFO top-to-bottom queue */}
             {expr && (() => {
               const totalSteps = steps.length
@@ -505,7 +539,7 @@ export default function ProblemPage() {
               return (
                 <motion.div
                   layout
-                  className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start select-none"
+                  className="flex flex-col gap-3 font-mono text-[17px] sm:text-[20px] lg:text-[22px] font-medium items-start select-none max-w-full"
                   onClick={() => setInspectedStepIdx(null)}
                 >
                   {lines.map((line, idx) => {
@@ -604,7 +638,7 @@ export default function ProblemPage() {
                           }`}
                         >
                           <span
-                            className={`font-mono text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors ${
+                            className={`font-mono text-[17px] sm:text-[20px] lg:text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors ${
                               isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
                             }`}
                           >
@@ -716,8 +750,20 @@ export default function ProblemPage() {
         </div>
       </main>
 
-      {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages ── */}
-      <aside className="w-[280px] min-w-[240px] bg-white border-l border-border flex flex-col overflow-hidden">
+      {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages ──
+          On phones/tablets (<1280px) it becomes a slide-in drawer; on
+          desktop it is a fixed column. ── */}
+      {showStagesPanel && (
+        <div className="fixed inset-0 z-40 bg-black/25 xl:hidden" onClick={() => setShowStagesPanel(false)} />
+      )}
+      <aside className={`fixed inset-y-0 right-0 z-50 w-[300px] max-w-[85vw] bg-white border-l border-border flex flex-col overflow-hidden transition-transform duration-300 pb-safe xl:static xl:z-auto xl:translate-x-0 xl:pb-0 xl:w-[280px] xl:min-w-[240px] ${showStagesPanel ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="xl:hidden flex items-center justify-between px-4 py-2.5 border-b border-border bg-bg">
+          <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-2">Stage Info</span>
+          <button className="w-8 h-8 min-tap rounded-md hover:bg-border text-text-3 hover:text-text-1 flex items-center justify-center font-bold text-sm transition-colors" onClick={() => setShowStagesPanel(false)} title="Close">
+            ✕
+          </button>
+        </div>
+
         {/* Top: Stage / Level Progress */}
         <div className="border-b border-border p-3.5 pt-4 bg-bg/30">
           <div className="flex items-center justify-between mb-1.5">
@@ -842,7 +888,7 @@ export default function ProblemPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 350 }}
-              className="fixed top-0 right-0 h-full w-[360px] bg-white border-l border-border z-50 shadow-2xl flex flex-col will-change-transform"
+              className="fixed top-0 right-0 h-full w-[min(360px,100vw)] bg-white border-l border-border z-50 shadow-2xl flex flex-col will-change-transform pb-safe"
             >
               <div className="p-4 border-b border-border flex items-center justify-between bg-bg">
                 <div className="font-bold text-sm text-text-1 flex items-center gap-2">
