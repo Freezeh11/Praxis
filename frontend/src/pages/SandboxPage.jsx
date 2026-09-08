@@ -114,21 +114,21 @@ export default function SandboxPage() {
         <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
-        <div className="flex items-center gap-2">
-          <Link to="/practice" className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
-            🎲 Practice
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Link to="/practice" className="h-9 px-2 sm:px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Random practice">
+            🎲<span className="hidden sm:inline">&nbsp;Practice</span>
           </Link>
-          <Link to="/tutorial" className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
-            ▶ Tutorial
+          <Link to="/tutorial" className="h-9 px-2 sm:px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Interactive tutorial">
+            ▶<span className="hidden sm:inline">&nbsp;Tutorial</span>
           </Link>
-          <Link to="/" className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
-            ← Home
+          <Link to="/" className="h-9 px-2 sm:px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Home">
+            ←<span className="hidden sm:inline">&nbsp;Home</span>
           </Link>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-2xl bg-white rounded-2xl border border-border shadow-lg p-8 flex flex-col gap-6">
+      <main className="flex-1 flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10">
+        <div className="w-full max-w-2xl bg-white rounded-2xl border border-border shadow-lg p-5 sm:p-8 flex flex-col gap-5 sm:gap-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-2xl">🧪</span>
