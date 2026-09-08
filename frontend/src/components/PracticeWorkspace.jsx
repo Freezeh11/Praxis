@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
 import ExpressionDisplay from './ExpressionDisplay'
 import AnimationOverlay from './AnimationOverlay'
@@ -37,23 +37,29 @@ export default function PracticeWorkspace({
     isAnimating, animationData,
     loadPuzzle,
     handleClickLit, handleClickNot, handleClickTerm,
-    applyLaw, undoAction, resetPuzzle, useHint,
+    applyLaw, undoAction, resetPuzzle, useHint: requestHint,
     optimalSteps,
   } = useGameState()
 
   const [showHint, setShowHint] = useState(false)
   const [currentHint, setCurrentHint] = useState('')
 
+  // Keep the latest onStateChange callback in a ref so the effect below
+  // does not need it as a dependency (parents pass unstable callbacks).
+  const onStateChangeRef = useRef(onStateChange)
+  useEffect(() => {
+    onStateChangeRef.current = onStateChange
+  })
+
   // Load puzzle whenever it changes
   useEffect(() => {
     if (puzzle) loadPuzzle(puzzle)
-    setShowHint(false)
-  }, [puzzle])
+  }, [puzzle, loadPuzzle])
 
   // Report game state changes to the parent (for the tutorial)
   useEffect(() => {
-    if (typeof onStateChange === 'function') {
-      onStateChange({
+    if (typeof onStateChangeRef.current === 'function') {
+      onStateChangeRef.current({
         selCount: sel.length,
         stepsCount: steps.length,
         applicableLawIds: applicableLaws.map(l => l.id),
@@ -66,7 +72,7 @@ export default function PracticeWorkspace({
 
   const handleHint = () => {
     if (!puzzle || isComplete) return
-    const hint = useHint(puzzle)
+    const hint = requestHint(puzzle)
     if (hint) {
       setCurrentHint(hint)
       setShowHint(true)

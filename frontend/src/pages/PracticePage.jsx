@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import PracticeWorkspace from '../components/PracticeWorkspace'
@@ -12,31 +12,29 @@ import { generateRandomPuzzle, DIFFICULTIES } from '../lib/randomPuzzle'
 export default function PracticePage() {
   const navigate = useNavigate()
   const [difficulty, setDifficulty] = useState('medium')
-  const [puzzle, setPuzzle] = useState(null)
+  const [puzzle, setPuzzle] = useState(() => generateRandomPuzzle('medium'))
   const [solvedCount, setSolvedCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [lastSolvedKey, setLastSolvedKey] = useState(null)
 
-  const newPuzzle = useCallback(() => {
+  const regenerate = useCallback((diff) => {
     setLoading(true)
-    // Defer to next tick so the loading state can paint before the solver runs
+    // Defer to the next tick so the loading state can paint before the solver runs
     setTimeout(() => {
-      const p = generateRandomPuzzle(difficulty)
+      const p = generateRandomPuzzle(diff)
       setPuzzle(p)
       setLastSolvedKey(null)
       setLoading(false)
     }, 50)
-  }, [difficulty])
+  }, [])
 
-  // Generate the first problem on mount
-  useEffect(() => {
-    newPuzzle()
-  }, [newPuzzle])
+  const newPuzzle = useCallback(() => regenerate(difficulty), [regenerate, difficulty])
 
-  // Regenerate when difficulty changes
-  useEffect(() => {
-    newPuzzle()
-  }, [difficulty, newPuzzle])
+  const handleDifficultyChange = (key) => {
+    if (key === difficulty) return
+    setDifficulty(key)
+    regenerate(key)
+  }
 
   const handleStateChange = (snapshot) => {
     const key = `${puzzle?.expr}`
@@ -73,7 +71,7 @@ export default function PracticePage() {
                     ? 'bg-accent text-white shadow-sm'
                     : 'text-text-2 hover:bg-border hover:text-text-1'
                 }`}
-                onClick={() => setDifficulty(key)}
+                onClick={() => handleDifficultyChange(key)}
               >
                 {d.label}
               </button>
@@ -102,6 +100,7 @@ export default function PracticePage() {
           </div>
         ) : (
           <PracticeWorkspace
+            key={puzzle.expr}
             puzzle={puzzle}
             onStateChange={handleStateChange}
             onExit={() => navigate('/levels')}

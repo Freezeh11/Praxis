@@ -34,9 +34,7 @@ export default function SandboxPage() {
       return
     }
 
-    let goalText = null
-    let goalCanon = null
-    let optimalSteps = 0
+    const exprTree = parseExpr(exprInput)
 
     if (goalInput.trim()) {
       const goalCheck = validateExpr(goalInput)
@@ -46,23 +44,27 @@ export default function SandboxPage() {
         return
       }
       const goalTree = parseExpr(goalInput)
-      goalCanon = canonText(goalTree)
-      goalText = nodeText(goalTree)
+      const goalCanon = canonText(goalTree)
 
-      const exprTree = parseExpr(exprInput)
       if (canonText(exprTree) === goalCanon) {
         toast.info('That expression is already equal to the target.')
         setSubmitting(false)
         return
       }
       const res = findOptimalPath(exprTree, goalCanon)
-      optimalSteps = res.found ? res.optimalSteps : 0
       if (!res.found) {
         toast.info("Couldn't verify a path to that target — you can still try, or leave the target empty to auto-simplify.")
       }
+      setPuzzle({
+        expr: nodeText(exprTree),
+        goal: nodeText(goalTree),
+        goalCanon,
+        optimalSteps: res.found ? res.optimalSteps : 0,
+        hints: [],
+        targetLaws: [],
+      })
     } else {
       // No target: auto-compute the fully simplified form
-      const exprTree = parseExpr(exprInput)
       const simplest = findSimplestForm(exprTree)
       if (!simplest.found) {
         toast.error("Couldn't compute the simplified form — try a smaller expression.")
@@ -74,19 +76,15 @@ export default function SandboxPage() {
         setSubmitting(false)
         return
       }
-      goalText = simplest.text
-      goalCanon = simplest.canon
-      optimalSteps = simplest.optimalSteps
+      setPuzzle({
+        expr: nodeText(exprTree),
+        goal: simplest.text,
+        goalCanon: simplest.canon,
+        optimalSteps: simplest.optimalSteps,
+        hints: [],
+        targetLaws: [],
+      })
     }
-
-    setPuzzle({
-      expr: nodeText(parseExpr(exprInput)),
-      goal: goalText,
-      goalCanon,
-      optimalSteps,
-      hints: [],
-      targetLaws: [],
-    })
     setSubmitting(false)
   }
 
@@ -98,6 +96,7 @@ export default function SandboxPage() {
     return (
       <div className="h-screen flex flex-col bg-bg p-3 sm:p-4">
         <PracticeWorkspace
+          key={puzzle.expr}
           puzzle={puzzle}
           onExit={handleEdit}
           exitLabel="Edit equation"
