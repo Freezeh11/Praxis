@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
@@ -15,18 +15,14 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
-  const [showTutorialWelcome, setShowTutorialWelcome] = useState(false)
-
-  // First visit: offer the interactive tutorial once
-  useEffect(() => {
-    let seen = false
+  // First visit: offer the interactive tutorial once (lazy init avoids a setState-in-effect)
+  const [showTutorialWelcome, setShowTutorialWelcome] = useState(() => {
     try {
-      seen = localStorage.getItem('praxis_tutorial_seen') === 'true'
+      return localStorage.getItem('praxis_tutorial_seen') !== 'true'
     } catch {
-      // ignore — storage may be unavailable
+      return false
     }
-    if (!seen) setShowTutorialWelcome(true)
-  }, [])
+  })
 
   const handleTutorialWelcome = (choice) => {
     try {
@@ -93,7 +89,7 @@ export default function LevelSelectPage() {
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
-    } catch (err) {
+    } catch {
       toast.error('Failed to log out.')
     }
   }

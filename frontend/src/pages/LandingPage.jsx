@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { data: session, isPending } = useSession()
+  const { data: session } = useSession()
 
   const handleLogout = async () => {
     try {
@@ -14,7 +14,7 @@ export default function LandingPage() {
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
-    } catch (err) {
+    } catch {
       toast.error('Failed to log out.')
     }
   }
