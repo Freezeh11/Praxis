@@ -307,3 +307,30 @@
   }
 }
 
+
+/* ═══════════════════════════════════════════════
+   MOBILE & TOUCH COMPATIBILITY (2016–2026 devices)
+   ═══════════════════════════════════════════════ */
+
+/* Prevent legacy iOS/Android text auto-inflation on focus */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* iPhone notch / home-indicator safe areas */
+@layer utilities {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+  .pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+  .pr-safe { padding-right: env(safe-area-inset-right, 0px); }
+  .min-tap { min-width: 44px; min-height: 44px; }
+}
+
+/* Touch screens (phones/tablets): grip badges must be visible without hover */
+@media (hover: none) {
+  .term-grip {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
