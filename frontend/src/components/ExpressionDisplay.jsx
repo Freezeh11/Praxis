@@ -43,7 +43,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
     <motion.span
       layout
       transition={transitionConfig}
-      className={`inline-flex items-baseline px-1 py-[2px] rounded-[4px] cursor-pointer transition-all border-[1.5px]
+      className={`inline-flex items-baseline px-1.5 py-1 min-h-[30px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
         ${selected ? 'bg-teal-light border-teal text-teal font-semibold' : 'border-transparent hover:bg-teal-light/60 hover:border-teal/60 hover:text-teal'}
         ${node.type === 'const' ? 'text-text-3 font-semibold' : ''}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal shadow-[0_0_0_6px_rgba(46,196,182,0)] animate-[guidePulse_2s_infinite] z-10' : ''}
@@ -171,7 +171,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 layout
                 transition={transitionConfig}
                 data-path={fPath}
-                className={`relative inline-flex items-center px-1.5 py-[2px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
+                className={`relative inline-flex items-center px-2 py-1 min-h-[34px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
                   ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
                   ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
                   ${factorSel
@@ -334,7 +334,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
-                className={`relative inline-flex items-center px-1.5 py-[2px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
+                className={`relative inline-flex items-center px-2 py-1 min-h-[34px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
                   ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
                   ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
                   ${termSel
