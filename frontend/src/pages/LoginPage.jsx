@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { signIn, useSession } from '../lib/auth-client'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -157,6 +158,9 @@ export default function LoginPage() {
       
       {/* Decorative Orbs */}
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-accent/20 blur-[100px] -z-10 mix-blend-multiply pointer-events-none" />
+
+      {/* Survey (production only) */}
+      <SurveyButton />
     </div>
   )
 }
