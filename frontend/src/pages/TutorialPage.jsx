@@ -23,21 +23,21 @@ const STEPS = [
     id: 1,
     icon: '👆',
     title: 'Select the term x',
-    text: 'Every step starts by SELECTING parts of the expression. Click the letter x in the expression on the left — it will highlight.',
+    text: 'Every step starts by SELECTING parts of the expression. Click the BLINKING term x in the workspace — it is highlighted just for you.',
     action: 'wait-sel-1',
   },
   {
     id: 2,
     icon: '✌️',
     title: 'Now select xy',
-    text: 'Great! Now click the term xy. With two items selected, Praxis shows every law you can apply to them.',
+    text: 'Great! Now click the BLINKING term xy. With two items selected, Praxis shows every law you can apply to them.',
     action: 'wait-sel-2',
   },
   {
     id: 3,
     icon: '⚡',
     title: 'Apply the Absorption Law',
-    text: 'Look below the expression: the Absorption Law card just appeared. Click it to apply the law and simplify the expression.',
+    text: 'Look below the expression: the Absorption Law card is BLINKING. Click it to apply the law and simplify the expression.',
     action: 'wait-step',
   },
   {
@@ -162,6 +162,8 @@ export default function TutorialPage() {
             exitLabel="Home"
             title="Tutorial Problem"
             subtitle="Simplify: x + xy"
+            guidePaths={stepIdx === 1 ? ['R.0'] : stepIdx === 2 ? ['R.1'] : []}
+            highlightLaw={stepIdx === 3 ? 'absorption' : null}
           />
         </div>
 
@@ -190,8 +192,9 @@ export default function TutorialPage() {
             {/* Mini expression reference for the selection steps */}
             {stepIdx >= 1 && stepIdx <= 3 && (
               <div className="bg-bg border border-border rounded-xl px-4 py-3 font-mono text-sm text-text-1">
-                F = <span className={stepIdx >= 1 ? 'text-teal font-bold' : ''}>x</span> +{' '}
-                <span className={stepIdx >= 2 ? 'text-teal font-bold' : ''}>xy</span>
+                F ={' '}
+                <span className={stepIdx === 1 ? 'text-teal font-bold animate-pulse' : stepIdx > 1 ? 'text-teal font-bold' : ''}>x</span> +{' '}
+                <span className={stepIdx === 2 ? 'text-teal font-bold animate-pulse' : stepIdx > 2 ? 'text-teal font-bold' : ''}>xy</span>
                 <div className="font-sans text-[11px] text-text-3 mt-1.5">Goal: x</div>
               </div>
             )}
