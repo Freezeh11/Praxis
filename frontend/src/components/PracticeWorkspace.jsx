@@ -4,9 +4,9 @@ import ExpressionDisplay from './ExpressionDisplay'
 import AnimationOverlay from './AnimationOverlay'
 
 /**
- * Compact, reusable problem workspace used by the interactive Tutorial.
- * Wraps useGameState + ExpressionDisplay + the applicable laws bar in a
- * self-contained layout that works with ANY problem object
+ * Compact, reusable problem workspace used by the interactive Tutorial and
+ * the Sandbox. Wraps useGameState + ExpressionDisplay + the applicable laws
+ * bar in a self-contained layout that works with ANY problem object
  * ({ expr, goal, ... }), not just backend level data.
  *
  * Props:
@@ -17,6 +17,11 @@ import AnimationOverlay from './AnimationOverlay'
  *  - exitLabel?: string
  *  - title / subtitle: header text
  *  - enableHint?: boolean — show the contextual hint button (default true)
+ *  - onNewPuzzle?: () => void — renders a "New problem" action when provided
+ *  - newPuzzleLabel?: string — label for the new-problem button
+ *  - guidePaths?: string[] — node paths to highlight with the pulse guide
+ *        (used by the tutorial to show exactly what to click)
+ *  - highlightLaw?: string — law id whose card pulses (tutorial step 3)
  */
 export default function PracticeWorkspace({
   puzzle,
@@ -26,6 +31,10 @@ export default function PracticeWorkspace({
   title = 'Simplify Expression',
   subtitle = 'Reduce to its simplest form',
   enableHint = true,
+  onNewPuzzle,
+  newPuzzleLabel = 'New problem',
+  guidePaths = [],
+  highlightLaw = null,
 }) {
   const {
     expr, sel, steps,
@@ -131,6 +140,15 @@ export default function PracticeWorkspace({
           >
             <span>↺</span><span className="hidden sm:inline">Reset</span>
           </button>
+          {typeof onNewPuzzle === 'function' && (
+            <button
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md bg-accent text-white text-xs font-bold transition-all hover:bg-text-1 shadow-sm"
+              onClick={onNewPuzzle}
+              title="Load a new random, solver-verified equation"
+            >
+              <span>🎲</span><span className="hidden sm:inline">{newPuzzleLabel}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -173,7 +191,7 @@ export default function PracticeWorkspace({
                   onClickLit={onClickLit}
                   onClickNot={onClickNot}
                   onClickTerm={onClickTerm}
-                  activeGuidePaths={[]}
+                  activeGuidePaths={guidePaths}
                   animationPaths={isAnimating ? animationData?.paths : []}
                   animationLaw={isAnimating ? animationData?.lawId : null}
                 />
@@ -230,7 +248,11 @@ export default function PracticeWorkspace({
                 {applicableLaws.map((law, i) => (
                   <button
                     key={i}
-                    className="bg-white border-[1.5px] border-border rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all min-w-[160px] max-w-[240px] hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px]"
+                    className={`bg-white border-[1.5px] rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all min-w-[160px] max-w-[240px] hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px] ${
+                      highlightLaw && law.id === highlightLaw
+                        ? 'law-highlight border-teal'
+                        : 'border-border'
+                    }`}
                     onClick={() => onApplyLaw(law)}
                   >
                     <div className="text-[13px] font-semibold text-text-1 mb-0.5">{law.name}</div>
