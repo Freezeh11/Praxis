@@ -3,6 +3,7 @@ import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -135,6 +136,9 @@ export default function LandingPage() {
       {/* Decorative Blur Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-accent/20 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green/10 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
+
+      {/* Survey (production only) */}
+      <SurveyButton />
     </div>
   )
 }
