@@ -49,6 +49,41 @@ const STEPS = [
   },
   {
     id: 5,
+    icon: '🎯',
+    title: 'Check the Goal',
+    text: 'Above the expression you will always see the GOAL chip — the expression you are simplifying toward. Every problem shows it, so you always know what you are aiming at.',
+    action: 'next',
+  },
+  {
+    id: 6,
+    icon: '↶',
+    title: 'Undo your move',
+    text: 'Made a mistake? Press the UNDO button in the top bar of the workspace to take back your last step. Try it now — your completed answer will go back to the unsimplified expression.',
+    action: 'wait-undo',
+  },
+  {
+    id: 7,
+    icon: '💡',
+    title: 'Use the Hint button',
+    text: 'Stuck? Press the HINT button in the top bar. Praxis scans the current expression and gives you a worded hint about what to do next — without solving it for you.',
+    action: 'wait-hint',
+  },
+  {
+    id: 8,
+    icon: '↺',
+    title: 'Reset the problem',
+    text: 'The RESET button restarts the problem from scratch. Press it now to get a clean x + xy, then close the hint bubble if it is still open.',
+    action: 'wait-reset',
+  },
+  {
+    id: 9,
+    icon: '🏆',
+    title: 'Solve it again — by yourself',
+    text: 'Now the real test: solve x + xy one more time WITHOUT the blinking hints. Select x, select xy, and apply the Absorption Law.',
+    action: 'wait-complete',
+  },
+  {
+    id: 10,
     icon: '🚀',
     title: "You're ready!",
     text: 'Work through the three levels to master every law, revisit the tutorial anytime from the home page, and consult the Law Reference screen during any problem.',
@@ -96,22 +131,45 @@ export default function TutorialPage() {
   const handleStateChange = useCallback((snapshot) => {
     if (!started) return
 
-    // Completion: jump to the "you did it" step, then to the finale.
-    // (Completion is the last snapshot the workspace emits, so schedule the
-    // final advance here rather than waiting for another state change.)
-    if (snapshot.isComplete) {
-      if (stepIdx < 4) goToStep(4)
-      if (stepIdx < 5) {
-        setAdvanceTimer(setTimeout(() => {
-          markCompleted()
-          goToStep(5)
-        }, 1500))
-      }
+    // Step 4: first completion → show the "you did it" step
+    if (stepIdx === 4 && snapshot.isComplete) {
+      setAdvanceTimer(setTimeout(() => goToStep(5), 900))
+      return
+    }
+
+    // Step 6: user pressed Undo → steps back to zero
+    if (stepIdx === 6 && snapshot.stepsCount === 0) {
+      setAdvanceTimer(setTimeout(() => goToStep(7), 500))
+      return
+    }
+
+    // Step 7: user pressed Hint → hint bubble is visible
+    if (stepIdx === 7 && snapshot.hintShown) {
+      setAdvanceTimer(setTimeout(() => goToStep(8), 600))
+      return
+    }
+
+    // Step 8: user pressed Reset → reset counter bumped
+    if (stepIdx === 8 && snapshot.resetCount >= 1) {
+      setAdvanceTimer(setTimeout(() => goToStep(9), 500))
+      return
+    }
+
+    // Step 9: the final unassisted solve → finish the tutorial
+    if (stepIdx === 9 && snapshot.isComplete) {
+      setAdvanceTimer(setTimeout(() => {
+        markCompleted()
+        goToStep(10)
+      }, 900))
       return
     }
 
     // Catch-up: user already applied a law before the tutorial expected it
-    if (snapshot.stepsCount >= 1 && stepIdx < 4) {
+    if (stepIdx < 4 && snapshot.isComplete) {
+      goToStep(4)
+      return
+    }
+    if (stepIdx < 4 && snapshot.stepsCount >= 1) {
       goToStep(4)
       return
     }
@@ -200,7 +258,7 @@ export default function TutorialPage() {
             )}
 
             {/* Current action checklist */}
-            {stepIdx >= 1 && stepIdx <= 4 && (
+            {stepIdx >= 1 && stepIdx <= 9 && (
               <ul className="flex flex-col gap-1.5 text-xs font-semibold">
                 <li className={`flex items-center gap-2 ${stepIdx >= 2 ? 'text-green line-through opacity-60' : 'text-text-1'}`}>
                   {stepIdx >= 2 ? '✓' : '①'} Select the term x
@@ -213,6 +271,18 @@ export default function TutorialPage() {
                 </li>
                 <li className={`flex items-center gap-2 ${stepIdx >= 5 ? 'text-green line-through opacity-60' : 'text-text-1'}`}>
                   {stepIdx >= 5 ? '✓' : '④'} Reach the goal x
+                </li>
+                <li className={`flex items-center gap-2 ${stepIdx >= 7 ? 'text-green line-through opacity-60' : stepIdx === 6 ? 'text-teal font-bold' : 'text-text-1'}`}>
+                  {stepIdx >= 7 ? '✓' : '⑤'} Undo your move
+                </li>
+                <li className={`flex items-center gap-2 ${stepIdx >= 8 ? 'text-green line-through opacity-60' : stepIdx === 7 ? 'text-teal font-bold' : 'text-text-1'}`}>
+                  {stepIdx >= 8 ? '✓' : '⑥'} Use the Hint button
+                </li>
+                <li className={`flex items-center gap-2 ${stepIdx >= 9 ? 'text-green line-through opacity-60' : stepIdx === 8 ? 'text-teal font-bold' : 'text-text-1'}`}>
+                  {stepIdx >= 9 ? '✓' : '⑦'} Reset the problem
+                </li>
+                <li className={`flex items-center gap-2 ${stepIdx >= 10 ? 'text-green line-through opacity-60' : stepIdx === 9 ? 'text-teal font-bold' : 'text-text-1'}`}>
+                  {stepIdx >= 10 ? '✓' : '⑧'} Solve it again by yourself
                 </li>
               </ul>
             )}
@@ -244,7 +314,15 @@ export default function TutorialPage() {
                 </button>
               </div>
             )}
-            {(step.action === 'wait-sel-1' || step.action === 'wait-sel-2' || step.action === 'wait-step' || step.action === 'wait-complete') && (
+            {step.action === 'next' && (
+              <button
+                className="w-full py-3 bg-accent text-white rounded-xl font-bold text-sm shadow-sm hover:bg-text-1 transition-all"
+                onClick={() => goToStep(stepIdx + 1)}
+              >
+                Next →
+              </button>
+            )}
+            {(step.action === 'wait-sel-1' || step.action === 'wait-sel-2' || step.action === 'wait-step' || step.action === 'wait-complete' || step.action === 'wait-undo' || step.action === 'wait-hint' || step.action === 'wait-reset') && (
               <div className="flex items-center justify-center gap-2 text-xs text-text-3 font-semibold py-1">
                 <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
                 Waiting for your move…
