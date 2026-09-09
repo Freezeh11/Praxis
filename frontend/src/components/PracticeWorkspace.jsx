@@ -50,6 +50,7 @@ export default function PracticeWorkspace({
 
   const [showHint, setShowHint] = useState(false)
   const [currentHint, setCurrentHint] = useState('')
+  const [resetCount, setResetCount] = useState(0)
 
   // Keep the latest onStateChange callback in a ref so the effect below
   // does not need it as a dependency (parents pass unstable callbacks).
@@ -73,9 +74,11 @@ export default function PracticeWorkspace({
         isComplete,
         status,
         expr,
+        hintShown: showHint,
+        resetCount,
       })
     }
-  }, [sel.length, steps.length, applicableLaws, isComplete, status, expr])
+  }, [sel.length, steps.length, applicableLaws, isComplete, status, expr, showHint, resetCount])
 
   const handleHint = () => {
     if (!puzzle || isComplete) return
@@ -89,6 +92,7 @@ export default function PracticeWorkspace({
 
   const handleReset = () => {
     setShowHint(false)
+    setResetCount(c => c + 1)
     resetPuzzle(puzzle)
   }
 
