@@ -13,6 +13,7 @@ class ScoreRequest(BaseModel):
     stepsUsed: int
     lawsUsed: List[str]   # list of law IDs applied (may have duplicates)
     hintsUsed: int        # number of hints/guides consumed
+    optimalSteps: Optional[int] = None
 
 
 class ScoreResponse(BaseModel):
@@ -73,7 +74,10 @@ async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, us
         raise HTTPException(status_code=404, detail=f"Stage {req.stageIdx} not found")
 
     puzzle = level["puzzles"][req.stageIdx]
-    optimal = puzzle.get("optimalSteps", req.stepsUsed)
+    optimal = req.optimalSteps if (req.optimalSteps is not None and req.optimalSteps > 0) else puzzle.get("optimalSteps", req.stepsUsed)
+    if req.stepsUsed < optimal:
+        optimal = req.stepsUsed
+
     target_laws = set(puzzle.get("targetLaws", []))
     laws_used = set(req.lawsUsed)
 

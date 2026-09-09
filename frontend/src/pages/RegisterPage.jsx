@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { signUp, useSession } from '../lib/auth-client'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -51,7 +52,7 @@ export default function RegisterPage() {
         toast.success('Account created successfully! Welcome to Praxis.')
         // useEffect will handle the navigation once the session state updates globally
       }
-    } catch (err) {
+    } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
@@ -225,6 +226,9 @@ export default function RegisterPage() {
 
       {/* Decorative Orbs */}
       <div className="absolute top-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-accent/20 blur-[100px] -z-10 mix-blend-multiply pointer-events-none" />
+
+      {/* Survey (production only) */}
+      <SurveyButton />
     </div>
   )
 }

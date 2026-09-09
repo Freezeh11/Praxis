@@ -3,10 +3,11 @@ import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { data: session, isPending } = useSession()
+  const { data: session } = useSession()
 
   const handleLogout = async () => {
     try {
@@ -14,7 +15,7 @@ export default function LandingPage() {
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
-    } catch (err) {
+    } catch {
       toast.error('Failed to log out.')
     }
   }
@@ -36,7 +37,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </div>
@@ -72,7 +73,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Headline */}
-          <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-6">
+          <motion.h1 variants={itemVariants} className="text-[30px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-6">
             Master Boolean Algebra<br className="hidden md:block" /> Without the Headache.
           </motion.h1>
 
@@ -107,12 +108,33 @@ export default function LandingPage() {
               </>
             )}
           </motion.div>
+
+          {/* Secondary: guided tutorial (always) + sandbox (only when logged in) */}
+          <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/tutorial"
+              className="px-4 py-2 rounded-full bg-teal/10 border border-teal/30 text-teal text-[13px] font-bold hover:bg-teal/20 hover:-translate-y-0.5 transition-all"
+            >
+              ▶ Interactive Tutorial
+            </Link>
+            {session && (
+              <Link
+                to="/sandbox"
+                className="px-4 py-2 rounded-full bg-white border border-border text-text-2 text-[13px] font-bold hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all"
+              >
+                🧪 Sandbox Mode
+              </Link>
+            )}
+          </motion.div>
         </motion.div>
       </main>
 
       {/* Decorative Blur Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-accent/20 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green/10 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
+
+      {/* Survey (production only) */}
+      <SurveyButton />
     </div>
   )
 }

@@ -79,13 +79,13 @@ export function useApi() {
     return levelRequestCache.get(levelId)
   }, [])
 
-  const submitScore = useCallback(async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }) => {
+  const submitScore = useCallback(async ({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed, optimalSteps }) => {
     try {
       const headers = await getAuthHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/score', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed }),
+        body: JSON.stringify({ levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed, optimalSteps }),
       })
       if (!res.ok) return null
       return res.json()

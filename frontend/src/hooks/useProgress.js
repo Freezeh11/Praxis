@@ -9,6 +9,7 @@ const defaultProgress = {
   levelsCompleted: [],        // [1, 2, 3]
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5, "1:3": 62.0 } → best total score per stage
+  stageSolutions: {},         // { "1:0": [{ law, from, to }] } → saved derivation steps
 }
 
 export function useProgress() {
@@ -17,7 +18,19 @@ export function useProgress() {
   const userId = session?.user?.id || 'guest'
   const STORAGE_KEY = `praxis_v1_${userId}`
 
-  const [progress, setProgress] = useState(defaultProgress)
+  // Synchronous state initialization from localStorage
+  const [progress, setProgress] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return { ...defaultProgress, ...JSON.parse(saved) }
+      }
+    } catch {
+      // fallback to default
+    }
+    return defaultProgress
+  })
+
   const [serverLoaded, setServerLoaded] = useState(false)
   const saveTimeoutRef = useRef(null)
 
@@ -26,24 +39,19 @@ export function useProgress() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress({ ...defaultProgress, ...JSON.parse(saved) })
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress(defaultProgress)
       }
     } catch {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(defaultProgress)
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setServerLoaded(false)
   }, [userId, STORAGE_KEY])
 
   // 2. Load progress from server when user is authenticated
   useEffect(() => {
     if (userId === 'guest') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setServerLoaded(true)
       return
     }
@@ -76,6 +84,12 @@ export function useProgress() {
             mergedScores[key] = Math.max(mergedScores[key] || 0, score)
           }
           merged.stageScores = mergedScores
+
+          // Merge stageSolutions
+          merged.stageSolutions = {
+            ...(serverData.stageSolutions || {}),
+            ...(prev.stageSolutions || {}),
+          }
 
           return merged
         })
@@ -141,6 +155,23 @@ export function useProgress() {
       return { ...p, stageScores: { ...p.stageScores, [key]: score } }
     })
 
+  const saveSolution = (levelId, stageIdx, steps) =>
+    setProgress(p => {
+      const key = `${levelId}:${stageIdx}`
+      return {
+        ...p,
+        stageSolutions: {
+          ...(p.stageSolutions || {}),
+          [key]: steps,
+        }
+      }
+    })
+
+  const getSavedSolution = (levelId, stageIdx) => {
+    const key = `${levelId}:${stageIdx}`
+    return progress.stageSolutions?.[key] || null
+  }
+
   const resetStreak = () => setProgress(p => ({ ...p, streak: 0 }))
 
   const isStageCompleted = (levelId, stageIdx) =>
@@ -151,24 +182,32 @@ export function useProgress() {
   const getStagesCompleted = (levelId) => progress.stageProgress[String(levelId)] || []
 
   /**
-   * Returns progress info for a given level, used for the lock gate.
+   * Returns progress info for a given level, used for the lock gate and star mastery.
    * @param {number} levelId
    * @param {number} totalStages  total number of stages in the level
-   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean }}
+   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean, totalStars: number, maxStars: number }}
    */
   const getLevelProgress = (levelId, totalStages) => {
     const scores = []
+    let totalStars = 0
     for (let i = 0; i < totalStages; i++) {
       const key = `${levelId}:${i}`
-      scores.push(progress.stageScores[key] ?? null)
+      const sc = progress.stageScores[key] ?? null
+      scores.push(sc)
+      const isDone = (progress.stageProgress[String(levelId)] || []).includes(i) || sc !== null
+      if (isDone) {
+        if (sc !== null && sc >= 90) totalStars += 3
+        else if (sc !== null && sc >= 75) totalStars += 2
+        else totalStars += 1
+      }
     }
     const completed = scores.filter(s => s !== null).length
     const avgScore = completed === 0
       ? 0
       : Math.round(scores.reduce((sum, s) => sum + (s ?? 0), 0) / totalStages)
     const allDone = completed === totalStages
-    const unlocked = allDone && avgScore >= 70
-    return { completed, avgScore, allDone, unlocked }
+    const unlocked = allDone && avgScore >= 80
+    return { completed, avgScore, allDone, unlocked, totalStars, maxStars: totalStages * 3 }
   }
 
   return {
@@ -179,6 +218,8 @@ export function useProgress() {
     completeLevel,
     resetStreak,
     saveScore,
+    saveSolution,
+    getSavedSolution,
     getLevelProgress,
     isStageCompleted,
     isLevelCompleted,

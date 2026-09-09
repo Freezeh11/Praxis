@@ -9,10 +9,19 @@
  * Clicking a NOT group          → onClickNot(path)
  */
 
-import { useRef } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 
 const transitionConfig = { type: 'spring', bounce: 0.15, duration: 0.5 }
+
+/**
+ * True on phones/tablets. Touch devices can't hover (grips stay visible via
+ * CSS) and can't HTML5-drag, so the grip tap becomes a swap-with-next action.
+ */
+function isTouchDevice() {
+  return typeof window !== 'undefined' &&
+    ('ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0)
+}
 
 // Module-level drag state removed in favor of useRef inside SumNode to fix linting.
 
@@ -20,20 +29,25 @@ function isSelected(sel, path) {
   return sel.some(s => s.path === path)
 }
 
+function isNodeAnimatingHide(path, animationPaths, animationLaw) {
+  if (!animationLaw || !animationPaths || animationPaths.length === 0) return false
+  return animationPaths.some(p => path === p || path.startsWith(p + '.'))
+}
+
 /* ── Literal node (variable or constant) ── */
 function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   return (
     <motion.span
       layout
       transition={transitionConfig}
-      className={`inline-flex items-baseline px-[7px] py-[3px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
-        ${selected ? 'bg-teal-light border-teal text-teal' : 'border-transparent hover:bg-teal-light hover:border-teal hover:text-teal'}
-        ${node.type === 'const' ? 'text-text-3' : ''}
+      className={`inline-flex items-baseline px-1.5 py-1 min-h-[30px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
+        ${selected ? 'bg-teal-light border-teal text-teal font-semibold' : 'border-transparent hover:bg-teal-light/60 hover:border-teal/60 hover:text-teal'}
+        ${node.type === 'const' ? 'text-text-3 font-semibold' : ''}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal shadow-[0_0_0_6px_rgba(46,196,182,0)] animate-[guidePulse_2s_infinite] z-10' : ''}
-        ${isAnimatingHide ? 'opacity-0' : ''}
+        ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickLit(path) }}
@@ -48,18 +62,18 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
 }
 
 /* ── NOT group: (child)' ── */
-function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
+function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
   const selected = isSelected(sel, path)
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   return (
     <motion.span
       layout
       transition={transitionConfig}
-      className={`inline-flex items-baseline px-1 py-[3px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
-        ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light hover:border-amber'}
+      className={`inline-flex items-baseline px-0.5 py-[2px] rounded-[5px] cursor-pointer transition-all border-[1.5px]
+        ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light/60 hover:border-amber/60'}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
-        ${isAnimatingHide ? 'opacity-0' : ''}
+        ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
@@ -70,7 +84,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
         display: 'inline-flex',
         alignItems: 'baseline',
         borderTop: '1.8px solid currentColor',
-        paddingTop: '4px',
+        paddingTop: '2px',
       }}>
         <ExprNode
           node={node.child}
@@ -79,6 +93,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
           onClickLit={onClickLit}
           onClickNot={onClickNot}
           onClickTerm={onClickTerm}
+          onSwapTerms={onSwapTerms}
           activeGuidePaths={activeGuidePaths}
           animationPaths={animationPaths}
           animationLaw={animationLaw}
@@ -89,29 +104,161 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeG
   )
 }
 
-/* ── Product (AND): juxtaposition ── */
-function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, activeGuidePaths, animationPaths, animationLaw }) {
+/* ── Product (AND): juxtaposition with selectable/draggable factor/clause capsules ── */
+function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
+  if (!node || !Array.isArray(node.factors)) return null
   const isGuide = activeGuidePaths?.includes(path)
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
+  const isTopLevel = path === 'R'
+  const hasMultiple = isTopLevel && node.factors.length >= 2
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [dragSourceIdx, setDragSourceIdx] = useState(null)
+
+  const handleDragStart = (idx, e) => {
+    setDragSourceIdx(idx)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(idx))
+  }
+
+  const handleDragEnd = () => {
+    setDragSourceIdx(null)
+    setDragOverIdx(null)
+  }
+
+  const handleDragOver = (idx, e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragSourceIdx !== null && dragSourceIdx !== idx) {
+      setDragOverIdx(idx)
+    }
+  }
+
+  const handleDragLeave = (idx) => {
+    if (dragOverIdx === idx) {
+      setDragOverIdx(null)
+    }
+  }
+
+  const handleDrop = (idx, e) => {
+    e.preventDefault()
+    if (dragSourceIdx !== null && dragSourceIdx !== idx) {
+      if (onSwapTerms) onSwapTerms(path, dragSourceIdx, idx)
+    }
+    setDragSourceIdx(null)
+    setDragOverIdx(null)
+  }
+
   return (
-    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-center ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0' : ''}`}>
+    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-center gap-0 ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.factors.map((f, i) => {
         const fPath = `${path}.${i}`
-        const prevIsConst = i > 0 && node.factors[i - 1].type === 'const'
-        const currIsConst = f.type === 'const'
+        const factorSel = sel.some(s => s.path === fPath)
+        const isFactorGuide = activeGuidePaths?.includes(fPath)
+        const factorAnimatingHide = isNodeAnimatingHide(fPath, animationPaths, animationLaw)
+        const prevIsConst = i > 0 && node.factors[i - 1]?.type === 'const'
+        const currIsConst = f?.type === 'const'
+        const isSumClause = f?.type === 'sum'
+        const isDragging = dragSourceIdx === i
+        const isDragTarget = dragOverIdx === i
+
         return (
-          <motion.span layout transition={transitionConfig} key={i} className="inline-flex items-center">
+          <motion.span layout transition={transitionConfig} key={f._id || fPath} className="inline-flex items-center">
             {(prevIsConst || currIsConst) && i > 0 && (
-              <span className="text-text-3 mx-0.5 text-[0.9em]"> · </span>
+              <span className={`text-text-3 mx-0.5 text-[0.9em] ${factorAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}> · </span>
             )}
-            {f.type === 'sum' ? (
-              <>
-                <span className="text-text-3">(</span>
-                <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
-                <span className="text-text-3">)</span>
-              </>
+            {hasMultiple ? (
+              <motion.span
+                layout
+                transition={transitionConfig}
+                data-path={fPath}
+                className={`relative inline-flex items-center px-2 py-1 min-h-[34px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
+                  ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
+                  ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
+                  ${factorSel
+                    ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid'
+                    : 'border-transparent hover:border-slate-300/80 hover:bg-slate-50/80 border-dashed'
+                  }
+                  ${isFactorGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
+                  ${factorAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
+                `}
+                draggable={!isTouchDevice()}
+                title="Click clause grip to select whole clause, or click variable inside"
+                onClick={e => { e.stopPropagation(); onClickTerm(fPath) }}
+                onDragStart={e => handleDragStart(i, e)}
+                onDragEnd={handleDragEnd}
+                onDragOver={e => handleDragOver(i, e)}
+                onDragLeave={() => handleDragLeave(i)}
+                onDrop={e => handleDrop(i, e)}
+              >
+                {/* Floating Top Grip Badge on Hover / Selected — always visible
+                    on touch screens; tapping it on touch swaps with the next
+                    factor (touch fallback for drag reorder) */}
+                <button
+                  type="button"
+                  className={`term-grip absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
+                    ${factorSel
+                      ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
+                      : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'
+                    }
+                  `}
+                  title={isTouchDevice() ? 'Tap to swap with the next factor' : 'Select entire clause (Dual Absorption / Idempotent)'}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (isTouchDevice() && typeof onSwapTerms === 'function') {
+                      const nextIdx = i + 1 < node.factors.length ? i + 1 : 0
+                      onSwapTerms(path, i, nextIdx)
+                    } else {
+                      onClickTerm(fPath)
+                    }
+                  }}
+                >
+                  ⠿
+                </button>
+
+                {isSumClause ? (
+                  <>
+                    <span className="text-text-3 font-normal">(</span>
+                    <ExprNode
+                      node={f}
+                      path={fPath}
+                      sel={sel}
+                      onClickLit={onClickLit}
+                      onClickNot={onClickNot}
+                      onClickTerm={onClickTerm}
+                      onSwapTerms={onSwapTerms}
+                      activeGuidePaths={activeGuidePaths}
+                      animationPaths={animationPaths}
+                      animationLaw={animationLaw}
+                    />
+                    <span className="text-text-3 font-normal">)</span>
+                  </>
+                ) : (
+                  <ExprNode
+                    node={f}
+                    path={fPath}
+                    sel={sel}
+                    onClickLit={onClickLit}
+                    onClickNot={onClickNot}
+                    onClickTerm={onClickTerm}
+                    onSwapTerms={onSwapTerms}
+                    activeGuidePaths={activeGuidePaths}
+                    animationPaths={animationPaths}
+                    animationLaw={animationLaw}
+                  />
+                )}
+              </motion.span>
             ) : (
-              <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
+              <motion.span layout transition={transitionConfig} className={isFactorGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}>
+                {isSumClause ? (
+                  <>
+                    <span className="text-text-3 font-normal">(</span>
+                    <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
+                    <span className="text-text-3 font-normal">)</span>
+                  </>
+                ) : (
+                  <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
+                )}
+              </motion.span>
             )}
           </motion.span>
         )
@@ -120,100 +267,116 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, active
   )
 }
 
-/* ── Sum (OR): terms separated by + with selectable/draggable term wrappers ── */
+/* ── Sum (OR): terms separated by + with selectable/draggable term capsules ── */
 function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
-  const hasMultiple = node.terms.length >= 2
-  const dragOverIdx = useRef(null)
-  const dragSrc = useRef({ sumPath: null, idx: null })
+  if (!node || !Array.isArray(node.terms)) return null
+  const isTopLevel = path === 'R'
+  const hasMultiple = isTopLevel && node.terms.length >= 2
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [dragSourceIdx, setDragSourceIdx] = useState(null)
 
-  const handleDragStart = (sumPath, idx, e) => {
-    dragSrc.current.sumPath = sumPath
-    dragSrc.current.idx = idx
+  const handleDragStart = (idx, e) => {
+    setDragSourceIdx(idx)
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', String(idx))
-    e.currentTarget.classList.add('opacity-45', 'border-border-dark', '!border-solid')
   }
 
-  const handleDragEnd = (e) => {
-    e.currentTarget.classList.remove('opacity-45', 'border-border-dark', '!border-solid')
-    // Clear all drag-over highlights
-    document.querySelectorAll('[data-dragover="true"]').forEach(el => {
-      el.removeAttribute('data-dragover')
-      el.className = el.className.replace(/border-amber bg-amber-light scale-\[1\.04\] !border-solid/g, '')
-    })
-    dragSrc.current.sumPath = null
-    dragSrc.current.idx = null
-    dragOverIdx.current = null
+  const handleDragEnd = () => {
+    setDragSourceIdx(null)
+    setDragOverIdx(null)
   }
 
-  const handleDragOver = (sumPath, idx, e) => {
+  const handleDragOver = (idx, e) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-    if (dragSrc.current.sumPath === sumPath && dragSrc.current.idx !== idx) {
-      if (!e.currentTarget.hasAttribute('data-dragover')) {
-        e.currentTarget.setAttribute('data-dragover', 'true')
-        e.currentTarget.className += ' border-amber bg-amber-light scale-[1.04] !border-solid'
-      }
-      dragOverIdx.current = idx
+    if (dragSourceIdx !== null && dragSourceIdx !== idx) {
+      setDragOverIdx(idx)
     }
   }
 
-  const handleDragLeave = (e) => {
-    if (e.currentTarget.hasAttribute('data-dragover')) {
-      e.currentTarget.removeAttribute('data-dragover')
-      e.currentTarget.className = e.currentTarget.className.replace(/ border-amber bg-amber-light scale-\[1\.04\] !border-solid/g, '')
+  const handleDragLeave = (idx) => {
+    if (dragOverIdx === idx) {
+      setDragOverIdx(null)
     }
   }
 
-  const handleDrop = (sumPath, idx, e) => {
+  const handleDrop = (idx, e) => {
     e.preventDefault()
-    if (e.currentTarget.hasAttribute('data-dragover')) {
-      e.currentTarget.removeAttribute('data-dragover')
-      e.currentTarget.className = e.currentTarget.className.replace(/ border-amber bg-amber-light scale-\[1\.04\] !border-solid/g, '')
+    if (dragSourceIdx !== null && dragSourceIdx !== idx) {
+      if (onSwapTerms) onSwapTerms(path, dragSourceIdx, idx)
     }
-    if (dragSrc.current.sumPath === sumPath && dragSrc.current.idx !== null && dragSrc.current.idx !== idx) {
-      onSwapTerms(sumPath, dragSrc.current.idx, idx)
-    }
-    dragSrc.current.sumPath = null
-    dragSrc.current.idx = null
+    setDragSourceIdx(null)
+    setDragOverIdx(null)
   }
 
-  const isAnimatingHide = animationPaths?.includes(path) && ['annulment', 'identity', 'idempotent', 'complement'].includes(animationLaw)
+  const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
 
   return (
-    <motion.span layout transition={transitionConfig} className={`inline-flex flex-wrap items-center gap-0.5 ${isAnimatingHide ? 'opacity-0' : ''}`}>
+    <motion.span layout transition={transitionConfig} className={`inline-flex flex-wrap items-center gap-0 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.terms.map((t, i) => {
         const tPath = `${path}.${i}`
         const termSel = sel.some(s => s.path === tPath)
         const isGuide = activeGuidePaths?.includes(tPath)
+        const termAnimatingHide = isNodeAnimatingHide(tPath, animationPaths, animationLaw)
+        const isDragging = dragSourceIdx === i
+        const isDragTarget = dragOverIdx === i
 
         return (
-          <motion.span layout transition={transitionConfig} key={i} className="inline-flex items-center">
-            {i > 0 && <span className="text-text-2 font-normal"> + </span>}
+          <motion.span layout transition={transitionConfig} key={t._id || tPath} className="inline-flex items-center">
+            {i > 0 && (
+              <span className={`text-text-2 font-normal mx-1.5 select-none ${termAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}>
+                +
+              </span>
+            )}
 
             {hasMultiple ? (
               <motion.span
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
-                className={`inline-flex items-center px-1.5 py-[3px] pl-0.5 rounded-md border-[1.5px] border-dashed transition-all gap-0.5 cursor-default group
-                  ${termSel ? 'border-teal bg-teal-light !border-solid' : 'border-transparent hover:border-border-dark hover:bg-bg'}
+                className={`relative inline-flex items-center px-2 py-1 min-h-[34px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
+                  ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
+                  ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
+                  ${termSel
+                    ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid'
+                    : 'border-transparent hover:border-slate-300/80 hover:bg-slate-50/80 border-dashed'
+                  }
                   ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
-                  ${animationPaths?.includes(tPath) && ['annulment','identity','idempotent','complement'].includes(animationLaw) ? 'opacity-0' : ''}
+                  ${termAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
                 `}
-                draggable={true}
-                onDragStart={e => handleDragStart(path, i, e)}
+                draggable={!isTouchDevice()}
+                title="Click term grip to select whole term, or click variable inside"
+                onClick={e => { e.stopPropagation(); onClickTerm(tPath) }}
+                onDragStart={e => handleDragStart(i, e)}
                 onDragEnd={handleDragEnd}
-                onDragOver={e => handleDragOver(path, i, e)}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(path, i, e)}
+                onDragOver={e => handleDragOver(i, e)}
+                onDragLeave={() => handleDragLeave(i)}
+                onDrop={e => handleDrop(i, e)}
               >
-                {/* Invisible zone — click to select term, drag to reorder */}
-                <span
-                  className="w-2 h-full min-h-[1.6em] shrink-0 cursor-grab rounded-[3px] transition-colors group-hover:bg-sky-500/10 active:cursor-grabbing"
-                  title="Click to select term · Drag to reorder"
-                  onClick={e => { e.stopPropagation(); onClickTerm(tPath) }}
-                />
+                {/* Floating Top Grip Badge on Hover / Selected — always visible
+                    on touch screens; tapping it on touch swaps with the next
+                    term (touch fallback for drag reorder) */}
+                <button
+                  type="button"
+                  className={`term-grip absolute -top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center
+                    ${termSel
+                      ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
+                      : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'
+                    }
+                  `}
+                  title={isTouchDevice() ? 'Tap to swap with the next term' : 'Select entire term (Absorption / Idempotent)'}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (isTouchDevice() && typeof onSwapTerms === 'function') {
+                      const nextIdx = i + 1 < node.terms.length ? i + 1 : 0
+                      onSwapTerms(path, i, nextIdx)
+                    } else {
+                      onClickTerm(tPath)
+                    }
+                  }}
+                >
+                  ⠿
+                </button>
 
                 <ExprNode
                   node={t}
@@ -230,18 +393,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
               </motion.span>
             ) : (
               <motion.span layout transition={transitionConfig} className={isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}>
-                <ExprNode
-                  node={t}
-                  path={tPath}
-                  sel={sel}
-                  onClickLit={onClickLit}
-                  onClickNot={onClickNot}
-                  onClickTerm={onClickTerm}
-                  onSwapTerms={onSwapTerms}
-                  activeGuidePaths={activeGuidePaths}
-                  animationPaths={animationPaths}
-                  animationLaw={animationLaw}
-                />
+                <ExprNode node={t} path={tPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
               </motion.span>
             )}
           </motion.span>
@@ -257,9 +409,9 @@ function ExprNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
   if (node.type === 'lit' || node.type === 'const')
     return <LitNode node={node} path={path} sel={sel} onClickLit={onClickLit} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'not')
-    return <NotNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
+    return <NotNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'prod')
-    return <ProdNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
+    return <ProdNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   if (node.type === 'sum')
     return <SumNode node={node} path={path} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
   return null

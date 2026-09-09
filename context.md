@@ -71,7 +71,7 @@ Praxis/
 │       │   └── ExprText.jsx            ← Handles symbol rendering in expressions
 │       ├── hooks/
 │       │   ├── useApi.js               ← Fetches levels/laws from API, submits scores
-│       │   ├── useGameState.js         ← Core game logic (selection, law application, hints, undo, animations)
+│       │   ├── useGameState.js         ← Core problem-solving logic (selection, law application, hints, undo, animations)
 │       │   └── useProgress.js          ← Client-side progress tracking (points, streak, localStorage)
 │       ├── lib/
 │       │   ├── expr.js                 ← Expression tree: parse, normalize, navigate, manipulate
@@ -88,9 +88,13 @@ Praxis/
 
 | Path | Component | Purpose |
 |---|---|---|
-| `/` | `LevelSelectPage` | Level carousel with lock/score-gate logic (acts as "home" page — no landing page exists) |
-| `/level/:levelId/stages` | `StageSelectorPage` | Stage/puzzle selection within a level |
-| `/level/:levelId/stage/:stageIdx` | `ProblemPage` | Main game screen |
+| `/` | `LandingPage` | Landing page with CTAs + link to the interactive tutorial |
+| `/login` | `LoginPage` | Supabase email/password login |
+| `/register` | `RegisterPage` | Account registration |
+| `/levels` | `LevelSelectPage` | Level carousel with lock/score-gate logic (80% avg to unlock next level) |
+| `/level/:levelId/stages` | `StageSelectorPage` | Stage/problem selection within a level |
+| `/level/:levelId/stage/:stageIdx` | `ProblemPage` | Main problem-solving screen |
+| `/tutorial` | `TutorialPage` | **Interactive tutorial** — guided real playthrough of `x + xy → x`; instruction steps auto-advance as the user performs the moves |
 | `*` | Redirect → `/` | Catch-all |
 
 ---
@@ -165,7 +169,7 @@ Earned Points:   (total / 100) × 5  (bonus on top of base 10)
 ## 8. Frontend Architecture — Expression Engine
 
 ### Expression Tree (from `lib/expr.js`)
-The entire game runs on an **AST (Abstract Syntax Tree)** representation of Boolean expressions:
+The entire problem engine runs on an **AST (Abstract Syntax Tree)** representation of Boolean expressions:
 
 - **Node Types:** `lit` (literal: `{type:'lit', v:'x', n:false}`), `const` (0 or 1), `prod` (product/AND), `sum` (sum/OR), `not` (negation/NOT)
 - **Parsing:** `parseExpr("x + xy")` → tree — supports SOP (Sum of Products) notation, `'` for complement
@@ -227,21 +231,23 @@ The entire game runs on an **AST (Abstract Syntax Tree)** representation of Bool
 
 | Feature | Status | Notes |
 |---|---|---|
-| Boolean expression game | ✅ Complete | Levels 1-2 with 6 puzzles each |
-| Level carousel (home page) | ✅ Complete | Acts as root route `/` |
+| Boolean expression challenge system | ✅ Complete | Levels 1-3 with 12 problems each (SOP & POS dual pairs) |
+| Level carousel (home page) | ✅ Complete | `/levels` |
 | Stage selection | ✅ Complete | `/level/:id/stages` |
-| Puzzle gameplay | ✅ Complete | `/level/:id/stage/:idx` |
+| Problem-solving interface | ✅ Complete | `/level/:id/stage/:idx` |
 | Score computation | ✅ Complete | POST /api/score (not persisted) |
 | Law reference | ✅ Complete | GET /api/laws + UI button |
-| **Landing page** | ❌ MISSING | Root `/` goes straight to carousel |
-| **Login page** | ❌ MISSING | No auth UI or routes |
-| **Register page** | ❌ MISSING | No auth UI or routes |
-| **User model (DB)** | ❌ MISSING | No users table, no profiles |
-| **Auth middleware** | ❌ MISSING | No JWT, no sessions, no protected routes |
-| **Database integration** | ❌ MISSING | No ORM, no DB driver, all data hardcoded |
-| **Persistent progress** | ❌ MISSING | Only localStorage, no server-side user progress |
-| **Supabase client** | ❌ MISSING | Credentials exist but not wired up |
-| **Protected routes** | ❌ MISSING | All pages are publicly accessible |
+| Landing page | ✅ Complete | `/` with CTA + mode links |
+| Login page | ✅ Complete | Supabase email/password |
+| Register page | ✅ Complete | Supabase sign-up |
+| User model (DB) | ✅ Complete | `user_progress`, `stage_progress`, `score_history` (Supabase) |
+| Auth middleware | ✅ Complete | Supabase JWT via `backend/auth_middleware.py` |
+| Database integration | ✅ Complete | httpx-based Supabase REST client (`backend/supabase_client.py`) |
+| Persistent progress | ✅ Complete | localStorage + server sync |
+| Supabase client | ✅ Complete | `frontend/src/utils/supabase.js` |
+| Protected routes | ✅ Complete | `ProtectedRoute` wraps problem pages |
+| **Interactive tutorial** | ✅ Complete | `/tutorial` — steps auto-advance on real user actions |
+
 
 ---
 
@@ -311,6 +317,14 @@ npm run dev
 
 8. **Animation pipeline** — When a law is applied, `useGameState.js` triggers a 2.5-second animation via `AnimationOverlay.jsx` before actually updating the AST. This is important for UX flow.
 
-9. **No `.env` file exists yet** — The project currently has no environment variables. The Supabase `.env` file needs to be created from scratch.
+9. **Environment variables** — `backend/.env` (FRONTEND_URL, SUPABASE_URL, SUPABASE_SERVICE_KEY) and `frontend/.env.local` (VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_AUTH_URL) are gitignored local-only files.
 
 10. **Python virtual environment not tracked** — `backend/venv/` is in `.gitignore`. Each developer creates their own.
+
+11. **Interactive tutorial** — `TutorialPage` (`/tutorial`) reuses the shared `components/PracticeWorkspace.jsx`, which wraps `useGameState` + `ExpressionDisplay` for any problem object. `lib/solver.js` exports `findOptimalPath` (BFS from an expression to a target canon), used by `useGameState.loadPuzzle` to compute optimal step counts.
+
+12. **Tutorial state machine** — tutorial steps auto-advance from `PracticeWorkspace`'s `onStateChange` snapshots (`selCount`, `stepsCount`, `isComplete`); the completion snapshot must schedule the final step advance because no further snapshots fire after a solve. First-visit welcome modal on `/levels` is gated by localStorage key `praxis_tutorial_seen`; completion sets `praxis_tutorial_completed`.
+
+13. **Git history** — the five feature branches (`feat/visualtutorial`, `refactor/dynamic-boolean-engine`, `feat/animation-overhaul`, `feat/third-level`, `feat/product-of-sums`) were merged into `main` with `--no-ff` merge commits. The owner pushes manually — do not push.
+
+14. **Mobile/tablet compatibility** — all pages are responsive down to 320px phones and tablets (portrait + landscape). ProblemPage uses a 3-column desktop layout at ≥1280px and stacked layout with slide-in drawers (☰ step history, ▦ stages) below that; tutorial stacks its instruction panel; the level carousel shows one card with overlay arrows + swipe on phones. Touch fallbacks: tap-to-swap grips replace HTML5 drag reorder, grips stay visible via `@media (hover: none)`, safe-area utilities (`pb-safe` etc.) handle iPhone notches. `vite.config.js` sets `build.target: es2017/safari11/chrome64/ios11` so modern syntax is transpiled for older mobile browsers (React 19 itself still assumes a reasonably modern engine — iOS 11+ / 2017+ devices are the practical floor).

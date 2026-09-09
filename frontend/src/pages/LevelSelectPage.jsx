@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
-// Level 3+ are permanently "coming soon" (no puzzles yet)
-const COMING_SOON = [3]
+// Level 4+ are permanently "coming soon" (no puzzles yet)
+const COMING_SOON = []
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
@@ -15,20 +16,39 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const touchStartX = useRef(null)
+  // First visit: offer the interactive tutorial once (lazy init avoids a setState-in-effect)
+  const [showTutorialWelcome, setShowTutorialWelcome] = useState(() => {
+    try {
+      return localStorage.getItem('praxis_tutorial_seen') !== 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const handleTutorialWelcome = (choice) => {
+    try {
+      localStorage.setItem('praxis_tutorial_seen', 'true')
+    } catch {
+      // ignore
+    }
+    setShowTutorialWelcome(false)
+    if (choice === 'start') navigate('/tutorial')
+  }
 
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
    * that hasn't been satisfied yet.
-   * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
+   * Level 2 requires Level 1 avg score >= 80% across all stages.
+   * Level 3 requires Level 2 avg score >= 80% across all stages.
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
     if (lv.id === 2) {
-      // Find Level 1 in the levels array to get its stage count
       const lvl1 = levels.find(l => l.id === 1)
-      const totalStages = lvl1?.puzzles?.length ?? 6
+      const totalStages = lvl1?.puzzles?.length ?? 12
       const p = getLevelProgress(1, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -36,6 +56,21 @@ export default function LevelSelectPage() {
         reason: 'score-gate',
         progress: p,
         totalStages,
+        reqLevel: 1,
+      }
+    }
+
+    if (lv.id === 3) {
+      const lvl2 = levels.find(l => l.id === 2)
+      const totalStages = lvl2?.puzzles?.length ?? 12
+      const p = getLevelProgress(2, totalStages)
+      if (p.unlocked) return { locked: false, reason: '' }
+      return {
+        locked: true,
+        reason: 'score-gate',
+        progress: p,
+        totalStages,
+        reqLevel: 2,
       }
     }
 
@@ -56,7 +91,7 @@ export default function LevelSelectPage() {
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
-    } catch (err) {
+    } catch {
       toast.error('Failed to log out.')
     }
   }
@@ -67,11 +102,12 @@ export default function LevelSelectPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
         <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
+          <Link to="/tutorial" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Interactive tutorial">▶ Tutorial</Link>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
@@ -89,13 +125,24 @@ export default function LevelSelectPage() {
         <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
       </div>
 
-      {/* Carousel */}
-      <div className="flex items-center justify-center gap-8 mt-10 flex-1">
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
+      {/* Carousel — on phones only the active card shows and the arrows
+          overlay its edges; swipe left/right also navigates */}
+      <div
+        className="relative flex items-center justify-center gap-2 sm:gap-5 md:gap-8 mt-10 flex-1 w-full max-w-full px-14 sm:px-2"
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+        onTouchEnd={e => {
+          if (touchStartX.current === null) return
+          const dx = e.changedTouches[0].clientX - touchStartX.current
+          touchStartX.current = null
+          if (dx > 48) prev()
+          else if (dx < -48) next()
+        }}
+      >
+        <button className="absolute left-0 z-10 md:static md:z-auto w-10 h-10 min-tap rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
           <span>‹</span>
         </button>
 
-        <div className="flex items-center justify-center gap-5 [perspective:1000px]">
+        <div className="flex items-center justify-center gap-5 [perspective:1000px] overflow-hidden">
           {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
           {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
           {!loading && !error && levels.map((lv, i) => {
@@ -110,26 +157,26 @@ export default function LevelSelectPage() {
             return (
               <div
                 key={lv.id}
-                className={`w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
-                  ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-1 opacity-70 shadow-sm'}
+                className={`${!isActive ? 'hidden md:block ' : ''}w-[220px] sm:w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
+                  ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-100 translate-y-0 opacity-70 shadow-sm'}
                   ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  ${!locked && !isActive ? 'hover:opacity-90 hover:scale-95 hover:translate-y-0.5' : ''}
+                  ${!locked && !isActive ? 'hover:opacity-90 hover:-translate-y-0.5' : ''}
                 `}
                 onClick={() => !locked && setSelected(i)}
               >
                 {/* Icon */}
-                <div className={`w-16 h-16 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
-                  ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px]' : 'border-border text-[26px]'}
+                <div className={`w-16 h-16 rounded-[14px] border-[1.5px] grid place-items-center font-extrabold transition-all
+                  ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px]' : 'border-border text-[26px] leading-none'}
                   ${done && !isActive ? 'bg-green-light text-green' : ''}
                   ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
                 `}>
-                  {isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
+                  <span className="grid place-items-center leading-none h-full w-full">{isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}</span>
                 </div>
 
-                <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
-                <div className="text-[13px] text-text-3 text-center">{lv.desc}</div>
+                <div className={`font-bold text-text-1 tracking-[-0.3px] text-center w-full ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
+                <div className="text-[13px] text-text-3 text-center leading-relaxed">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2 */}
+                {/* Score gate progress for Level 2/3 */}
                 {isScoreGated && isActive && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
@@ -142,9 +189,9 @@ export default function LevelSelectPage() {
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(100, lockState.progress.avgScore)}%`,
-                          background: lockState.progress.avgScore >= 70
+                          background: lockState.progress.avgScore >= 80
                             ? '#22c55e'
-                            : lockState.progress.avgScore >= 40
+                            : lockState.progress.avgScore >= 50
                               ? '#f59e0b'
                               : '#ef4444',
                         }}
@@ -152,24 +199,37 @@ export default function LevelSelectPage() {
                     </div>
                     {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
-                      Need 70% avg across all Level 1 stages
+                      Need 80% avg across all Level {lockState.reqLevel || (lv.id - 1)} stages
                     </div>
                   </div>
                 )}
+
+                {/* Level star badge if unlocked & played */}
+                {!locked && !isComingSoon && (() => {
+                  const lp = getLevelProgress(lv.id, lv.puzzles?.length || 12)
+                  if (lp.totalStars > 0) {
+                    return (
+                      <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 mt-auto flex items-center gap-1">
+                        <span>★</span> {lp.totalStars} / {lp.maxStars} Stars
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 {/* Tags */}
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
                 )}
                 {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 70% avg required</div>
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 80% avg required</div>
                 )}
               </div>
             )
           })}
         </div>
 
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
+        <button className="absolute right-0 z-10 md:static md:z-auto w-10 h-10 min-tap rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
           <span>›</span>
         </button>
       </div>
@@ -194,7 +254,7 @@ export default function LevelSelectPage() {
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
-      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-[min(340px,92vw)] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 pb-safe ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-base font-bold text-text-1">Law Reference</h2>
           <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
@@ -213,6 +273,42 @@ export default function LevelSelectPage() {
           ))}
         </div>
       </div>
+      {/* ── FIRST-VISIT TUTORIAL WELCOME MODAL ── */}
+      {showTutorialWelcome && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
+          onClick={() => handleTutorialWelcome('skip')}
+        >
+          <div
+            className="bg-white rounded-2xl p-7 flex flex-col items-center shadow-2xl max-w-[420px] w-[92%] border border-border"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-[44px] mb-2 leading-none">👋</div>
+            <h2 className="text-[22px] font-extrabold text-text-1 mb-2 text-center">New to Praxis?</h2>
+            <p className="text-[13px] text-text-3 text-center leading-relaxed mb-6">
+              Take the 2-minute interactive tutorial and solve your first expression step-by-step — no math background needed.
+            </p>
+            <div className="flex flex-col gap-2.5 w-full">
+              <button
+                className="w-full py-3 bg-accent text-white rounded-xl font-bold text-sm shadow-sm hover:bg-text-1 transition-all"
+                onClick={() => handleTutorialWelcome('start')}
+              >
+                ▶ Start Interactive Tutorial
+              </button>
+              <button
+                className="w-full py-2.5 text-text-3 text-xs font-bold hover:text-text-1 transition-all"
+                onClick={() => handleTutorialWelcome('skip')}
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Survey (production only) — hidden while the law reference drawer is
+          open so it never overlaps the drawer content */}
+      {!showLawsDrawer && <SurveyButton />}
     </div>
   )
 }
