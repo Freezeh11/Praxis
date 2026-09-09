@@ -158,9 +158,9 @@ export default function LevelSelectPage() {
               <div
                 key={lv.id}
                 className={`${!isActive ? 'hidden md:block ' : ''}w-[220px] sm:w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
-                  ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-0 opacity-70 shadow-sm'}
+                  ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-100 translate-y-0 opacity-70 shadow-sm'}
                   ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  ${!locked && !isActive ? 'hover:opacity-90 hover:scale-95 hover:translate-y-0' : ''}
+                  ${!locked && !isActive ? 'hover:opacity-90 hover:-translate-y-0.5' : ''}
                 `}
                 onClick={() => !locked && setSelected(i)}
               >
