@@ -52,7 +52,7 @@ export default function RegisterPage() {
         toast.success('Account created successfully! Welcome to Praxis.')
         // useEffect will handle the navigation once the session state updates globally
       }
-    } catch (err) {
+    } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
