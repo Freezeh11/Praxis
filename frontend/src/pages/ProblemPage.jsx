@@ -631,10 +631,12 @@ export default function ProblemPage() {
 
                         {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                         <div
-                          className={`flex items-baseline gap-1.5 px-2.5 py-1 rounded-xl transition-all border ${
+                          className={`flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl transition-all border ${
                             isLineHighlighted
                               ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
-                              : 'border-transparent'
+                              : line.isActive
+                                ? 'border-teal/50 bg-teal-light/30 ring-1 ring-teal/20'
+                                : 'border-transparent'
                           }`}
                         >
                           <span
