@@ -1,10 +1,11 @@
 /**
  * Floating "Take a Survey" button.
  *
- * Only rendered in the production build (hidden while developing/testing
- * locally) and hidden when automated browser runs set the
- * 'praxis_hide_survey' localStorage flag. Place it on the pages where the
- * survey should appear: homepage, login, register, and level select.
+ * Visible everywhere by default (dev and production). It is only hidden
+ * while automated browser runs drive the app — the e2e harness sets the
+ * 'praxis_hide_survey' localStorage flag so the button never interferes
+ * with tests. Place it on the pages where the survey should appear:
+ * homepage, login, register, and level select.
  */
 export default function SurveyButton() {
   let hidden = false
@@ -14,7 +15,7 @@ export default function SurveyButton() {
     // localStorage unavailable — leave it visible
   }
 
-  if (!import.meta.env.PROD || hidden) return null
+  if (hidden) return null
 
   return (
     <a
