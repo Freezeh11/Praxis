@@ -234,3 +234,84 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
     found: false,
   }
 }
+
+/**
+ * Finds a fully simplified form of the expression using BFS.
+ *
+ * A state is "fully simplified" when the law engine reports zero legal
+ * transitions from it. Returns the first terminal state found (which is
+ * also the one reachable in the fewest steps) along with the derivation
+ * path used to reach it.
+ *
+ * @param {Object} startExpr - Starting AST tree
+ * @param {Object} [options]
+ * @param {number} [options.maxDepth=12] - Maximum search depth
+ * @param {number} [options.maxStates=8000] - Maximum state budget
+ * @returns {{ tree: Object, canon: string, text: string, optimalSteps: number, path: Array, found: boolean }}
+ */
+export function findSimplestForm(startExpr, options = {}) {
+  if (!startExpr) {
+    return { tree: null, canon: '', text: '', optimalSteps: 0, path: [], found: false }
+  }
+
+  const maxDepth = options.maxDepth ?? 12
+  const maxStates = options.maxStates ?? 8000
+
+  const initialCanon = canonText(startExpr)
+  const queue = [{
+    tree: cloneN(startExpr),
+    canon: initialCanon,
+    depth: 0,
+    path: [],
+  }]
+  const visited = new Set([initialCanon])
+  let statesExplored = 0
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+
+    const transitions = getLegalTransitions(current.tree)
+    statesExplored += transitions.length
+
+    // Terminal state: no law applies — this is a fully simplified form.
+    if (transitions.length === 0) {
+      return {
+        tree: current.tree,
+        canon: current.canon,
+        text: nodeText(current.tree),
+        optimalSteps: current.path.length,
+        path: current.path,
+        found: true,
+      }
+    }
+
+    if (current.depth >= maxDepth || statesExplored >= maxStates) {
+      continue
+    }
+
+    for (const trans of transitions) {
+      if (!visited.has(trans.nextCanon)) {
+        visited.add(trans.nextCanon)
+        queue.push({
+          tree: trans.nextTree,
+          canon: trans.nextCanon,
+          depth: current.depth + 1,
+          path: [...current.path, {
+            law: trans.law,
+            from: trans.from,
+            to: trans.to,
+          }],
+        })
+      }
+    }
+  }
+
+  return {
+    tree: startExpr,
+    canon: initialCanon,
+    text: nodeText(startExpr),
+    optimalSteps: 0,
+    path: [],
+    found: false,
+  }
+}
