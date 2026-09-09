@@ -284,7 +284,7 @@ export default function StageSelectorPage() {
                   {/* "Play now" pulse badge on the current stage */}
                   {isCurrent && (
                     <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-accent text-white text-[10px] font-extrabold uppercase tracking-wide shadow-md flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Play now
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Solve Now
                     </span>
                   )}
 
