@@ -3,3 +3,6 @@ venv/
 .env
 auth-server/node_modules/
 .e2e/
+
+# School documents — kept out of the repository
+Software Proposal Writing Guide*.md
