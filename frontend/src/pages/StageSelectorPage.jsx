@@ -245,7 +245,18 @@ export default function StageSelectorPage() {
           </section>
 
           {/* ── STAGES GRID (4 Columns × 3 Rows) ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🗺️</span>
+                <h2 className="text-lg sm:text-xl font-extrabold text-text-1 tracking-tight">Choose Your Stage</h2>
+              </div>
+              <span className="text-[11px] sm:text-xs font-bold text-teal bg-teal/10 border border-teal/30 px-2.5 py-1 rounded-full">
+                {completedSet.size}/{puzzles.length} cleared
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             {puzzles.map((puz, idx) => {
               const status = getStageStatus(idx)
               const isLocked = status === 'locked'
@@ -262,30 +273,37 @@ export default function StageSelectorPage() {
                   transition={{ duration: 0.2, delay: idx * 0.025 }}
                   onClick={() => handleStageClick(idx)}
                   disabled={isLocked}
-                  className={`relative rounded-2xl p-4 border text-left flex flex-col justify-between gap-3 transition-all select-none ${
+                  className={`relative rounded-2xl p-4 border-2 text-left flex flex-col justify-between gap-3 transition-all duration-200 select-none ${
                     isLocked
                       ? 'bg-bg/40 border-border/70 opacity-45 cursor-not-allowed'
                       : isCompleted
-                        ? 'bg-white border-border hover:border-teal hover:shadow-md hover:-translate-y-0.5 cursor-pointer group'
-                        : 'bg-white border-amber/50 hover:border-amber hover:shadow-md hover:-translate-y-0.5 ring-2 ring-amber/20 cursor-pointer group'
+                        ? 'bg-gradient-to-br from-green-50/80 to-white border-green/50 hover:border-green hover:shadow-lg hover:shadow-green/10 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer group'
+                        : 'bg-gradient-to-br from-amber-50/90 to-white border-amber/60 shadow-sm shadow-amber/10 hover:border-amber hover:shadow-lg hover:shadow-amber/20 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer group'
                   }`}
                 >
+                  {/* "Play now" pulse badge on the current stage */}
+                  {isCurrent && (
+                    <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-accent text-white text-[10px] font-extrabold uppercase tracking-wide shadow-md flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Play now
+                    </span>
+                  )}
+
                   {/* Card Top: Stage Number + Stars */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono font-extrabold border ${
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-mono font-extrabold border ${
                           isCompleted
-                            ? 'bg-green-light text-green border-green/40'
+                            ? 'bg-green text-white border-green shadow-sm'
                             : isCurrent
-                              ? 'bg-accent text-white border-accent'
+                              ? 'bg-accent text-white border-accent shadow-sm'
                               : 'bg-bg text-text-3 border-border'
                         }`}
                       >
                         {isCompleted ? '✓' : idx + 1}
                       </span>
-                      <span className="text-xs font-bold text-text-1">
-                        Stage {idx + 1}
+                      <span className={`text-xs font-extrabold tracking-wide ${isLocked ? 'text-text-3' : 'text-text-1'}`}>
+                        STAGE {idx + 1}
                       </span>
                     </div>
 
@@ -294,6 +312,9 @@ export default function StageSelectorPage() {
 
                   {/* Card Middle: Expression Box */}
                   <div className="bg-bg/80 rounded-xl p-2.5 border border-border/80 flex flex-col gap-1 text-center">
+                    <div className="text-[9px] font-extrabold uppercase tracking-[1.5px] text-text-3">
+                      {isLocked ? '🔒 Locked challenge' : 'Challenge'}
+                    </div>
                     <div className="font-mono text-sm sm:text-base font-bold text-text-1 truncate py-0.5">
                       <ExprText text={puz?.expr} />
                     </div>
@@ -317,33 +338,34 @@ export default function StageSelectorPage() {
                               : 'bg-red-50 text-red-600 border-red-200'
                         }`}
                       >
-                        {score} pts
+                        🏆 {score} pts
                       </span>
                     ) : isCurrent ? (
-                      <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber/30">
-                        Ready
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber/40">
+                        ⚡ Ready
                       </span>
                     ) : (
                       <span className="text-[11px] text-text-3 font-semibold">
-                        Locked
+                        Complete previous
                       </span>
                     )}
 
                     <span
-                      className={`text-xs font-bold transition-transform ${
+                      className={`text-xs font-extrabold transition-transform ${
                         isLocked
                           ? 'text-text-3'
                           : isCompleted
-                            ? 'text-text-2 group-hover:text-teal group-hover:translate-x-0.5'
+                            ? 'text-green group-hover:translate-x-0.5'
                             : 'text-accent group-hover:translate-x-0.5'
                       }`}
                     >
-                      {isLocked ? '🔒' : isCompleted ? 'Replay →' : 'Start →'}
+                      {isLocked ? '🔒' : isCompleted ? 'Replay →' : 'Play →'}
                     </span>
                   </div>
                 </motion.button>
               )
             })}
+            </div>
           </div>
         </main>
       )}
