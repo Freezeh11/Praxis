@@ -5,6 +5,7 @@ import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
 import { signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyButton from '../components/SurveyButton'
 
 // Level 4+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = []
@@ -306,6 +307,9 @@ export default function LevelSelectPage() {
           </div>
         </div>
       )}
+
+      {/* Survey (production only) */}
+      <SurveyButton />
     </div>
   )
 }
