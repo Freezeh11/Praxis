@@ -4,19 +4,18 @@ import ExpressionDisplay from './ExpressionDisplay'
 import AnimationOverlay from './AnimationOverlay'
 
 /**
- * Compact, reusable gameplay workspace used by the Sandbox, Practice and
- * Tutorial pages. Wraps useGameState + ExpressionDisplay + the applicable
- * laws bar in a self-contained layout that works with ANY puzzle object
+ * Compact, reusable problem workspace used by the interactive Tutorial.
+ * Wraps useGameState + ExpressionDisplay + the applicable laws bar in a
+ * self-contained layout that works with ANY problem object
  * ({ expr, goal, ... }), not just backend level data.
  *
  * Props:
- *  - puzzle: { expr, goal, ... } the puzzle to solve
- *  - onStateChange?: (snapshot) => void  — fired whenever game state changes
- *        (used by the interactive tutorial to detect user actions)
+ *  - puzzle: { expr, goal, ... } the problem to solve
+ *  - onStateChange?: (snapshot) => void  — fired whenever the problem state
+ *        changes (used by the interactive tutorial to detect user actions)
  *  - onExit: () => void — back navigation
  *  - exitLabel?: string
  *  - title / subtitle: header text
- *  - onNewPuzzle?: () => void — renders a "New problem" action when provided
  *  - enableHint?: boolean — show the contextual hint button (default true)
  */
 export default function PracticeWorkspace({
@@ -26,7 +25,6 @@ export default function PracticeWorkspace({
   exitLabel = 'Back',
   title = 'Simplify Expression',
   subtitle = 'Reduce to its simplest form',
-  onNewPuzzle,
   enableHint = true,
 }) {
   const {
@@ -56,7 +54,7 @@ export default function PracticeWorkspace({
     if (puzzle) loadPuzzle(puzzle)
   }, [puzzle, loadPuzzle])
 
-  // Report game state changes to the parent (for the tutorial)
+  // Report problem state changes to the parent (for the tutorial)
   useEffect(() => {
     if (typeof onStateChangeRef.current === 'function') {
       onStateChangeRef.current({
@@ -133,15 +131,6 @@ export default function PracticeWorkspace({
           >
             <span>↺</span><span className="hidden sm:inline">Reset</span>
           </button>
-          {typeof onNewPuzzle === 'function' && (
-            <button
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 min-tap rounded-md bg-accent text-white text-xs font-bold transition-all hover:bg-text-1 shadow-sm"
-              onClick={onNewPuzzle}
-              title="Generate a new random problem"
-            >
-              <span>🎲</span><span className="hidden sm:inline">New problem</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -224,14 +213,6 @@ export default function PracticeWorkspace({
               >
                 ↺ Try again
               </button>
-              {typeof onNewPuzzle === 'function' && (
-                <button
-                  className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px"
-                  onClick={onNewPuzzle}
-                >
-                  🎲 New problem →
-                </button>
-              )}
             </div>
           </div>
         ) : (

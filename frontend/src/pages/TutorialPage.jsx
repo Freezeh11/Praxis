@@ -16,7 +16,7 @@ const STEPS = [
     id: 0,
     icon: '👋',
     title: 'Welcome to Praxis',
-    text: 'Praxis is a game about simplifying Boolean expressions using algebra laws. In the next two minutes you will solve your first real problem: simplify x + xy down to x.',
+    text: 'Praxis is an interactive trainer for simplifying Boolean expressions using algebra laws. In the next two minutes you will solve your first real problem: simplify x + xy down to x.',
     action: 'start',
   },
   {
@@ -51,7 +51,7 @@ const STEPS = [
     id: 5,
     icon: '🚀',
     title: "You're ready!",
-    text: 'Play through the levels to learn every law, drill random problems in Practice mode, or type your own equations in the Sandbox.',
+    text: 'Work through the three levels to master every law, revisit the tutorial anytime from the home page, and consult the Law Reference screen during any problem.',
     action: 'done',
   },
 ]
@@ -233,20 +233,6 @@ export default function TutorialPage() {
                 >
                   Go to Levels →
                 </button>
-                <div className="flex gap-2">
-                  <Link
-                    to="/practice"
-                    className="flex-1 py-2.5 rounded-xl border-[1.5px] border-border text-text-2 font-bold text-xs hover:bg-bg transition-all text-center"
-                  >
-                    🎲 Practice
-                  </Link>
-                  <Link
-                    to="/sandbox"
-                    className="flex-1 py-2.5 rounded-xl border-[1.5px] border-border text-text-2 font-bold text-xs hover:bg-bg transition-all text-center"
-                  >
-                    🧪 Sandbox
-                  </Link>
-                </div>
                 <button
                   className="w-full py-2 text-text-3 text-xs font-semibold hover:text-text-1 transition-all"
                   onClick={() => { setStarted(false); goToStep(0) }}

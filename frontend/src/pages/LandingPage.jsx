@@ -109,25 +109,13 @@ export default function LandingPage() {
             )}
           </motion.div>
 
-          {/* Secondary modes: tutorial, random practice, sandbox */}
+          {/* Secondary: guided tutorial */}
           <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               to="/tutorial"
               className="px-4 py-2 rounded-full bg-teal/10 border border-teal/30 text-teal text-[13px] font-bold hover:bg-teal/20 hover:-translate-y-0.5 transition-all"
             >
               ▶ Interactive Tutorial
-            </Link>
-            <Link
-              to="/practice"
-              className="px-4 py-2 rounded-full bg-white border border-border text-text-2 text-[13px] font-bold hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all"
-            >
-              🎲 Random Practice
-            </Link>
-            <Link
-              to="/sandbox"
-              className="px-4 py-2 rounded-full bg-white border border-border text-text-2 text-[13px] font-bold hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all"
-            >
-              🧪 Sandbox Mode
             </Link>
           </motion.div>
         </motion.div>

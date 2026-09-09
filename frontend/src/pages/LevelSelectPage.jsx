@@ -107,8 +107,6 @@ export default function LevelSelectPage() {
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
-          <Link to="/practice" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Random practice problems">🎲 Practice</Link>
-          <Link to="/sandbox" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Simplify your own equation">🧪 Sandbox</Link>
           <Link to="/tutorial" className="hidden md:flex h-9 px-3 rounded-lg items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Interactive tutorial">▶ Tutorial</Link>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
