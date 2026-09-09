@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import LevelSelectPage from './pages/LevelSelectPage'
 import StageSelectorPage from './pages/StageSelectorPage'
 import ProblemPage from './pages/ProblemPage'
+import SandboxPage from './pages/SandboxPage'
 import TutorialPage from './pages/TutorialPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -25,8 +26,11 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Guided interactive tutorial */}
+            {/* Guided interactive tutorial — public */}
             <Route path="/tutorial" element={<TutorialPage />} />
+
+            {/* Sandbox — requires authentication */}
+            <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
 
             {/* Protected routes — require authentication */}
             <Route path="/levels" element={<ProtectedRoute><LevelSelectPage /></ProtectedRoute>} />
