@@ -31,38 +31,6 @@ export default function ProblemPage() {
   const [showStagesPanel, setShowStagesPanel] = useState(false)
   const loadedAsSavedRef = useRef(false)
 
-  function getLawExplanation(lawName) {
-    if (!lawName) return null
-    const lower = String(lawName).toLowerCase()
-    if (lower.includes('initial')) {
-      return 'Starting problem expression.'
-    }
-    if (lower.includes('distributive')) {
-      return 'Factored out a common variable (AB + AC = A(B+C)) or applied POS dual distribution ((A+B)(A+C) = A + BC).'
-    }
-    if (lower.includes('absorption')) {
-      return 'Redundant term absorbed: A + AB = A in sums, and A(A + B) = A in products.'
-    }
-    if (lower.includes('complement')) {
-      return 'Opposites evaluated: A + A\' = 1 in sums, and A · A\' = 0 in products.'
-    }
-    if (lower.includes('idempotent')) {
-      return 'Duplicate terms combined: A + A = A in sums, and A · A = A in products.'
-    }
-    if (lower.includes('identity')) {
-      return 'Neutral element dropped: A + 0 = A in sums, and A · 1 = A in products.'
-    }
-    if (lower.includes('annulment')) {
-      return 'Dominant value takes over: A + 1 = 1 in sums, and A · 0 = 0 in products.'
-    }
-    if (lower.includes('double neg')) {
-      return 'Double NOT cancels out: (A\')\' = A.'
-    }
-    if (lower.includes('demorgan')) {
-      return 'Negated group expanded: (AB)\' = A\' + B\' or (A+B)\' = A\'B\'.'
-    }
-    return `Applied ${lawName}.`
-  }
   const ZOOM_STEP = 0.15
   const ZOOM_MIN = 0.5
   const ZOOM_MAX = 2.0
@@ -498,192 +466,25 @@ export default function ProblemPage() {
               </div>
             )}
 
-            {/* Zoom wrapper — scales the entire expression block; long
-                expressions can scroll horizontally on narrow screens */}
+            {/* Current expression — sandbox-style single line */}
             <div className="max-w-full overflow-x-auto" style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
-              {/* Derivation chain — clean FIFO top-to-bottom queue */}
-            {expr && (() => {
-              const totalSteps = steps.length
-
-              // Build unified list of derivation lines
-              const lines = []
-              if (totalSteps === 0) {
-                lines.push({
-                  key: 'active-0',
-                  isFirst: true,
-                  isActive: true,
-                  text: null,
-                  stepIdx: null,
-                  law: null,
-                })
-              } else {
-                // Line 0: Starting problem
-                lines.push({
-                  key: 'past-0',
-                  isFirst: true,
-                  isActive: false,
-                  text: steps[0].from,
-                  stepIdx: 0,
-                  law: steps[0].law,
-                })
-                // Intermediate lines
-                for (let i = 1; i < totalSteps; i++) {
-                  lines.push({
-                    key: `past-${i}`,
-                    isFirst: false,
-                    isActive: false,
-                    text: steps[i - 1].to,
-                    stepIdx: i,
-                    law: steps[i].law,
-                  })
-                }
-                // Active bottom line
-                lines.push({
-                  key: `active-${totalSteps}`,
-                  isFirst: false,
-                  isActive: true,
-                  text: null,
-                  stepIdx: null,
-                  law: null,
-                })
-              }
-
-              return (
-                <motion.div
-                  layout
-                  className="flex flex-col gap-3 font-mono text-[17px] sm:text-[20px] lg:text-[22px] font-medium items-start select-none max-w-full"
-                  onClick={() => setInspectedStepIdx(null)}
-                >
-                  {lines.map((line, idx) => {
-                    const isFromInspected = line.stepIdx !== null && inspectedStepIdx === line.stepIdx
-                    const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
-                    const isLineHighlighted = isFromInspected || isToInspected
-                    const age = lines.length - 1 - idx
-                    const targetOpacity = isLineHighlighted || line.isActive ? 1 : Math.max(0.35, 0.6 - (age - 1) * 0.08)
-
-                    return (
-                      <motion.div
-                        layout
-                        key={line.key}
-                        initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
-                        animate={{ opacity: targetOpacity, y: 0 }}
-                        transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
-                        className="relative flex items-center min-h-[44px] gap-2.5"
-                      >
-                        {/* Stepper Left Rail: Dot + Symmetrical Connector Line (Independent Column with z-30) */}
-                        <div className="relative flex items-center justify-center w-6 self-stretch shrink-0 select-none z-30">
-                          {/* Downward connector line centered exactly between node i and node i+1 */}
-                          {line.stepIdx !== null && (
-                            <button
-                              type="button"
-                              data-inspect-trigger="true"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
-                              }}
-                              className="group absolute top-[calc(50%+8px)] left-1/2 -translate-x-1/2 w-6 h-[calc(100%-4px)] flex items-center justify-center cursor-pointer p-0 bg-transparent border-0 z-30"
-                              title={`Click to inspect ${line.law}`}
-                            >
-                              {/* Symmetrical vertical line */}
-                              <div
-                                className={`w-[2px] h-full rounded-full transition-all duration-200 ${
-                                  inspectedStepIdx === line.stepIdx
-                                    ? 'bg-teal w-[3px] shadow-sm'
-                                    : 'bg-slate-300 group-hover:bg-teal group-hover:w-[3px]'
-                                }`}
-                              />
-                            </button>
-                          )}
-
-                          {/* Node Dot */}
-                          {isLineHighlighted ? (
-                            <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200" />
-                          ) : line.isActive ? (
-                            <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-white shadow-xs transition-all">
-                              <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
-                            </div>
-                          ) : (
-                            <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-slate-300 transition-all duration-200" />
-                          )}
-
-                          {/* Floating Law Context Card anchored at the exact midpoint of the transition */}
-                          <AnimatePresence>
-                            {line.stepIdx !== null && inspectedStepIdx === line.stepIdx && (
-                              <div
-                                data-inspect-card="true"
-                                className="absolute right-full top-[calc(100%+6px)] -translate-y-1/2 mr-4 z-40 pointer-events-auto"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <motion.div
-                                  initial={{ opacity: 0, x: -6, scale: 0.96 }}
-                                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                                  exit={{ opacity: 0, x: -6, scale: 0.96 }}
-                                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                                  className="bg-white border border-teal/40 shadow-xl rounded-xl p-3.5 text-left w-[260px] select-none"
-                                >
-                                  <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide border-b border-slate-100 pb-1.5 mb-1.5">
-                                    <span>{line.law}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => setInspectedStepIdx(null)}
-                                      className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 w-5 h-5 rounded flex items-center justify-center font-bold text-xs transition-colors"
-                                      title="Close explanation"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                  <div className="text-[12px] text-slate-600 leading-relaxed font-sans font-normal">
-                                    {getLawExplanation(line.law)}
-                                  </div>
-                                </motion.div>
-                              </div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Formula Display with Highlight Box wrapping ONLY the equation */}
-                        <div
-                          className={`flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl transition-all border ${
-                            isLineHighlighted
-                              ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
-                              : line.isActive
-                                ? 'border-teal/50 bg-teal-light/30 ring-1 ring-teal/20'
-                                : 'border-transparent'
-                          }`}
-                        >
-                          <span
-                            className={`font-mono text-[17px] sm:text-[20px] lg:text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors ${
-                              isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
-                            }`}
-                          >
-                            {line.isFirst ? 'F =' : '\u00a0\u00a0='}
-                          </span>
-                          {line.isActive ? (
-                            <ExpressionDisplay
-                              expr={expr}
-                              sel={sel}
-                              onClickLit={onClickLit}
-                              onClickNot={onClickNot}
-                              onClickTerm={onClickTerm}
-                              onSwapTerms={swapTerms}
-                              activeGuidePaths={activeGuidePaths}
-                              animationPaths={isAnimating ? animationData?.paths : []}
-                              animationLaw={isAnimating ? animationData?.lawId : null}
-                            />
-                          ) : (
-                            <ExprText
-                              text={line.text}
-                              className={isLineHighlighted ? 'text-slate-900 font-semibold' : 'text-text-1'}
-                            />
-                          )}
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-                </motion.div>
-              )
-            })()}
-            </div>{/* end zoom wrapper */}
+              {expr && (
+                <div className={`flex items-baseline gap-1.5 font-mono select-none max-w-full ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
+                  <span className="font-mono text-[17px] sm:text-[20px] lg:text-[22px] whitespace-pre shrink-0 select-none mr-1 text-text-2 font-medium">F =</span>
+                  <ExpressionDisplay
+                    expr={expr}
+                    sel={sel}
+                    onClickLit={onClickLit}
+                    onClickNot={onClickNot}
+                    onClickTerm={onClickTerm}
+                    onSwapTerms={onSwapTerms}
+                    activeGuidePaths={activeGuidePaths}
+                    animationPaths={isAnimating ? animationData?.paths : []}
+                    animationLaw={isAnimating ? animationData?.lawId : null}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Hint bubble */}
             {showHint && (
