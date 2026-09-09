@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import PracticeWorkspace from '../components/PracticeWorkspace'
 import { parseExpr, canonText, nodeText, validateExpr } from '../lib/expr'
 import { findOptimalPath, findSimplestForm } from '../lib/solver'
-import { generateRandomPuzzle } from '../lib/randomPuzzle'
+import { randomPoolEquation } from '../lib/sandboxPool'
 
 const EXAMPLE_EXPRESSIONS = [
   'x + xy',
@@ -46,29 +46,29 @@ export default function SandboxPage() {
 
   // Fill the expression field with a fresh random, solver-verified equation
   const handleRandomize = useCallback(() => {
-    const p = generateRandomPuzzle('medium')
-    setExprInput(p.expr)
+    const expr = randomPoolEquation(exprInput.trim() || null)
+    setExprInput(expr)
     setGoalInput('')
     setPuzzle(null)
     toast.success('Random equation loaded — press Start to simplify it!')
-  }, [])
+  }, [exprInput])
 
   // While a puzzle is open, immediately swap in a new random one
   const handleNewPuzzle = useCallback(() => {
-    const p = generateRandomPuzzle('medium')
-    const exprTree = parseExpr(p.expr)
+    const expr = randomPoolEquation(puzzle?.expr || null)
+    const exprTree = parseExpr(expr)
     const simplest = findSimplestForm(exprTree)
-    setExprInput(p.expr)
+    setExprInput(expr)
     setGoalInput('')
     setPuzzle({
       expr: nodeText(exprTree),
-      goal: simplest.found ? simplest.text : p.goal,
-      goalCanon: simplest.found ? simplest.canon : canonText(parseExpr(p.goal)),
-      optimalSteps: simplest.found ? simplest.optimalSteps : p.optimalSteps,
+      goal: simplest.found ? simplest.text : expr,
+      goalCanon: simplest.found ? simplest.canon : canonText(exprTree),
+      optimalSteps: simplest.found ? simplest.optimalSteps : 1,
       hints: [],
       targetLaws: [],
     })
-  }, [])
+  }, [puzzle])
 
   const handleStart = () => {
     setSubmitting(true)
