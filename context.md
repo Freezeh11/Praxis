@@ -71,7 +71,7 @@ Praxis/
 │       │   └── ExprText.jsx            ← Handles symbol rendering in expressions
 │       ├── hooks/
 │       │   ├── useApi.js               ← Fetches levels/laws from API, submits scores
-│       │   ├── useGameState.js         ← Core game logic (selection, law application, hints, undo, animations)
+│       │   ├── useGameState.js         ← Core problem-solving logic (selection, law application, hints, undo, animations)
 │       │   └── useProgress.js          ← Client-side progress tracking (points, streak, localStorage)
 │       ├── lib/
 │       │   ├── expr.js                 ← Expression tree: parse, normalize, navigate, manipulate
@@ -88,15 +88,13 @@ Praxis/
 
 | Path | Component | Purpose |
 |---|---|---|
-| `/` | `LandingPage` | Landing page with CTAs + secondary links to tutorial/practice/sandbox |
+| `/` | `LandingPage` | Landing page with CTAs + link to the interactive tutorial |
 | `/login` | `LoginPage` | Supabase email/password login |
 | `/register` | `RegisterPage` | Account registration |
 | `/levels` | `LevelSelectPage` | Level carousel with lock/score-gate logic (80% avg to unlock next level) |
-| `/level/:levelId/stages` | `StageSelectorPage` | Stage/puzzle selection within a level |
-| `/level/:levelId/stage/:stageIdx` | `ProblemPage` | Main game screen |
+| `/level/:levelId/stages` | `StageSelectorPage` | Stage/problem selection within a level |
+| `/level/:levelId/stage/:stageIdx` | `ProblemPage` | Main problem-solving screen |
 | `/tutorial` | `TutorialPage` | **Interactive tutorial** — guided real playthrough of `x + xy → x`; instruction steps auto-advance as the user performs the moves |
-| `/sandbox` | `SandboxPage` | **User-specified equations** — type any expression (+ optional target); auto-computes the simplest form when no target given |
-| `/practice` | `PracticePage` | **Randomized problems** — endless solver-verified puzzles, Easy/Medium/Hard |
 | `*` | Redirect → `/` | Catch-all |
 
 ---
@@ -171,7 +169,7 @@ Earned Points:   (total / 100) × 5  (bonus on top of base 10)
 ## 8. Frontend Architecture — Expression Engine
 
 ### Expression Tree (from `lib/expr.js`)
-The entire game runs on an **AST (Abstract Syntax Tree)** representation of Boolean expressions:
+The entire problem engine runs on an **AST (Abstract Syntax Tree)** representation of Boolean expressions:
 
 - **Node Types:** `lit` (literal: `{type:'lit', v:'x', n:false}`), `const` (0 or 1), `prod` (product/AND), `sum` (sum/OR), `not` (negation/NOT)
 - **Parsing:** `parseExpr("x + xy")` → tree — supports SOP (Sum of Products) notation, `'` for complement
@@ -233,10 +231,10 @@ The entire game runs on an **AST (Abstract Syntax Tree)** representation of Bool
 
 | Feature | Status | Notes |
 |---|---|---|
-| Boolean expression game | ✅ Complete | Levels 1-3 with 12 puzzles each (SOP & POS dual pairs) |
+| Boolean expression challenge system | ✅ Complete | Levels 1-3 with 12 problems each (SOP & POS dual pairs) |
 | Level carousel (home page) | ✅ Complete | `/levels` |
 | Stage selection | ✅ Complete | `/level/:id/stages` |
-| Puzzle gameplay | ✅ Complete | `/level/:id/stage/:idx` |
+| Problem-solving interface | ✅ Complete | `/level/:id/stage/:idx` |
 | Score computation | ✅ Complete | POST /api/score (not persisted) |
 | Law reference | ✅ Complete | GET /api/laws + UI button |
 | Landing page | ✅ Complete | `/` with CTA + mode links |
@@ -247,10 +245,9 @@ The entire game runs on an **AST (Abstract Syntax Tree)** representation of Bool
 | Database integration | ✅ Complete | httpx-based Supabase REST client (`backend/supabase_client.py`) |
 | Persistent progress | ✅ Complete | localStorage + server sync |
 | Supabase client | ✅ Complete | `frontend/src/utils/supabase.js` |
-| Protected routes | ✅ Complete | `ProtectedRoute` wraps game pages |
+| Protected routes | ✅ Complete | `ProtectedRoute` wraps problem pages |
 | **Interactive tutorial** | ✅ Complete | `/tutorial` — steps auto-advance on real user actions |
-| **User-specified equations** | ✅ Complete | `/sandbox` — with/without target; BFS auto-simplify |
-| **Randomized problems** | ✅ Complete | `/practice` — inverse-law generator + solver verification |
+
 
 ---
 
@@ -324,7 +321,7 @@ npm run dev
 
 10. **Python virtual environment not tracked** — `backend/venv/` is in `.gitignore`. Each developer creates their own.
 
-11. **New learning modes** — `TutorialPage` (`/tutorial`), `SandboxPage` (`/sandbox`) and `PracticePage` (`/practice`) all reuse the shared `components/PracticeWorkspace.jsx` which wraps `useGameState` + `ExpressionDisplay` for any puzzle object. `lib/randomPuzzle.js` generates guaranteed-solvable puzzles via inverse-law expansions and verifies them with the BFS solver; `lib/solver.js` exports `findOptimalPath` (to a target) and `findSimplestForm` (to a terminal state); `lib/expr.js` exports `validateExpr` for strict user-input validation.
+11. **Interactive tutorial** — `TutorialPage` (`/tutorial`) reuses the shared `components/PracticeWorkspace.jsx`, which wraps `useGameState` + `ExpressionDisplay` for any problem object. `lib/solver.js` exports `findOptimalPath` (BFS from an expression to a target canon), used by `useGameState.loadPuzzle` to compute optimal step counts.
 
 12. **Tutorial state machine** — tutorial steps auto-advance from `PracticeWorkspace`'s `onStateChange` snapshots (`selCount`, `stepsCount`, `isComplete`); the completion snapshot must schedule the final step advance because no further snapshots fire after a solve. First-visit welcome modal on `/levels` is gated by localStorage key `praxis_tutorial_seen`; completion sets `praxis_tutorial_completed`.
 

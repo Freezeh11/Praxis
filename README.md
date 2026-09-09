@@ -6,8 +6,6 @@ Praxis is an interactive web application designed to help users master **Boolean
 
 - **Level-based puzzles** — 3 levels × 12 stages covering SOP and POS dual pairs, with star ratings and score gating
 - **▶ Interactive Tutorial** — a guided first playthrough that reacts to your actual moves (`/tutorial`)
-- **🧪 Sandbox Mode** — type any Boolean equation and simplify it, with or without a target (`/sandbox`)
-- **🎲 Random Practice** — endless randomized, solver-verified problems with Easy/Medium/Hard difficulty (`/practice`)
 - **Dynamic boolean engine** — AST-based law engine with BFS optimal-path solver and law animations
 
 ---
