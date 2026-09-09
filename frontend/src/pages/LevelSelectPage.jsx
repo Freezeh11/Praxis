@@ -165,12 +165,12 @@ export default function LevelSelectPage() {
                 onClick={() => !locked && setSelected(i)}
               >
                 {/* Icon */}
-                <div className={`w-16 h-16 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
+                <div className={`w-16 h-16 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold leading-none transition-all
                   ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px]' : 'border-border text-[26px]'}
                   ${done && !isActive ? 'bg-green-light text-green' : ''}
                   ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
                 `}>
-                  {isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
+                  <span className="flex items-center justify-center leading-none">{isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}</span>
                 </div>
 
                 <div className={`font-bold text-text-1 tracking-[-0.3px] text-center w-full ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
