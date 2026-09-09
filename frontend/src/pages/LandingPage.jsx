@@ -109,7 +109,7 @@ export default function LandingPage() {
             )}
           </motion.div>
 
-          {/* Secondary: guided tutorial */}
+          {/* Secondary: guided tutorial (always) + sandbox (only when logged in) */}
           <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               to="/tutorial"
@@ -117,6 +117,14 @@ export default function LandingPage() {
             >
               ▶ Interactive Tutorial
             </Link>
+            {session && (
+              <Link
+                to="/sandbox"
+                className="px-4 py-2 rounded-full bg-white border border-border text-text-2 text-[13px] font-bold hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all"
+              >
+                🧪 Sandbox Mode
+              </Link>
+            )}
           </motion.div>
         </motion.div>
       </main>
