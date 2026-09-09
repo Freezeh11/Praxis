@@ -469,8 +469,20 @@ export default function ProblemPage() {
 
         {/* Expression workspace — grid bg + derivation chain */}
         <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[320px] sm:min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
-          <div className="relative w-full h-full flex flex-col justify-center items-center">
+          <div className="relative w-full h-full flex flex-col justify-center items-center gap-3">
             {isAnimating && <AnimationOverlay data={animationData} />}
+
+            {/* Goal chip — sandbox-style, shows the target we are simplifying toward */}
+            {expr && (
+              <div className="text-[11px] font-sans font-bold tracking-[1px] uppercase text-text-3">
+                Goal: <span className="font-mono text-[13px] text-teal font-bold">{puzzle?.goal}</span>
+                {optimalSteps > 0 && (
+                  <span className="ml-2 text-text-3 font-sans font-medium normal-case tracking-normal">
+                    (optimal: {optimalSteps} step{optimalSteps !== 1 ? 's' : ''})
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Status pill — absolutely pinned to top, outside zoom wrapper so it stays fixed size */}
             {status !== 'select' && (
