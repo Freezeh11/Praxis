@@ -131,9 +131,23 @@ export default function TutorialPage() {
   const handleStateChange = useCallback((snapshot) => {
     if (!started) return
 
-    // Step 4: first completion → show the "you did it" step
-    if (stepIdx === 4 && snapshot.isComplete) {
-      setAdvanceTimer(setTimeout(() => goToStep(5), 900))
+    // Step 9: the final unassisted solve → finish the tutorial
+    if (stepIdx === 9 && snapshot.isComplete) {
+      setAdvanceTimer(setTimeout(() => {
+        markCompleted()
+        goToStep(10)
+      }, 900))
+      return
+    }
+
+    // First completion → show the "you did it" step, then advance to the
+    // goal-info step. (Completion is the last snapshot the workspace emits,
+    // so the second advance is scheduled right here.)
+    if (snapshot.isComplete) {
+      if (stepIdx < 4) goToStep(4)
+      if (stepIdx < 5) {
+        setAdvanceTimer(setTimeout(() => goToStep(5), 1200))
+      }
       return
     }
 
@@ -155,20 +169,7 @@ export default function TutorialPage() {
       return
     }
 
-    // Step 9: the final unassisted solve → finish the tutorial
-    if (stepIdx === 9 && snapshot.isComplete) {
-      setAdvanceTimer(setTimeout(() => {
-        markCompleted()
-        goToStep(10)
-      }, 900))
-      return
-    }
-
     // Catch-up: user already applied a law before the tutorial expected it
-    if (stepIdx < 4 && snapshot.isComplete) {
-      goToStep(4)
-      return
-    }
     if (stepIdx < 4 && snapshot.stepsCount >= 1) {
       goToStep(4)
       return
