@@ -306,8 +306,9 @@ export default function LevelSelectPage() {
         </div>
       )}
 
-      {/* Survey (production only) */}
-      <SurveyButton />
+      {/* Survey (production only) — hidden while the law reference drawer is
+          open so it never overlaps the drawer content */}
+      {!showLawsDrawer && <SurveyButton />}
     </div>
   )
 }
