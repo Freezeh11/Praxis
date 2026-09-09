@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import { toast } from 'sonner'
 import PracticeWorkspace from '../components/PracticeWorkspace'
 import { parseExpr, canonText, nodeText, validateExpr } from '../lib/expr'
 import { findOptimalPath, findSimplestForm } from '../lib/solver'
+import { generateRandomPuzzle } from '../lib/randomPuzzle'
 
 const EXAMPLE_EXPRESSIONS = [
   'x + xy',
@@ -14,15 +15,60 @@ const EXAMPLE_EXPRESSIONS = [
   "(w+x+y+z)' + w'x'",
 ]
 
+/** Dice button with a hover tooltip explaining what it does. */
+function DiceButton({ onClick, tooltip }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={tooltip}
+      className="relative group h-11 w-11 shrink-0 rounded-xl border-[1.5px] border-border bg-bg text-xl flex items-center justify-center transition-all hover:border-teal hover:bg-teal-light hover:scale-105 active:scale-95"
+    >
+      🎲
+      <span className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-text-1 text-white text-[11px] font-semibold px-2.5 py-1.5 opacity-0 scale-95 transition-all duration-150 group-hover:opacity-100 group-hover:scale-100 group-focus-visible:opacity-100 shadow-md z-30">
+        {tooltip}
+        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-text-1" />
+      </span>
+    </button>
+  )
+}
+
 /**
  * Sandbox mode: the user types ANY boolean expression (and optionally a
- * target goal) and plays it through the real law engine.
+ * target goal) and plays it through the real law engine. A dice button
+ * randomizes the equation.
  */
 export default function SandboxPage() {
   const [exprInput, setExprInput] = useState('')
   const [goalInput, setGoalInput] = useState('')
   const [puzzle, setPuzzle] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Fill the expression field with a fresh random, solver-verified equation
+  const handleRandomize = useCallback(() => {
+    const p = generateRandomPuzzle('medium')
+    setExprInput(p.expr)
+    setGoalInput('')
+    setPuzzle(null)
+    toast.success('Random equation loaded — press Start to simplify it!')
+  }, [])
+
+  // While a puzzle is open, immediately swap in a new random one
+  const handleNewPuzzle = useCallback(() => {
+    const p = generateRandomPuzzle('medium')
+    const exprTree = parseExpr(p.expr)
+    const simplest = findSimplestForm(exprTree)
+    setExprInput(p.expr)
+    setGoalInput('')
+    setPuzzle({
+      expr: nodeText(exprTree),
+      goal: simplest.found ? simplest.text : p.goal,
+      goalCanon: simplest.found ? simplest.canon : canonText(parseExpr(p.goal)),
+      optimalSteps: simplest.found ? simplest.optimalSteps : p.optimalSteps,
+      hints: [],
+      targetLaws: [],
+    })
+  }, [])
 
   const handleStart = () => {
     setSubmitting(true)
@@ -102,6 +148,8 @@ export default function SandboxPage() {
           exitLabel="Edit equation"
           title="Sandbox"
           subtitle={`Simplify: ${puzzle.expr}`}
+          onNewPuzzle={handleNewPuzzle}
+          newPuzzleLabel="Randomize"
         />
       </div>
     )
@@ -115,9 +163,6 @@ export default function SandboxPage() {
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Link to="/practice" className="h-9 px-2 sm:px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Random practice">
-            🎲<span className="hidden sm:inline">&nbsp;Practice</span>
-          </Link>
           <Link to="/tutorial" className="h-9 px-2 sm:px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all" title="Interactive tutorial">
             ▶<span className="hidden sm:inline">&nbsp;Tutorial</span>
           </Link>
@@ -150,15 +195,21 @@ export default function SandboxPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-bold tracking-[1px] uppercase text-text-2">Expression to simplify</span>
-            <input
-              type="text"
-              value={exprInput}
-              onChange={e => setExprInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleStart()}
-              placeholder="e.g. x'y + xy + xyz"
-              className="h-11 px-4 rounded-xl border-[1.5px] border-border bg-white font-mono text-[15px] text-text-1 outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all placeholder:text-text-3"
-              autoFocus
-            />
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={exprInput}
+                onChange={e => setExprInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleStart()}
+                placeholder="e.g. x'y + xy + xyz"
+                className="flex-1 min-w-0 h-11 px-4 rounded-xl border-[1.5px] border-border bg-white font-mono text-[15px] text-text-1 outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all placeholder:text-text-3"
+                autoFocus
+              />
+              <DiceButton
+                onClick={handleRandomize}
+                tooltip="Randomize the equation with a solver-verified problem"
+              />
+            </div>
           </label>
 
           <label className="flex flex-col gap-1.5">
