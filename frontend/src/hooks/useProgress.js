@@ -10,6 +10,7 @@ const defaultProgress = {
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5, "1:3": 62.0 } → best total score per stage
   stageSolutions: {},         // { "1:0": [{ law, from, to }] } → saved derivation steps
+  hasSeenTutorial: false,
 }
 
 export function useProgress() {
@@ -134,8 +135,15 @@ export function useProgress() {
     setProgress(p => {
       const key = String(levelId)
       const existing = p.stageProgress[key] || []
-      if (existing.includes(stageIdx)) return p
-      return { ...p, stageProgress: { ...p.stageProgress, [key]: [...existing, stageIdx] } }
+      const isTut = Number(levelId) === 0
+      if (existing.includes(stageIdx)) {
+        return isTut ? { ...p, hasSeenTutorial: true } : p
+      }
+      return {
+        ...p,
+        stageProgress: { ...p.stageProgress, [key]: [...existing, stageIdx] },
+        hasSeenTutorial: isTut ? true : p.hasSeenTutorial,
+      }
     })
 
   const completeLevel = (levelId) =>
@@ -158,12 +166,14 @@ export function useProgress() {
   const saveSolution = (levelId, stageIdx, steps) =>
     setProgress(p => {
       const key = `${levelId}:${stageIdx}`
+      const isTut = Number(levelId) === 0
       return {
         ...p,
         stageSolutions: {
           ...(p.stageSolutions || {}),
           [key]: steps,
-        }
+        },
+        hasSeenTutorial: isTut ? true : p.hasSeenTutorial,
       }
     })
 
@@ -210,6 +220,43 @@ export function useProgress() {
     return { completed, avgScore, allDone, unlocked, totalStars, maxStars: totalStages * 3 }
   }
 
+  const resetLevelProgress = (levelId) =>
+    setProgress(p => {
+      const key = String(levelId)
+      const newStageProgress = { ...p.stageProgress }
+      delete newStageProgress[key]
+
+      const newScores = { ...p.stageScores }
+      const newSolutions = { ...p.stageSolutions }
+
+      Object.keys(newScores).forEach(k => {
+        if (k.startsWith(`${levelId}:`)) delete newScores[k]
+      })
+      Object.keys(newSolutions).forEach(k => {
+        if (k.startsWith(`${levelId}:`)) delete newSolutions[k]
+      })
+
+      return {
+        ...p,
+        stageProgress: newStageProgress,
+        stageScores: newScores,
+        stageSolutions: newSolutions,
+        levelsCompleted: p.levelsCompleted.filter(id => id !== levelId),
+        hasSeenTutorial: Number(levelId) === 0 ? true : p.hasSeenTutorial,
+      }
+    })
+
+  const markTutorialSeen = () => {
+    setProgress(p => ({ ...p, hasSeenTutorial: true }))
+  }
+
+  const hasSeenTutorial = Boolean(
+    progress.hasSeenTutorial ||
+    (progress.stageProgress && progress.stageProgress['0'] && progress.stageProgress['0'].length > 0) ||
+    (progress.stageScores && Object.keys(progress.stageScores).some(k => k.startsWith('0:'))) ||
+    (progress.stageSolutions && Object.keys(progress.stageSolutions).some(k => k.startsWith('0:')))
+  )
+
   return {
     progress,
     addPoints,
@@ -224,5 +271,8 @@ export function useProgress() {
     isStageCompleted,
     isLevelCompleted,
     getStagesCompleted,
+    resetLevelProgress,
+    hasSeenTutorial,
+    markTutorialSeen,
   }
 }

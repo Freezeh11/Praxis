@@ -30,11 +30,33 @@ export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
   const { fetchLevel, laws } = useApi()
-  const { progress, getStagesCompleted, getLevelProgress } = useProgress()
+  const { progress, getStagesCompleted, getLevelProgress, getSavedSolution, resetLevelProgress, hasSeenTutorial } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
+  const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  const handleTutorialClick = () => {
+    const skipPrompt = sessionStorage.getItem('praxis_skip_tutorial_replay_prompt') === 'true'
+
+    if (hasSeenTutorial && !skipPrompt) {
+      setDontAskTutorialAgain(false)
+      setShowTutorialPrompt(true)
+    } else {
+      navigate('/level/0/stage/0?tutorial=true')
+    }
+  }
+
+  const handleRestartTutorial = () => {
+    if (dontAskTutorialAgain) {
+      sessionStorage.setItem('praxis_skip_tutorial_replay_prompt', 'true')
+    }
+    resetLevelProgress(0)
+    setShowTutorialPrompt(false)
+    navigate('/level/0/stage/0?tutorial=true')
+  }
 
   const numLevelId = Number(levelId)
 
@@ -82,6 +104,7 @@ export default function StageSelectorPage() {
   }
 
   // Level progress metrics
+  const isTutorialLevel = numLevelId === 0
   const lp = getLevelProgress(numLevelId, puzzles.length || 12)
   const isMaxLevel = numLevelId >= 3
   const nextLevelId = numLevelId + 1
@@ -104,6 +127,13 @@ export default function StageSelectorPage() {
         </Link>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleTutorialClick}
+            className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+            title="Interactive Tutorial"
+          >
+            <span>Tutorial</span>
+          </button>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50/80 border border-amber/30 rounded-full text-xs font-bold text-amber-700">
             <span>⭐ {progress.points || 0}</span>
             <span className="opacity-40">•</span>
@@ -123,8 +153,11 @@ export default function StageSelectorPage() {
       {/* ── LOADING STATE ── */}
       {loading && (
         <div className="flex-1 flex flex-col items-center justify-center p-12 gap-3">
-          <div className="w-8 h-8 border-3 border-teal border-t-transparent rounded-full animate-spin" />
-          <p className="text-text-3 text-xs font-semibold">Loading stages…</p>
+          <svg className="animate-spin h-8 w-8 text-accent" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm font-semibold text-text-3">Loading stages...</span>
         </div>
       )}
 
@@ -145,11 +178,26 @@ export default function StageSelectorPage() {
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-text-1 tracking-tight">
-                  Dual-Track Stage Matrix
+                  {isTutorialLevel ? 'Tutorial Stage Overview' : 'Dual-Track Stage Matrix'}
                 </h1>
                 <p className="text-xs sm:text-sm text-text-3 mt-1.5 max-w-2xl leading-relaxed">
-                  {level.desc}. Every Boolean theorem exists as a dual pair — practice both <span className="font-semibold text-teal">Sum of Products (SOP)</span> and <span className="font-semibold text-indigo-600">Product of Sums (POS)</span>.
+                  {isTutorialLevel
+                    ? 'Guided walkthrough and orientation for core workspace mechanics, variable selections, drag-and-drop reordering, negation capsules, and efficiency challenges.'
+                    : `${level.desc}. Every Boolean theorem exists as a dual pair — practice both Sum of Products (SOP) and Product of Sums (POS).`
+                  }
                 </p>
+                {isTutorialLevel && (
+                  <div className="mt-3.5 flex items-center gap-3">
+                    <button
+                      onClick={handleTutorialClick}
+                      className="h-9 px-4 rounded-xl flex items-center gap-2 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                      title="Start or Restart Guided Interactive Tutorial"
+                    >
+                      <span className="text-xs">▶</span>
+                      <span>Interactive Tutorial</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Stat Cards Grid */}
@@ -187,14 +235,27 @@ export default function StageSelectorPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold">
                 <div className="flex items-center gap-1.5 text-text-2">
                   <span className="font-extrabold text-text-1">
-                    {isMaxLevel ? `Level ${numLevelId} Mastery` : `Level ${nextLevelId} Unlock Gate`}
+                    {isTutorialLevel ? 'Level 1 Unlock Gate' : isMaxLevel ? `Level ${numLevelId} Mastery` : `Level ${nextLevelId} Unlock Gate`}
                   </span>
                   <span className="text-text-3 font-normal">
-                    (Target: 80% Average Score across all {puzzles.length} stages)
+                    {isTutorialLevel
+                      ? '(Complete the 4 tutorial stages to master fundamentals)'
+                      : `(Target: 80% Average Score across all ${puzzles.length} stages)`
+                    }
                   </span>
                 </div>
                 <div>
-                  {isMaxLevel ? (
+                  {isTutorialLevel ? (
+                    completedSet.size >= puzzles.length ? (
+                      <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
+                        ✓ Tutorial Completed!
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-text-3">
+                        {completedSet.size} / {puzzles.length} completed
+                      </span>
+                    )
+                  ) : isMaxLevel ? (
                     isMastered ? (
                       <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
                         🏆 Level Mastered!
@@ -225,20 +286,24 @@ export default function StageSelectorPage() {
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.min(100, lp.avgScore)}%`,
-                    background: lp.unlocked || isMastered ? '#22c55e' : lp.avgScore >= 50 ? '#f59e0b' : '#ef4444',
+                    width: isTutorialLevel
+                      ? `${puzzles.length > 0 ? (completedSet.size / puzzles.length) * 100 : 0}%`
+                      : `${Math.min(100, lp.avgScore)}%`,
+                    background: isTutorialLevel || lp.unlocked || isMastered ? '#22c55e' : lp.avgScore >= 50 ? '#f59e0b' : '#ef4444',
                   }}
                 />
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-1 rounded-full shadow-xs"
-                  style={{ left: '80%' }}
-                  title="80% Target Gate"
-                />
+                {!isTutorialLevel && (
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-1 rounded-full shadow-xs"
+                    style={{ left: '80%' }}
+                    title="80% Target Gate"
+                  />
+                )}
               </div>
 
               <div className="flex justify-between items-center text-[10px] text-text-3 font-semibold px-0.5">
                 <span>0%</span>
-                <span className="text-text-2 font-bold">80% Unlock Threshold</span>
+                <span className="text-text-2 font-bold">{isTutorialLevel ? 'Tutorial Progress' : '80% Unlock Threshold'}</span>
                 <span>100%</span>
               </div>
             </div>
@@ -293,15 +358,9 @@ export default function StageSelectorPage() {
                   </div>
 
                   {/* Card Middle: Expression Box */}
-                  <div className="bg-bg/80 rounded-xl p-2.5 border border-border/80 flex flex-col gap-1 text-center">
-                    <div className="font-mono text-sm sm:text-base font-bold text-text-1 truncate py-0.5">
+                  <div className="bg-bg/80 rounded-xl p-3 border border-border/80 flex flex-col gap-1 text-center">
+                    <div className="font-mono text-base font-bold text-text-1 truncate py-1">
                       <ExprText text={puz?.expr} />
-                    </div>
-                    <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-text-3 border-t border-border/60 pt-1">
-                      <span>Goal:</span>
-                      <span className="font-mono font-extrabold text-teal">
-                        <ExprText text={puz?.goal} />
-                      </span>
                     </div>
                   </div>
 
@@ -338,7 +397,7 @@ export default function StageSelectorPage() {
                             : 'text-accent group-hover:translate-x-0.5'
                       }`}
                     >
-                      {isLocked ? '🔒' : isCompleted ? 'Replay →' : 'Start →'}
+                      {isLocked ? '🔒' : isCompleted ? 'Review →' : 'Start →'}
                     </span>
                   </div>
                 </motion.button>
@@ -346,6 +405,70 @@ export default function StageSelectorPage() {
             })}
           </div>
         </main>
+      )}
+
+      {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
+      {showTutorialPrompt && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs transition-opacity"
+          onClick={() => setShowTutorialPrompt(false)}
+        >
+          <div 
+            className="relative bg-white rounded-3xl pt-9 pb-8 px-8 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
+              onClick={() => setShowTutorialPrompt(false)}
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-3">
+                Tutorial Replay
+              </span>
+              <h3 className="text-xl font-extrabold text-text-1 tracking-tight">
+                Restart the Walkthrough?
+              </h3>
+            </div>
+
+            <p className="text-[13.5px] text-text-2 leading-relaxed max-w-[380px]">
+              You've already made progress in the tutorial. Would you like to reset your derivation and experience the full guided walkthrough again?
+            </p>
+
+            {/* Don't ask again checkbox */}
+            <label className="flex items-center gap-2.5 px-3 py-1 rounded-lg hover:bg-bg cursor-pointer select-none -mt-1">
+              <input
+                type="checkbox"
+                checked={dontAskTutorialAgain}
+                onChange={e => setDontAskTutorialAgain(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
+              />
+              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
+            </label>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 w-full mt-1">
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
+                onClick={() => setShowTutorialPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
+                onClick={handleRestartTutorial}
+              >
+                Restart Walkthrough
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}

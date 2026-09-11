@@ -3,7 +3,7 @@ import { parseExpr, cloneN, canonText, nodeText, getNode, findCommonProd } from 
 import { analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints } from '../lib/laws.js'
 import { findOptimalPath } from '../lib/solver.js'
 
-const DEAD_END_MSG = 'This expression is simplified, but it is not the final target. A different law path can still reach the required answer.'
+const DEAD_END_MSG = "This expression is simplified, but it isn't in its optimal state. A different law path can reach the target answer."
 
 /**
  * Converts a scanHints result into a human-readable hint string.
@@ -92,9 +92,11 @@ export function useGameState() {
   const [isDeadEnd, setIsDeadEnd] = useState(false)
   const [earnedXp, setEarnedXp] = useState(0)
   const [activeGuidePaths, setActiveGuidePaths] = useState([])
+  const [isPreLawHighlight, setIsPreLawHighlight] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationData, setAnimationData] = useState(null)
 
+  const preLawTimerRef = useRef(null)
   const animationTimerRef = useRef(null)
   const goalCanonRef = useRef('')
 
@@ -291,13 +293,17 @@ export function useGameState() {
       if (existing >= 0) {
         next = prev.filter((_, i) => i !== existing)
       } else {
-        const hasNotNode = prev.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
+        const parts = path.split('.')
+        const parentTermPath = parts.length > 1 ? parts.slice(0, -1).join('.') : null
+        // If parent term is selected (e.g. 'R.1'), replace it with this specific literal ('R.1.0')
+        const cleaned = parentTermPath ? prev.filter(s => s.path !== parentTermPath) : prev
+        const hasNotNode = cleaned.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
         if (hasNotNode) {
           next = [{ path, isTermSel: false }]
         } else {
-          next = prev.length >= 2
-            ? [prev[1], { path, isTermSel: false }]
-            : [...prev, { path, isTermSel: false }]
+          next = cleaned.length >= 2
+            ? [cleaned[1], { path, isTermSel: false }]
+            : [...cleaned, { path, isTermSel: false }]
         }
       }
       updateLaws(next, exprSnapshot)
@@ -344,11 +350,11 @@ export function useGameState() {
     if (isDeadEnd) {
       setSel(prev => {
         const existing = prev.findIndex(s => s.path === path)
-        return existing >= 0
-          ? prev.filter((_, i) => i !== existing)
-          : prev.length >= 2
-            ? [prev[1], { path, isTermSel: true }]
-            : [...prev, { path, isTermSel: true }]
+        if (existing >= 0) return prev.filter((_, i) => i !== existing)
+        const cleaned = prev.filter(s => !s.path.startsWith(path + '.'))
+        return cleaned.length >= 2
+          ? [cleaned[1], { path, isTermSel: true }]
+          : [...cleaned, { path, isTermSel: true }]
       })
       setApplicableLaws([])
       return
@@ -364,13 +370,15 @@ export function useGameState() {
         setStatusMsg('Select a term or variable to begin')
         return next
       }
-      const hasNotNode = prev.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
+      // If prev contains sub-literals of this term (e.g. 'R.1.0' or 'R.1.1'), replace them with the whole term
+      const cleaned = prev.filter(s => !s.path.startsWith(path + '.'))
+      const hasNotNode = cleaned.some(s => getNode(exprSnapshot, s.path)?.type === 'not')
       if (hasNotNode) {
         next = [{ path, isTermSel: true }]
       } else {
-        next = prev.length >= 2
-          ? [prev[1], { path, isTermSel: true }]
-          : [...prev, { path, isTermSel: true }]
+        next = cleaned.length >= 2
+          ? [cleaned[1], { path, isTermSel: true }]
+          : [...cleaned, { path, isTermSel: true }]
       }
 
       updateLaws(next, exprSnapshot)
@@ -378,7 +386,7 @@ export function useGameState() {
     })
   }, [isAnimating, isDeadEnd, updateLaws])
 
-  const applyLaw = useCallback((law, currentExpr = expr, currentSteps = steps) => {
+  const applyLaw = useCallback((law, currentExpr = expr, currentSteps = steps, hintsCount = 0, isTutorial = false) => {
     if (isAnimating) return
     const activeExpr = currentExpr || expr
     if (!activeExpr) return
@@ -396,75 +404,97 @@ export function useGameState() {
       return
     }
 
+    if (preLawTimerRef.current) {
+      clearTimeout(preLawTimerRef.current)
+      preLawTimerRef.current = null
+    }
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current)
+      animationTimerRef.current = null
     }
 
-    // Trigger Animation Phase
-    setIsAnimating(true)
-    setAnimationData({
-      lawId: law.id,
-      lawName: law.name,
-      paths: law.animPaths || sel.map(s => s.path),
-      measurePaths: law.measurePaths,
-      factoredVar: law.factoredVar,
-      rem1: law.rem1,
-      rem2: law.rem2,
-      outerPrefix: law.outerPrefix,
-      outerSuffix: law.outerSuffix,
-      survivorPath: law.survivorPath,
-      absorbedPath: law.absorbedPath,
-      survivorText: law.survivorText,
-      absorbedText: law.absorbedText,
-      extraText: law.extraText,
-      dominantConst: law.dominantConst,
-      constPath: law.constPath,
-      varPath: law.varPath,
-      varText: law.varText,
-      lit1Text: law.lit1Text,
-      lit2Text: law.lit2Text,
-      resultConst: law.resultConst,
-      duplicatePath: law.duplicatePath,
-      termText: law.termText,
-      activeText: law.activeText,
-      constText: law.constText,
-      coreText: law.coreText,
-      rawChildText: law.rawChildText,
-      deMorganTerms: law.deMorganTerms,
-      isAndToOr: law.isAndToOr,
-      exprBefore: activeExpr,
-      exprAfter: newExpr
-    })
-    setStatus('select')
-    setStatusMsg(`Applying ${law.name}...`)
+    const startAnimation = () => {
+      setIsPreLawHighlight(false)
+      setIsAnimating(true)
+      setAnimationData({
+        lawId: law.id,
+        lawName: law.name,
+        paths: law.animPaths || sel.map(s => s.path),
+        measurePaths: law.measurePaths,
+        factoredVar: law.factoredVar,
+        rem1: law.rem1,
+        rem2: law.rem2,
+        outerPrefix: law.outerPrefix,
+        outerSuffix: law.outerSuffix,
+        survivorPath: law.survivorPath,
+        absorbedPath: law.absorbedPath,
+        survivorText: law.survivorText,
+        absorbedText: law.absorbedText,
+        extraText: law.extraText,
+        dominantConst: law.dominantConst,
+        constPath: law.constPath,
+        varPath: law.varPath,
+        varText: law.varText,
+        lit1Text: law.lit1Text,
+        lit2Text: law.lit2Text,
+        resultConst: law.resultConst,
+        duplicatePath: law.duplicatePath,
+        termText: law.termText,
+        activeText: law.activeText,
+        constText: law.constText,
+        coreText: law.coreText,
+        rawChildText: law.rawChildText,
+        deMorganTerms: law.deMorganTerms,
+        isAndToOr: law.isAndToOr,
+        exprBefore: activeExpr,
+        exprAfter: newExpr
+      })
+      setStatus('select')
+      setStatusMsg(`Applying ${law.name}...`)
 
-    animationTimerRef.current = setTimeout(() => {
-      animationTimerRef.current = null
-      setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])
-      setSel([])
-      setApplicableLaws([])
-      setActiveGuidePaths([])
-      setIsAnimating(false)
-      setAnimationData(null)
+      animationTimerRef.current = setTimeout(() => {
+        animationTimerRef.current = null
+        setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])
+        setSel([])
+        setApplicableLaws([])
+        setActiveGuidePaths([])
+        setIsAnimating(false)
+        setAnimationData(null)
 
-      // Check completion
-      if (canonText(newExpr) === goalCanonRef.current) {
-        setIsDeadEnd(false)
-        setEarnedXp(10) // Fixed 10 points per completion
-        setIsComplete(true)
-        setStatus('success')
-        setStatusMsg('Expression simplified! 🎉')
-      } else {
-        syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
-      }
-    }, 1350) // 1.35s duration
+        // Check completion
+        if (canonText(newExpr) === goalCanonRef.current) {
+          setIsDeadEnd(false)
+          setEarnedXp(10) // Fixed 10 points per completion
+          setIsComplete(true)
+          setStatus('success')
+          setStatusMsg('Expression simplified! 🎉')
+        } else {
+          syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
+        }
+      }, 1350) // 1.35s duration
+    }
+
+    if (isTutorial) {
+      setIsPreLawHighlight(true)
+      preLawTimerRef.current = setTimeout(() => {
+        preLawTimerRef.current = null
+        startAnimation()
+      }, 1500)
+    } else {
+      startAnimation()
+    }
   }, [expr, steps, isAnimating, sel, syncDeadEndStatus])
 
   const undoAction = useCallback(() => {
+    if (preLawTimerRef.current) {
+      clearTimeout(preLawTimerRef.current)
+      preLawTimerRef.current = null
+    }
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current)
       animationTimerRef.current = null
     }
+    setIsPreLawHighlight(false)
     setIsAnimating(false)
     setAnimationData(null)
     setSel([])
@@ -600,6 +630,7 @@ export function useGameState() {
     isComplete, earnedXp,
     status, statusMsg,
     activeGuidePaths,
+    isPreLawHighlight,
     isAnimating, animationData,
     loadPuzzle,
     handleClickLit, handleClickNot, handleClickTerm,

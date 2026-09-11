@@ -98,10 +98,11 @@ export function analyzeSelection(expr, sel) {
                 apply: () => {
                   const tree = cloneN(expr)
                   const sn = getNode(tree, cs.sumPath)
+                  const minIdx = Math.min(cs.ti1, cs.ti2)
                   const newTerms = sn.terms.filter((_, k) => k !== cs.ti1 && k !== cs.ti2)
                   const nr1 = removeLitFromNode(cloneN(t1), n1.v, n1.n)
                   const nr2 = removeLitFromNode(cloneN(t2), n2.v, n2.n)
-                  newTerms.push(prod(lit(n1.v, n1.n), sum(nr1, nr2)))
+                  newTerms.splice(minIdx, 0, prod(lit(n1.v, n1.n), sum(nr1, nr2)))
                   sn.terms = newTerms
                   return normalizeFlat(tree)
                 },
@@ -127,8 +128,9 @@ export function analyzeSelection(expr, sel) {
           apply: () => {
             const tree = cloneN(expr)
             const sn = getNode(tree, cs.sumPath)
+            const minIdx = Math.min(cs.ti1, cs.ti2)
             const newTerms = sn.terms.filter((_, k) => k !== cs.ti1 && k !== cs.ti2)
-            newTerms.push(con(1))
+            newTerms.splice(minIdx, 0, con(1))
             sn.terms = newTerms
             return normalizeFlat(tree)
           },

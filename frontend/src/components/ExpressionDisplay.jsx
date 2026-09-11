@@ -67,6 +67,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
+      data-tutorial="not-capsule"
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
     >
       {/* Parens are OUTSIDE the border-top span so only the inner content gets the bar */}
@@ -97,13 +98,14 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
 
 /* ── Product (AND): juxtaposition with selectable/draggable factor/clause capsules ── */
 function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [dragSourceIdx, setDragSourceIdx] = useState(null)
+
   if (!node || !Array.isArray(node.factors)) return null
   const isGuide = activeGuidePaths?.includes(path)
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   const isTopLevel = path === 'R'
   const hasMultiple = isTopLevel && node.factors.length >= 2
-  const [dragOverIdx, setDragOverIdx] = useState(null)
-  const [dragSourceIdx, setDragSourceIdx] = useState(null)
 
   const handleDragStart = (idx, e) => {
     setDragSourceIdx(idx)
@@ -162,6 +164,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 layout
                 transition={transitionConfig}
                 data-path={fPath}
+                data-tutorial={`term-${i}`}
                 className={`relative inline-flex items-center px-1.5 py-[2px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
                   ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
                   ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
@@ -253,11 +256,12 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
 
 /* ── Sum (OR): terms separated by + with selectable/draggable term capsules ── */
 function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapTerms, activeGuidePaths, animationPaths, animationLaw }) {
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [dragSourceIdx, setDragSourceIdx] = useState(null)
+
   if (!node || !Array.isArray(node.terms)) return null
   const isTopLevel = path === 'R'
   const hasMultiple = isTopLevel && node.terms.length >= 2
-  const [dragOverIdx, setDragOverIdx] = useState(null)
-  const [dragSourceIdx, setDragSourceIdx] = useState(null)
 
   const handleDragStart = (idx, e) => {
     setDragSourceIdx(idx)
@@ -318,6 +322,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
+                data-tutorial={`term-${i}`}
                 className={`relative inline-flex items-center px-1.5 py-[2px] rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group
                   ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
                   ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}

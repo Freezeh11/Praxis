@@ -7,6 +7,7 @@ import { useGameState } from '../hooks/useGameState'
 import ExpressionDisplay from '../components/ExpressionDisplay'
 import AnimationOverlay from '../components/AnimationOverlay'
 import ExprText from '../components/ExprText'
+import InteractiveTutorial from '../components/InteractiveTutorial'
 
 export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
@@ -27,7 +28,33 @@ export default function ProblemPage() {
   const [scoreResult, setScoreResult] = useState(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
+  const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
+  const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
+  const [isTutorialActive, setIsTutorialActive] = useState(() => new URLSearchParams(window.location.search).get('tutorial') === 'true')
   const loadedAsSavedRef = useRef(false)
+
+  const stageNum = parseInt(stageIdx)
+  const completedSet = new Set(getStagesCompleted(Number(levelId)))
+
+  // Reset review reminder and inspection tip on stage changes
+  useEffect(() => {
+    setDismissReviewReminder(false)
+    setShowStepInspectionTip(false)
+  }, [levelId, stageIdx])
+
+  // Dismiss inspection tip whenever a step is actively inspected
+  useEffect(() => {
+    if (inspectedStepIdx !== null) {
+      setShowStepInspectionTip(false)
+    }
+  }, [inspectedStepIdx])
+
+  // Sync tutorial active state from URL query or tutorial level
+  useEffect(() => {
+    const isTutQuery = new URLSearchParams(window.location.search).get('tutorial') === 'true'
+    const isTutLevel = Number(levelId) === 0
+    setIsTutorialActive(isTutQuery || isTutLevel)
+  }, [levelId, stageIdx])
 
   function getLawExplanation(lawName) {
     if (!lawName) return null
@@ -71,6 +98,7 @@ export default function ProblemPage() {
     isComplete, earnedXp,
     status, statusMsg,
     activeGuidePaths,
+    isPreLawHighlight,
     isAnimating, animationData,
     loadPuzzle,
     handleClickLit, handleClickNot, handleClickTerm,
@@ -78,9 +106,6 @@ export default function ProblemPage() {
     hintsUsed,
     optimalSteps, optimalPath,
   } = useGameState()
-
-  const stageNum = parseInt(stageIdx)
-  const completedSet = new Set(getStagesCompleted(Number(levelId)))
 
   // 1. Fetch level and set current puzzle
   useEffect(() => {
@@ -115,7 +140,8 @@ export default function ProblemPage() {
   useEffect(() => {
     if (!puzzle) return
 
-    const savedSteps = getSavedSolution(Number(levelId), stageNum)
+    const isTutorial = Number(levelId) === 0 && new URLSearchParams(window.location.search).get('tutorial') === 'true'
+    const savedSteps = isTutorial ? null : getSavedSolution(Number(levelId), stageNum)
     loadedAsSavedRef.current = Boolean(savedSteps && savedSteps.length > 0)
     loadPuzzle(puzzle, savedSteps)
   }, [puzzle, levelId, stageNum])
@@ -130,12 +156,6 @@ export default function ProblemPage() {
     }
 
     const isFirstTime = !completedSet.has(stageNum)
-
-    if (isFirstTime) {
-      addPoints(earnedXp)
-    }
-    completeStage(Number(levelId), stageNum)
-    saveSolution(Number(levelId), stageNum, steps)
 
     // Derive lawsUsed from step history at this moment
     const nameToId = {
@@ -156,10 +176,41 @@ export default function ProblemPage() {
       'Distributive (POS)': 'distributive',
     }
     const lawsUsed = steps.map(s => nameToId[s?.law] || s?.law?.toLowerCase() || 'unknown')
-
     const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
 
-    // Submit score
+    // Compute immediate local score result so UI renders instant 0ms breakdown
+    const target_laws = new Set(puzzle?.targetLaws || [])
+    const laws_used = new Set(lawsUsed)
+    const efficiency = steps.length <= effectiveOptimal ? 40.0 : Math.max(0.0, 40.0 - (steps.length - effectiveOptimal) * 10.0)
+    const target_law = target_laws.size === 0 ? 30.0 : Math.round((Array.from(target_laws).filter(l => laws_used.has(l)).length / target_laws.size) * 30.0 * 10) / 10
+    const hint_independence = hintsUsed === 0 ? 30.0 : Math.max(0.0, 30.0 - hintsUsed * 10.0)
+    const total = Math.round((efficiency + target_law + hint_independence) * 10) / 10
+    const earnedPoints = Math.round((total / 100.0) * 5) // +5 bonus for 100% score
+
+    if (isFirstTime) {
+      addPoints(earnedXp + earnedPoints)
+    }
+    completeStage(Number(levelId), stageNum)
+    saveSolution(Number(levelId), stageNum, steps)
+
+    const immediateScore = {
+      efficiency,
+      targetLaw: target_law,
+      hintIndependence: hint_independence,
+      total,
+      earnedPoints,
+      breakdown: {
+        stepsUsed: steps.length,
+        optimalSteps: effectiveOptimal,
+        targetLawsRequired: Array.from(target_laws),
+        targetLawsUsed: Array.from(laws_used).filter(l => target_laws.has(l)),
+        hintsUsed: hintsUsed || 0,
+      },
+    }
+    setScoreResult(immediateScore)
+    saveScore(Number(levelId), stageNum, total)
+
+    // Submit score in background to sync with server/database
     submitScore({
       levelId: Number(levelId),
       stageIdx: stageNum,
@@ -174,11 +225,9 @@ export default function ProblemPage() {
       }
     })
 
-    // ONLY auto-pop the complete modal if the player completed the stage for the first time
-    if (isFirstTime) {
-      const timer = setTimeout(() => setShowSuccess(true), 1200)
-      return () => clearTimeout(timer)
-    }
+    // Auto-pop the complete modal promptly after solving
+    const timer = setTimeout(() => setShowSuccess(true), 200)
+    return () => clearTimeout(timer)
   }, [isComplete])
 
   // Global click-away listener for derivation step inspection
@@ -247,8 +296,13 @@ export default function ProblemPage() {
   const handleNextStage = () => {
     const nextIdx = stageNum + 1
     if (level && nextIdx < level.puzzles.length) {
-      navigate(`/level/${levelId}/stage/${nextIdx}`)
+      const isTutLevel = Number(levelId) === 0
+      const tutParam = isTutLevel ? '?tutorial=true' : ''
+      navigate(`/level/${levelId}/stage/${nextIdx}${tutParam}`)
     } else {
+      if (Number(levelId) === 0) {
+        setIsTutorialActive(false)
+      }
       navigate(`/level/${levelId}/stages`)
     }
   }
@@ -310,7 +364,8 @@ export default function ProblemPage() {
   const onApplyLaw = (law) => {
     setInspectedStepIdx(null)
     loadedAsSavedRef.current = false
-    if (expr) applyLaw(law, expr, steps, hintsUsed)
+    const enableTutorialPause = isTutorialActive && stageNum < 3
+    if (expr) applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)
   }
   const onSwapTerms = (sumPath, fromIdx, toIdx) => {
     setInspectedStepIdx(null)
@@ -335,7 +390,7 @@ export default function ProblemPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
       {/* ── LEFT PANEL: Step History ── */}
-      <aside className="w-[260px] min-w-[200px] max-w-[300px] bg-white border-r border-border flex flex-col overflow-hidden">
+      <aside data-tutorial="step-history-panel" className="w-[260px] min-w-[200px] max-w-[300px] bg-white border-r border-border flex flex-col overflow-hidden">
         <div className="px-4 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-2">
           <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all w-fit" onClick={() => navigate(`/level/${levelId}/stages`)}>
             ← Stages
@@ -353,6 +408,7 @@ export default function ProblemPage() {
             return (
               <div
                 key={i}
+                data-tutorial={`step-history-card-${i}`}
                 onClick={() => setInspectedStepIdx(prev => (prev === i ? null : i))}
                 className={`border rounded-xl px-3 py-2.5 font-mono text-[11px] cursor-pointer transition-all ${
                   isInspected
@@ -412,23 +468,53 @@ export default function ProblemPage() {
 
             <div className="w-[1px] h-4 bg-border mx-1" />
 
-            {/* Undo button */}
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
-              onClick={handleUndo}
-              disabled={steps.length === 0}
-              title="Undo last step"
-            >
-              <span>↶</span> Undo
-            </button>
+            {/* Undo & Reset group */}
+            <div data-tutorial="undo-reset-group" className="flex items-center gap-1.5">
+              <button
+                data-tutorial="undo-button"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleUndo}
+                disabled={steps.length === 0}
+                title="Undo last step"
+              >
+                <span>↶</span> Undo
+              </button>
 
-            {/* Reset button */}
+              <button
+                data-tutorial="reset-button"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
+                onClick={handleResetClick}
+                title="Reset problem to start"
+              >
+                <span>↺</span> Reset
+              </button>
+            </div>
+
+            <div className="w-[1px] h-4 bg-border mx-1" />
+
+            {/* Interactive Tutorial Button */}
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
-              onClick={handleResetClick}
-              title="Reset problem to start"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-all ${
+                isTutorialActive
+                  ? 'bg-teal text-white border-teal shadow-xs'
+                  : 'border-border bg-bg text-text-2 hover:bg-border hover:text-text-1'
+              }`}
+              onClick={() => {
+                setIsTutorialActive(prev => {
+                  const next = !prev
+                  if (next && puzzle) {
+                    loadedAsSavedRef.current = false
+                    setShowSuccess(false)
+                    setShowHint(false)
+                    setScoreResult(null)
+                    resetPuzzle(puzzle)
+                  }
+                  return next
+                })
+              }}
+              title="Toggle Interactive Tutorial Guide"
             >
-              <span>↺</span> Reset
+              Tutorial
             </button>
           </div>
         </div>
@@ -454,7 +540,7 @@ export default function ProblemPage() {
             )}
 
             {/* Zoom wrapper — scales the entire expression block */}
-            <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
+            <div data-tutorial="canvas" style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
               {/* Derivation chain — clean FIFO top-to-bottom queue */}
             {expr && (() => {
               const totalSteps = steps.length
@@ -512,15 +598,12 @@ export default function ProblemPage() {
                     const isFromInspected = line.stepIdx !== null && inspectedStepIdx === line.stepIdx
                     const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
                     const isLineHighlighted = isFromInspected || isToInspected
-                    const age = lines.length - 1 - idx
-                    const targetOpacity = isLineHighlighted || line.isActive ? 1 : Math.max(0.35, 0.6 - (age - 1) * 0.08)
-
                     return (
                       <motion.div
                         layout
                         key={line.key}
                         initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
-                        animate={{ opacity: targetOpacity, y: 0 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
                         className="relative flex items-center min-h-[44px] gap-2.5"
                       >
@@ -593,18 +676,58 @@ export default function ProblemPage() {
                               </div>
                             )}
                           </AnimatePresence>
+
+                          {/* Small dismissable modal pointing at the connection line after Stage 2 tutorial */}
+                          <AnimatePresence>
+                            {showStepInspectionTip && idx === 0 && line.stepIdx !== null && inspectedStepIdx === null && (
+                              <div
+                                className="absolute right-full top-[calc(100%+6px)] -translate-y-1/2 mr-4 z-40 pointer-events-auto select-none"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <motion.div
+                                  initial={{ opacity: 0, x: -8, scale: 0.95 }}
+                                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                                  exit={{ opacity: 0, x: -8, scale: 0.95 }}
+                                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                                  className="bg-white border-2 border-teal/70 shadow-2xl rounded-2xl p-3.5 w-[250px] text-left relative flex flex-col gap-2 ring-4 ring-teal/10"
+                                >
+                                  {/* Right Pointer Triangle pointing directly at the connection line */}
+                                  <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-l-[8px] border-l-teal/70" />
+
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-teal">
+                                    <span>💡</span> Try Inspecting Steps
+                                  </div>
+
+                                  <p className="text-[11.5px] text-text-2 leading-relaxed font-sans font-normal">
+                                    Click any past step in the left history panel OR any connection line between equations to inspect the applied law and reasoning!
+                                  </p>
+
+                                  <div className="flex justify-end pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowStepInspectionTip(false)}
+                                      className="px-3.5 py-1 bg-teal hover:bg-teal-dark text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                    >
+                                      Okay
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              </div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
                         {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                         <div
-                          className={`flex items-baseline gap-1.5 px-2.5 py-1 rounded-xl transition-all border ${
+                          data-tutorial={line.isActive ? "active-equation" : undefined}
+                          className={`relative flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
                             isLineHighlighted
                               ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
                               : 'border-transparent'
                           }`}
                         >
                           <span
-                            className={`font-mono text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors ${
+                            className={`font-mono text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors duration-300 ${
                               isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
                             }`}
                           >
@@ -649,7 +772,7 @@ export default function ProblemPage() {
 
 
         {/* ── APPLICABLE LAWS / STAGE COMPLETE BAR ── */}
-        <div className="border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0">
+        <div data-tutorial="laws-dock" className="border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0">
           {isComplete ? (
             <div className="flex items-center justify-between gap-4 flex-wrap py-1">
               <div className="flex items-center gap-3">
@@ -664,13 +787,15 @@ export default function ProblemPage() {
 
               <div className="flex items-center gap-2.5">
                 <button
-                  className="px-3.5 py-2 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all"
+                  data-tutorial="reopen-score-btn"
+                  className="px-3.5 py-2 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all cursor-pointer"
                   onClick={handleOpenScoreSummary}
                 >
                   📊 Score Summary
                 </button>
                 {level && stageNum + 1 < level.puzzles.length ? (
                   <button
+                    data-tutorial="next-stage-btn"
                     className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px"
                     onClick={handleNextStage}
                   >
@@ -678,6 +803,7 @@ export default function ProblemPage() {
                   </button>
                 ) : (
                   <button
+                    data-tutorial="next-stage-btn"
                     className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px"
                     onClick={() => navigate(`/level/${levelId}/stages`)}
                   >
@@ -701,6 +827,8 @@ export default function ProblemPage() {
                   {applicableLaws.map((law, i) => (
                     <button
                       key={i}
+                      data-tutorial={`law-card-${i}`}
+                      data-law-id={law.id}
                       className="bg-white border-[1.5px] border-border rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all min-w-[160px] max-w-[240px] hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px]"
                       onClick={() => onApplyLaw(law)}
                     >
@@ -736,9 +864,9 @@ export default function ProblemPage() {
         </div>
 
         {/* Middle: User Points & Assistance Controls (Replaced Target Box) */}
-        <div className="p-3.5 border-b border-border flex flex-col gap-2.5 bg-white">
+        <div data-tutorial="points-and-assistance" className="p-3.5 border-b border-border flex flex-col gap-2.5 bg-white">
           {/* User Points Card */}
-          <div className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl">
+          <div data-tutorial="points-card" className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl">
             <div className="flex items-center gap-2">
               <span className="text-lg">⭐</span>
               <div>
@@ -750,14 +878,15 @@ export default function ProblemPage() {
             </div>
             <div className="text-right">
               <span className="text-[10px] font-bold text-teal bg-teal/10 border border-teal/30 px-2 py-0.5 rounded-full">
-                +10 on clear
+                +10 to +15 on clear
               </span>
             </div>
           </div>
 
           {/* Hint & Guide Action Buttons */}
-          <div className="flex gap-2">
+          <div data-tutorial="assistance-group" className="flex gap-2">
             <button
+              data-tutorial="hint-button"
               className="flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-bg disabled:hover:text-text-2"
               onClick={handleHint}
               disabled={isComplete}
@@ -766,6 +895,7 @@ export default function ProblemPage() {
               <span>💡</span> Hint
             </button>
             <button
+              data-tutorial="guide-button"
               className="flex-1 py-2 px-2 rounded-lg text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:border-amber/50"
               onClick={handleGuide}
               disabled={isComplete || (progress.points ?? 0) < 20}
@@ -777,6 +907,7 @@ export default function ProblemPage() {
 
           {/* Quick Laws Reference Drawer Trigger */}
           <button
+            data-tutorial="laws-reference-button"
             className="w-full py-2 px-3 bg-bg border border-border rounded-lg text-xs font-semibold text-text-2 hover:bg-border/60 transition-all flex items-center justify-between shadow-xs"
             onClick={() => setShowLawsDrawer(true)}
           >
@@ -787,24 +918,62 @@ export default function ProblemPage() {
 
         {/* Level Puzzles List (Quick Stage Select) */}
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+          {/* Review Mode Reminder Card */}
+          {isComplete && !showSuccess && !dismissReviewReminder && level && stageNum + 1 < level.puzzles.length && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="bg-emerald-50 border border-emerald-500/60 rounded-xl p-2.5 mb-1.5 flex flex-col gap-2 shadow-2xs"
+            >
+              <div className="flex items-start gap-2">
+                <span className="relative flex h-2 w-2 mt-1 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <div className="text-[11.5px] leading-snug font-semibold text-emerald-950">
+                  When you're ready, press the next stage.
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDismissReviewReminder(true)}
+                  className="px-3 py-0.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  Okay
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           <div className="text-[10px] font-bold tracking-[1px] uppercase text-text-3 mb-1 px-1">STAGES</div>
           {level?.puzzles.map((p, idx) => {
             const isCurrent = idx === stageNum
             const isCompleted = completedSet.has(idx)
             const isAvailable = idx === 0 || completedSet.has(idx - 1) || isCompleted
             const isLocked = !isAvailable && !isCompleted
+            const isNextAvailable = isComplete && !showSuccess && idx === stageNum + 1 && (idx === 0 || completedSet.has(idx - 1) || isCompleted)
 
             return (
               <button
                 key={p.id || idx}
-                disabled={isLocked}
+                disabled={isLocked || isTutorialActive}
                 onClick={() => {
-                  if (!isLocked && levelId) {
-                    navigate(`/level/${levelId}/stage/${idx}`)
+                  if (!isLocked && !isTutorialActive && levelId) {
+                    const isTutLevel = Number(levelId) === 0
+                    const tutParam = isTutLevel ? '?tutorial=true' : ''
+                    navigate(`/level/${levelId}/stage/${idx}${tutParam}`)
                   }
                 }}
                 className={`flex items-center justify-between p-2.5 rounded-lg text-left transition-all border ${
-                  isCurrent
+                  isTutorialActive
+                    ? isCurrent
+                      ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
+                      : 'bg-transparent border-transparent text-text-3 opacity-40 cursor-not-allowed pointer-events-none'
+                    : isNextAvailable
+                    ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-md animate-pulse cursor-pointer'
+                    : isCurrent
                     ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
                     : isCompleted
                     ? 'bg-bg/50 border-transparent text-text-2 hover:bg-bg hover:border-border cursor-pointer'
@@ -817,8 +986,11 @@ export default function ProblemPage() {
                   <span className="font-mono text-xs w-4">{idx + 1}.</span>
                   <span className="font-mono text-xs">{p.initial || `Stage ${idx + 1}`}</span>
                 </div>
-                {isCompleted && <span className="text-teal text-xs font-bold">✓</span>}
-                {isLocked && <span className="text-xs text-text-3 opacity-60">🔒</span>}
+                {isNextAvailable && (
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Next →</span>
+                )}
+                {!isNextAvailable && isCompleted && <span className="text-teal text-xs font-bold">✓</span>}
+                {!isNextAvailable && isLocked && <span className="text-xs text-text-3 opacity-60">🔒</span>}
               </button>
             )
           })}
@@ -875,97 +1047,138 @@ export default function ProblemPage() {
       </AnimatePresence>
 
       {/* ── SUCCESS OVERLAY ── */}
-      {showSuccess && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[8px] cursor-pointer"
-          onClick={() => setShowSuccess(false)}
-        >
-          <div
-            className="bg-white rounded-2xl px-8 py-8 flex flex-col items-center shadow-2xl max-w-[420px] w-full animate-fade-in border border-border cursor-default"
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            key="success-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed inset-0 z-50 flex items-center justify-center cursor-pointer ${
+              isTutorialActive ? 'bg-transparent' : 'bg-white/60 backdrop-blur-[8px]'
+            }`}
+            onClick={() => setShowSuccess(false)}
           >
-            <div className="text-[44px] mb-1 leading-none">🎉</div>
-            <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete!</h2>
-            <p className="text-xs text-text-3 mb-5">Here's how you did across the three metrics</p>
+            <motion.div
+              data-tutorial="score-modal"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -6 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-2xl px-8 py-8 flex flex-col items-center shadow-2xl max-w-[420px] w-full border border-border cursor-default"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-[44px] mb-1 leading-none">🎉</div>
+              <h2 className="text-[26px] font-extrabold text-accent mb-1">Stage Complete!</h2>
+              <p className="text-xs text-text-3 mb-5">Here's how you did across the three metrics</p>
 
-            {scoreResult && (
-              <div className="w-full flex flex-col gap-3 mb-5">
-                {/* Total score badge */}
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className={`text-3xl font-extrabold ${
-                    scoreResult.total >= 80 ? 'text-green-600' :
-                    scoreResult.total >= 50 ? 'text-amber-600' : 'text-red-500'
-                  }`}>{scoreResult.total}</span>
-                  <span className="text-sm text-text-3 font-medium">/ 100</span>
+              {scoreResult && (
+                <div className="w-full flex flex-col gap-3 mb-5">
+                  {/* Total score badge */}
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className={`text-3xl font-extrabold ${
+                      scoreResult.total >= 80 ? 'text-green-600' :
+                      scoreResult.total >= 50 ? 'text-amber-600' : 'text-red-500'
+                    }`}>{scoreResult.total}</span>
+                    <span className="text-sm text-text-3 font-medium">/ 100</span>
+                  </div>
+
+                  {/* Metric rows */}
+                  {[
+                    { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
+                      sub: `${scoreResult.breakdown?.stepsUsed ?? 0} steps (optimal: ${scoreResult.breakdown?.optimalSteps ?? 1})`,
+                      color: 'bg-sky-500' },
+                    { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
+                      sub: (scoreResult.breakdown?.targetLawsRequired || []).length === 0
+                        ? 'No required laws'
+                        : `Used ${(scoreResult.breakdown?.targetLawsUsed || []).length} / ${(scoreResult.breakdown?.targetLawsRequired || []).length} required`,
+                      color: 'bg-violet-500' },
+                    { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
+                      sub: `${scoreResult.breakdown?.hintsUsed ?? 0} hint${scoreResult.breakdown?.hintsUsed !== 1 ? 's' : ''} used`,
+                      color: 'bg-teal' },
+                  ].map(({ label, score, max, sub, color }) => (
+                    <div key={label} className="bg-bg rounded-xl px-4 py-3">
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-[13px] font-semibold text-text-1">{label}</span>
+                        <span className="text-[13px] font-bold text-text-1">{score}<span className="text-text-3 font-normal text-xs"> / {max}</span></span>
+                      </div>
+                      <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${color} transition-all duration-700`}
+                          style={{ width: `${(score / max) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-[11px] text-text-3 mt-1">{sub}</div>
+                    </div>
+                  ))}
+
+                  {/* Optimal hint shown if efficiency < max */}
+                  {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
+                    <div className="text-[12px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full leading-relaxed">
+                      <strong>💡 Tip:</strong> {puzzle.optimalHint}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-5">
+                +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
+              </div>
+
+              <div className="flex flex-col gap-2.5 w-full">
+                <div className="flex gap-3 w-full">
+                  {level && stageNum + 1 < level.puzzles.length ? (
+                    <button
+                      disabled={isTutorialActive}
+                      className={`flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md ${
+                        isTutorialActive
+                          ? 'opacity-40 cursor-not-allowed'
+                          : 'hover:bg-text-1 hover:shadow-lg hover:-translate-y-px cursor-pointer'
+                      }`}
+                      onClick={handleNextStage}
+                    >
+                      Next Stage →
+                    </button>
+                  ) : (
+                    <button
+                      disabled={isTutorialActive}
+                      className={`flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md ${
+                        isTutorialActive
+                          ? 'opacity-40 cursor-not-allowed'
+                          : 'hover:bg-text-1 hover:shadow-lg hover:-translate-y-px cursor-pointer'
+                      }`}
+                      onClick={() => navigate(`/level/${levelId}/stages`)}
+                    >
+                      Back to Stages
+                    </button>
+                  )}
+                  <button
+                    disabled={isTutorialActive}
+                    className={`px-5 py-3 border-[1.5px] border-border text-text-2 font-semibold text-sm rounded-lg bg-transparent transition-all ${
+                      isTutorialActive
+                        ? 'opacity-40 cursor-not-allowed'
+                        : 'hover:bg-bg hover:border-border-dark cursor-pointer'
+                    }`}
+                    onClick={executeReset}
+                  >
+                    Try Again
+                  </button>
                 </div>
 
-                {/* Metric rows */}
-                {[
-                  { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
-                    sub: `${scoreResult.breakdown.stepsUsed} steps (optimal: ${scoreResult.breakdown.optimalSteps})`,
-                    color: 'bg-sky-500' },
-                  { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
-                    sub: scoreResult.breakdown.targetLawsRequired.length === 0
-                      ? 'No required laws'
-                      : `Used ${scoreResult.breakdown.targetLawsUsed.length} / ${scoreResult.breakdown.targetLawsRequired.length} required`,
-                    color: 'bg-violet-500' },
-                  { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
-                    sub: `${scoreResult.breakdown.hintsUsed} hint${scoreResult.breakdown.hintsUsed !== 1 ? 's' : ''} used`,
-                    color: 'bg-teal' },
-                ].map(({ label, score, max, sub, color }) => (
-                  <div key={label} className="bg-bg rounded-xl px-4 py-3">
-                    <div className="flex justify-between items-baseline mb-1.5">
-                      <span className="text-[13px] font-semibold text-text-1">{label}</span>
-                      <span className="text-[13px] font-bold text-text-1">{score}<span className="text-text-3 font-normal text-xs"> / {max}</span></span>
-                    </div>
-                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${color} transition-all duration-700`}
-                        style={{ width: `${(score / max) * 100}%` }}
-                      />
-                    </div>
-                    <div className="text-[11px] text-text-3 mt-1">{sub}</div>
-                  </div>
-                ))}
-
-                {/* Optimal hint shown if efficiency < max */}
-                {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
-                  <div className="text-[12px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full leading-relaxed">
-                    <strong>💡 Tip:</strong> {puzzle.optimalHint}
-                  </div>
-                )}
+                {/* Review Completed Derivation Button */}
+                <button
+                  data-tutorial="review-derivation-btn"
+                  className="w-full py-2.5 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 transition-all hover:bg-slate-100 hover:text-text-1 flex items-center justify-center gap-1.5 cursor-pointer"
+                  onClick={() => setShowSuccess(false)}
+                >
+                  <span>🔍</span> Review Completed Derivation
+                </button>
               </div>
-            )}
-
-            <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-5">
-              +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
-            </div>
-
-            <div className="flex flex-col gap-2.5 w-full">
-              <div className="flex gap-3 w-full">
-                {level && stageNum + 1 < level.puzzles.length ? (
-                  <button className="flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:bg-text-1 hover:shadow-lg hover:-translate-y-px" onClick={handleNextStage}>
-                    Next Stage →
-                  </button>
-                ) : (
-                  <button className="flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:bg-text-1 hover:shadow-lg hover:-translate-y-px" onClick={() => navigate(`/level/${levelId}/stages`)}>
-                    Back to Stages
-                  </button>
-                )}
-                <button className="px-5 py-3 border-[1.5px] border-border text-text-2 font-semibold text-sm rounded-lg bg-transparent transition-all hover:bg-bg hover:border-border-dark" onClick={executeReset}>Try Again</button>
-              </div>
-
-              {/* Review Completed Derivation Button */}
-              <button
-                className="w-full py-2.5 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 transition-all hover:bg-slate-100 hover:text-text-1 flex items-center justify-center gap-1.5"
-                onClick={() => setShowSuccess(false)}
-              >
-                <span>🔍</span> Review Completed Derivation
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── RESET CONFIRMATION MODAL ── */}
       {showResetConfirm && (
@@ -1018,6 +1231,43 @@ export default function ProblemPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── INTERACTIVE TUTORIAL OVERLAY ── */}
+      {isTutorialActive && (
+        <InteractiveTutorial
+          stageIdx={stageNum}
+          sel={sel}
+          steps={steps}
+          expr={expr}
+          applicableLaws={applicableLaws}
+          isComplete={isComplete}
+          isPreLawHighlight={isPreLawHighlight}
+          isAnimating={isAnimating}
+          showSuccess={showSuccess}
+          onResetStage={executeReset}
+          onNextStage={() => {
+            if (stageNum + 1 < (level?.puzzles?.length || 4)) {
+              navigate(`/level/0/stage/${stageNum + 1}?tutorial=true`)
+            } else {
+              setIsTutorialActive(false)
+              navigate('/level/0/stages')
+            }
+          }}
+          onFinish={() => {
+            setIsTutorialActive(false)
+            if (stageNum === 1) {
+              setShowStepInspectionTip(true)
+            }
+            if (stageNum + 1 >= (level?.puzzles?.length || 4)) {
+              navigate('/levels')
+            }
+          }}
+          onSkip={() => {
+            setIsTutorialActive(false)
+            navigate('/level/0/stages')
+          }}
+        />
       )}
     </div>
   )

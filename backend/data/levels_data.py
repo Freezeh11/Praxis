@@ -69,6 +69,63 @@ LAWS = [
 
 LEVELS = [
     {
+        "id": 0,
+        "name": "Tutorial",
+        "desc": "Interactive Fundamentals & System Orientation",
+        "varCount": 2,
+        "puzzles": [
+            # Tutorial Stage 1 — Selection & Laws (Absorption)
+            {
+                "expr": "x + xy",
+                "goal": "x",
+                "targetLaws": ["absorption"],
+                "hints": [
+                    "Select x and xy to reveal applicable laws.",
+                    "Absorption Law eliminates the redundant term.",
+                ],
+                "optimalSteps": 1,
+                "optimalHint": "Apply Absorption Law (A + AB = A) to simplify x + xy to x.",
+            },
+            # Tutorial Stage 2 — Drag-and-Drop Reordering (Commutative -> Distributive)
+            {
+                "expr": "x'y + z + xy",
+                "goal": "y + z",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "Drag xy next to x'y to group common terms.",
+                    "Factor out y using Distributive Law.",
+                    "Simplify x' + x using Complement Law.",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Reorder terms, factor common variable y, and apply Complement Law.",
+            },
+            # Tutorial Stage 3 — Negated Groups & De Morgan's Law
+            {
+                "expr": "(x + y)' + x'y'",
+                "goal": "x'y'",
+                "targetLaws": ["demorgan-or", "idempotent"],
+                "hints": [
+                    "Click the (x + y)' group handle to expand with De Morgan's Law.",
+                    "Merge identical terms using Idempotent Law.",
+                ],
+                "optimalSteps": 2,
+                "optimalHint": "Apply De Morgan's Law to expand the negated sum, then merge duplicates.",
+            },
+            # Tutorial Stage 4 — Efficiency Challenge
+            {
+                "expr": "x + x'y + xy",
+                "goal": "x + y",
+                "targetLaws": ["distributive", "complement", "identity"],
+                "hints": [
+                    "Spot which terms can be combined directly.",
+                    "Look for common variables: x'y and xy both share variable y!",
+                ],
+                "optimalSteps": 3,
+                "optimalHint": "Factor y from x'y + xy, simplify x' + x with Complement Law, then eliminate 1 with Identity Law.",
+            },
+        ],
+    },
+    {
         "id": 1,
         "name": "Level 1",
         "desc": "Two-variable expressions (SOP & POS Dual Pairs)",

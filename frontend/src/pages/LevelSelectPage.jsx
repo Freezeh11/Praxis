@@ -12,9 +12,31 @@ const COMING_SOON = []
 export default function LevelSelectPage() {
   const navigate = useNavigate()
   const { levels, laws, loading, error } = useApi()
-  const { progress, isLevelCompleted, getLevelProgress } = useProgress()
+  const { progress, isLevelCompleted, getLevelProgress, getSavedSolution, getStagesCompleted, resetLevelProgress, hasSeenTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into levels array
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
+  const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  const handleTutorialClick = () => {
+    const skipPrompt = sessionStorage.getItem('praxis_skip_tutorial_replay_prompt') === 'true'
+
+    if (hasSeenTutorial && !skipPrompt) {
+      setDontAskTutorialAgain(false)
+      setShowTutorialPrompt(true)
+    } else {
+      navigate('/level/0/stage/0?tutorial=true')
+    }
+  }
+
+  const handleRestartTutorial = () => {
+    if (dontAskTutorialAgain) {
+      sessionStorage.setItem('praxis_skip_tutorial_replay_prompt', 'true')
+    }
+    resetLevelProgress(0)
+    setShowTutorialPrompt(false)
+    navigate('/level/0/stage/0?tutorial=true')
+  }
 
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
@@ -26,9 +48,11 @@ export default function LevelSelectPage() {
     if (!lv) return { locked: true, reason: '' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
+    if (lv.id === 0) return { locked: false, reason: '' }
+
     if (lv.id === 2) {
       const lvl1 = levels.find(l => l.id === 1)
-      const totalStages = lvl1?.puzzles?.length ?? 12
+      const totalStages = lvl1?.puzzleCount ?? lvl1?.puzzles?.length ?? 12
       const p = getLevelProgress(1, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -42,7 +66,7 @@ export default function LevelSelectPage() {
 
     if (lv.id === 3) {
       const lvl2 = levels.find(l => l.id === 2)
-      const totalStages = lvl2?.puzzles?.length ?? 12
+      const totalStages = lvl2?.puzzleCount ?? lvl2?.puzzles?.length ?? 12
       const p = getLevelProgress(2, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -87,10 +111,17 @@ export default function LevelSelectPage() {
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleTutorialClick}
+            className="h-9 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+            title="Interactive Tutorial"
+          >
+            <span>Tutorial</span>
+          </button>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
-            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2" 
+            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-1" 
             title="Sign Out"
           >
             Sign Out
@@ -172,9 +203,25 @@ export default function LevelSelectPage() {
                   </div>
                 )}
 
-                {/* Level star badge if unlocked & played */}
+                {/* Level star badge if unlocked & played (excluding Tutorial) */}
                 {!locked && !isComingSoon && (() => {
-                  const lp = getLevelProgress(lv.id, lv.puzzles?.length || 12)
+                  if (lv.id === 0) {
+                    if (done) {
+                      return (
+                        <div className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full border border-teal/30 mt-auto flex items-center gap-1">
+                          <span>✓</span> Completed
+                        </div>
+                      )
+                    }
+                    return (
+                      <div className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 mt-auto flex items-center gap-1">
+                        <span>Guided Walkthrough</span>
+                      </div>
+                    )
+                  }
+
+                  const totalCount = lv.puzzleCount || lv.puzzles?.length || 12
+                  const lp = getLevelProgress(lv.id, totalCount)
                   if (lp.totalStars > 0) {
                     return (
                       <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 mt-auto flex items-center gap-1">
@@ -219,6 +266,70 @@ export default function LevelSelectPage() {
           START LEVEL
         </button>
       </div>
+
+      {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
+      {showTutorialPrompt && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs transition-opacity"
+          onClick={() => setShowTutorialPrompt(false)}
+        >
+          <div 
+            className="relative bg-white rounded-3xl pt-9 pb-8 px-8 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
+              onClick={() => setShowTutorialPrompt(false)}
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-3">
+                Tutorial Replay
+              </span>
+              <h3 className="text-xl font-extrabold text-text-1 tracking-tight">
+                Restart the Walkthrough?
+              </h3>
+            </div>
+
+            <p className="text-[13.5px] text-text-2 leading-relaxed max-w-[380px]">
+              You've already made progress in the tutorial. Would you like to reset your derivation and experience the full guided walkthrough again?
+            </p>
+
+            {/* Don't ask again checkbox */}
+            <label className="flex items-center gap-2.5 px-3 py-1 rounded-lg hover:bg-bg cursor-pointer select-none -mt-1">
+              <input
+                type="checkbox"
+                checked={dontAskTutorialAgain}
+                onChange={e => setDontAskTutorialAgain(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
+              />
+              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
+            </label>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 w-full mt-1">
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
+                onClick={() => setShowTutorialPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
+                onClick={handleRestartTutorial}
+              >
+                Restart Walkthrough
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />

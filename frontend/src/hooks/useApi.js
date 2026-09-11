@@ -1,16 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase'
+import { STATIC_LAWS, STATIC_LEVELS, STATIC_LEVEL_SUMMARIES } from '../lib/gameData'
 
-let cachedLevels = null
-let cachedLaws = null
+let cachedLevels = STATIC_LEVEL_SUMMARIES
+let cachedLaws = STATIC_LAWS
 let fetchAllPromise = null
 const levelCache = new Map()
+
+// Prepopulate levelCache with static bundled levels for 0ms loads
+for (const lv of STATIC_LEVELS) {
+  levelCache.set(lv.id, lv)
+  levelCache.set(String(lv.id), lv)
+}
+
 const levelRequestCache = new Map()
 
 export function useApi() {
-  const [levels, setLevels] = useState(cachedLevels || [])
-  const [laws, setLaws] = useState(cachedLaws || [])
-  const [loading, setLoading] = useState(!cachedLevels || !cachedLaws)
+  const [levels, setLevels] = useState(cachedLevels || STATIC_LEVEL_SUMMARIES)
+  const [laws, setLaws] = useState(cachedLaws || STATIC_LAWS)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   const getAuthHeaders = useCallback(async (baseHeaders = {}) => {
@@ -58,6 +66,10 @@ export function useApi() {
   }, [])
 
   const fetchLevel = useCallback(async (levelId) => {
+    const numId = Number(levelId)
+    if (levelCache.has(numId)) {
+      return levelCache.get(numId)
+    }
     if (levelCache.has(levelId)) {
       return levelCache.get(levelId)
     }
@@ -68,6 +80,7 @@ export function useApi() {
         if (!res.ok) throw new Error(`Level ${levelId} not found`)
         const data = await res.json()
         levelCache.set(levelId, data)
+        levelCache.set(numId, data)
         levelRequestCache.delete(levelId)
         return data
       })().catch(err => {
