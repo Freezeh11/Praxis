@@ -9,14 +9,32 @@ import { toast } from 'sonner'
 // Level 4+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = []
 
+/**
+ * Synthetic carousel entry for Sandbox mode. It is not part of the fetched
+ * level data — it has no stages and never participates in score gates or
+ * progress tracking — but it rides the exact same card so it sits naturally
+ * alongside the real levels.
+ */
+const SANDBOX_LEVEL = {
+  id: 'sandbox',
+  name: 'Sandbox',
+  desc: 'Free practice — randomize any expression',
+  varCount: 3,
+  puzzleCount: 0,
+  isSandbox: true,
+}
+
 export default function LevelSelectPage() {
   const navigate = useNavigate()
   const { levels, laws, loading, error } = useApi()
   const { progress, isLevelCompleted, getLevelProgress, getSavedSolution, getStagesCompleted, resetLevelProgress, hasSeenTutorial } = useProgress()
-  const [selected, setSelected] = useState(0) // index into levels array
+  const [selected, setSelected] = useState(0) // index into the carousel entries
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
   const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  // Real levels plus the always-available Sandbox entry, rendered as one list.
+  const entries = [...(levels || []), SANDBOX_LEVEL]
 
   const handleTutorialClick = () => {
     const skipPrompt = sessionStorage.getItem('praxis_skip_tutorial_replay_prompt') === 'true'
@@ -46,6 +64,8 @@ export default function LevelSelectPage() {
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
+    // Sandbox is always unlocked free practice, regardless of progress.
+    if (lv.isSandbox) return { locked: false, reason: 'sandbox' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
     if (lv.id === 0) return { locked: false, reason: '' }
@@ -82,10 +102,15 @@ export default function LevelSelectPage() {
   }
 
   const handleStart = () => {
-    const lv = levels[selected]
+    const lv = entries[selected]
     if (!lv) return
     const { locked } = getLockState(lv)
     if (locked) return
+    // Sandbox opens the workspace directly — it has no stage-selection screen.
+    if (lv.isSandbox) {
+      navigate('/sandbox')
+      return
+    }
     navigate(`/level/${lv.id}/stages`)
   }
 
@@ -101,7 +126,7 @@ export default function LevelSelectPage() {
   }
 
   const prev = () => setSelected(s => Math.max(0, s - 1))
-  const next = () => setSelected(s => Math.min((levels.length || 1) - 1, s + 1))
+  const next = () => setSelected(s => Math.min(entries.length - 1, s + 1))
 
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
@@ -144,11 +169,12 @@ export default function LevelSelectPage() {
         <div className="flex items-center justify-center gap-5 [perspective:1000px]">
           {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
           {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
-          {!loading && !error && levels.map((lv, i) => {
+          {!loading && !error && entries.map((lv, i) => {
             const offset = i - selected
             const lockState = getLockState(lv)
             const { locked } = lockState
-            const done = isLevelCompleted(lv.id)
+            const isSandbox = Boolean(lv.isSandbox)
+            const done = !isSandbox && isLevelCompleted(lv.id)
             const isActive = offset === 0
             const isComingSoon = COMING_SOON.includes(lv.id)
             const isScoreGated = lockState.reason === 'score-gate'
@@ -169,7 +195,7 @@ export default function LevelSelectPage() {
                   ${done && !isActive ? 'bg-green-light text-green' : ''}
                   ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
                 `}>
-                  {isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
+                  {isSandbox ? '🧪' : isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
                 </div>
 
                 <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
@@ -205,6 +231,14 @@ export default function LevelSelectPage() {
 
                 {/* Level star badge if unlocked & played (excluding Tutorial) */}
                 {!locked && !isComingSoon && (() => {
+                  if (isSandbox) {
+                    return (
+                      <div className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 mt-auto flex items-center gap-1">
+                        <span>🎲</span> Random Practice
+                      </div>
+                    )
+                  }
+
                   if (lv.id === 0) {
                     if (done) {
                       return (
@@ -244,7 +278,7 @@ export default function LevelSelectPage() {
           })}
         </div>
 
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
+        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === entries.length - 1}>
           <span>›</span>
         </button>
       </div>
@@ -261,9 +295,9 @@ export default function LevelSelectPage() {
           id="start-level-btn"
           className="bg-accent text-white text-base font-bold px-12 py-4 rounded-full shadow-md transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg"
           onClick={handleStart}
-          disabled={!levels[selected] || getLockState(levels[selected]).locked}
+          disabled={!entries[selected] || getLockState(entries[selected]).locked}
         >
-          START LEVEL
+          {entries[selected]?.isSandbox ? 'ENTER SANDBOX' : 'START LEVEL'}
         </button>
       </div>
 

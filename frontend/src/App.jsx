@@ -28,6 +28,11 @@ export default function App() {
             <Route path="/levels" element={<ProtectedRoute><LevelSelectPage /></ProtectedRoute>} />
             <Route path="/level/:levelId/stages" element={<ProtectedRoute><StageSelectorPage /></ProtectedRoute>} />
             <Route path="/level/:levelId/stage/:stageIdx" element={<ProtectedRoute><ProblemPage /></ProtectedRoute>} />
+            {/* Sandbox: same workspace as a level, driven by generated problems.
+                Reached from the always-unlocked Sandbox card on /levels and
+                deliberately free of route params, which is what puts
+                ProblemPage into sandbox mode. */}
+            <Route path="/sandbox" element={<ProtectedRoute><ProblemPage /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
