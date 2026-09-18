@@ -13,6 +13,10 @@ const defaultProgress = {
   hasSeenTutorial: false,
 }
 
+/** Tutorial lives at level 0 and has exactly 4 stages. */
+const TUTORIAL_LEVEL_ID = 0
+const TUTORIAL_STAGES = [0, 1, 2, 3]
+
 export function useProgress() {
   const { loadProgress, saveProgress } = useApi()
   const { data: session } = useSession()
@@ -257,6 +261,30 @@ export function useProgress() {
     (progress.stageSolutions && Object.keys(progress.stageSolutions).some(k => k.startsWith('0:')))
   )
 
+  /**
+   * Whether the learner has finished the whole tutorial (all TUTORIAL_STAGES).
+   *
+   * The gate that blocks levels 1-3 and the sandbox uses this rather than the
+   * looser `hasSeenTutorial` above, which flips true on the FIRST tutorial
+   * stage. Stage completion is also synced to the server, so a learner who
+   * cleared the tutorial on another device still satisfies the gate even when
+   * the local `hasSeenTutorial` flag is missing.
+   */
+  const tutorialStagesCompleted = progress.stageProgress?.[String(TUTORIAL_LEVEL_ID)] || []
+  const hasCompletedTutorial = Boolean(
+    progress.hasSeenTutorial || TUTORIAL_STAGES.every(idx => tutorialStagesCompleted.includes(idx))
+  )
+
+  /**
+   * Whether the server round-trip has settled for an authenticated user.
+   *
+   * Consumers that gate UI on progress MUST wait for this. Progress is seeded
+   * from localStorage, then merged with the server asynchronously, so an
+   * immediate decision can be wrong for a learner whose completion only exists
+   * server-side (new device, cleared browser data).
+   */
+  const progressHydrated = serverLoaded && userId !== 'guest'
+
   return {
     progress,
     addPoints,
@@ -273,6 +301,8 @@ export function useProgress() {
     getStagesCompleted,
     resetLevelProgress,
     hasSeenTutorial,
+    hasCompletedTutorial,
+    progressHydrated,
     markTutorialSeen,
   }
 }
