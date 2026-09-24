@@ -1,5 +1,5 @@
 """
-Praxis Level Data — Level 1 (Two-variable expressions)
+Praxis Level Data: Level 1 (Two-variable expressions)
 Each puzzle has: expr (SOP string), goal (target expression), hints (list of strings)
 Notation: Use ' for complement  e.g. x' = NOT x
 """
@@ -74,7 +74,7 @@ LEVELS = [
         "desc": "Interactive Fundamentals & System Orientation",
         "varCount": 2,
         "puzzles": [
-            # Tutorial Stage 1 — Selection & Laws (Absorption)
+            # Tutorial Stage 1: Selection & Laws (Absorption)
             {
                 "expr": "x + xy",
                 "goal": "x",
@@ -86,7 +86,7 @@ LEVELS = [
                 "optimalSteps": 1,
                 "optimalHint": "Apply Absorption Law (A + AB = A) to simplify x + xy to x.",
             },
-            # Tutorial Stage 2 — Drag-and-Drop Reordering (Commutative -> Distributive)
+            # Tutorial Stage 2: Drag-and-Drop Reordering (Commutative -> Distributive)
             {
                 "expr": "x'y + z + xy",
                 "goal": "y + z",
@@ -99,7 +99,7 @@ LEVELS = [
                 "optimalSteps": 3,
                 "optimalHint": "Reorder terms, factor common variable y, and apply Complement Law.",
             },
-            # Tutorial Stage 3 — Negated Groups & De Morgan's Law
+            # Tutorial Stage 3: Negated Groups & De Morgan's Law
             {
                 "expr": "(x + y)' + x'y'",
                 "goal": "x'y'",
@@ -111,7 +111,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "Apply De Morgan's Law to expand the negated sum, then merge duplicates.",
             },
-            # Tutorial Stage 4 — Efficiency Challenge
+            # Tutorial Stage 4: Efficiency Challenge
             {
                 "expr": "x + x'y + xy",
                 "goal": "x + y",
@@ -131,7 +131,7 @@ LEVELS = [
         "desc": "Two-variable expressions (SOP & POS Dual Pairs)",
         "varCount": 2,
         "puzzles": [
-            # Stage 1 — SOP Absorption
+            # Stage 1: SOP Absorption
             {
                 "expr": "x + xy",
                 "goal": "x",
@@ -139,12 +139,12 @@ LEVELS = [
                 "hints": [
                     "x is shorter than xy.",
                     "x absorbs xy because xy contains x.",
-                    "Absorption Law: A + AB = A — select x and xy to apply it.",
+                    "Absorption Law: A + AB = A: select x and xy to apply it.",
                 ],
                 "optimalSteps": 1,
                 "optimalHint": "Did you take a longer route? The Absorption Law (A + AB = A) can solve this in a single step.",
             },
-            # Stage 2 — POS Dual Absorption
+            # Stage 2: POS Dual Absorption
             {
                 "expr": "x(x + y)",
                 "goal": "x",
@@ -152,38 +152,38 @@ LEVELS = [
                 "hints": [
                     "Notice the standalone literal x multiplied by the clause (x + y).",
                     "A standalone literal absorbs a longer sum clause containing it.",
-                    "Dual Absorption: A(A + B) = A — select x and (x + y) to apply it.",
+                    "Dual Absorption: A(A + B) = A: select x and (x + y) to apply it.",
                 ],
                 "optimalSteps": 1,
                 "optimalHint": "Dual Absorption (A(A + B) = A) simplifies maxterm clauses in 1 direct step.",
             },
-            # Stage 3 — SOP Idempotent -> Distributive
+            # Stage 3: SOP Idempotent -> Distributive
             {
                 "expr": "x'y + xy + xy",
                 "goal": "y",
                 "targetLaws": ["idempotent", "distributive", "complement"],
                 "hints": [
-                    "Two identical xy terms — remove the duplicate first.",
-                    "Now x'y + xy — both terms share a common variable.",
+                    "Two identical xy terms: remove the duplicate first.",
+                    "Now x'y + xy: both terms share a common variable.",
                     "Factor out the common variable, then look for a pair that cancels to 1.",
                 ],
                 "optimalSteps": 3,
                 "optimalHint": "Remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive).",
             },
-            # Stage 4 — POS Dual Idempotent -> Dual Distributive
+            # Stage 4: POS Dual Idempotent -> Dual Distributive
             {
                 "expr": "(x' + y)(x + y)(x + y)",
                 "goal": "y",
                 "targetLaws": ["idempotent", "distributive", "complement"],
                 "hints": [
-                    "Two identical (x + y) clauses — merge the duplicate first.",
-                    "Now (x' + y)(x + y) — both clauses share variable y.",
+                    "Two identical (x + y) clauses: merge the duplicate first.",
+                    "Now (x' + y)(x + y): both clauses share variable y.",
                     "Factor out y using Dual Distributive: (A+B)(A+C) = A + BC, then simplify x'x.",
                 ],
                 "optimalSteps": 3,
                 "optimalHint": "Merge identical clauses first (Dual Idempotent), then extract the common literal.",
             },
-            # Stage 5 — SOP De Morgan's OR -> Idempotent
+            # Stage 5: SOP De Morgan's OR -> Idempotent
             {
                 "expr": "(x + y')' + x'y",
                 "goal": "x'y",
@@ -196,7 +196,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's (OR→AND) expands the negated group, then Idempotent merges duplicates.",
             },
-            # Stage 6 — POS Dual De Morgan's AND -> Dual Idempotent
+            # Stage 6: POS Dual De Morgan's AND -> Dual Idempotent
             {
                 "expr": "(xy')'(x' + y)",
                 "goal": "x' + y",
@@ -209,20 +209,20 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's (AND→OR) breaks the product, then Dual Idempotent simplifies the clauses.",
             },
-            # Stage 7 — SOP De Morgan's AND -> Absorption
+            # Stage 7: SOP De Morgan's AND -> Absorption
             {
                 "expr": "(xy)' + x'y",
                 "goal": "x' + y'",
                 "targetLaws": ["demorgan-and", "absorption"],
                 "hints": [
-                    "Click (xy)' — De Morgan's expands it to x' + y'.",
+                    "Click (xy)': De Morgan's expands it to x' + y'.",
                     "Scan for a shorter term that shares its literal with a longer one.",
                     "Look for a shorter term that absorbs a longer product containing it.",
                 ],
                 "optimalSteps": 2,
                 "optimalHint": "After De Morgan's expansion, look for Absorption instead of factoring.",
             },
-            # Stage 8 — POS Dual De Morgan's OR -> Dual Absorption
+            # Stage 8: POS Dual De Morgan's OR -> Dual Absorption
             {
                 "expr": "(x + y)'(x' + y)",
                 "goal": "x'y'",
@@ -235,7 +235,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "Expand with De Morgan's, then use Dual Absorption to clear the larger clause.",
             },
-            # Stage 9 — SOP Distributive Factoring
+            # Stage 9: SOP Distributive Factoring
             {
                 "expr": "x + x'y + xy",
                 "goal": "x + y",
@@ -248,7 +248,7 @@ LEVELS = [
                 "optimalSteps": 3,
                 "optimalHint": "Factor y from x'y + xy, cancel x' + x to 1, then apply Identity.",
             },
-            # Stage 10 — POS Dual Distributive Factoring
+            # Stage 10: POS Dual Distributive Factoring
             {
                 "expr": "x(x' + y)(x + y)",
                 "goal": "xy",
@@ -261,7 +261,7 @@ LEVELS = [
                 "optimalSteps": 3,
                 "optimalHint": "Extract common y from both clauses, turn x'x into 0, and simplify with Identity.",
             },
-            # Stage 11 — SOP De Morgan -> Complement -> Annulment
+            # Stage 11: SOP De Morgan -> Complement -> Annulment
             {
                 "expr": "(x'y)' + (xy')' + xy",
                 "goal": "1",
@@ -274,7 +274,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "De Morgan's on both groups, Complement to produce 1, then Annulment collapses everything.",
             },
-            # Stage 12 — POS Dual De Morgan -> Dual Complement -> Dual Annulment
+            # Stage 12: POS Dual De Morgan -> Dual Complement -> Dual Annulment
             {
                 "expr": "(x' + y)'(x + y')'(x + y)",
                 "goal": "0",
@@ -295,7 +295,7 @@ LEVELS = [
         "desc": "Three-variable expressions (SOP & POS Dual Pairs)",
         "varCount": 3,
         "puzzles": [
-            # Stage 1 — SOP 3-Var Factoring
+            # Stage 1: SOP 3-Var Factoring
             {
                 "expr": "xy'z + xyz",
                 "goal": "xz",
@@ -308,7 +308,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "Factor x and z systematically to isolate y' + y = 1, giving xz in 4 steps.",
             },
-            # Stage 2 — POS Dual 3-Var Factoring
+            # Stage 2: POS Dual 3-Var Factoring
             {
                 "expr": "(x + y' + z)(x + y + z)",
                 "goal": "x + z",
@@ -321,7 +321,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "Dual Distributive extracts x and z, y'y collapses to 0, leaving x + z in 4 steps.",
             },
-            # Stage 3 — SOP 3-Var Absorption & Factoring
+            # Stage 3: SOP 3-Var Absorption & Factoring
             {
                 "expr": "xyz + xz + x'yz",
                 "goal": "xz + yz",
@@ -334,7 +334,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "xz absorbs xyz directly. Then simplify xz + x'yz to reach xz + yz.",
             },
-            # Stage 4 — POS Dual 3-Var Absorption & Factoring
+            # Stage 4: POS Dual 3-Var Absorption & Factoring
             {
                 "expr": "(x + y + z)(x + z)(x' + y + z)",
                 "goal": "(x + z)(y + z)",
@@ -347,7 +347,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "(x + z) absorbs (x + y + z) in 1 step, leaving the simplified dual form.",
             },
-            # Stage 5 — SOP 3-Var De Morgan OR -> Idempotent
+            # Stage 5: SOP 3-Var De Morgan OR -> Idempotent
             {
                 "expr": "(x + y + z')' + x'y'z",
                 "goal": "x'y'z",
@@ -360,7 +360,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's (OR→AND) expands the negated group into x'y'z, then Idempotent merges duplicates.",
             },
-            # Stage 6 — POS Dual 3-Var De Morgan AND -> Dual Idempotent
+            # Stage 6: POS Dual 3-Var De Morgan AND -> Dual Idempotent
             {
                 "expr": "(xyz')'(x' + y' + z)",
                 "goal": "x' + y' + z",
@@ -373,7 +373,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's (AND→OR) expands to (x' + y' + z), then Dual Idempotent merges identical clauses.",
             },
-            # Stage 7 — SOP 3-Var Reduction Chain
+            # Stage 7: SOP 3-Var Reduction Chain
             {
                 "expr": "x'y' + x'yz + x'yz'",
                 "goal": "x'",
@@ -386,7 +386,7 @@ LEVELS = [
                 "optimalSteps": 7,
                 "optimalHint": "Factor pairs systematically to cancel z + z' and y' + y, reducing the entire expression to x'.",
             },
-            # Stage 8 — POS Dual 3-Var Reduction Chain
+            # Stage 8: POS Dual 3-Var Reduction Chain
             {
                 "expr": "(x' + y')(x' + y + z)(x' + y + z')",
                 "goal": "x'",
@@ -399,7 +399,7 @@ LEVELS = [
                 "optimalSteps": 7,
                 "optimalHint": "Dual factor the clauses to collapse zz' = 0 and y'y = 0, reducing all clauses to x'.",
             },
-            # Stage 9 — SOP 3-Var De Morgan -> Absorption
+            # Stage 9: SOP 3-Var De Morgan -> Absorption
             {
                 "expr": "(x + y)' + x'y'z",
                 "goal": "x'y'",
@@ -412,7 +412,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's reveals x'y', which immediately absorbs the 3-variable term x'y'z in 2 steps.",
             },
-            # Stage 10 — POS Dual 3-Var De Morgan -> Dual Absorption
+            # Stage 10: POS Dual 3-Var De Morgan -> Dual Absorption
             {
                 "expr": "(xy)'(x' + y' + z)",
                 "goal": "x' + y'",
@@ -425,7 +425,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's unlocks (x' + y'), which directly absorbs (x' + y' + z).",
             },
-            # Stage 11 — SOP 3-Var Quad Minterm Reduction
+            # Stage 11: SOP 3-Var Quad Minterm Reduction
             {
                 "expr": "x'y'z + x'yz + xy'z + xyz",
                 "goal": "z",
@@ -438,7 +438,7 @@ LEVELS = [
                 "optimalSteps": 11,
                 "optimalHint": "Factor pairs systematically to eliminate y, then eliminate x, isolating z in 11 steps.",
             },
-            # Stage 12 — POS Dual 3-Var Quad Maxterm Reduction
+            # Stage 12: POS Dual 3-Var Quad Maxterm Reduction
             {
                 "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
                 "goal": "z",
@@ -455,11 +455,11 @@ LEVELS = [
     },
     {
         "id": 3,
-        "name": "Level 3 — Boss",
+        "name": "Level 3 - Boss",
         "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
         "varCount": 4,
         "puzzles": [
-            # Stage 1 — SOP Multi-Variable Absorption
+            # Stage 1: SOP Multi-Variable Absorption
             {
                 "expr": "wxyz + wxz + wyz + w",
                 "goal": "wxz + w",
@@ -472,7 +472,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "The Absorption Law (A + AB = A) eliminates both 4-variable and 3-variable terms in just 2 quick steps!",
             },
-            # Stage 2 — POS Dual Multi-Variable Absorption
+            # Stage 2: POS Dual Multi-Variable Absorption
             {
                 "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
                 "goal": "(w + x + z)w",
@@ -485,7 +485,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "Dual Absorption eliminates longer clauses in 2 direct steps!",
             },
-            # Stage 3 — SOP 4-Var Nested Factoring
+            # Stage 3: SOP 4-Var Nested Factoring
             {
                 "expr": "wxy'z + wxyz",
                 "goal": "wxz",
@@ -498,7 +498,7 @@ LEVELS = [
                 "optimalSteps": 5,
                 "optimalHint": "Factoring w, x, and z systematically isolates y' + y = 1, giving wxz in 5 steps.",
             },
-            # Stage 4 — POS Dual 4-Var Nested Factoring
+            # Stage 4: POS Dual 4-Var Nested Factoring
             {
                 "expr": "(w + x + y' + z)(w + x + y + z)",
                 "goal": "w + x + z",
@@ -511,7 +511,7 @@ LEVELS = [
                 "optimalSteps": 5,
                 "optimalHint": "Dual factoring isolates y'y = 0, leaving w + x + z in 5 steps.",
             },
-            # Stage 5 — SOP 4-Var De Morgan OR -> Idempotent
+            # Stage 5: SOP 4-Var De Morgan OR -> Idempotent
             {
                 "expr": "(w + x' + y + z')' + w'xy'z",
                 "goal": "w'xy'z",
@@ -524,7 +524,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's produces matching term w'xy'z, merged in 1 step by Idempotent.",
             },
-            # Stage 6 — POS Dual 4-Var De Morgan AND -> Dual Idempotent
+            # Stage 6: POS Dual 4-Var De Morgan AND -> Dual Idempotent
             {
                 "expr": "(w'xy'z)'(w + x' + y + z')",
                 "goal": "w + x' + y + z'",
@@ -537,7 +537,7 @@ LEVELS = [
                 "optimalSteps": 2,
                 "optimalHint": "De Morgan's expands to matching clause (w + x' + y + z'), merged by Dual Idempotent.",
             },
-            # Stage 7 — SOP 4-Var 3-Law Chain
+            # Stage 7: SOP 4-Var 3-Law Chain
             {
                 "expr": "wx'y + wxy + wx'yz",
                 "goal": "wy",
@@ -548,9 +548,9 @@ LEVELS = [
                     "After simplifying to wy, notice that wy appears inside wx'yz. Use Absorption!",
                 ],
                 "optimalSteps": 4,
-                "optimalHint": "Distributive → Complement creates wy, which then directly absorbs wx'yz — 4 steps total.",
+                "optimalHint": "Distributive → Complement creates wy, which then directly absorbs wx'yz: 4 steps total.",
             },
-            # Stage 8 — POS Dual 4-Var 3-Law Chain
+            # Stage 8: POS Dual 4-Var 3-Law Chain
             {
                 "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
                 "goal": "w + y",
@@ -563,7 +563,7 @@ LEVELS = [
                 "optimalSteps": 4,
                 "optimalHint": "Dual Distributive → Dual Complement creates (w + y), which absorbs the 4-var clause.",
             },
-            # Stage 9 — SOP 4-Var Double De Morgan -> Annulment
+            # Stage 9: SOP 4-Var Double De Morgan -> Annulment
             {
                 "expr": "(wx)' + (w'xyz)' + z",
                 "goal": "1",
@@ -571,12 +571,12 @@ LEVELS = [
                 "hints": [
                     "Expand the 4-variable negated group (w'xyz)' using De Morgan's Law.",
                     "Scan the resulting expression for a complementary pair like z' and z.",
-                    "Once z' + z = 1, use Annulment — 1 + anything = 1!",
+                    "Once z' + z = 1, use Annulment: 1 + anything = 1!",
                 ],
                 "optimalSteps": 3,
                 "optimalHint": "Expanding the 4-var group reveals z', creating z'+z=1, which allows an instant Annulment collapse to 1.",
             },
-            # Stage 10 — POS Dual 4-Var Double De Morgan -> Dual Annulment
+            # Stage 10: POS Dual 4-Var Double De Morgan -> Dual Annulment
             {
                 "expr": "(w + x)'(w' + x + y + z)'z",
                 "goal": "0",
@@ -584,12 +584,12 @@ LEVELS = [
                 "hints": [
                     "Expand the negated sum groups using De Morgan's (OR→AND).",
                     "Scan for complementary literal product pairs like z' · z.",
-                    "Once z' · z = 0, use Product Annulment — 0 · anything = 0!",
+                    "Once z' · z = 0, use Product Annulment: 0 · anything = 0!",
                 ],
                 "optimalSteps": 3,
                 "optimalHint": "Expanding reveals z', creating z' · z = 0, collapsing the entire product to 0.",
             },
-            # Stage 11 — SOP 4-Var Quad Factoring Reduction
+            # Stage 11: SOP 4-Var Quad Factoring Reduction
             {
                 "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
                 "goal": "wz",
@@ -602,7 +602,7 @@ LEVELS = [
                 "optimalSteps": 14,
                 "optimalHint": "Factoring pairs of minterms systematically eliminates y and then x, leaving the clean 2-variable core wz.",
             },
-            # Stage 12 — POS Dual 4-Var Quad Factoring Reduction
+            # Stage 12: POS Dual 4-Var Quad Factoring Reduction
             {
                 "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
                 "goal": "w + z",

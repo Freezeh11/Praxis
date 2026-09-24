@@ -171,7 +171,7 @@ export const STATIC_LEVELS = [
         "hints": [
           "x is shorter than xy.",
           "x absorbs xy because xy contains x.",
-          "Absorption Law: A + AB = A \u2014 select x and xy to apply it."
+          "Absorption Law: A + AB = A: select x and xy to apply it."
         ],
         "optimalSteps": 1,
         "optimalHint": "Did you take a longer route? The Absorption Law (A + AB = A) can solve this in a single step."
@@ -185,7 +185,7 @@ export const STATIC_LEVELS = [
         "hints": [
           "Notice the standalone literal x multiplied by the clause (x + y).",
           "A standalone literal absorbs a longer sum clause containing it.",
-          "Dual Absorption: A(A + B) = A \u2014 select x and (x + y) to apply it."
+          "Dual Absorption: A(A + B) = A: select x and (x + y) to apply it."
         ],
         "optimalSteps": 1,
         "optimalHint": "Dual Absorption (A(A + B) = A) simplifies maxterm clauses in 1 direct step."
@@ -199,8 +199,8 @@ export const STATIC_LEVELS = [
           "complement"
         ],
         "hints": [
-          "Two identical xy terms \u2014 remove the duplicate first.",
-          "Now x'y + xy \u2014 both terms share a common variable.",
+          "Two identical xy terms: remove the duplicate first.",
+          "Now x'y + xy: both terms share a common variable.",
           "Factor out the common variable, then look for a pair that cancels to 1."
         ],
         "optimalSteps": 3,
@@ -215,8 +215,8 @@ export const STATIC_LEVELS = [
           "complement"
         ],
         "hints": [
-          "Two identical (x + y) clauses \u2014 merge the duplicate first.",
-          "Now (x' + y)(x + y) \u2014 both clauses share variable y.",
+          "Two identical (x + y) clauses: merge the duplicate first.",
+          "Now (x' + y)(x + y): both clauses share variable y.",
           "Factor out y using Dual Distributive: (A+B)(A+C) = A + BC, then simplify x'x."
         ],
         "optimalSteps": 3,
@@ -260,7 +260,7 @@ export const STATIC_LEVELS = [
           "absorption"
         ],
         "hints": [
-          "Click (xy)' \u2014 De Morgan's expands it to x' + y'.",
+          "Click (xy)': De Morgan's expands it to x' + y'.",
           "Scan for a shorter term that shares its literal with a longer one.",
           "Look for a shorter term that absorbs a longer product containing it."
         ],
@@ -540,7 +540,7 @@ export const STATIC_LEVELS = [
   },
   {
     "id": 3,
-    "name": "Level 3 \u2014 Boss",
+    "name": "Level 3 - Boss",
     "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
     "varCount": 4,
     "puzzles": [
@@ -648,7 +648,7 @@ export const STATIC_LEVELS = [
           "After simplifying to wy, notice that wy appears inside wx'yz. Use Absorption!"
         ],
         "optimalSteps": 4,
-        "optimalHint": "Distributive \u2192 Complement creates wy, which then directly absorbs wx'yz \u2014 4 steps total."
+        "optimalHint": "Distributive \u2192 Complement creates wy, which then directly absorbs wx'yz: 4 steps total."
       },
       {
         "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
@@ -677,7 +677,7 @@ export const STATIC_LEVELS = [
         "hints": [
           "Expand the 4-variable negated group (w'xyz)' using De Morgan's Law.",
           "Scan the resulting expression for a complementary pair like z' and z.",
-          "Once z' + z = 1, use Annulment \u2014 1 + anything = 1!"
+          "Once z' + z = 1, use Annulment: 1 + anything = 1!"
         ],
         "optimalSteps": 3,
         "optimalHint": "Expanding the 4-var group reveals z', creating z'+z=1, which allows an instant Annulment collapse to 1."
@@ -693,7 +693,7 @@ export const STATIC_LEVELS = [
         "hints": [
           "Expand the negated sum groups using De Morgan's (OR\u2192AND).",
           "Scan for complementary literal product pairs like z' \u00b7 z.",
-          "Once z' \u00b7 z = 0, use Product Annulment \u2014 0 \u00b7 anything = 0!"
+          "Once z' \u00b7 z = 0, use Product Annulment: 0 \u00b7 anything = 0!"
         ],
         "optimalSteps": 3,
         "optimalHint": "Expanding reveals z', creating z' \u00b7 z = 0, collapsing the entire product to 0."
