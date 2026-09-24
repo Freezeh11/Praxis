@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 
-export const useSession = () => {
+const AuthContext = createContext({
+  data: null,
+  isPending: true,
+  error: null,
+});
+
+export const AuthProvider = ({ children }) => {
   const [data, setData] = useState(null);
   const [isPending, setIsPending] = useState(true);
   const [error, setError] = useState(null);
@@ -38,8 +44,14 @@ export const useSession = () => {
     };
   }, []);
 
-  return { data, isPending, error };
+  return React.createElement(
+    AuthContext.Provider,
+    { value: { data, isPending, error } },
+    children
+  );
 };
+
+export const useSession = () => useContext(AuthContext);
 
 export const signIn = {
   email: async ({ email, password }) => {

@@ -9,7 +9,13 @@ const defaultProgress = {
   levelsCompleted: [],        // [1, 2, 3]
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5, "1:3": 62.0 } → best total score per stage
+  stageSolutions: {},         // { "1:0": [{ law, from, to }] } → saved derivation steps
+  hasSeenTutorial: false,
 }
+
+/** Tutorial lives at level 0 and has exactly 4 stages. */
+const TUTORIAL_LEVEL_ID = 0
+const TUTORIAL_STAGES = [0, 1, 2, 3]
 
 export function useProgress() {
   const { loadProgress, saveProgress } = useApi()
@@ -17,7 +23,19 @@ export function useProgress() {
   const userId = session?.user?.id || 'guest'
   const STORAGE_KEY = `praxis_v1_${userId}`
 
-  const [progress, setProgress] = useState(defaultProgress)
+  // Synchronous state initialization from localStorage
+  const [progress, setProgress] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return { ...defaultProgress, ...JSON.parse(saved) }
+      }
+    } catch {
+      // fallback to default
+    }
+    return defaultProgress
+  })
+
   const [serverLoaded, setServerLoaded] = useState(false)
   const saveTimeoutRef = useRef(null)
 
@@ -26,24 +44,19 @@ export function useProgress() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress({ ...defaultProgress, ...JSON.parse(saved) })
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress(defaultProgress)
       }
     } catch {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(defaultProgress)
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setServerLoaded(false)
   }, [userId, STORAGE_KEY])
 
   // 2. Load progress from server when user is authenticated
   useEffect(() => {
     if (userId === 'guest') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setServerLoaded(true)
       return
     }
@@ -76,6 +89,12 @@ export function useProgress() {
             mergedScores[key] = Math.max(mergedScores[key] || 0, score)
           }
           merged.stageScores = mergedScores
+
+          // Merge stageSolutions
+          merged.stageSolutions = {
+            ...(serverData.stageSolutions || {}),
+            ...(prev.stageSolutions || {}),
+          }
 
           return merged
         })
@@ -120,8 +139,15 @@ export function useProgress() {
     setProgress(p => {
       const key = String(levelId)
       const existing = p.stageProgress[key] || []
-      if (existing.includes(stageIdx)) return p
-      return { ...p, stageProgress: { ...p.stageProgress, [key]: [...existing, stageIdx] } }
+      const isTut = Number(levelId) === 0
+      if (existing.includes(stageIdx)) {
+        return isTut ? { ...p, hasSeenTutorial: true } : p
+      }
+      return {
+        ...p,
+        stageProgress: { ...p.stageProgress, [key]: [...existing, stageIdx] },
+        hasSeenTutorial: isTut ? true : p.hasSeenTutorial,
+      }
     })
 
   const completeLevel = (levelId) =>
@@ -141,6 +167,25 @@ export function useProgress() {
       return { ...p, stageScores: { ...p.stageScores, [key]: score } }
     })
 
+  const saveSolution = (levelId, stageIdx, steps) =>
+    setProgress(p => {
+      const key = `${levelId}:${stageIdx}`
+      const isTut = Number(levelId) === 0
+      return {
+        ...p,
+        stageSolutions: {
+          ...(p.stageSolutions || {}),
+          [key]: steps,
+        },
+        hasSeenTutorial: isTut ? true : p.hasSeenTutorial,
+      }
+    })
+
+  const getSavedSolution = (levelId, stageIdx) => {
+    const key = `${levelId}:${stageIdx}`
+    return progress.stageSolutions?.[key] || null
+  }
+
   const resetStreak = () => setProgress(p => ({ ...p, streak: 0 }))
 
   const isStageCompleted = (levelId, stageIdx) =>
@@ -151,25 +196,94 @@ export function useProgress() {
   const getStagesCompleted = (levelId) => progress.stageProgress[String(levelId)] || []
 
   /**
-   * Returns progress info for a given level, used for the lock gate.
+   * Returns progress info for a given level, used for the lock gate and star mastery.
    * @param {number} levelId
    * @param {number} totalStages  total number of stages in the level
-   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean }}
+   * @returns {{ completed: number, avgScore: number, allDone: boolean, unlocked: boolean, totalStars: number, maxStars: number }}
    */
   const getLevelProgress = (levelId, totalStages) => {
     const scores = []
+    let totalStars = 0
     for (let i = 0; i < totalStages; i++) {
       const key = `${levelId}:${i}`
-      scores.push(progress.stageScores[key] ?? null)
+      const sc = progress.stageScores[key] ?? null
+      scores.push(sc)
+      const isDone = (progress.stageProgress[String(levelId)] || []).includes(i) || sc !== null
+      if (isDone) {
+        if (sc !== null && sc >= 90) totalStars += 3
+        else if (sc !== null && sc >= 75) totalStars += 2
+        else totalStars += 1
+      }
     }
     const completed = scores.filter(s => s !== null).length
     const avgScore = completed === 0
       ? 0
       : Math.round(scores.reduce((sum, s) => sum + (s ?? 0), 0) / totalStages)
     const allDone = completed === totalStages
-    const unlocked = allDone && avgScore >= 70
-    return { completed, avgScore, allDone, unlocked }
+    const unlocked = allDone && avgScore >= 80
+    return { completed, avgScore, allDone, unlocked, totalStars, maxStars: totalStages * 3 }
   }
+
+  const resetLevelProgress = (levelId) =>
+    setProgress(p => {
+      const key = String(levelId)
+      const newStageProgress = { ...p.stageProgress }
+      delete newStageProgress[key]
+
+      const newScores = { ...p.stageScores }
+      const newSolutions = { ...p.stageSolutions }
+
+      Object.keys(newScores).forEach(k => {
+        if (k.startsWith(`${levelId}:`)) delete newScores[k]
+      })
+      Object.keys(newSolutions).forEach(k => {
+        if (k.startsWith(`${levelId}:`)) delete newSolutions[k]
+      })
+
+      return {
+        ...p,
+        stageProgress: newStageProgress,
+        stageScores: newScores,
+        stageSolutions: newSolutions,
+        levelsCompleted: p.levelsCompleted.filter(id => id !== levelId),
+        hasSeenTutorial: Number(levelId) === 0 ? true : p.hasSeenTutorial,
+      }
+    })
+
+  const markTutorialSeen = () => {
+    setProgress(p => ({ ...p, hasSeenTutorial: true }))
+  }
+
+  const hasSeenTutorial = Boolean(
+    progress.hasSeenTutorial ||
+    (progress.stageProgress && progress.stageProgress['0'] && progress.stageProgress['0'].length > 0) ||
+    (progress.stageScores && Object.keys(progress.stageScores).some(k => k.startsWith('0:'))) ||
+    (progress.stageSolutions && Object.keys(progress.stageSolutions).some(k => k.startsWith('0:')))
+  )
+
+  /**
+   * Whether the learner has finished the whole tutorial (all TUTORIAL_STAGES).
+   *
+   * The gate that blocks levels 1-3 and the sandbox uses this rather than the
+   * looser `hasSeenTutorial` above, which flips true on the FIRST tutorial
+   * stage. Stage completion is also synced to the server, so a learner who
+   * cleared the tutorial on another device still satisfies the gate even when
+   * the local `hasSeenTutorial` flag is missing.
+   */
+  const tutorialStagesCompleted = progress.stageProgress?.[String(TUTORIAL_LEVEL_ID)] || []
+  const hasCompletedTutorial = Boolean(
+    progress.hasSeenTutorial || TUTORIAL_STAGES.every(idx => tutorialStagesCompleted.includes(idx))
+  )
+
+  /**
+   * Whether the server round-trip has settled for an authenticated user.
+   *
+   * Consumers that gate UI on progress MUST wait for this. Progress is seeded
+   * from localStorage, then merged with the server asynchronously, so an
+   * immediate decision can be wrong for a learner whose completion only exists
+   * server-side (new device, cleared browser data).
+   */
+  const progressHydrated = serverLoaded && userId !== 'guest'
 
   return {
     progress,
@@ -179,9 +293,16 @@ export function useProgress() {
     completeLevel,
     resetStreak,
     saveScore,
+    saveSolution,
+    getSavedSolution,
     getLevelProgress,
     isStageCompleted,
     isLevelCompleted,
     getStagesCompleted,
+    resetLevelProgress,
+    hasSeenTutorial,
+    hasCompletedTutorial,
+    progressHydrated,
+    markTutorialSeen,
   }
 }

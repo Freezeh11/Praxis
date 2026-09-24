@@ -3,6 +3,7 @@ import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyBanner from '../components/SurveyBanner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </div>
@@ -64,6 +65,13 @@ export default function LandingPage() {
           initial="hidden"
           animate="show"
         >
+          {/* Survey Banner (Only when logged in) */}
+          {session && (
+            <motion.div variants={itemVariants} className="mb-5">
+              <SurveyBanner />
+            </motion.div>
+          )}
+
           {/* Badge */}
           <motion.div variants={itemVariants} className="mb-6">
             <span className="px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold uppercase tracking-wider">

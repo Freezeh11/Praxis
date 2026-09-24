@@ -3,32 +3,78 @@ import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
-import { signOut } from '../lib/auth-client'
+import { signOut, useSession } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyBanner from '../components/SurveyBanner'
 
-// Level 3+ are permanently "coming soon" (no puzzles yet)
-const COMING_SOON = [3]
+// Level 4+ are permanently "coming soon" (no puzzles yet)
+const COMING_SOON = []
+
+/**
+ * Synthetic carousel entry for Sandbox mode. It is not part of the fetched
+ * level data: it has no stages and never participates in score gates or
+ * progress tracking, but it rides the exact same card so it sits naturally
+ * alongside the real levels.
+ */
+const SANDBOX_LEVEL = {
+  id: 'sandbox',
+  name: 'Sandbox',
+  desc: 'Free practice: randomize any expression',
+  varCount: 3,
+  puzzleCount: 0,
+  isSandbox: true,
+}
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
+  const { data: session } = useSession()
   const { levels, laws, loading, error } = useApi()
-  const { progress, isLevelCompleted, getLevelProgress } = useProgress()
-  const [selected, setSelected] = useState(0) // index into levels array
+  const { progress, isLevelCompleted, getLevelProgress, getSavedSolution, getStagesCompleted, resetLevelProgress, hasSeenTutorial } = useProgress()
+  const [selected, setSelected] = useState(0) // index into the carousel entries
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
+  const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
+  const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  // Real levels plus the always-available Sandbox entry, rendered as one list.
+  const entries = [...(levels || []), SANDBOX_LEVEL]
+
+  const handleTutorialClick = () => {
+    const skipPrompt = sessionStorage.getItem('praxis_skip_tutorial_replay_prompt') === 'true'
+
+    if (hasSeenTutorial && !skipPrompt) {
+      setDontAskTutorialAgain(false)
+      setShowTutorialPrompt(true)
+    } else {
+      navigate('/level/0/stage/0?tutorial=true')
+    }
+  }
+
+  const handleRestartTutorial = () => {
+    if (dontAskTutorialAgain) {
+      sessionStorage.setItem('praxis_skip_tutorial_replay_prompt', 'true')
+    }
+    resetLevelProgress(0)
+    setShowTutorialPrompt(false)
+    navigate('/level/0/stage/0?tutorial=true')
+  }
 
   /**
    * A level is locked if it's "coming soon" OR it requires a prerequisite
    * that hasn't been satisfied yet.
-   * Level 2 requires Level 1 avg score >= 70% across all 6 stages.
+   * Level 2 requires Level 1 avg score >= 80% across all stages.
+   * Level 3 requires Level 2 avg score >= 80% across all stages.
    */
   const getLockState = (lv) => {
     if (!lv) return { locked: true, reason: '' }
+    // Sandbox is always unlocked free practice, regardless of progress.
+    if (lv.isSandbox) return { locked: false, reason: 'sandbox' }
     if (COMING_SOON.includes(lv.id)) return { locked: true, reason: 'Coming Soon' }
 
+    if (lv.id === 0) return { locked: false, reason: '' }
+
     if (lv.id === 2) {
-      // Find Level 1 in the levels array to get its stage count
       const lvl1 = levels.find(l => l.id === 1)
-      const totalStages = lvl1?.puzzles?.length ?? 6
+      const totalStages = lvl1?.puzzleCount ?? lvl1?.puzzles?.length ?? 12
       const p = getLevelProgress(1, totalStages)
       if (p.unlocked) return { locked: false, reason: '' }
       return {
@@ -36,6 +82,21 @@ export default function LevelSelectPage() {
         reason: 'score-gate',
         progress: p,
         totalStages,
+        reqLevel: 1,
+      }
+    }
+
+    if (lv.id === 3) {
+      const lvl2 = levels.find(l => l.id === 2)
+      const totalStages = lvl2?.puzzleCount ?? lvl2?.puzzles?.length ?? 12
+      const p = getLevelProgress(2, totalStages)
+      if (p.unlocked) return { locked: false, reason: '' }
+      return {
+        locked: true,
+        reason: 'score-gate',
+        progress: p,
+        totalStages,
+        reqLevel: 2,
       }
     }
 
@@ -43,10 +104,15 @@ export default function LevelSelectPage() {
   }
 
   const handleStart = () => {
-    const lv = levels[selected]
+    const lv = entries[selected]
     if (!lv) return
     const { locked } = getLockState(lv)
     if (locked) return
+    // Sandbox opens the workspace directly: it has no stage-selection screen.
+    if (lv.isSandbox) {
+      navigate('/sandbox')
+      return
+    }
     navigate(`/level/${lv.id}/stages`)
   }
 
@@ -62,20 +128,27 @@ export default function LevelSelectPage() {
   }
 
   const prev = () => setSelected(s => Math.max(0, s - 1))
-  const next = () => setSelected(s => Math.min((levels.length || 1) - 1, s + 1))
+  const next = () => setSelected(s => Math.min(entries.length - 1, s + 1))
 
   return (
     <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       {/* Header */}
-      <header className="w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-10 shrink-0">
+      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
         <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
         </Link>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleTutorialClick}
+            className="h-9 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+            title="Interactive Tutorial"
+          >
+            <span>Tutorial</span>
+          </button>
           <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
-            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-2" 
+            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-1" 
             title="Sign Out"
           >
             Sign Out
@@ -84,7 +157,13 @@ export default function LevelSelectPage() {
       </header>
 
       {/* Title */}
-      <div className="mt-10 flex flex-col items-center gap-1.5">
+      <div className="mt-8 flex flex-col items-center gap-2">
+        {/* Survey Banner for logged-in users */}
+        {session && (
+          <div className="mb-2">
+            <SurveyBanner />
+          </div>
+        )}
         <h1 className="font-bold text-[32px] tracking-tight text-accent">Choose Your Level</h1>
         <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
       </div>
@@ -98,11 +177,12 @@ export default function LevelSelectPage() {
         <div className="flex items-center justify-center gap-5 [perspective:1000px]">
           {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
           {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
-          {!loading && !error && levels.map((lv, i) => {
+          {!loading && !error && entries.map((lv, i) => {
             const offset = i - selected
             const lockState = getLockState(lv)
             const { locked } = lockState
-            const done = isLevelCompleted(lv.id)
+            const isSandbox = Boolean(lv.isSandbox)
+            const done = !isSandbox && isLevelCompleted(lv.id)
             const isActive = offset === 0
             const isComingSoon = COMING_SOON.includes(lv.id)
             const isScoreGated = lockState.reason === 'score-gate'
@@ -123,13 +203,13 @@ export default function LevelSelectPage() {
                   ${done && !isActive ? 'bg-green-light text-green' : ''}
                   ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
                 `}>
-                  {isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
+                  {isSandbox ? '🧪' : isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
                 </div>
 
                 <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
                 <div className="text-[13px] text-text-3 text-center">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2 */}
+                {/* Score gate progress for Level 2/3 */}
                 {isScoreGated && isActive && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
@@ -142,9 +222,9 @@ export default function LevelSelectPage() {
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(100, lockState.progress.avgScore)}%`,
-                          background: lockState.progress.avgScore >= 70
+                          background: lockState.progress.avgScore >= 80
                             ? '#22c55e'
-                            : lockState.progress.avgScore >= 40
+                            : lockState.progress.avgScore >= 50
                               ? '#f59e0b'
                               : '#ef4444',
                         }}
@@ -152,24 +232,61 @@ export default function LevelSelectPage() {
                     </div>
                     {/* Threshold marker label */}
                     <div className="text-[10px] text-text-3 text-center font-medium">
-                      Need 70% avg across all Level 1 stages
+                      Need 80% avg across all Level {lockState.reqLevel || (lv.id - 1)} stages
                     </div>
                   </div>
                 )}
+
+                {/* Level star badge if unlocked & played (excluding Tutorial) */}
+                {!locked && !isComingSoon && (() => {
+                  if (isSandbox) {
+                    return (
+                      <div className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 mt-auto flex items-center gap-1">
+                        <span>🎲</span> Random Practice
+                      </div>
+                    )
+                  }
+
+                  if (lv.id === 0) {
+                    if (done) {
+                      return (
+                        <div className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full border border-teal/30 mt-auto flex items-center gap-1">
+                          <span>✓</span> Completed
+                        </div>
+                      )
+                    }
+                    return (
+                      <div className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 mt-auto flex items-center gap-1">
+                        <span>Guided Walkthrough</span>
+                      </div>
+                    )
+                  }
+
+                  const totalCount = lv.puzzleCount || lv.puzzles?.length || 12
+                  const lp = getLevelProgress(lv.id, totalCount)
+                  if (lp.totalStars > 0) {
+                    return (
+                      <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 mt-auto flex items-center gap-1">
+                        <span>★</span> {lp.totalStars} / {lp.maxStars} Stars
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 {/* Tags */}
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
                 )}
                 {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 70% avg required</div>
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 80% avg required</div>
                 )}
               </div>
             )
           })}
         </div>
 
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === levels.length - 1}>
+        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === entries.length - 1}>
           <span>›</span>
         </button>
       </div>
@@ -186,11 +303,75 @@ export default function LevelSelectPage() {
           id="start-level-btn"
           className="bg-accent text-white text-base font-bold px-12 py-4 rounded-full shadow-md transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg"
           onClick={handleStart}
-          disabled={!levels[selected] || getLockState(levels[selected]).locked}
+          disabled={!entries[selected] || getLockState(entries[selected]).locked}
         >
-          START LEVEL
+          {entries[selected]?.isSandbox ? 'ENTER SANDBOX' : 'START LEVEL'}
         </button>
       </div>
+
+      {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
+      {showTutorialPrompt && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs transition-opacity"
+          onClick={() => setShowTutorialPrompt(false)}
+        >
+          <div 
+            className="relative bg-white rounded-3xl pt-9 pb-8 px-8 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
+              onClick={() => setShowTutorialPrompt(false)}
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-3">
+                Tutorial Replay
+              </span>
+              <h3 className="text-xl font-extrabold text-text-1 tracking-tight">
+                Restart the Walkthrough?
+              </h3>
+            </div>
+
+            <p className="text-[13.5px] text-text-2 leading-relaxed max-w-[380px]">
+              You've already made progress in the tutorial. Would you like to reset your derivation and experience the full guided walkthrough again?
+            </p>
+
+            {/* Don't ask again checkbox */}
+            <label className="flex items-center gap-2.5 px-3 py-1 rounded-lg hover:bg-bg cursor-pointer select-none -mt-1">
+              <input
+                type="checkbox"
+                checked={dontAskTutorialAgain}
+                onChange={e => setDontAskTutorialAgain(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
+              />
+              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
+            </label>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 w-full mt-1">
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
+                onClick={() => setShowTutorialPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
+                onClick={handleRestartTutorial}
+              >
+                Restart Walkthrough
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
