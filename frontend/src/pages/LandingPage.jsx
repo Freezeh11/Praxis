@@ -3,6 +3,7 @@ import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession, signOut } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyBanner from '../components/SurveyBanner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -64,6 +65,13 @@ export default function LandingPage() {
           initial="hidden"
           animate="show"
         >
+          {/* Survey Banner (Only when logged in) */}
+          {session && (
+            <motion.div variants={itemVariants} className="mb-5">
+              <SurveyBanner />
+            </motion.div>
+          )}
+
           {/* Badge */}
           <motion.div variants={itemVariants} className="mb-6">
             <span className="px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold uppercase tracking-wider">

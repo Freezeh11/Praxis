@@ -51,8 +51,8 @@ function buildHintText(law, paths, expr) {
       case 'annulment': {
         const hasOne = (n1?.type === 'const' && n1.val === 1) || (n2?.type === 'const' && n2.val === 1)
         return hasOne
-          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1 — the whole sum collapses to 1.`
-          : `There's a 0 in a product. Annulment Law says A · 0 = 0 — the product collapses to 0.`
+          ? `There's a 1 in a sum. Annulment Law says A + 1 = 1, so the whole sum collapses to 1.`
+          : `There's a 0 in a product. Annulment Law says A · 0 = 0, so the product collapses to 0.`
       }
       case 'identity': {
         const hasZero = (n1?.type === 'const' && n1.val === 0) || (n2?.type === 'const' && n2.val === 0)
@@ -65,10 +65,10 @@ function buildHintText(law, paths, expr) {
           ? `Two clauses share a common variable. Try POS Distributive Law: (A+B)(A+C) = A + BC.`
           : `Two terms share a common variable. Try Distributive Law to factor it out: AB + AC = A(B+C).`
       default:
-        return `Look at the current expression — a simplification is available.`
+        return `Look at the current expression: a simplification is available.`
     }
   } catch {
-    return `A simplification is available in the current expression — look carefully.`
+    return `A simplification is available in the current expression. Look carefully.`
   }
 }
 
@@ -202,7 +202,7 @@ export function useGameState() {
       if (laws.length) {
         setStatusMsg(`Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`)
       } else {
-        setStatusMsg('No simplification for these selected items — try different terms or variables')
+        setStatusMsg('No simplification for these selected items. Try different terms or variables.')
       }
     } else if (nextSel.length === 1) {
       const item = nextSel[0]
@@ -268,7 +268,7 @@ export function useGameState() {
           setStatusMsg(
             laws.length
               ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-              : 'No law applies here — try different terms'
+              : 'No law applies here. Try different terms.'
           )
           return
         }
@@ -280,7 +280,7 @@ export function useGameState() {
           setStatusMsg(
             laws.length
               ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-              : 'No law applies here — try different terms'
+              : 'No law applies here. Try different terms.'
           )
           return
         }
@@ -339,7 +339,7 @@ export function useGameState() {
       setStatusMsg(
         laws.length
           ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-          : 'No law applies — try a different element'
+          : 'No law applies. Try a different element.'
       )
       return next
     })

@@ -3,22 +3,23 @@ import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import { useProgress } from '../hooks/useProgress'
-import { signOut } from '../lib/auth-client'
+import { signOut, useSession } from '../lib/auth-client'
 import { toast } from 'sonner'
+import SurveyBanner from '../components/SurveyBanner'
 
 // Level 4+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = []
 
 /**
  * Synthetic carousel entry for Sandbox mode. It is not part of the fetched
- * level data — it has no stages and never participates in score gates or
- * progress tracking — but it rides the exact same card so it sits naturally
+ * level data: it has no stages and never participates in score gates or
+ * progress tracking, but it rides the exact same card so it sits naturally
  * alongside the real levels.
  */
 const SANDBOX_LEVEL = {
   id: 'sandbox',
   name: 'Sandbox',
-  desc: 'Free practice — randomize any expression',
+  desc: 'Free practice: randomize any expression',
   varCount: 3,
   puzzleCount: 0,
   isSandbox: true,
@@ -26,6 +27,7 @@ const SANDBOX_LEVEL = {
 
 export default function LevelSelectPage() {
   const navigate = useNavigate()
+  const { data: session } = useSession()
   const { levels, laws, loading, error } = useApi()
   const { progress, isLevelCompleted, getLevelProgress, getSavedSolution, getStagesCompleted, resetLevelProgress, hasSeenTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into the carousel entries
@@ -106,7 +108,7 @@ export default function LevelSelectPage() {
     if (!lv) return
     const { locked } = getLockState(lv)
     if (locked) return
-    // Sandbox opens the workspace directly — it has no stage-selection screen.
+    // Sandbox opens the workspace directly: it has no stage-selection screen.
     if (lv.isSandbox) {
       navigate('/sandbox')
       return
@@ -155,7 +157,13 @@ export default function LevelSelectPage() {
       </header>
 
       {/* Title */}
-      <div className="mt-10 flex flex-col items-center gap-1.5">
+      <div className="mt-8 flex flex-col items-center gap-2">
+        {/* Survey Banner for logged-in users */}
+        {session && (
+          <div className="mb-2">
+            <SurveyBanner />
+          </div>
+        )}
         <h1 className="font-bold text-[32px] tracking-tight text-accent">Choose Your Level</h1>
         <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
       </div>

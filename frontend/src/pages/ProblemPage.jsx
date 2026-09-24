@@ -73,6 +73,7 @@ export default function ProblemPage() {
   const loadedAsSavedRef = useRef(false)
 
   const stageNum = isSandbox ? 0 : parseInt(stageIdx)
+  const isTutorialLevel = !isSandbox && Number(levelId) === 0
   const completedSet = new Set(isSandbox ? [] : getStagesCompleted(Number(levelId)))
 
   /** The puzzle currently being played — generated in sandbox, fetched otherwise. */
@@ -398,7 +399,7 @@ export default function ProblemPage() {
       setScoreResult(null)
       loadedAsSavedRef.current = false
     } catch {
-      toast.error('Could not generate a new problem — try again.')
+      toast.error('Could not generate a new problem. Please try again.')
     }
   }
 
@@ -609,32 +610,35 @@ export default function ProblemPage() {
               </button>
             </div>
 
-            <div className="w-[1px] h-4 bg-border mx-1" />
-
-            {/* Interactive Tutorial Button */}
-            <button
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-all ${
-                isTutorialActive
-                  ? 'bg-teal text-white border-teal shadow-xs'
-                  : 'border-border bg-bg text-text-2 hover:bg-border hover:text-text-1'
-              }`}
-              onClick={() => {
-                setIsTutorialActive(prev => {
-                  const next = !prev
-                  if (next && puzzle) {
-                    loadedAsSavedRef.current = false
-                    setShowSuccess(false)
-                    setShowHint(false)
-                    setScoreResult(null)
-                    resetPuzzle(puzzle)
-                  }
-                  return next
-                })
-              }}
-              title="Toggle Interactive Tutorial Guide"
-            >
-              Tutorial
-            </button>
+            {/* Interactive Tutorial Button (Only in Tutorial Level 0) */}
+            {isTutorialLevel && (
+              <>
+                <div className="w-[1px] h-4 bg-border mx-1" />
+                <button
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-all cursor-pointer ${
+                    isTutorialActive
+                      ? 'bg-teal text-white border-teal shadow-xs'
+                      : 'border-border bg-bg text-text-2 hover:bg-border hover:text-text-1'
+                  }`}
+                  onClick={() => {
+                    setIsTutorialActive(prev => {
+                      const next = !prev
+                      if (next && puzzle) {
+                        loadedAsSavedRef.current = false
+                        setShowSuccess(false)
+                        setShowHint(false)
+                        setScoreResult(null)
+                        resetPuzzle(puzzle)
+                      }
+                      return next
+                    })
+                  }}
+                  title="Toggle Interactive Tutorial Guide"
+                >
+                  Tutorial
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -957,7 +961,7 @@ export default function ProblemPage() {
                 <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">APPLICABLE LAWS</span>
                 {applicableLaws.length === 0 && (
                   <span className="text-xs text-text-3 italic">
-                    {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply — try a different selection'}
+                    {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply for this selection. Try different terms.'}
                   </span>
                 )}
               </div>
@@ -984,21 +988,21 @@ export default function ProblemPage() {
       </main>
 
       {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages ── */}
-      <aside className="w-[280px] min-w-[240px] bg-white border-l border-border flex flex-col overflow-hidden">
+      <aside className="w-[320px] min-w-[280px] xl:w-[340px] bg-white border-l border-border flex flex-col overflow-hidden">
         {/* Top: Stage / Level Progress (sandbox shows problem stats instead) */}
         {isSandbox ? (
-          <div data-tutorial="sandbox-stats" className="border-b border-border p-3.5 pt-4 bg-bg/30">
-            <div className="flex items-center justify-between mb-1.5">
+          <div data-tutorial="sandbox-stats" className="border-b border-border p-4 pt-4.5 bg-bg/30">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">SANDBOX</span>
               <span className="text-xs font-bold text-sky-700">Free Practice</span>
             </div>
-            <div className="h-1.5 bg-border rounded-full mb-2 overflow-hidden">
+            <div className="h-2 bg-border rounded-full mb-2.5 overflow-hidden">
               <div
                 className="h-full bg-teal transition-all duration-300 rounded-full"
                 style={{ width: `${optimalSteps > 0 ? Math.min(100, (steps.length / optimalSteps) * 100) : (isComplete ? 100 : 0)}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[10.5px] text-text-3 font-medium">
+            <div className="flex items-center justify-between text-[11px] text-text-3 font-medium">
               <span>{DIFFICULTIES[sandboxDifficulty]?.label || 'Medium'} problem</span>
               <span>
                 <span className="font-bold text-text-2">{steps.length}</span> steps
@@ -1007,33 +1011,33 @@ export default function ProblemPage() {
             </div>
           </div>
         ) : (
-        <div className="border-b border-border p-3.5 pt-4 bg-bg/30">
-          <div className="flex items-center justify-between mb-1.5">
+        <div className="border-b border-border p-4 pt-4.5 bg-bg/30">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">LEVEL PROGRESS</span>
             <span className="text-xs font-bold text-teal">{completedSet.size} / {level?.puzzles.length ?? '?'} Completed</span>
           </div>
-          <div className="h-1.5 bg-border rounded-full mb-1.5 overflow-hidden">
+          <div className="h-2 bg-border rounded-full mb-2 overflow-hidden">
             <div
               className="h-full bg-teal transition-all duration-300 rounded-full"
               style={{ width: `${level && level.puzzles.length > 0 ? (completedSet.size / level.puzzles.length) * 100 : 0}%` }}
             />
           </div>
-          <div className="text-[10.5px] text-text-3 font-medium">
+          <div className="text-[11px] text-text-3 font-medium">
             {level?.name || 'Level Stages'}
           </div>
         </div>
         )}
 
         {/* Middle: User Points & Assistance Controls (Replaced Target Box) */}
-        <div data-tutorial="points-and-assistance" className="p-3.5 border-b border-border flex flex-col gap-2.5 bg-white">
+        <div data-tutorial="points-and-assistance" className="p-4 border-b border-border flex flex-col gap-3 bg-white">
           {/* User Points Card — sandbox play is unscored, so it shows a notice instead */}
           {isSandbox ? (
-            <div data-tutorial="sandbox-notice" className="flex items-start gap-2.5 px-3.5 py-2.5 bg-sky-50/70 border border-sky-200 rounded-xl">
-              <span className="text-lg leading-none">🧪</span>
+            <div data-tutorial="sandbox-notice" className="flex items-start gap-3 px-3.5 py-3 bg-sky-50/70 border border-sky-200 rounded-xl">
+              <span className="text-xl leading-none">🧪</span>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-sky-900/80">SANDBOX MODE</div>
-                <div className="text-[11px] text-sky-900/90 leading-snug mt-0.5">
-                  Free practice — no points, stars, or progress are recorded.
+                <div className="text-[11.5px] text-sky-900/90 leading-snug mt-0.5">
+                  Free practice: no points, stars, or progress are recorded.
                 </div>
               </div>
             </div>
@@ -1058,16 +1062,16 @@ export default function ProblemPage() {
 
           {/* Sandbox difficulty picker */}
           {isSandbox && (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">DIFFICULTY</span>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-2">
                 {Object.entries(DIFFICULTIES).map(([key, preset]) => (
                   <button
                     key={key}
                     type="button"
                     data-difficulty={key}
                     onClick={() => handleRandomize(key)}
-                    className={`py-1.5 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                    className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
                       sandboxDifficulty === key
                         ? 'bg-accent text-white border-accent shadow-xs'
                         : 'bg-bg border-border text-text-2 hover:border-text-1 hover:text-text-1'
@@ -1080,7 +1084,7 @@ export default function ProblemPage() {
               </div>
               <button
                 type="button"
-                className="w-full py-2 rounded-lg border-[1.5px] border-teal bg-teal-light text-xs font-bold text-sky-700 hover:bg-teal hover:text-white hover:border-teal transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 rounded-xl border-[1.5px] border-teal bg-teal-light text-xs font-bold text-sky-700 hover:bg-teal hover:text-white hover:border-teal transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 onClick={() => handleRandomize()}
               >
                 <span>🎲</span> New Random Problem
@@ -1092,7 +1096,7 @@ export default function ProblemPage() {
           <div data-tutorial="assistance-group" className="flex gap-2">
             <button
               data-tutorial="hint-button"
-              className="flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-bg disabled:hover:text-text-2"
+              className="flex-1 py-2.5 px-2.5 rounded-xl text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-bg disabled:hover:text-text-2"
               onClick={handleHint}
               disabled={isComplete}
               title={isComplete ? "Expression is already simplified" : "Get a hint for the next step"}
@@ -1101,7 +1105,7 @@ export default function ProblemPage() {
             </button>
             <button
               data-tutorial="guide-button"
-              className="flex-1 py-2 px-2 rounded-lg text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:border-amber/50"
+              className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:border-amber/50"
               onClick={handleGuide}
               disabled={isComplete || isSandbox || (progress.points ?? 0) < 20}
               title={isSandbox ? "Guide is disabled in the sandbox" : isComplete ? "Expression is already simplified" : "Highlight terms for the next move (Costs 20 pts)"}
@@ -1113,7 +1117,7 @@ export default function ProblemPage() {
           {/* Quick Laws Reference Drawer Trigger */}
           <button
             data-tutorial="laws-reference-button"
-            className="w-full py-2 px-3 bg-bg border border-border rounded-lg text-xs font-semibold text-text-2 hover:bg-border/60 transition-all flex items-center justify-between shadow-xs"
+            className="w-full py-2.5 px-3 bg-bg border border-border rounded-xl text-xs font-semibold text-text-2 hover:bg-border/60 transition-all flex items-center justify-between shadow-xs"
             onClick={() => setShowLawsDrawer(true)}
           >
             <span>📖 Laws Quick Reference</span>
@@ -1122,49 +1126,20 @@ export default function ProblemPage() {
         </div>
 
         {/* Level Puzzles List (Quick Stage Select) — hidden in sandbox mode */}
-        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+        <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2">
           {isSandbox ? (
-            <div className="text-[10.5px] text-text-3 leading-relaxed px-1 pt-1">
-              <div className="font-bold tracking-[1px] uppercase text-text-3 mb-2">HOW IT WORKS</div>
-              <p className="mb-2">
+            <div className="text-[11.5px] text-text-3 leading-relaxed px-1 pt-1">
+              <div className="font-bold tracking-[1px] uppercase text-text-3 mb-2.5">HOW IT WORKS</div>
+              <p className="mb-2.5">
                 Every problem is generated from an inverse Boolean law, so the engine can always simplify it back down.
               </p>
               <p>
                 Press <span className="font-bold text-sky-700">🎲 New Random Problem</span> any time to swap in a
-                fresh expression — your current derivation is discarded.
+                fresh expression. Your current derivation will reset.
               </p>
             </div>
           ) : (
           <>
-          {/* Review Mode Reminder Card */}
-          {isComplete && !showSuccess && !dismissReviewReminder && level && stageNum + 1 < level.puzzles.length && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="bg-emerald-50 border border-emerald-500/60 rounded-xl p-2.5 mb-1.5 flex flex-col gap-2 shadow-2xs"
-            >
-              <div className="flex items-start gap-2">
-                <span className="relative flex h-2 w-2 mt-1 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <div className="text-[11.5px] leading-snug font-semibold text-emerald-950">
-                  When you're ready, press the next stage.
-                </div>
-              </div>
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={() => setDismissReviewReminder(true)}
-                  className="px-3 py-0.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
-                >
-                  Okay
-                </button>
-              </div>
-            </motion.div>
-          )}
-
           <div className="text-[10px] font-bold tracking-[1px] uppercase text-text-3 mb-1 px-1">STAGES</div>
           {level?.puzzles.map((p, idx) => {
             const isCurrent = idx === stageNum
@@ -1295,7 +1270,7 @@ export default function ProblemPage() {
               </h2>
               <p className="text-xs text-text-3 mb-5">
                 {isSandbox
-                  ? 'Sandbox practice is unscored — here is how this attempt went'
+                  ? 'Sandbox practice is unscored: here is how this attempt went'
                   : "Here's how you did across the three metrics"}
               </p>
 
@@ -1324,7 +1299,7 @@ export default function ProblemPage() {
                       <span className="text-text-2 font-semibold shrink-0">Laws applied</span>
                       <span className="text-text-1 font-bold text-right">
                         {steps.length === 0
-                          ? '—'
+                          ? 'None'
                           : [...new Set(steps.map(s => s?.law).filter(Boolean))].join(', ')}
                       </span>
                     </div>
