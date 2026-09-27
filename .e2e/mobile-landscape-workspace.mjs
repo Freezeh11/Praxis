@@ -19,7 +19,7 @@
  * Requires: vite dev server on 5173, FastAPI on 8000, e2e user to exist.
  * Run:  node .e2e/mobile-landscape-workspace.mjs [--section=1,2,3,4,5]
  */
-import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX, SKIP_RESET_CONFIRM } from './_harness.mjs'
 
 // The dev server binds to [::1]; 127.0.0.1 also resolves here, localhost is the
 // form the other workspace suites use.
@@ -136,10 +136,60 @@ async function selectUntilLawAppears(page, attempts = 40) {
   return null
 }
 
+/**
+ * Reorders two term capsules with a FINGER. The workspace used HTML5
+ * drag-and-drop, which never fires for touch input, so this drives the pointer
+ * implementation with synthetic `pointerType: 'touch'` events
+ * (pointerdown → several pointermoves → pointerup) at the capsule centres —
+ * exactly what a phone produces, minus the browser's scroll arbitration.
+ *
+ * `to` is either a selector (drop on that capsule) or `{ dx, dy }` — an offset
+ * from the source centre, for dragging onto empty space.
+ */
+const touchDragTerm = (page, fromSel, to) => page.evaluate(async ({ a, b }) => {
+  const tick = () => new Promise(r => setTimeout(r, 8))
+  const src = document.querySelector(a)
+  if (!src) return false
+  const ra = src.getBoundingClientRect()
+  const from = { x: ra.left + ra.width / 2, y: ra.top + ra.height / 2 }
+  let target = null
+  if (typeof b === 'string') {
+    const dst = document.querySelector(b)
+    if (!dst) return false
+    const rb = dst.getBoundingClientRect()
+    target = { x: rb.left + rb.width / 2, y: rb.top + rb.height / 2 }
+  } else if (b && typeof b === 'object') {
+    target = { x: from.x + (b.dx || 0), y: from.y + (b.dy || 0) }
+  }
+  if (!target) return false
+  const opts = (x, y) => ({
+    bubbles: true, cancelable: true, composed: true, view: window,
+    pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1,
+    clientX: x, clientY: y,
+  })
+  const fire = (type, x, y) => {
+    const el = document.elementFromPoint(x, y) || src
+    el.dispatchEvent(new PointerEvent(type, opts(x, y)))
+  }
+  fire('pointerdown', from.x, from.y)
+  for (let i = 1; i <= 10; i++) {
+    fire('pointermove', from.x + ((target.x - from.x) * i) / 10, from.y + ((target.y - from.y) * i) / 10)
+    await tick()
+  }
+  fire('pointerup', target.x, target.y)
+  return true
+}, { a: fromSel, b: to })
+
+/** Rendered order of the draggable capsules ("x+xy" / "xy+x"). */
+const termOrder = (page) => page.evaluate(() =>
+  [...document.querySelectorAll('[data-tutorial="canvas"] [data-drag-index]')]
+    .map(el => (el.innerText || '').replace(/[^\w']/g, ''))
+    .filter(Boolean)
+    .join('+'))
+
 /* ══════════════════════════════════════════════════════════════════════════
    1 + 2 — Phone landscape: usable, tap-sized, no page scroll, strip + drawer
-   ══════════════════════════════════════════════════════════════════════════ */
-if (want(1) || want(2)) {
+   ══════════════════════════════════════════════════════════════════════════ */if (want(1) || want(2)) {
   section('1. Phone landscape 844x390')
   const { ctx, page, errors } = await makeLearner({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true })
   await page.goto(BASE + '/level/1/stage/0', { waitUntil: 'domcontentloaded' })
@@ -290,6 +340,79 @@ if (want(1) || want(2)) {
     } else {
       log('2.2 applying the law solves a step in the mobile layout', false, 'no law card appeared')
     }
+
+    // 2.4 / 2.5 — Term reordering must work on a TOUCH device. A completed stage
+    // reopens at its SAVED solution (one literal, no capsules), so reset the
+    // derivation first: "x + xy" always starts as two draggable term capsules.
+    const reopenFresh = async () => {
+      await page.goto(BASE + '/level/1/stage/0', { waitUntil: 'domcontentloaded' })
+      await page.waitForTimeout(800)
+      // sessionStorage flag: skip the reset-confirmation modal for a solved stage.
+      await page.evaluate((key) => sessionStorage.setItem(key, 'true'), SKIP_RESET_CONFIRM)
+      await page.locator('[data-tutorial="reset-button"]').first().click({ timeout: 8000 }).catch(() => {})
+      await page.waitForTimeout(1200)
+      // Never throw here: a missing capsule is reported by the checks below.
+      await page.waitForSelector('[data-tutorial="canvas"] [data-drag-index]', { timeout: 15000 }).catch(() => {})
+      // A cold first load can still be hydrating when the capsules appear, and an
+      // empty term reading would weaken 2.4/2.5 into checks that cannot fail.
+      // Wait until the expression is actually readable before measuring.
+      for (let i = 0; i < 24; i++) {
+        if ((await termOrder(page)) !== '') return
+        await page.waitForTimeout(250)
+      }
+    }
+
+    await reopenFresh()
+    const orderBeforeDrag = await termOrder(page)
+    const dragRan = await touchDragTerm(page, '[data-tutorial="term-1"]', '[data-tutorial="term-0"]')
+    await page.waitForTimeout(700)
+    const orderAfterDrag = await termOrder(page)
+    log('2.4 a term can be dragged with a finger (pointer events, not HTML5 DnD)',
+      dragRan && orderBeforeDrag === 'x+xy' && orderAfterDrag === 'xy+x',
+      `"${orderBeforeDrag}" -> "${orderAfterDrag}"`)
+
+    // 2.4b — a finger drag must show the same live affordances as a mouse drag:
+    // the source dims and the capsule under the finger lights up amber. Sampled
+    // MID-gesture, with a frame between moves so React has flushed the state
+    // update (dispatching the whole gesture in one task samples a stale DOM).
+    const affordance = await page.evaluate(async () => {
+      const src = document.querySelector('[data-tutorial="term-1"]')
+      const dst = document.querySelector('[data-tutorial="term-0"]')
+      if (!src || !dst) return { sampled: false }
+      const ra = src.getBoundingClientRect()
+      const rb = dst.getBoundingClientRect()
+      const opts = (x, y) => ({
+        bubbles: true, cancelable: true, composed: true, view: window,
+        pointerId: 11, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1,
+        clientX: x, clientY: y,
+      })
+      const fire = (type, x, y) =>
+        (document.elementFromPoint(x, y) || src).dispatchEvent(new PointerEvent(type, opts(x, y)))
+      const cx = ra.left + ra.width / 2
+      const cy = ra.top + ra.height / 2
+      const tx = rb.left + rb.width / 2
+      const ty = rb.top + rb.height / 2
+      fire('pointerdown', cx, cy)
+      for (let i = 1; i <= 6; i++) {
+        fire('pointermove', cx + ((tx - cx) * i) / 6, cy + ((ty - cy) * i) / 6)
+        await new Promise(resolve => requestAnimationFrame(() => resolve()))
+      }
+      const sourceDimmed = src.className.includes('opacity-45')
+      const targetLit = dst.className.includes('bg-amber-light')
+      fire('pointerup', tx, ty)
+      return { sampled: true, sourceDimmed, targetLit }
+    })
+    log('2.4b a finger drag shows the live affordances (source dimmed, target amber)',
+      affordance.sampled && affordance.sourceDimmed && affordance.targetLit,
+      JSON.stringify(affordance))
+
+    await reopenFresh()
+    const orderBeforeDrop = await termOrder(page)
+    await touchDragTerm(page, '[data-tutorial="term-1"]', { dy: 150 })
+    await page.waitForTimeout(600)
+    log('2.5 dropping a dragged term on empty space never reorders anything',
+      orderBeforeDrop === 'x+xy' && (await termOrder(page)) === orderBeforeDrop,
+      `"${orderBeforeDrop}" -> "${await termOrder(page)}"`)
   }
 
   log('1.17 no uncaught page errors in phone landscape', errors.length === 0, errors.slice(0, 3).join(' | '))
