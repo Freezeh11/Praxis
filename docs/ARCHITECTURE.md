@@ -106,9 +106,10 @@ Praxis/
 ### services/ — the only network boundary
 
 `apiClient.js` (fetch, auth header, JSON, `ApiError`, envelope unwrapping) ·
-`contentApi.js` · `scoreApi.js` · `progressApi.js` · `authClient.jsx` ·
-`supabaseClient.js`. Components never call `fetch`; they call a service or a
-`state/` hook that wraps one.
+`contentApi.js` · `scoreApi.js` · `progressApi.js` · `authActions.js` ·
+`supabaseClient.js`. Components never call `fetch`; they call the one service
+module they need, or a `state/` hook that wraps it. There is no barrel here on
+purpose — each module is already the smallest useful interface.
 
 ### components/ and pages/
 
@@ -176,7 +177,7 @@ Key properties:
   functions power the UI, the hint system, the solver and the sandbox generator.
 - **Scoring is computed twice, on purpose, from one rule set.** The client
   estimate renders instantly; the backend value is authoritative and overwrites
-  it. `config/game-rules.js` and `backend/config/constants.py` hold the numbers,
+  it. `config/gameRules.js` and `backend/config/constants.py` hold the numbers,
   and `engine/scoring.js` documents the mapping.
 
 ---
@@ -195,7 +196,7 @@ Key properties:
 | Hint/guide suggestions | `frontend/src/engine/laws/scanHints.js` |
 | The sandbox's accepted input | `frontend/src/engine/sandbox/input.js` |
 | Generated (random) puzzles | `frontend/src/engine/sandbox/generator.js` |
-| Scoring weights, star thresholds, unlock rule, timings, guide cost | `frontend/src/config/game-rules.js` **and** `backend/config/constants.py` |
+| Scoring weights, star thresholds, unlock rule, timings, guide cost | `frontend/src/config/gameRules.js` **and** `backend/config/constants.py` |
 | A storage key | `frontend/src/config/storageKeys.js` |
 | Points/streak/stage completion behaviour | `frontend/src/state/progressStore.js` |
 | Selection, undo, hint, animation sequencing | `frontend/src/state/useGameState.js` |
@@ -224,20 +225,22 @@ it in `laws/{sum,product,not,const}Laws.js`. Nothing else.
 
 - **Naming**: `PascalCase.jsx` for components and screens (file named after the
   component, one component per file); `camelCase.js` for modules; `useThing.js`
-  for hooks. Kebab-case is not used.
+  for hooks. Kebab-case is not used. The single exception is `main.jsx`, the bundler
+  entry point that `index.html` references by name.
 - **Layer imports**: `engine/` imports only `config/` and itself; `state/`
   imports `engine/`, `services/`, `config/`; `components/` and `pages/` import
   state + services + engine; `services/` imports `config/` only. Nothing imports
   from `components/` except other components.
-- **Public interfaces**: each folder has a barrel (`engine/index.js`,
-  `services/index.js`) or a documented entry module. Internals stay private.
+- **Public interfaces**: `engine/` has a barrel (`engine/index.js`) because its
+  internals are numerous and move; every other folder exposes one explicit entry
+  module per concern (e.g. `services/apiClient.js`) and keeps internals private.
 - **Size**: target < ~250 lines per file; the largest files left are
   `state/useGameState.js` (589, the puzzle session state machine — one job, still
   long), `pages/ProblemPage.jsx` (509, composition root) and
   `hooks/useCollisionPlacement.js` (407, mostly verbatim geometry). Anything much
   larger than these is almost certainly doing two jobs.
 - **Tunables**: a number that a designer might change belongs in
-  `config/game-rules.js` (frontend) or `backend/config/constants.py` (backend) —
+  `config/gameRules.js` (frontend) or `backend/config/constants.py` (backend) —
   never inline at a call site.
 - **Failures**: backend raises a named `AppError` (user-safe `message`,
   developer `detail`); frontend throws `ApiError` from `services/apiClient.js`

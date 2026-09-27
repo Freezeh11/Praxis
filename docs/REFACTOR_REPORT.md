@@ -32,8 +32,8 @@ frontend/src/engine/     pure algebra: node, tree, parser, render, normalize, eq
                          laws/{definitions,helpers,sum,product,not,const,scanHints}, solver, scoring,
                          sandbox/{input,generator,pool}, index, __tests__/
 frontend/src/state/      progressStore (single source of truth) · useProgress · useGameState · useGameContent
-frontend/src/services/   apiClient · contentApi · scoreApi · progressApi · authClient · supabaseClient
-frontend/src/config/     game-rules.js (every tunable) · storageKeys.js
+frontend/src/services/   apiClient · contentApi · scoreApi · progressApi · authActions · supabaseClient
+frontend/src/config/     gameRules.js (every tunable) · storageKeys.js
 frontend/src/components/ animations/ puzzle/ tutorial/ laws/ layout/ ui/ + the tree renderers
 frontend/src/pages/      one file per route screen
 frontend/src/styles/     index (Tailwind entry) · tokens · utilities · orientation · animations
@@ -47,7 +47,7 @@ never call `fetch` and never touch the engine's internals.
 
 | Duplication | Resolution |
 |---|---|
-| Levels + laws stored twice (Python and JS, 1,363 lines total) | `content/*.json`, read by `backend/repositories/content_repository.py` and imported by `frontend/src/content/game-content.js` through the `@content` alias |
+| Levels + laws stored twice (Python and JS, 1,363 lines total) | `content/*.json`, read by `backend/repositories/content_repository.py` and imported by `frontend/src/content/gameContent.js` through the `@content` alias |
 | Law identity retyped in builders, reference cards, hints, scoring | `engine/laws/definitions.js` — one table; the name→id map is derived from it |
 | The scoring formula in two places (server + client) | `backend/services/scoring_service.py` (authoritative) and `engine/scoring.js` (instant estimate), both reading their numbers from config |
 | `nameToId` map duplicated inside the puzzle screen, plus the scoring arithmetic inline | deleted; the screen calls `engine/scoring.js` |
@@ -77,7 +77,8 @@ never call `fetch` and never touch the engine's internals.
 | Dead declarations (`tokenBaseStyle`, `MIN_TAP`, `shockColor`, unused `earliest`/slice, write-only `earnedPoints`/`toastMessage`, dead tutorial data) | ~60 |
 
 Moved rather than deleted: `lib/tutorialData.js` → `content/tutorialContent.js`,
-`lib/auth-client.js` → `services/authClient.jsx`,
+`lib/auth-client.js` → `state/AuthProvider.jsx` + `state/useSession.js` +
+`services/authActions.js` (split again after the move),
 `hooks/useGameState.js` → `state/useGameState.js` (all `git mv`, history intact).
 
 ## 5. Verification
