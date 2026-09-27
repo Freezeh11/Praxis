@@ -107,7 +107,7 @@ Praxis/
 
 `apiClient.js` (fetch, auth header, JSON, `ApiError`, envelope unwrapping) ·
 `contentApi.js` · `scoreApi.js` · `progressApi.js` · `authActions.js` ·
-`supabaseClient.js`. Components never call `fetch`; they call the one service
+`supabaseClient.js` · `soundEffects.js` (Web Audio cues — no assets, no network). Components never call `fetch`; they call the one service
 module they need, or a `state/` hook that wraps it. There is no barrel here on
 purpose — each module is already the smallest useful interface.
 
@@ -198,6 +198,11 @@ Key properties:
 | Generated (random) puzzles | `frontend/src/engine/sandbox/generator.js` |
 | Scoring weights, star thresholds, unlock rule, timings, guide cost | `frontend/src/config/gameRules.js` **and** `backend/config/constants.py` |
 | A storage key | `frontend/src/config/storageKeys.js` |
+| The learner survey link | `frontend/src/config/appLinks.js` |
+| A sound cue, its notes or the master volume | `frontend/src/config/gameRules.js` (`SOUND`) + `frontend/src/services/soundEffects.js` |
+| When a cue fires | `frontend/src/state/useGameState.js` (step/hint/guide/reset/wrong) and `components/puzzle/usePuzzleSession.js` (complete) |
+| Dragging a term or factor | `frontend/src/hooks/useTermDrag.js` |
+| The laws reference panel geometry | `frontend/src/components/puzzle/LawsReferenceSheet.jsx` + `.praxis-sheet-panel` / `.praxis-drawer-panel` in `styles/utilities.css` |
 | Points/streak/stage completion behaviour | `frontend/src/state/progressStore.js` |
 | Selection, undo, hint, animation sequencing | `frontend/src/state/useGameState.js` |
 | An API call or an error message | `frontend/src/services/apiClient.js` + the matching `*Api.js` |
