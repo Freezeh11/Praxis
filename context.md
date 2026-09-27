@@ -1,6 +1,11 @@
 # Praxis — Full Project Context for AI
 
 > Feed this entire file to any AI agent when you want it to work on this project.
+>
+> **Architecture lives in [ARCHITECTURE.md](ARCHITECTURE.md).** That file is the
+> authoritative folder map, data flow and "where does X live?" index. This file
+> stays product-focused: what Praxis is, what exists, how to run it. When the two
+> disagree about a path, ARCHITECTURE.md wins.
 
 ---
 
@@ -28,61 +33,35 @@
 
 ---
 
-## 3. Complete Folder Structure
+## 3. Folder Structure
+
+The full map (with a per-module description and a "where does X live?" index) is
+in [ARCHITECTURE.md](ARCHITECTURE.md). In short:
 
 ```
 Praxis/
-├── .gitignore
-├── README.md
-├── context.md                          ← THIS FILE
-├── backend/
-│   ├── main.py                         ← FastAPI app entry point
-│   ├── requirements.txt                ← fastapi, uvicorn[standard], python-multipart
-│   ├── data/
-│   │   ├── __init__.py
-│   │   └── levels_data.py             ← Hardcoded LAWS array + LEVELS array (all puzzle data lives here)
-│   └── routers/
-│       ├── __init__.py                 ← Package marker
-│       ├── levels.py                   ← GET /api/levels, GET /api/levels/{level_id}
-│       ├── laws.py                     ← GET /api/laws
-│       └── score.py                    ← POST /api/score (computes score, does NOT save to DB)
-├── frontend/
-│   ├── .gitignore
-│   ├── index.html                      ← Entry HTML, loads Inter + JetBrains Mono fonts
-│   ├── package.json                    ← Dependencies (React 19, Vite, Tailwind, Framer Motion, React Router)
-│   ├── package-lock.json
-│   ├── postcss.config.js
-│   ├── tailwind.config.js              ← Custom colors (bg, text-1/2/3, accent, teal, amber, green, red), shadows, fonts
-│   ├── vite.config.js                  ← Proxies /api → http://localhost:8000
-│   ├── eslint.config.js
-│   ├── public/
-│   └── src/
-│       ├── main.jsx                    ← React entry, renders <App /> inside StrictMode
-│       ├── App.jsx                     ← BrowserRouter with 4 routes
-│       ├── App.css
-│       ├── index.css                   ← Tailwind directives + custom CSS tokens + animations
-│       ├── assets/
-│       │   ├── hero.png
-│       │   ├── react.svg
-│       │   └── vite.svg
-│       ├── components/
-│       │   ├── AnimationOverlay.jsx    ← Visual animation when a law is applied
-│       │   ├── ExpressionDisplay.jsx   ← Renders the Boolean expression tree
-│       │   └── ExprText.jsx            ← Handles symbol rendering in expressions
-│       ├── hooks/
-│       │   ├── useApi.js               ← Fetches levels/laws from API, submits scores
-│       │   ├── useGameState.js         ← Core game logic (selection, law application, hints, undo, animations)
-│       │   └── useProgress.js          ← Client-side progress tracking (points, streak, localStorage)
-│       ├── lib/
-│       │   ├── expr.js                 ← Expression tree: parse, normalize, navigate, manipulate
-│       │   └── laws.js                 ← Law analysis engine: detect applicable laws, scan for hints
-│       └── pages/
-│           ├── LevelSelectPage.jsx     ← ROOT ROUTE `/` — Level carousel (NO landing page)
-│           ├── StageSelectorPage.jsx   ← `/level/:levelId/stages`
-│           └── ProblemPage.jsx         ← `/level/:levelId/stage/:stageIdx`
+├── content/            laws.json + levels.json — ONE source, served by the API
+│                       and bundled by the app
+├── backend/            FastAPI, layered
+│   ├── main.py         assembly only
+│   ├── config/         settings + every scoring/star/unlock constant
+│   ├── core/           errors, response envelope, logging, request ids, auth
+│   ├── api/            thin routes + pydantic schemas
+│   ├── services/       content, scoring, progress logic
+│   └── repositories/   the only data access (content JSON, Supabase)
+├── frontend/src/
+│   ├── engine/         pure Boolean algebra (parser, laws, solver, sandbox,
+│   │                   scoring) + 46 unit tests
+│   ├── state/          one progress store + the puzzle session hook
+│   ├── services/       the only place that calls the API
+│   ├── config/         tunable numbers and storage keys
+│   ├── hooks/          UI hooks (device tier, popups)
+│   ├── components/     animations, puzzle, tutorial, laws, layout, ui
+│   ├── pages/          one file per route screen
+│   └── styles/         tokens, shared utilities, keyframes
+├── database/init.sql   Supabase schema
+└── .e2e/               browser suites + engine fingerprints + run-all-suites.sh
 ```
-
----
 
 ## 4. Current Routes (Frontend — React Router)
 
@@ -100,16 +79,16 @@ Praxis/
 | Method | Path | Router File | Purpose |
 |---|---|---|---|
 | `GET` | `/` | `main.py` | Health check — returns `{"message": "Praxis API is running", "docs": "/docs"}` |
-| `GET` | `/api/levels` | `routers/levels.py` | Returns all level metadata (id, name, desc, varCount, puzzleCount) — no puzzle details |
-| `GET` | `/api/levels/{level_id}` | `routers/levels.py` | Returns full level with all puzzle data (expr, goal, targetLaws, hints, optimalSteps) |
-| `GET` | `/api/laws` | `routers/laws.py` | Returns all 10 Boolean law reference cards |
-| `POST` | `/api/score` | `routers/score.py` | Computes score (efficiency 40% + target law 30% + hint independence 30%), returns earnedPoints — **does NOT save to DB** |
+| `GET` | `/api/levels` | `api/routes/levels.py` | Returns all level metadata (id, name, desc, varCount, puzzleCount) — no puzzle details |
+| `GET` | `/api/levels/{level_id}` | `api/routes/levels.py` | Returns full level with all puzzle data (expr, goal, targetLaws, hints, optimalSteps) |
+| `GET` | `/api/laws` | `api/routes/laws.py` | Returns all 10 Boolean law reference cards |
+| `POST` | `/api/score` | `api/routes/score.py` | Computes score (efficiency 40% + target law 30% + hint independence 30%), returns earnedPoints — **does NOT save to DB** |
 
 **CORS:** Backend allows `http://localhost:5173` and `http://127.0.0.1:5173`
 
 ---
 
-## 6. Score Calculation Logic (from `backend/routers/score.py`)
+## 6. Score Calculation Logic (from `backend/services/scoring_service.py`)
 
 ```
 ScoreRequest: { levelId, stageIdx, stepsUsed, lawsUsed[], hintsUsed }
@@ -123,7 +102,7 @@ Earned Points:   (total / 100) × 5  (bonus on top of base 10)
 
 ---
 
-## 7. Level/Law Data Structure (from `backend/data/levels_data.py`)
+## 7. Level/Law Data Structure (from `content/levels.json` + `content/laws.json`)
 
 ### LAWS Array (10 laws)
 ```python
@@ -164,7 +143,7 @@ Earned Points:   (total / 100) × 5  (bonus on top of base 10)
 
 ## 8. Frontend Architecture — Expression Engine
 
-### Expression Tree (from `lib/expr.js`)
+### Expression Tree (from `frontend/src/engine/`)
 The entire game runs on an **AST (Abstract Syntax Tree)** representation of Boolean expressions:
 
 - **Node Types:** `lit` (literal: `{type:'lit', v:'x', n:false}`), `const` (0 or 1), `prod` (product/AND), `sum` (sum/OR), `not` (negation/NOT)
@@ -173,20 +152,20 @@ The entire game runs on an **AST (Abstract Syntax Tree)** representation of Bool
 - **Navigation:** `getNode(root, "R.0.1")` navigates tree by path (R = root, numbers are indices)
 - **Canonical Text:** `canonText()` for order-independent comparison
 
-### Law Engine (from `lib/laws.js`)
+### Law Engine (from `frontend/src/engine/laws/`)
 - **analyzeSelection(expr, sel):** Given two selected nodes, returns array of applicable laws
 - **analyzeNot(expr, path):** For single negated-group clicks (De Morgan's, double negation)
 - **analyzeProductConst(expr, path, val, prodPath):** For constants inside products (Identity, Annulment)
 - **scanHints(node, path):** Scans entire expression tree for all possible simplifications
 - **Supported laws:** Absorption, Idempotent, Complement, Identity, Annulment, Distributive, Double Negation, De Morgan's AND, De Morgan's OR
 
-### Game State (from `hooks/useGameState.js`)
+### Game State (from `frontend/src/state/useGameState.js`)
 - Manages: expression tree, selection, step history, hints, applicable laws, animations
 - Selection modes: click literal, click NOT group, click whole term
 - **Animation pipeline:** When law is applied → triggers 2.5s animation → then updates AST
 - **Guide system:** `activateGuide()` uses `scanHints()` to pre-select items and auto-highlight
 
-### Progress Tracking (from `hooks/useProgress.js`)
+### Progress Tracking (from `frontend/src/state/progressStore.js`)
 - **Client-side only** — stored in `localStorage`
 - Tracks: points, streak, per-level scores, completed stages
 
@@ -299,13 +278,13 @@ npm run dev
 
 3. **Scores are computed but discarded** — `POST /api/score` returns a score response but does NOT save anything. The response is used for display only.
 
-4. **All data is hardcoded** — Levels, laws, and puzzles are all in `backend/data/levels_data.py`. There's no database reads or writes anywhere.
+4. **Content is static but not duplicated** — levels and laws live once, in `content/*.json`; the API serves them and the frontend bundles them. Supabase is used only for progress and score history.
 
 5. **The root route IS the level select** — `App.jsx` routes `/` directly to `<LevelSelectPage />`. To add a landing page, you'll need to either:
    - Change the root route to a new LandingPage component and move LevelSelectPage to `/play` or `/levels`
    - Or add auth gating (redirect to landing if not logged in)
 
-6. **The expression engine is self-contained** — `lib/expr.js` and `lib/laws.js` have no React dependencies. They're pure JavaScript that could be reused server-side if needed.
+6. **The expression engine is self-contained** — `frontend/src/engine/` has no React or network dependencies, and it is the *only* Boolean engine in the project (the backend serves content and persists scores, it does not re-implement algebra). See "The engine contract" in ARCHITECTURE.md.
 
 7. **Custom Tailwind tokens** — The project uses custom color names like `bg-bg`, `bg-bg-card`, `text-text-1`, `text-text-2`, `text-text-3`, `border-border`, `bg-accent`. Don't use standard Tailwind colors without checking if a custom token exists.
 
