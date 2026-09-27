@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
@@ -18,10 +18,98 @@ const COMING_SOON = []
 const SANDBOX_LEVEL = {
   id: 'sandbox',
   name: 'Sandbox',
-  desc: 'Free practice — randomize any expression',
+  desc: 'Free practice — type your own expression',
   varCount: 3,
   puzzleCount: 0,
   isSandbox: true,
+}
+
+/**
+ * Shared placement helper for this screen's two overlays.
+ *
+ * The tutorial-replay prompt used to be a plain centred dialog, so on a short
+ * landscape phone it covered the header button that opened it; the law drawer
+ * was a full-height panel, so it hid the whole header rail. Both now measure
+ * the control they belong to and stay clear of it:
+ *
+ *   band   → the free strip below that control (`top` + `maxHeight`)
+ *   shift  → a vertical nudge that moves a centred dialog clear of it,
+ *            clamped to the viewport so the dialog can never be pushed off.
+ */
+function usePopupPlacement(anchorSelector, active) {
+  const [placement, setPlacement] = useState(null)
+
+  useEffect(() => {
+    if (!active) return undefined
+    let frame = null
+
+    const measure = () => {
+      const vh = window.visualViewport?.height ?? window.innerHeight
+      const MARGIN = 8
+      const anchorEl = document.querySelector(anchorSelector)
+      const ar = anchorEl ? anchorEl.getBoundingClientRect() : null
+      const anchorBottom = ar ? ar.bottom : 0
+
+      // Drawer band: everything under the control, capped so it stays a
+      // drawer and never swallows the page.
+      const drawerTop = MARGIN
+      // The drawer may be tall, but its left edge must stay clear of the header
+      // controls, so a wide viewport gives it a column that starts after them
+      // and a narrow one gives it the full width under them.
+      const margin = 96
+      const narrow = window.innerWidth <= 640
+      const maxWidth = narrow
+        ? window.innerWidth - MARGIN * 2
+        : Math.max(260, window.innerWidth - Math.max(0, (document.querySelector(anchorSelector)?.getBoundingClientRect().left ?? 0) - 24))
+      const aboveTrigger = Math.max(0, anchorBottom + MARGIN - drawerTop)
+      const fullHeight = (vh - drawerTop - MARGIN) * 0.9
+      const band = {
+        top: drawerTop,
+        maxHeight: Math.max(margin, Math.min(fullHeight, narrow ? aboveTrigger : Math.max(aboveTrigger, fullHeight * 0.7))),
+        maxWidth,
+      }
+
+      // Centred dialog: keep it vertically centred unless that would cover the
+      // control, then slide it down just enough.
+      const panel = document.querySelector('[data-popup-panel="centered"]')
+      let shift = 0
+      if (panel) {
+        const naturalH = panel.offsetHeight || 0
+        const maxH = Math.max(120, vh - MARGIN * 2)
+        const height = Math.min(naturalH, maxH)
+        if (naturalH > 0 && anchorBottom + MARGIN > (vh - height) / 2) {
+          shift = Math.min(anchorBottom + MARGIN - (vh - height) / 2, Math.max(0, vh - MARGIN - ((vh - height) / 2 + height)))
+        }
+      }
+      publish({ band, shift })
+    }
+
+    const publish = (next) => {
+      setPlacement(prev => (prev
+        && Math.abs(prev.band.top - next.band.top) < 0.6
+        && Math.abs(prev.band.maxHeight - next.band.maxHeight) < 0.6
+        && Math.abs(prev.shift - next.shift) < 0.6
+        ? prev
+        : next))
+    }
+    const schedule = () => {
+      if (frame) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measure)
+    }
+
+    schedule()
+    window.addEventListener('resize', schedule)
+    window.addEventListener('orientationchange', schedule)
+    window.visualViewport?.addEventListener('resize', schedule)
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      window.removeEventListener('resize', schedule)
+      window.removeEventListener('orientationchange', schedule)
+      window.visualViewport?.removeEventListener('resize', schedule)
+    }
+  }, [anchorSelector, active])
+
+  return placement
 }
 
 export default function LevelSelectPage() {
@@ -32,6 +120,11 @@ export default function LevelSelectPage() {
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
   const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  // Each overlay belongs to the control that opened it, so its band/shift is
+  // measured against that control.
+  const popupAnchorSelector = showLawsDrawer ? '[data-popup-anchor="laws"]' : '[data-popup-anchor="tutorial"]'
+  const popupPlacement = usePopupPlacement(popupAnchorSelector, showTutorialPrompt || showLawsDrawer)
 
   // Real levels plus the always-available Sandbox entry, rendered as one list.
   const entries = [...(levels || []), SANDBOX_LEVEL]
@@ -128,25 +221,80 @@ export default function LevelSelectPage() {
   const prev = () => setSelected(s => Math.max(0, s - 1))
   const next = () => setSelected(s => Math.min(entries.length - 1, s + 1))
 
+  /**
+   * Carousel centring.
+   *
+   * On a phone the five-entry row (5 x 240px + gaps) is far wider than the
+   * viewport, so the track clips it. Flex-centring then leaves whichever card
+   * happens to sit in the middle under the spotlight — on a 420px window that
+   * was Level 2 while the *selected* entry (Level 1 / Sandbox) sat off-screen,
+   * which is why the arrows and the CTA looked broken.
+   *
+   * The row is translated so the selected card is centred. `offsetLeft` is used
+   * instead of getBoundingClientRect because it ignores the current transform,
+   * which keeps the maths stable across re-measures. When the row fits inside
+   * the track (every desktop width) maxShift is 0 and the row never moves, so
+   * the pre-mobile layout is untouched.
+   */
+  const trackRef = useRef(null)
+  const rowRef = useRef(null)
+  const cardRefs = useRef([])
+  const [rowShift, setRowShift] = useState(0)
+
+  const recenterRow = useCallback(() => {
+    const track = trackRef.current
+    const row = rowRef.current
+    const card = cardRefs.current[selected]
+    if (!track || !row || !card) return
+    const maxShift = Math.max(0, (row.offsetWidth - track.clientWidth) / 2)
+    const wanted = row.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
+    const nextShift = Math.round(Math.max(-maxShift, Math.min(maxShift, wanted)))
+    setRowShift(prevShift => (Math.abs(prevShift - nextShift) < 1 ? prevShift : nextShift))
+  }, [selected])
+
+  useLayoutEffect(() => {
+    recenterRow()
+  }, [recenterRow, entries.length, loading])
+
+  useEffect(() => {
+    window.addEventListener('resize', recenterRow)
+    window.addEventListener('orientationchange', recenterRow)
+    return () => {
+      window.removeEventListener('resize', recenterRow)
+      window.removeEventListener('orientationchange', recenterRow)
+    }
+  }, [recenterRow])
+
   return (
-    <div className="min-h-screen bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-      {/* Header */}
-      <header className="relative w-full h-[72px] px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
-        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-          <img src={logoFull} alt="Praxis" className="h-8 object-contain" />
-        </Link>
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
+      {/* Header — shrinks to 52px on a landscape phone so the card + CTA fit. */}
+      <header className="relative w-full h-[72px] [@media(max-height:480px)]:h-[52px] px-4 sm:px-8 flex items-center justify-between bg-bg-card/70 backdrop-blur-md border-b-2 border-border z-20 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-white border border-slate-300 shadow-xs hover:bg-slate-50 hover:shadow-sm transition-all active:scale-95 cursor-pointer"
+            title="Back to Home"
+          >
+            <span className="font-extrabold text-teal leading-none text-sm">←</span>
+            <span>Home</span>
+          </Link>
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src={logoFull} alt="Praxis" className="h-8 [@media(max-height:480px)]:h-6 object-contain" />
+          </Link>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
+            data-popup-anchor="tutorial"
             onClick={handleTutorialClick}
-            className="h-9 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+            className="h-9 [@media(max-height:480px)]:h-11 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
             title="Interactive Tutorial"
           >
             <span>Tutorial</span>
           </button>
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
+          <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
           <button 
             onClick={handleLogout}
-            className="h-9 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all ml-1" 
+            className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all sm:ml-1" 
             title="Sign Out"
           >
             Sign Out
@@ -155,51 +303,76 @@ export default function LevelSelectPage() {
       </header>
 
       {/* Title */}
-      <div className="mt-10 flex flex-col items-center gap-1.5">
-        <h1 className="font-bold text-[32px] tracking-tight text-accent">Choose Your Level</h1>
-        <p className="text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
+      <div className="mt-10 [@media(max-height:480px)]:mt-1.5 max-sm:mt-6 flex flex-col items-center gap-1.5">
+        <h1 className="font-bold text-[32px] [@media(max-height:480px)]:text-[22px] tracking-tight text-accent">Choose Your Level</h1>
+        <p className="praxis-hide-short text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
       </div>
 
-      {/* Carousel */}
-      <div className="flex items-center justify-center gap-8 mt-10 flex-1">
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={prev} disabled={selected === 0}>
+      {/* Carousel — the track clips the row; the row is translated so the
+          selected card is centred (see recenterRow). */}
+      <div className="flex items-center justify-center gap-3 sm:gap-8 mt-10 [@media(max-height:480px)]:mt-2 flex-1 min-h-0">
+        <button
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-2xl font-black text-slate-700 shadow-md transition-all shrink-0 hover:not:disabled:border-accent hover:not:disabled:bg-slate-50 hover:not:disabled:text-accent hover:not:disabled:scale-105 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+          onClick={prev}
+          disabled={selected === 0}
+          aria-label="Previous level"
+        >
           <span>‹</span>
         </button>
 
-        <div className="flex items-center justify-center gap-5 [perspective:1000px]">
-          {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
-          {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
-          {!loading && !error && entries.map((lv, i) => {
-            const offset = i - selected
-            const lockState = getLockState(lv)
-            const { locked } = lockState
-            const isSandbox = Boolean(lv.isSandbox)
-            const done = !isSandbox && isLevelCompleted(lv.id)
-            const isActive = offset === 0
-            const isComingSoon = COMING_SOON.includes(lv.id)
-            const isScoreGated = lockState.reason === 'score-gate'
+        <div
+          ref={trackRef}
+          data-carousel-track="true"
+          className="relative flex min-w-0 shrink items-center justify-center overflow-hidden"
+        >
+          <div
+            ref={rowRef}
+            className="relative flex shrink-0 items-center justify-center gap-5 [perspective:1000px] transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${rowShift}px)` }}
+          >
+            {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
+            {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
+            {!loading && !error && entries.map((lv, i) => {
+              const offset = i - selected
+              const lockState = getLockState(lv)
+              const { locked } = lockState
+              const isSandbox = Boolean(lv.isSandbox)
+              const done = !isSandbox && isLevelCompleted(lv.id)
+              const isActive = offset === 0
+              const isComingSoon = COMING_SOON.includes(lv.id)
+              const isScoreGated = lockState.reason === 'score-gate'
 
-            return (
-              <div
-                key={lv.id}
-                className={`w-[240px] bg-bg-card rounded-[20px] px-7 py-9 flex flex-col items-center gap-2.5 transition-all duration-250 ease-out select-none
-                  ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-1 opacity-70 shadow-sm'}
-                  ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  ${!locked && !isActive ? 'hover:opacity-90 hover:scale-95 hover:translate-y-0.5' : ''}
-                `}
-                onClick={() => !locked && setSelected(i)}
-              >
-                {/* Icon */}
-                <div className={`w-16 h-16 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
-                  ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px]' : 'border-border text-[26px]'}
-                  ${done && !isActive ? 'bg-green-light text-green' : ''}
-                  ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
-                `}>
-                  {isSandbox ? '🧪' : isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
-                </div>
+              return (
+                <div
+                  key={lv.id}
+                  ref={el => { cardRefs.current[i] = el }}
+                  data-level-card={lv.id}
+                  data-active={isActive ? 'true' : 'false'}
+                  className={`w-[240px] [@media(max-width:379px)]:w-[200px] bg-bg-card rounded-[20px] px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-all duration-250 ease-out select-none
+                    ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-1 opacity-70 shadow-sm'}
+                    ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    ${!locked && !isActive ? 'hover:opacity-90 hover:scale-95 hover:translate-y-0.5' : ''}
+                  `}
+                  onClick={() => {
+                    if (locked) return
+                    if (isActive) {
+                      handleStart()
+                    } else {
+                      setSelected(i)
+                    }
+                  }}
+                >
+                  {/* Icon */}
+                  <div className={`w-16 h-16 [@media(max-height:480px)]:w-12 [@media(max-height:480px)]:h-12 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
+                    ${isActive ? 'bg-text-1 text-white border-text-1 text-[28px] [@media(max-height:480px)]:text-[22px]' : 'border-border text-[26px] [@media(max-height:480px)]:text-[20px]'}
+                    ${done && !isActive ? 'bg-green-light text-green' : ''}
+                    ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
+                  `}>
+                    {isSandbox ? '🧪' : isComingSoon ? '🔒' : locked ? '🔒' : done ? '✓' : lv.id}
+                  </div>
 
-                <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'}`}>{lv.name}</div>
-                <div className="text-[13px] text-text-3 text-center">{lv.desc}</div>
+                  <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'} [@media(max-height:480px)]:text-[16px]`}>{lv.name}</div>
+                  <div className="text-[13px] [@media(max-height:480px)]:text-[12px] [@media(max-height:359px)]:hidden text-text-3 text-center">{lv.desc}</div>
 
                 {/* Score gate progress for Level 2/3 */}
                 {isScoreGated && isActive && lockState.progress && (
@@ -266,6 +439,21 @@ export default function LevelSelectPage() {
                   return null
                 })()}
 
+                {/* Direct action button on active card */}
+                {isActive && !locked && (
+                  <button
+                    type="button"
+                    className="w-full mt-2 py-2 px-3 rounded-xl font-bold text-xs bg-accent text-white shadow-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStart()
+                    }}
+                  >
+                    <span>{isSandbox ? 'Open Sandbox' : 'View Stages'}</span>
+                    <span>→</span>
+                  </button>
+                )}
+
                 {/* Tags */}
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
@@ -276,28 +464,35 @@ export default function LevelSelectPage() {
               </div>
             )
           })}
+          </div>
         </div>
 
-        <button className="w-10 h-10 rounded-full border-[1.5px] border-border bg-white flex items-center justify-center text-[22px] text-text-2 shadow-sm transition-all shrink-0 hover:not:disabled:border-text-1 hover:not:disabled:text-text-1 hover:not:disabled:shadow-md disabled:opacity-30 disabled:cursor-not-allowed" onClick={next} disabled={selected === entries.length - 1}>
+        <button
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-2xl font-black text-slate-700 shadow-md transition-all shrink-0 hover:not:disabled:border-accent hover:not:disabled:bg-slate-50 hover:not:disabled:text-accent hover:not:disabled:scale-105 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+          onClick={next}
+          disabled={selected === entries.length - 1}
+          aria-label="Next level"
+        >
           <span>›</span>
         </button>
       </div>
 
-      {/* XP bar */}
-      <div className="flex justify-center gap-4 mb-5">
-        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-4 py-1.5 text-sm font-bold text-text-1 shadow-sm flex items-center gap-1.5">⭐ {progress.points || 0} Points</span>
-        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-4 py-1.5 text-sm font-bold text-text-1 shadow-sm flex items-center gap-1.5">🔥 {progress.streak} streak</span>
+      {/* XP bar — decorative on a 320px-tall phone, where the fold wins. */}
+      <div className="flex justify-center gap-3 sm:gap-4 mb-5 [@media(max-height:480px)]:mb-1 [@media(max-height:359px)]:hidden">
+        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-3 sm:px-4 py-1.5 [@media(max-height:480px)]:py-0.5 text-sm [@media(max-height:480px)]:text-xs font-bold text-text-1 shadow-sm flex items-center gap-1.5">⭐ {progress.points || 0} Points</span>
+        <span className="bg-bg-card border-[1.5px] border-border rounded-full px-3 sm:px-4 py-1.5 [@media(max-height:480px)]:py-0.5 text-sm [@media(max-height:480px)]:text-xs font-bold text-text-1 shadow-sm flex items-center gap-1.5">🔥 {progress.streak} streak</span>
       </div>
 
-      {/* Start button */}
-      <div className="flex justify-center pb-16">
+      {/* Start button — pinned into the fold on landscape phones. */}
+      <div className="flex justify-center pb-16 [@media(max-height:480px)]:pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] [@media(max-height:359px)]:pb-1">
         <button
           id="start-level-btn"
-          className="bg-accent text-white text-base font-bold px-12 py-4 rounded-full shadow-md transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg"
+          className="bg-accent text-white text-base font-extrabold px-10 py-3.5 [@media(max-height:480px)]:px-8 [@media(max-height:480px)]:py-2.5 rounded-full shadow-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-800 hover:scale-105 hover:shadow-xl active:scale-95 flex items-center gap-2 cursor-pointer"
           onClick={handleStart}
           disabled={!entries[selected] || getLockState(entries[selected]).locked}
         >
-          {entries[selected]?.isSandbox ? 'ENTER SANDBOX' : 'START LEVEL'}
+          <span>{entries[selected]?.isSandbox ? '🧪 ENTER SANDBOX' : '🚀 VIEW LEVEL STAGES'}</span>
+          <span className="text-lg">→</span>
         </button>
       </div>
 
@@ -308,13 +503,15 @@ export default function LevelSelectPage() {
           onClick={() => setShowTutorialPrompt(false)}
         >
           <div 
-            className="relative bg-white rounded-3xl pt-9 pb-8 px-8 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5"
+            data-popup-panel="centered"
+            className="praxis-modal-panel relative bg-white rounded-3xl pt-9 pb-8 [@media(max-height:480px)]:pt-6 [@media(max-height:480px)]:pb-3 px-6 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5 [@media(max-height:480px)]:gap-2.5"
+            style={{ transform: `translateY(${Math.round(popupPlacement ? popupPlacement.shift : 0)}px)` }}
             onClick={e => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               type="button"
-              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
+              className="absolute top-2 right-2 w-11 h-11 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
               onClick={() => setShowTutorialPrompt(false)}
             >
               ✕
@@ -345,17 +542,17 @@ export default function LevelSelectPage() {
             </label>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 w-full mt-1">
+            <div className="praxis-modal-actions flex items-center gap-3 w-full mt-1">
               <button
                 type="button"
-                className="flex-1 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
+                className="flex-1 min-h-11 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
                 onClick={() => setShowTutorialPrompt(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="flex-1 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
+                className="flex-1 min-h-11 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
                 onClick={handleRestartTutorial}
               >
                 Restart Walkthrough
@@ -367,12 +564,21 @@ export default function LevelSelectPage() {
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
       <div className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowLawsDrawer(false)} />
-      <div className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        data-testid="laws-drawer"
+        className={`praxis-sheet-panel fixed right-0 max-w-[92vw] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${showLawsDrawer ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{
+          top: `${Math.round(popupPlacement ? popupPlacement.band.top : 0)}px`,
+          maxHeight: `${Math.round(popupPlacement ? popupPlacement.band.maxHeight : 0)}px`,
+          width: `${Math.round(popupPlacement ? popupPlacement.band.maxWidth : 340)}px`,
+          opacity: popupPlacement ? 1 : 0,
+        }}
+      >
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-base font-bold text-text-1">Law Reference</h2>
-          <button className="w-8 h-8 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
+          <button data-testid="laws-close" className="praxis-touch-target shrink-0 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all" onClick={() => setShowLawsDrawer(false)}>✕</button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 flex flex-col gap-3 praxis-safe-b">
           {laws && laws.map(law => (
             <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
               <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
