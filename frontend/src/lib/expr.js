@@ -26,7 +26,7 @@ export function cloneN(n) {
  * Supports:
  * - Literals (A-Z, a-z)
  * - Constants (0, 1)
- * - Operators (+, ·, *, &, |, ', !, ~)
+ * - Operators (+, ·, *, ., &, |, ∨, ', !, ¬, ~)
  * - Parentheses (, )
  */
 function tokenize(str) {
@@ -44,16 +44,16 @@ function tokenize(str) {
     } else if (/[a-zA-Z]/.test(ch)) {
       tokens.push({ type: 'VAR', val: ch })
       i++
-    } else if (ch === '+' || ch === '|') {
+    } else if (ch === '+' || ch === '|' || ch === '∨') {
       tokens.push({ type: 'OR' })
       i++
-    } else if (ch === '*' || ch === '·' || ch === '&') {
+    } else if (ch === '*' || ch === '·' || ch === '&' || ch === '.') {
       tokens.push({ type: 'AND' })
       i++
     } else if (ch === "'" ) {
       tokens.push({ type: 'POST_NOT' })
       i++
-    } else if (ch === '!' || ch === '~') {
+    } else if (ch === '!' || ch === '~' || ch === '¬') {
       tokens.push({ type: 'PRE_NOT' })
       i++
     } else if (ch === '(') {
