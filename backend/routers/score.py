@@ -12,7 +12,8 @@ class ScoreRequest(BaseModel):
     stageIdx: int
     stepsUsed: int
     lawsUsed: List[str]   # list of law IDs applied (may have duplicates)
-    hintsUsed: int        # number of hints/guides consumed
+    hintsUsed: int        # number of hints consumed
+    guidesUsed: Optional[int] = 0
     optimalSteps: Optional[int] = None
 
 
@@ -25,7 +26,7 @@ class ScoreResponse(BaseModel):
     breakdown: dict
 
 
-def save_score_to_db(user, req: ScoreRequest, efficiency, target_law, hint_independence, total, earned_points):
+def save_score_to_db(user, req: ScoreRequest, efficiency, target_law, hint_independence, total, earned_points, total_assistance: int):
     try:
         from supabase_client import supabase
 
@@ -36,7 +37,7 @@ def save_score_to_db(user, req: ScoreRequest, efficiency, target_law, hint_indep
             "stage_idx": req.stageIdx,
             "steps_used": req.stepsUsed,
             "laws_used": req.lawsUsed,
-            "hints_used": req.hintsUsed,
+            "hints_used": total_assistance,
             "efficiency": efficiency,
             "target_law": target_law,
             "hint_independence": hint_independence,
@@ -98,8 +99,9 @@ async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, us
         target_law = round((matched / len(target_laws)) * 30.0, 1)
 
     # ── 3. Hint Independence (30%) ──────────────────────────────────────────
-    # 0 hints = 30 pts. Each hint/guide used costs 10 pts. Minimum 0.
-    hint_independence = max(0.0, 30.0 - req.hintsUsed * 10.0)
+    # 0 hints/guides = 30 pts. Each hint/guide used costs 10 pts. Minimum 0.
+    total_assistance = max(req.hintsUsed or 0, (req.hintsUsed or 0) + (req.guidesUsed or 0))
+    hint_independence = max(0.0, 30.0 - total_assistance * 10.0)
 
     total = round(efficiency + target_law + hint_independence, 1)
 
@@ -110,7 +112,7 @@ async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, us
     if user:
         background_tasks.add_task(
             save_score_to_db,
-            user, req, efficiency, target_law, hint_independence, total, earned_points
+            user, req, efficiency, target_law, hint_independence, total, earned_points, total_assistance
         )
 
     return ScoreResponse(
@@ -124,6 +126,8 @@ async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, us
             "optimalSteps": optimal,
             "targetLawsRequired": list(target_laws),
             "targetLawsUsed": list(target_laws & laws_used),
-            "hintsUsed": req.hintsUsed,
+            "hintsUsed": req.hintsUsed or 0,
+            "guidesUsed": req.guidesUsed or 0,
+            "totalAssistance": total_assistance,
         },
     )
