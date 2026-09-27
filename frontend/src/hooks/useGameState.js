@@ -72,7 +72,10 @@ function buildHintText(law, paths, expr) {
   }
 }
 
-export function useGameState() {
+export function useGameState(options = {}) {
+  // Sandbox-only engine opt-in: enables the gated Distributive-Expand law.
+  // Graded levels call useGameState() with no options, so nothing changes there.
+  const { allowExpand = false } = options || {}
   const [history, setHistory] = useState([]) // Array of { expr, step }
   const expr = history.length > 0 ? history[history.length - 1].expr : null
   const steps = history.length > 1 ? history.slice(1).map(h => h.step) : []
@@ -83,6 +86,7 @@ export function useGameState() {
   const [goalCanon, setGoalCanon] = useState('')
   const [hintIdx, setHintIdx] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
+  const [guidesUsed, setGuidesUsed] = useState(0)
   const [optimalSteps, setOptimalSteps] = useState(0)
   const [optimalPath, setOptimalPath] = useState([])
   const [applicableLaws, setApplicableLaws] = useState([])
@@ -99,6 +103,7 @@ export function useGameState() {
   const preLawTimerRef = useRef(null)
   const animationTimerRef = useRef(null)
   const goalCanonRef = useRef('')
+  const currentPuzzleExprRef = useRef('')
 
   const syncDeadEndStatus = useCallback((exprSnapshot, fallbackMsg = 'Select a term or variable to begin') => {
     if (!exprSnapshot) return false
@@ -108,7 +113,7 @@ export function useGameState() {
       return false
     }
 
-    const hints = scanHints(exprSnapshot, 'R')
+    const hints = scanHints(exprSnapshot, 'R', { allowExpand })
     if (hints.length === 0) {
       setIsDeadEnd(true)
       setApplicableLaws([])
@@ -121,7 +126,7 @@ export function useGameState() {
     setStatus('select')
     setStatusMsg(fallbackMsg)
     return false
-  }, [])
+  }, [allowExpand])
 
   const loadPuzzle = useCallback((puzzle, savedSteps = null) => {
     if (animationTimerRef.current) {
@@ -135,7 +140,7 @@ export function useGameState() {
 
     // Compute dynamic optimal path via BFS
     try {
-      const solverRes = findOptimalPath(parsedExpr, gCanon)
+      const solverRes = findOptimalPath(parsedExpr, gCanon, { allowExpand })
       if (solverRes.found && solverRes.optimalSteps > 0) {
         setOptimalSteps(solverRes.optimalSteps)
         setOptimalPath(solverRes.path)
@@ -177,15 +182,20 @@ export function useGameState() {
     setGoalText(puzzle.goal)
     setGoalCanon(gCanon)
     setSel([])
-    setHintIdx(0)
-    setHintsUsed(0)
+    const isNewPuzzle = currentPuzzleExprRef.current !== puzzle.expr
+    if (isNewPuzzle) {
+      currentPuzzleExprRef.current = puzzle.expr
+      setHintIdx(0)
+      setHintsUsed(0)
+      setGuidesUsed(0)
+    }
     setApplicableLaws([])
     setActiveGuidePaths([])
     setIsDeadEnd(false)
     setIsAnimating(false)
     setAnimationData(null)
     setEarnedXp(0)
-  }, [syncDeadEndStatus])
+  }, [syncDeadEndStatus, allowExpand])
 
   const updateLaws = useCallback((nextSel, exprSnapshot) => {
     if (isDeadEnd) {
@@ -196,7 +206,7 @@ export function useGameState() {
     }
 
     if (nextSel.length === 2) {
-      const laws = analyzeSelection(exprSnapshot, nextSel)
+      const laws = analyzeSelection(exprSnapshot, nextSel, { allowExpand })
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
       if (laws.length) {
@@ -235,7 +245,7 @@ export function useGameState() {
       setStatus('select')
       setStatusMsg('Select a term or variable to begin')
     }
-  }, [isDeadEnd])
+  }, [isDeadEnd, allowExpand])
 
   /* ---- selection handlers ---- */
   const handleClickLit = useCallback((path, exprSnapshot) => {
@@ -386,6 +396,10 @@ export function useGameState() {
     })
   }, [isAnimating, isDeadEnd, updateLaws])
 
+  // currentSteps / hintsCount are part of the positional call signature
+  // (ProblemPage calls applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)),
+  // so they must stay in place even though this body no longer reads them.
+  // eslint-disable-next-line no-unused-vars
   const applyLaw = useCallback((law, currentExpr = expr, currentSteps = steps, hintsCount = 0, isTutorial = false) => {
     if (isAnimating) return
     const activeExpr = currentExpr || expr
@@ -524,7 +538,7 @@ export function useGameState() {
   const useHint = useCallback((puzzle) => {
     // Always try to generate a contextual hint from the current expression first
     if (expr) {
-      const scanResults = scanHints(expr, 'R')
+      const scanResults = scanHints(expr, 'R', { allowExpand })
       if (scanResults.length > 0) {
         const { law, paths } = scanResults[0]
         const contextMsg = buildHintText(law, paths, expr)
@@ -538,7 +552,7 @@ export function useGameState() {
     setHintIdx(i => i + 1)
     setHintsUsed(h => h + 1)
     return hint
-  }, [expr, hintIdx])
+  }, [expr, hintIdx, allowExpand])
 
   /** Drag-and-drop term or factor reorder - no law applied, no step recorded */
   const swapTerms = useCallback((parentPath, fromIdx, toIdx) => {
@@ -580,7 +594,7 @@ export function useGameState() {
 
   const activateGuide = useCallback(() => {
     if (!expr) return false
-    const hints = scanHints(expr, 'R')
+    const hints = scanHints(expr, 'R', { allowExpand })
     if (hints.length === 0) {
       setIsDeadEnd(true)
       setStatus('error')
@@ -589,6 +603,7 @@ export function useGameState() {
     }
 
     setIsDeadEnd(false)
+    setGuidesUsed(g => g + 1)
     const hint = hints[0]
     const paths = hint.paths
 
@@ -612,19 +627,19 @@ export function useGameState() {
     setSel(nextSel)
 
     // Compute applicable laws right away so user just has to pick one
-    const laws = analyzeSelection(expr, nextSel)
+    const laws = analyzeSelection(expr, nextSel, { allowExpand })
     setApplicableLaws(laws)
     setStatus(laws.length ? 'laws' : 'select')
     setStatusMsg(laws.length
       ? 'Guide: the terms are pre-selected - pick a law to apply!'
       : 'Guide: click the highlighted terms, then choose a law.')
     return true
-  }, [expr])
+  }, [expr, allowExpand])
 
   return {
     expr, sel, steps, exprHistory,
     goalText, goalCanon,
-    hintIdx, hintsUsed,
+    hintIdx, hintsUsed, guidesUsed,
     optimalSteps, optimalPath,
     applicableLaws,
     isComplete, earnedXp,
