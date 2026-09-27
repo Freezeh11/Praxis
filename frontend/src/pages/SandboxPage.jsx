@@ -4,7 +4,7 @@
  * The learner types their own Boolean expression, gets a LIVE validity verdict
  * while typing, and is dropped into the exact same workspace as a graded level
  * once the expression is both valid AND actually solvable by the engine
- * (`buildSandboxPuzzle`, owned by lib/sandboxInput.js).
+ * (`buildSandboxPuzzle`, owned by engine/sandbox/input.js).
  *
  * Two verdicts exist and they are deliberately separate:
  *
@@ -35,7 +35,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { validateSandboxInput, buildSandboxPuzzle } from '../lib/sandboxInput.js'
+import { validateSandboxInput, buildSandboxPuzzle } from '../engine/index.js'
 
 /** Keep the verdict off every keystroke — ~300ms after the learner stops. */
 const VALIDATION_DEBOUNCE_MS = 300

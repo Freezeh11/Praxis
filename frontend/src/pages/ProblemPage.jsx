@@ -10,7 +10,7 @@ import ExpressionDisplay from '../components/ExpressionDisplay'
 import AnimationOverlay from '../components/AnimationOverlay'
 import ExprText from '../components/ExprText'
 import InteractiveTutorial from '../components/InteractiveTutorial'
-import { generatePuzzlePair } from '../lib/randomPuzzle'
+import { generatePuzzlePair } from '../engine/index.js'
 
 /** sessionStorage slot that keeps a typed sandbox expression across a refresh. */
 const CUSTOM_PUZZLE_STORAGE_KEY = 'praxis_sandbox_custom_puzzle'

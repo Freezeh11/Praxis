@@ -254,7 +254,7 @@ log(`"A(B + A')" -> Validate & Play opens /sandbox/play with that expression on 
 if (!handedOff) {
   const verdict = await feedbackOf()
   blocked('the workspace handoff for "A(B + A\')"',
-    `buildSandboxPuzzle rejected it ("${verdict.text || 'no feedback'}"). The engine has NO legal move for prod(A, sum(B, A')) — lib/solver.js getLegalTransitions() — so it reports already-simplest. Fix is shared task-5 (gated distributive-expansion law, owner validator-dev; do NOT swap the expression out).`)
+    `buildSandboxPuzzle rejected it ("${verdict.text || 'no feedback'}"). The engine has NO legal move for prod(A, sum(B, A')) — engine/solver.js getLegalTransitions() — so it reports already-simplest. Fix is shared task-5 (gated distributive-expansion law, owner validator-dev; do NOT swap the expression out).`)
 }
 
 /* Independent proof of the same page -> workspace handoff, with an expression

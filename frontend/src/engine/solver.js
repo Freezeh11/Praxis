@@ -1,13 +1,12 @@
-import {
-  cloneN, nodeText, canonText,
-  getSumLits
-} from './expr.js'
+import { cloneN } from './node.js'
+import { getSumLits } from './tree.js'
+import { nodeText, canonText } from './render.js'
 import {
   analyzeNot,
   analyzeProductConst,
   analyzeSelection,
   getLits
-} from './laws.js'
+} from './laws/index.js'
 
 function findLitPath(node, base, v, n) {
   if (node.type === 'lit' && node.v === v && node.n === n) return base

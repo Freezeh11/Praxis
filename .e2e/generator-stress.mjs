@@ -12,9 +12,9 @@
  * Run:  node .e2e/generator-stress.mjs
  * Exit code is non-zero when any failure is found.
  */
-import { parseExpr, canonText, nodeText, extractVariables, validateExpr } from '../frontend/src/lib/expr.js'
-import { findOptimalPath, findSimplestForm } from '../frontend/src/lib/solver.js'
-import { generateRandomPuzzle, generatePuzzlePair, DIFFICULTIES } from '../frontend/src/lib/randomPuzzle.js'
+import { parseExpr, canonText, nodeText, extractVariables, validateExpr } from '../frontend/src/engine/index.js'
+import { findOptimalPath, findSimplestForm } from '../frontend/src/engine/index.js'
+import { generateRandomPuzzle, generatePuzzlePair, DIFFICULTIES } from '../frontend/src/engine/index.js'
 
 const VAR_POOL = ['x', 'y', 'z']
 const PER_DIFFICULTY = 40

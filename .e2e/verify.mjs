@@ -1,5 +1,5 @@
-import { parseExpr, canonText, nodeText, extractVariables } from '../frontend/src/lib/expr.js'
-import { findOptimalPath, findSimplestForm } from '../frontend/src/lib/solver.js'
+import { parseExpr, canonText, nodeText, extractVariables } from '../frontend/src/engine/index.js'
+import { findOptimalPath, findSimplestForm } from '../frontend/src/engine/index.js'
 
 const API = 'http://127.0.0.1:8000'
 

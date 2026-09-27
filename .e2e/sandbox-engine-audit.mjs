@@ -35,11 +35,11 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   MAX_SANDBOX_VARS, validateSandboxInput, buildSandboxPuzzle, normalizeSandboxExpr,
-} from '../frontend/src/lib/sandboxInput.js'
+} from '../frontend/src/engine/index.js'
 import {
   parseExpr, nodeText, canonText, isEquivalent, extractVariables,
-} from '../frontend/src/lib/expr.js'
-import { getLegalTransitions } from '../frontend/src/lib/solver.js'
+} from '../frontend/src/engine/index.js'
+import { getLegalTransitions } from '../frontend/src/engine/index.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '..')

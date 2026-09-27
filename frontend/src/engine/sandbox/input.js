@@ -33,10 +33,10 @@
  * The error strings are part of the product spec — they are acceptance-tested
  * verbatim, so keep them byte-identical.
  */
-import {
-  parseExpr, nodeText, canonText, extractVariables, isEquivalent,
-} from './expr.js'
-import { findSimplestForm, findOptimalPath, getLegalTransitions } from './solver.js'
+import { nodeText, canonText } from '../render.js'
+import { extractVariables, isEquivalent } from '../equivalence.js'
+import { parseExpr } from '../parser.js'
+import { findSimplestForm, findOptimalPath, getLegalTransitions } from '../solver.js'
 
 export const MAX_SANDBOX_VARS = 6
 

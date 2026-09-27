@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
-import { parseExpr, cloneN, canonText, nodeText, getNode, findCommonProd } from '../lib/expr.js'
-import { analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints } from '../lib/laws.js'
-import { findOptimalPath } from '../lib/solver.js'
+import {
+  parseExpr, cloneN, canonText, nodeText, getNode, findCommonProd,
+  analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints,
+  findOptimalPath,
+} from '../engine/index.js'
 
 const DEAD_END_MSG = "This expression is simplified, but it isn't in its optimal state. A different law path can reach the target answer."
 

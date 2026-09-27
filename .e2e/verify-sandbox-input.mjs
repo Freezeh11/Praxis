@@ -1,7 +1,7 @@
 /**
  * Sandbox free-text input verification (no browser, no backend).
  *
- * Covers the Feature 1 part 1 contract in frontend/src/lib/sandboxInput.js:
+ * Covers the Feature 1 part 1 contract in frontend/src/engine/sandbox/input.js:
  *  1. frozen API surface + return shapes
  *  2. every errorCode with its EXACT spec message, in the spec's order
  *  3. every notation that must be accepted (· * . & | ∨ ' ! ¬, adjacency, 0/1)
@@ -16,12 +16,12 @@
  */
 import {
   MAX_SANDBOX_VARS, validateSandboxInput, buildSandboxPuzzle, normalizeSandboxExpr,
-} from '../frontend/src/lib/sandboxInput.js'
+} from '../frontend/src/engine/index.js'
 import {
   parseExpr, nodeText, canonText, isEquivalent, extractVariables,
-} from '../frontend/src/lib/expr.js'
-import { getLegalTransitions, findSimplestForm } from '../frontend/src/lib/solver.js'
-import { scanHints, analyzeSelection } from '../frontend/src/lib/laws.js'
+} from '../frontend/src/engine/index.js'
+import { getLegalTransitions, findSimplestForm } from '../frontend/src/engine/index.js'
+import { scanHints, analyzeSelection } from '../frontend/src/engine/index.js'
 
 /** Option set the sandbox builder uses; the default (no options) is graded levels. */
 const SANDBOX_ENGINE = { allowExpand: true }

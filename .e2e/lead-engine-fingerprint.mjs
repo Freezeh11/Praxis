@@ -17,10 +17,10 @@
  *   node .e2e/lead-engine-fingerprint.mjs --expand   > with-expand.json
  */
 
-import { parseExpr, canonText, nodeText } from '../frontend/src/lib/expr.js'
-import { getLegalTransitions, findOptimalPath } from '../frontend/src/lib/solver.js'
-import { scanHints } from '../frontend/src/lib/laws.js'
-import { SANDBOX_POOL } from '../frontend/src/lib/sandboxPool.js'
+import { parseExpr, canonText, nodeText } from '../frontend/src/engine/index.js'
+import { getLegalTransitions, findOptimalPath } from '../frontend/src/engine/index.js'
+import { scanHints } from '../frontend/src/engine/index.js'
+import { SANDBOX_POOL } from '../frontend/src/engine/index.js'
 
 const WITH_EXPAND = process.argv.includes('--expand')
 const OPTS = WITH_EXPAND ? { allowExpand: true } : {}

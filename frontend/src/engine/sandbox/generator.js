@@ -1,10 +1,11 @@
-import {
-  lit, prod, sum,
-  cloneN, nodeText, parseExpr, canonText, normalizeFlat, extractVariables,
-  validateExpr,
-} from './expr.js'
-import { findSimplestForm, findOptimalPath } from './solver.js'
-import { randomPoolEquation } from './sandboxPool.js'
+import { lit, prod, sum, cloneN } from '../node.js'
+import { nodeText, canonText } from '../render.js'
+import { normalizeFlat } from '../normalize.js'
+import { extractVariables } from '../equivalence.js'
+import { validateExpr } from '../validate.js'
+import { parseExpr } from '../parser.js'
+import { findSimplestForm, findOptimalPath } from '../solver.js'
+import { randomPoolEquation } from './pool.js'
 
 /**
  * Random practice problem generator for Sandbox mode.
