@@ -11,12 +11,19 @@ import ProblemPage from './pages/ProblemPage'
 import SandboxPage from './pages/SandboxPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import TutorialGate from './components/TutorialGate'
+import OrientationGate from './components/OrientationGate'
 
 export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
+          {/* Device/orientation enforcement: phones in portrait get the
+              "rotate your device" overlay, small tablets in portrait get the
+              dismissible banner. Rendered globally so it also covers the
+              public routes. */}
+          <OrientationGate />
+
           {/* Global Toast Notifications */}
           <Toaster position="top-center" richColors />
 
