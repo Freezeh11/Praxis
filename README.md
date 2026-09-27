@@ -4,6 +4,16 @@ Praxis is an interactive web application designed to help users master **Boolean
 
 ---
 
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — folder map, data flow, "where does X live?"
+- [`docs/REFACTOR_REPORT.md`](docs/REFACTOR_REPORT.md) — the refactor's before/after, deletions, verification
+- [`docs/context.md`](docs/context.md) — product context and setup notes
+- [`docs/SKILLS.md`](docs/SKILLS.md) — engineering skills demonstrated + common recipes
+- [`docs/Software Proposal Writing Guide (LAWS) v2.0.docx.md`](docs/Software%20Proposal%20Writing%20Guide%20%28LAWS%29%20v2.0.docx.md) — the original proposal guide
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

@@ -59,8 +59,15 @@ Praxis/
 │       ├── pages/                # route screens
 │       └── styles/               # tokens + shared utilities + keyframes
 │
+├── docs/                         # every document except the READMEs
+│   ├── ARCHITECTURE.md           #   this file
+│   ├── SKILLS.md                 #   skills demonstrated + working recipes
+│   ├── REFACTOR_REPORT.md        #   the restructure: before/after + verification
+│   ├── context.md                #   product context, what exists, how to run
+│   └── Software Proposal … .md    #   the original proposal guide
 ├── database/init.sql             # Supabase schema (unchanged by the refactor)
 ├── render.yaml                   # Render deploy (backend, rootDir: backend)
+├── README.md                     # setup guide (stays at the root)
 └── .e2e/                         # browser suites + engine fingerprint baselines
 ```
 

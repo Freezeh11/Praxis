@@ -4,7 +4,7 @@ React 19 + Vite + Tailwind CSS v3 + Framer Motion + React Router 7.
 
 **Setup, environment variables and the full project guide live in the
 [root README](../README.md); the architecture map is
-[ARCHITECTURE.md](../ARCHITECTURE.md).** This file only covers what is specific to
+[ARCHITECTURE.md](../docs/ARCHITECTURE.md).** This file only covers what is specific to
 `frontend/`.
 
 ## Run it
