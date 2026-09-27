@@ -2,6 +2,7 @@
 // around the surviving core term.
 // Reads: data.coreText (falls back to rects[0].text).
 import ExprText from '../ExprText.jsx'
+import { ghostTextStyle } from './animationStyles.js'
 
 /* ─────────────────────────────────────────────
    3. Double Negation Animation
@@ -15,20 +16,10 @@ export default function DoubleNegationAnimation({ rects, data }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        left: r.left,
-        top: r.top,
-        display: 'inline-flex',
-        alignItems: 'baseline',
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        fontSize: r.fontSize || '22px',
-        fontWeight: '600',
+      style={ghostTextStyle(r, {
         padding: '2px 6px',
         borderRadius: '6px',
-        zIndex: 9999,
-        pointerEvents: 'none',
-      }}
+      })}
     >
       {/* Outer parentheses fade out */}
       <span style={{ color: '#94a3b8', animation: 'parenFadeOut 0.6s forwards' }}>(</span>

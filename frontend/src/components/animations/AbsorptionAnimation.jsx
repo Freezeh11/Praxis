@@ -2,6 +2,7 @@
 // in, its shared literals gliding across and its extras evaporating.
 // Reads: data.survivorPath, data.paths, data.survivorText, data.absorbedText.
 import ExprText from '../ExprText.jsx'
+import { ghostTextStyle, shockwaveStyle } from './animationStyles.js'
 
 /* ─────────────────────────────────────────────
    4. Absorption Suction Animation
@@ -32,60 +33,33 @@ export default function AbsorptionAnimation({ rects, data }) {
     <>
       {/* Expanding emerald shockwave on absorption impact */}
       <div
-        style={{
-          position: 'fixed',
-          left: survivor.cx,
-          top: survivor.cy,
-          width: Math.max(survivor.width, 36) + 16,
-          height: Math.max(survivor.height, 36) + 16,
-          borderRadius: '9999px',
-          pointerEvents: 'none',
-          zIndex: 9998,
+        style={shockwaveStyle(survivor, {
           animation: 'absorbShockwave 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        }}
+        })}
       />
 
       {/* Survivor (Absorber) — glowing emerald container with energy pulse */}
       <div
-        style={{
-          position: 'fixed',
-          left: survivor.left,
-          top: survivor.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: survivor.fontSize || '22px',
-          fontWeight: '600',
+        style={ghostTextStyle(survivor, {
           color: '#059669',
           padding: '2px 6px',
           borderRadius: '6px',
           border: '1.5px solid #10b981',
           background: 'rgba(16, 185, 129, 0.08)',
-          zIndex: 9999,
-          pointerEvents: 'none',
           animation: 'absorbSurvivorPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}
+        })}
       >
         <ExprText text={survivorText} />
       </div>
 
       {/* Absorbed Term (Victim) — split into evaporating extras and gliding core payload */}
       <div
-        style={{
-          position: 'fixed',
-          left: absorbed.left,
-          top: absorbed.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: absorbed.fontSize || '22px',
-          fontWeight: '600',
+        style={ghostTextStyle(absorbed, {
           padding: '2px 6px',
           zIndex: 10000,
-          pointerEvents: 'none',
           '--abs-dx': `${dx}px`,
           '--abs-dy': `${dy}px`,
-        }}
+        })}
       >
         {absorbedLits.map((lit, idx) => {
           const isShared = survivorLits.includes(lit)

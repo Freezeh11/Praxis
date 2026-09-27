@@ -2,6 +2,7 @@
 // existing overbars cancel away and fresh overbars drop onto the unbarred subterms.
 // Reads: lawId, data.isAndToOr, data.deMorganTerms, data.exprBefore, data.paths.
 import { getNode, nodeText } from '../../engine/index.js'
+import { ghostTextStyle } from './animationStyles.js'
 
 /* ─────────────────────────────────────────────
    1. De Morgan's Law Animation
@@ -56,21 +57,12 @@ export default function DeMorganSplitAnimation({ rects, data, lawId }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        left: r.left,
-        top: r.top,
+      style={ghostTextStyle(r, {
         width: r.width,
         height: r.height,
-        display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        fontSize: r.fontSize || '22px',
-        fontWeight: '600',
-        zIndex: 9999,
-        pointerEvents: 'none',
-      }}
+      })}
     >
       {/* Top Group Overbar spanning the whole expression — dissolves away */}
       <div

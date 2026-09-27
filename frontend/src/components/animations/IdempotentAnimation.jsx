@@ -2,6 +2,7 @@
 // under a harmonic shockwave.
 // Reads: data.survivorPath, data.paths, data.termText.
 import ExprText from '../ExprText.jsx'
+import { ghostTextStyle, shockwaveStyle } from './animationStyles.js'
 
 /* ─────────────────────────────────────────────
    6. Idempotent Animation (A + A = A and A · A = A)
@@ -24,63 +25,36 @@ export default function IdempotentAnimation({ rects, data }) {
     <>
       {/* Expanding harmonic shockwave on merge */}
       <div
-        style={{
-          position: 'fixed',
-          left: survivor.cx,
-          top: survivor.cy,
-          width: Math.max(survivor.width, 36) + 16,
-          height: Math.max(survivor.height, 36) + 16,
-          borderRadius: '9999px',
-          pointerEvents: 'none',
-          zIndex: 9998,
+        style={shockwaveStyle(survivor, {
           animation: 'idempotentShockwave 1.2s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           opacity: 0,
-        }}
+        })}
       />
 
       {/* Survivor Term receiving the harmonic unification */}
       <div
-        style={{
-          position: 'fixed',
-          left: survivor.left,
-          top: survivor.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: survivor.fontSize || '22px',
-          fontWeight: '600',
+        style={ghostTextStyle(survivor, {
           color: '#4f46e5',
           padding: '2px 6px',
           borderRadius: '6px',
           border: '1.5px solid #6366f1',
           background: 'rgba(99, 102, 241, 0.08)',
-          zIndex: 9999,
-          pointerEvents: 'none',
           animation: 'idempotentSurvivorPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}
+        })}
       >
         <ExprText text={termText} />
       </div>
 
       {/* Duplicate Term sliding into survivor */}
       <div
-        style={{
-          position: 'fixed',
-          left: duplicate.left,
-          top: duplicate.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: duplicate.fontSize || '22px',
-          fontWeight: '600',
+        style={ghostTextStyle(duplicate, {
           color: '#6366f1',
           padding: '2px 6px',
           zIndex: 10000,
-          pointerEvents: 'none',
           '--idem-dx': `${dx}px`,
           '--idem-dy': `${dy}px`,
           animation: 'idempotentGlideMerge 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}
+        })}
       >
         <ExprText text={termText} />
       </div>

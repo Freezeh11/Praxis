@@ -3,6 +3,7 @@
 // Reads: data.factoredVar, data.rem1, data.rem2, data.outerPrefix, data.outerSuffix,
 // data.formula, data.lawName.
 import ExprText from '../ExprText.jsx'
+import { ghostTextStyle } from './animationStyles.js'
 
 /* ─────────────────────────────────────────────
    2. Distributive Factoring Animation
@@ -35,42 +36,25 @@ export default function DistributiveFactoringAnimation({ rects, data }) {
     <>
       {/* Ghost variable from term 2 sliding and merging into the factored variable position */}
       <div
-        style={{
-          position: 'fixed',
-          left: ghostStartLeft,
-          top: ghostRect.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        style={ghostTextStyle(ghostRect, {
           fontSize: r1.fontSize || '22px',
-          fontWeight: '600',
           color: '#0ea5e9',
           zIndex: 10000,
-          pointerEvents: 'none',
           animation: 'factorSlideIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
           '--fact-dx2': `${dx2}px`,
-        }}
+        })}
       >
         <ExprText text={factoredVar} />
       </div>
 
       {/* Unified correctly-typeset formula: outerPrefix + x(rem1 + rem2) + outerSuffix */}
       <div
-        style={{
-          position: 'fixed',
+        style={ghostTextStyle(r1, {
           left: minLeft,
-          top: r1.top,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize: r1.fontSize || '22px',
-          fontWeight: '600',
           color: '#1a2035',
-          zIndex: 9999,
-          pointerEvents: 'none',
           whiteSpace: 'nowrap',
           lineHeight: 1,
-        }}
+        })}
       >
         {/* Outer prefix if nested inside a parent product */}
         {outerPrefix && (
