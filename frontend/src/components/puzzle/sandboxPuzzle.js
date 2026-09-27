@@ -9,7 +9,7 @@
  */
 import { useEffect } from 'react'
 
-import { SANDBOX_DIFFICULTY } from '../../config/game-rules.js'
+import { SANDBOX_DIFFICULTY } from '../../config/gameRules.js'
 import { CUSTOM_SANDBOX_PUZZLE } from '../../config/storageKeys.js'
 import { generatePuzzlePair } from '../../engine/index.js'
 
@@ -17,7 +17,7 @@ import { generatePuzzlePair } from '../../engine/index.js'
 export const SANDBOX_LEVEL = { id: 'sandbox', name: 'Sandbox', desc: 'Free practice', varCount: 3, puzzles: [] }
 
 /** The shared engine needs both the start expression and a target to be playable. */
-export function isPlayablePuzzle(candidate) {
+function isPlayablePuzzle(candidate) {
   return Boolean(
     candidate
     && typeof candidate.expr === 'string' && candidate.expr.trim() !== ''
@@ -26,7 +26,7 @@ export function isPlayablePuzzle(candidate) {
 }
 
 /** Reads the persisted custom puzzle, tolerating a missing/corrupt slot. */
-export function readStoredCustomPuzzle() {
+function readStoredCustomPuzzle() {
   try {
     const raw = sessionStorage.getItem(CUSTOM_SANDBOX_PUZZLE)
     if (!raw) return null

@@ -1,3 +1,4 @@
+import { SOLVER_BUDGET } from '../config/gameRules.js'
 import { cloneN } from './node.js'
 import { getSumLits } from './tree.js'
 import { nodeText, canonText } from './render.js'
@@ -179,8 +180,8 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
     return { optimalSteps: 0, path: [], found: true }
   }
 
-  const maxDepth = options.maxDepth ?? 10
-  const maxStates = options.maxStates ?? 3000
+  const maxDepth = options.maxDepth ?? SOLVER_BUDGET.graded.maxDepth
+  const maxStates = options.maxStates ?? SOLVER_BUDGET.graded.maxStates
 
   // BFS Queue: [ { tree, canon, depth, path } ]
   const queue = [{
@@ -259,8 +260,8 @@ export function findSimplestForm(startExpr, options = {}) {
     return { tree: null, canon: '', text: '', optimalSteps: 0, path: [], found: false }
   }
 
-  const maxDepth = options.maxDepth ?? 12
-  const maxStates = options.maxStates ?? 8000
+  const maxDepth = options.maxDepth ?? SOLVER_BUDGET.generator.simplestForm.maxDepth
+  const maxStates = options.maxStates ?? SOLVER_BUDGET.generator.simplestForm.maxStates
 
   const initialCanon = canonText(startExpr)
   const queue = [{

@@ -1,5 +1,5 @@
 /**
- * @file tutorialData.js
+ * @file tutorialContent.js
  * @description Curated multi-stage interactive tutorial definitions for Praxis.
  * Contains the welcome modal slide sequence and step-by-step interactive guidance.
  */

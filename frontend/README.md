@@ -30,7 +30,7 @@ src/
 ├── state/       the single source of truth: progressStore + the puzzle session
 ├── services/    the only place that calls the API (apiClient + one module per
 │                endpoint group)
-├── config/      tunable numbers (game-rules.js) and storage keys
+├── config/      tunable numbers (gameRules.js) and storage keys
 ├── content/     tutorial copy; laws and levels come from <repo>/content/*.json
 │                through the `@content` Vite alias
 ├── hooks/       UI-only hooks (device tier, popup placement, tutorial replay)

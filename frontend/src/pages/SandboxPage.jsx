@@ -36,15 +36,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { validateSandboxInput, buildSandboxPuzzle } from '../engine/index.js'
+import { TIMING } from '../config/gameRules.js'
 
 /** Keep the verdict off every keystroke — ~300ms after the learner stops. */
-const VALIDATION_DEBOUNCE_MS = 300
 
 /**
  * The solver is synchronous, so the button is allowed to paint its "Simplifying…"
  * state before it takes the main thread.
  */
-const BUSY_PAINT_MS = 30
 
 /**
  * One-tap starting points covering the whole accepted notation.
@@ -115,7 +114,7 @@ export default function SandboxPage() {
 
   /* Live validation, debounced: a learner mid-word is told nothing yet. */
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedRaw(raw), VALIDATION_DEBOUNCE_MS)
+    const timer = window.setTimeout(() => setDebouncedRaw(raw), TIMING.sandboxValidationDebounceMs)
     return () => window.clearTimeout(timer)
   }, [raw])
 
@@ -183,7 +182,7 @@ export default function SandboxPage() {
 
       setBusy(false)
       setBuildError(result?.error || BUILD_FALLBACK_ERROR)
-    }, BUSY_PAINT_MS)
+    }, TIMING.sandboxBusyPaintMs)
   }
 
   /**

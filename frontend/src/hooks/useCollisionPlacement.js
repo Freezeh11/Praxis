@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from 'react'
 export const CANVAS_SELECTOR = '[data-tutorial="canvas"]'
 
 /** Gameplay controls a non-blocking popup must never cover. */
-export const POPUP_PROTECTED_SELECTORS = [
+const POPUP_PROTECTED_SELECTORS = [
   '[data-tutorial="hint-button"]',
   '[data-tutorial="guide-button"]',
   '[data-tutorial="laws-reference-button"]',
@@ -32,11 +32,11 @@ export const POPUP_PROTECTED_SELECTORS = [
 export const POPUP_MARGIN = 8
 export const POPUP_GAP = 8
 /** Below this the explanation card stops being readable. */
-export const POPUP_NARROW_MIN_WIDTH = 112
+const POPUP_NARROW_MIN_WIDTH = 112
 
 export const clampNum = (value, min, max) => (min > max ? min : Math.min(Math.max(value, min), max))
 
-export function rectsIntersect(a, b) {
+function rectsIntersect(a, b) {
   return !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top)
 }
 
@@ -46,7 +46,7 @@ export function rectsIntersect(a, b) {
  * this one expression counts as a dozen separate obstacles in the cost
  * function and outvotes the header controls.
  */
-export function mergeOverlappingRects(rects) {
+function mergeOverlappingRects(rects) {
   const merged = []
   for (const rect of rects) {
     let next = rect
@@ -82,7 +82,7 @@ export function viewportBox() {
   }
 }
 
-export function measureProtectRects(anchorEl) {
+function measureProtectRects(anchorEl) {
   const out = []
   for (const sel of POPUP_PROTECTED_SELECTORS) {
     for (const el of document.querySelectorAll(sel)) {
@@ -123,7 +123,7 @@ export const popupLayerStyle = (placement) => ({
  *                           for popups that may leave the canvas — see callers)
  * @param fullWidthOnNarrow  below this viewport width the popup spans the screen
  */
-export const DEFAULT_POPUP_CANDIDATES = [{ side: 'below' }, { side: 'above' }, { side: 'top-center' }, { side: 'bottom-center' }]
+const DEFAULT_POPUP_CANDIDATES = [{ side: 'below' }, { side: 'above' }, { side: 'top-center' }, { side: 'bottom-center' }]
 /**
  * Cards that explain a derivation line, ordered by how close they keep the card
  * to the line it explains: under it, over it, then the two header corners — a

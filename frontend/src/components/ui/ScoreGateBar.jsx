@@ -1,4 +1,4 @@
-import { SCORE_RAMP, UNLOCK_AVERAGE_SCORE } from '../../config/game-rules'
+import { SCORE_RAMP, UNLOCK_AVERAGE_SCORE } from '../../config/gameRules.js'
 
 /** Fill colours for the score ramp, keyed to the SCORE_RAMP thresholds. */
 const RAMP_COLORS = { good: '#22c55e', fair: '#f59e0b', low: '#ef4444' }
@@ -12,7 +12,7 @@ const rampColor = (score) => {
 
 /**
  * Score progress bar with the unlock-threshold notch: `score` drives the ramp colour (from
- * config/game-rules.js), `success` forces the good colour, `percent` overrides the fill width.
+ * config/gameRules.js), `success` forces the good colour, `percent` overrides the fill width.
  * `variant` keeps the two existing tracks (compact card bar vs hero bar) unchanged.
  */
 export default function ScoreGateBar({ score = 0, percent = Math.min(100, score), success = false, variant = 'compact', notch = false }) {

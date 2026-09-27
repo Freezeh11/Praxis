@@ -65,10 +65,6 @@ export const LAW_NAME_TO_ID = Object.fromEntries(
 )
 
 /** Definitions grouped by reference-card id, in declaration order. */
-export function definitionsForId(id) {
-  return LAW_DEFINITIONS.filter((definition) => definition.id === id)
-}
-
 /**
  * Looks up the identity of a law by the name the engine emits and the form it
  * was found in.

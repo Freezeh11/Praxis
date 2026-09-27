@@ -21,7 +21,7 @@
  * to /api/progress/save for signed-in learners. Hydration merges rather than
  * overwrites, so a learner who played offline does not lose local progress.
  */
-import { TIMING, TUTORIAL, UNLOCK_AVERAGE_SCORE, MAX_STARS_PER_STAGE, STAR_THRESHOLDS } from '../config/game-rules.js'
+import { TIMING, TUTORIAL, UNLOCK_AVERAGE_SCORE, MAX_STARS_PER_STAGE, STAR_THRESHOLDS } from '../config/gameRules.js'
 import { PROGRESS_KEY_PREFIX, progressKey } from '../config/storageKeys.js'
 import * as progressApi from '../services/progressApi.js'
 
@@ -261,7 +261,7 @@ export function getSavedSolution(state, levelId, stageIdx) {
 }
 
 /** Stars a single stage score is worth. */
-export function starsForScore(score) {
+function starsForScore(score) {
   if (score >= STAR_THRESHOLDS.three) return 3
   if (score >= STAR_THRESHOLDS.two) return 2
   return STAR_THRESHOLDS.one
@@ -314,11 +314,6 @@ export function hasCompletedTutorial(state) {
   if (state.hasSeenTutorial) return true
   const completed = getStagesCompleted(state, TUTORIAL.levelId)
   return TUTORIAL.stageIndexes.every((idx) => completed.includes(idx))
-}
-
-/** True once the server round-trip has settled for a signed-in learner. */
-export function isHydrated(state) {
-  return state.serverLoaded && state.userId !== GUEST_USER_ID
 }
 
 export { PROGRESS_KEY_PREFIX }

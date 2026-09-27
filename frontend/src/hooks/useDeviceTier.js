@@ -19,6 +19,8 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 
+import { HIDE_ROTATE_BANNER } from '../config/storageKeys.js'
+
 /** Device classes, ordered smallest → largest. */
 export const DEVICE_TIERS = {
   PHONE: 'phone',
@@ -28,7 +30,7 @@ export const DEVICE_TIERS = {
 }
 
 /** sessionStorage flag that keeps the rotate banner dismissed for the session. */
-export const ROTATE_BANNER_STORAGE_KEY = 'praxis_hide_rotate_banner'
+export const ROTATE_BANNER_STORAGE_KEY = HIDE_ROTATE_BANNER
 
 /** Widest CSS pixel width still treated as a phone (inclusive). */
 export const PHONE_MAX_WIDTH = 767
@@ -92,7 +94,7 @@ export function detectDeviceTier({ width, height, isTouch, orientation, bannerDi
 }
 
 /** Touch capability without any UA sniffing. */
-export function readIsTouch() {
+function readIsTouch() {
   if (typeof window === 'undefined') return false
   let coarse
   try {
@@ -110,7 +112,7 @@ export function readIsTouch() {
  *   screen.orientation.type → screen.orientation.angle → window.orientation →
  *   viewport aspect ratio.
  */
-export function readOrientation() {
+function readOrientation() {
   if (typeof window === 'undefined') return ORIENTATION_LANDSCAPE
 
   const screenOrientation = window.screen && window.screen.orientation
@@ -138,7 +140,7 @@ export function readOrientation() {
 }
 
 /** Viewport size in CSS px, tolerant of a missing document. */
-export function readViewport() {
+function readViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
   const doc = typeof document !== 'undefined' ? document.documentElement : null
   const width = window.innerWidth || (doc ? doc.clientWidth : 0) || 0
@@ -147,7 +149,7 @@ export function readViewport() {
 }
 
 /** Whether the rotate banner was dismissed earlier in this browser session. */
-export function readBannerDismissed() {
+function readBannerDismissed() {
   if (typeof window === 'undefined') return false
   try {
     return window.sessionStorage.getItem(ROTATE_BANNER_STORAGE_KEY) === 'true'
@@ -158,7 +160,7 @@ export function readBannerDismissed() {
 }
 
 /** Full environment snapshot: tier decision plus the raw inputs behind it. */
-export function readDeviceSnapshot(bannerDismissed = false) {
+function readDeviceSnapshot(bannerDismissed = false) {
   const { width, height } = readViewport()
   const isTouch = readIsTouch()
   const orientation = readOrientation()
@@ -307,10 +309,3 @@ export default function useDeviceTier() {
     dismissRotateBanner,
   }
 }
-
-/**
- * Named alias of the default export, so both import styles resolve:
- *   import useDeviceTier from '../hooks/useDeviceTier.js'
- *   import { useDeviceTier } from '../hooks/useDeviceTier.js'
- */
-export { useDeviceTier }

@@ -6,6 +6,7 @@ import { validateExpr } from '../validate.js'
 import { parseExpr } from '../parser.js'
 import { findSimplestForm, findOptimalPath } from '../solver.js'
 import { randomPoolEquation } from './pool.js'
+import { SOLVER_BUDGET } from '../../config/gameRules.js'
 
 /**
  * Random practice problem generator for Sandbox mode.
@@ -215,11 +216,11 @@ function buildVerifiedPuzzle(exprString, difficulty, minSteps) {
   const parsed = parseExpr(exprString)
   if (canonText(parseExpr(nodeText(parsed))) !== canonText(parsed)) return null
 
-  const simplest = findSimplestForm(parsed, { maxDepth: 12, maxStates: 8000 })
+  const simplest = findSimplestForm(parsed, SOLVER_BUDGET.generator.simplestForm)
   if (!simplest.found || simplest.optimalSteps === 0) return null
   if (simplest.canon === canonText(parsed)) return null
 
-  const solution = findOptimalPath(parsed, simplest.canon, { maxDepth: 12, maxStates: 12000 })
+  const solution = findOptimalPath(parsed, simplest.canon, SOLVER_BUDGET.generator.optimalPath)
   if (!solution.found || solution.optimalSteps < minSteps) return null
 
   return {

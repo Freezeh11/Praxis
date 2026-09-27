@@ -7,7 +7,7 @@
  *
  * Layering rule (enforced by review, not by the bundler): nothing in engine/ may
  * import from components/, screens/, state/, services/ or hooks/. The only
- * external imports are plain data/constants (config/game-rules.js).
+ * external imports are plain data/constants (config/gameRules.js).
  *
  * Consumers should import from this barrel, not from the deep modules, so the
  * internals stay free to move.

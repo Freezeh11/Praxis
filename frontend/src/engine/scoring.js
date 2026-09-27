@@ -6,7 +6,7 @@
  * working if the score endpoint is unreachable), and it must stay in lockstep
  * with `backend/services/scoring_service.py` — same weights, same rounding.
  *
- * Weights and penalties come from config/game-rules.js, so the two sides cannot
+ * Weights and penalties come from config/gameRules.js, so the two sides cannot
  * drift on the numbers themselves.
  *
  * Pure module: no React/DOM/network.
@@ -15,7 +15,7 @@ import {
   SCORE_BONUS_MAX_POINTS,
   SCORE_PENALTY,
   SCORE_WEIGHTS,
-} from '../config/game-rules.js'
+} from '../config/gameRules.js'
 import { LAW_NAME_TO_ID } from './laws/definitions.js'
 
 /** Round to one decimal, the precision the API uses. */

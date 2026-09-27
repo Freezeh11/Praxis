@@ -7,7 +7,7 @@
  *
  * Caches are module-level on purpose: every component shares one fetch.
  */
-import { LEVELS, LEVEL_SUMMARIES, LAWS, getLevel as findBundledLevel } from '../content/game-content.js'
+import { LEVELS, LEVEL_SUMMARIES, LAWS, getLevel as findBundledLevel } from '../content/gameContent.js'
 import { apiRequest } from './apiClient.js'
 
 const levelCache = new Map()

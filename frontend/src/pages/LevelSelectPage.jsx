@@ -4,6 +4,7 @@ import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
 import { usePopupPlacement } from '../hooks/usePopupPlacement'
 import { useTutorialReplay } from '../hooks/useTutorialReplay'
+import { TIMING } from '../config/gameRules.js'
 import { signOut } from '../services/authActions.js'
 import { toast } from 'sonner'
 import AppHeader from '../components/layout/AppHeader'
@@ -118,7 +119,7 @@ export default function LevelSelectPage() {
       await signOut()
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
-      setTimeout(() => navigate('/'), 100)
+      setTimeout(() => navigate('/'), TIMING.signOutRedirectMs)
     } catch {
       toast.error('Failed to log out.')
     }

@@ -4,6 +4,7 @@ import {
   analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints,
   findOptimalPath,
 } from '../engine/index.js'
+import { STAGE_COMPLETION_XP, TIMING } from '../config/gameRules.js'
 import { DEAD_END_MSG, buildHintText } from './hintText.js'
 
 export function useGameState(options = {}) {
@@ -412,14 +413,14 @@ export function useGameState(options = {}) {
         // Check completion
         if (canonText(newExpr) === goalCanonRef.current) {
           setIsDeadEnd(false)
-          setEarnedXp(10) // Fixed 10 points per completion
+          setEarnedXp(STAGE_COMPLETION_XP)
           setIsComplete(true)
           setStatus('success')
           setStatusMsg('Expression simplified! 🎉')
         } else {
           syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
         }
-      }, 1350) // 1.35s duration
+      }, TIMING.lawAnimationMs)
     }
 
     if (isTutorial) {
@@ -427,7 +428,7 @@ export function useGameState(options = {}) {
       preLawTimerRef.current = setTimeout(() => {
         preLawTimerRef.current = null
         startAnimation()
-      }, 1500)
+      }, TIMING.preLawHighlightMs)
     } else {
       startAnimation()
     }

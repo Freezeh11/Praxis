@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import DerivationCanvas from '../components/puzzle/DerivationCanvas'
 import HintBubble from '../components/puzzle/HintBubble'
@@ -27,7 +28,7 @@ import WorkspaceHeader from '../components/puzzle/WorkspaceHeader'
 import usePuzzleSession from '../components/puzzle/usePuzzleSession'
 import InteractiveTutorial from '../components/InteractiveTutorial'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { GUIDE_COST_POINTS, TIMING, TUTORIAL } from '../config/game-rules.js'
+import { GUIDE_COST_POINTS, TIMING, TUTORIAL } from '../config/gameRules.js'
 import { SKIP_RESET_CONFIRM } from '../config/storageKeys.js'
 import useBandedOverlay from '../hooks/useBandedOverlay.js'
 import useCollisionPlacement, {
@@ -261,7 +262,7 @@ export default function ProblemPage() {
         deductPoints(guideCost)
       }
     } else {
-      alert(`Not enough points! You need ${guideCost} points to use the Guide.`)
+      toast.error(`Not enough points! You need ${guideCost} points to use the Guide.`)
     }
   }
 

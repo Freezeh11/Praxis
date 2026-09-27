@@ -12,6 +12,7 @@ import {
   buildTargetHighlight,
   isSameRect,
 } from './spotlightRects'
+import { TIMING } from '../../config/gameRules.js'
 
 export function useSpotlightRects({
   stageIdx,
@@ -143,7 +144,7 @@ export function useSpotlightRects({
     const handleResize = () => updateTargetRect()
     window.addEventListener('resize', handleResize)
     window.addEventListener('scroll', handleResize, true)
-    const intervalId = setInterval(updateTargetRect, 200)
+    const intervalId = setInterval(updateTargetRect, TIMING.spotlightRectPollMs)
 
     return () => {
       window.removeEventListener('resize', handleResize)

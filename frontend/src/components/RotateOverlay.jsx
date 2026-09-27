@@ -14,7 +14,7 @@
 import { useEffect } from 'react'
 
 /** Body class defined in index.css: overflow/overscroll/touch-action lock. */
-export const OVERLAY_BODY_CLASS = 'praxis-overlay-open'
+const OVERLAY_BODY_CLASS = 'praxis-overlay-open'
 
 const OVERLAY_TEXT = 'Praxis works best in landscape mode. Please rotate your device.'
 const OVERLAY_HELPER = 'Turn your phone sideways to continue.'

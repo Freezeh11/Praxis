@@ -13,6 +13,7 @@ import {
 import { pickCoachPlacement } from './coachCardPlacement'
 import { cutoutRectOf } from './spotlightRects'
 import { CARD_ANCHOR_ZONES } from './tutorialTargets'
+import { TIMING } from '../../config/gameRules.js'
 
 /** @returns {import('react').RefObject} the coach-card DOM node ref. */
 export function useCoachCardPlacement({ currentStep, highlightRect, secondaryHighlightRect }) {
@@ -128,7 +129,7 @@ export function useCoachCardPlacement({ currentStep, highlightRect, secondaryHig
     window.addEventListener('resize', remeasure)
     window.addEventListener('orientationchange', remeasure)
     window.addEventListener('scroll', reflow, true)
-    const intervalId = setInterval(reflow, 320)
+    const intervalId = setInterval(reflow, TIMING.coachCardReflowMs)
     return () => {
       window.removeEventListener('resize', remeasure)
       window.removeEventListener('orientationchange', remeasure)

@@ -70,6 +70,12 @@ export const TIMING = {
   sandboxValidationDebounceMs: 300,
   /** Paint delay while the sandbox builds a puzzle. */
   sandboxBusyPaintMs: 30,
+  /** Pause after sign-out before routing away, so auth state clears first. */
+  signOutRedirectMs: 100,
+  /** Poll interval that keeps the tutorial card anchored while the layout reflows. */
+  coachCardReflowMs: 320,
+  /** Poll interval that keeps the spotlight on a moving target. */
+  spotlightRectPollMs: 200,
 }
 
 /** Tutorial identity. The tutorial is a real level, so these must match content. */

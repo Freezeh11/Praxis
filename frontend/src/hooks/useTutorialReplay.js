@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { SKIP_TUTORIAL_REPLAY_PROMPT } from '../config/storageKeys'
-import { TUTORIAL } from '../config/game-rules'
+import { TUTORIAL } from '../config/gameRules.js'
 
 /** Replay always restarts the very first tutorial stage. */
 const REPLAY_ROUTE = `/level/${TUTORIAL.levelId}/stage/${TUTORIAL.stageIndexes[0]}?tutorial=true`

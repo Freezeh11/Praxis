@@ -37,6 +37,7 @@ import { nodeText, canonText } from '../render.js'
 import { extractVariables, isEquivalent } from '../equivalence.js'
 import { parseExpr } from '../parser.js'
 import { findSimplestForm, findOptimalPath, getLegalTransitions } from '../solver.js'
+import { SOLVER_BUDGET } from '../../config/gameRules.js'
 
 export const MAX_SANDBOX_VARS = 6
 
@@ -351,7 +352,7 @@ export function buildSandboxPuzzle(raw) {
 
   /* 3. fully simplified terminal form — the sandbox opts into the gated
         Distributive-Expand law, which graded levels never enable */
-  const simplest = findSimplestForm(parsed, { maxDepth: 14, maxStates: 20000, allowExpand: true })
+  const simplest = findSimplestForm(parsed, { ...SOLVER_BUDGET.sandbox.simplestForm, allowExpand: true })
   if (!simplest.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }
@@ -364,7 +365,7 @@ export function buildSandboxPuzzle(raw) {
   }
 
   /* 4. guaranteed legal forward path (the step-locking rule needs one) */
-  const solution = findOptimalPath(parsed, simplest.canon, { maxDepth: 14, maxStates: 24000, allowExpand: true })
+  const solution = findOptimalPath(parsed, simplest.canon, { ...SOLVER_BUDGET.sandbox.optimalPath, allowExpand: true })
   if (!solution.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }

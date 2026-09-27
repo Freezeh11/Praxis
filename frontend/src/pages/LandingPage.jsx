@@ -3,6 +3,7 @@ import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import { useSession } from '../state/useSession.js'
 import { signOut } from '../services/authActions.js'
+import { TIMING } from '../config/gameRules.js'
 import { toast } from 'sonner'
 
 export default function LandingPage() {
@@ -14,7 +15,7 @@ export default function LandingPage() {
       await signOut()
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
-      setTimeout(() => navigate('/'), 100)
+      setTimeout(() => navigate('/'), TIMING.signOutRedirectMs)
     } catch {
       toast.error('Failed to log out.')
     }
