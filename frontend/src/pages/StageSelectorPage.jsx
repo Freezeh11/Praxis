@@ -3,13 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
-import { usePopupPlacement } from '../hooks/usePopupPlacement'
-import { useTutorialReplay } from '../hooks/useTutorialReplay'
+import { usePageOverlays } from '../hooks/usePageOverlays'
 import { STAR_THRESHOLDS, UNLOCK_AVERAGE_SCORE } from '../config/gameRules.js'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
-import LawsDrawer from '../components/laws/LawsDrawer'
-import TutorialReplayModal from '../components/tutorial/TutorialReplayModal'
+import PageOverlays from '../components/layout/PageOverlays'
 import ExprText from '../components/ExprText'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import PointsChip from '../components/ui/PointsChip'
@@ -24,21 +22,12 @@ export default function StageSelectorPage() {
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
+  // Tutorial-replay prompt, laws drawer, and the placement both are measured against.
   const {
-    showTutorialPrompt,
-    dontAskTutorialAgain,
-    setDontAskTutorialAgain,
-    handleTutorialClick,
-    handleRestartTutorial,
-    closeTutorialPrompt,
-  } = useTutorialReplay({ navigate, hasSeenTutorial, resetLevelProgress })
-
-  // Each overlay belongs to the control that opened it, so its band/shift is
-  // measured against that control.
-  const popupAnchorSelector = showLawsDrawer ? '[data-popup-anchor="laws"]' : '[data-popup-anchor="tutorial"]'
-  const popupPlacement = usePopupPlacement(popupAnchorSelector, showTutorialPrompt || showLawsDrawer)
+    showTutorialPrompt, dontAskTutorialAgain, setDontAskTutorialAgain, handleTutorialClick,
+    handleRestartTutorial, closeTutorialPrompt, showLawsDrawer, setShowLawsDrawer, popupPlacement,
+  } = usePageOverlays({ navigate, hasSeenTutorial, resetLevelProgress })
 
   const numLevelId = Number(levelId)
 
@@ -374,22 +363,13 @@ export default function StageSelectorPage() {
         </main>
       )}
 
-      {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
-      <TutorialReplayModal
-        show={showTutorialPrompt}
-        onClose={closeTutorialPrompt}
-        dontAskAgain={dontAskTutorialAgain}
-        onDontAskAgainChange={setDontAskTutorialAgain}
-        shift={popupPlacement ? popupPlacement.shift : 0}
-        onRestart={handleRestartTutorial}
-      />
-
-      {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
-      <LawsDrawer
-        show={showLawsDrawer}
-        onClose={() => setShowLawsDrawer(false)}
-        laws={laws}
-        placement={popupPlacement}
+      {/* ── OVERLAYS: TUTORIAL REPLAY PROMPT + LAWS DRAWER ── */}
+      <PageOverlays
+        showTutorialPrompt={showTutorialPrompt} onCloseTutorialPrompt={closeTutorialPrompt}
+        dontAskTutorialAgain={dontAskTutorialAgain} onDontAskAgainChange={setDontAskTutorialAgain}
+        onRestartTutorial={handleRestartTutorial} shift={popupPlacement ? popupPlacement.shift : 0}
+        placement={popupPlacement} showLawsDrawer={showLawsDrawer}
+        onCloseLawsDrawer={() => setShowLawsDrawer(false)} laws={laws}
       />
     </div>
   )

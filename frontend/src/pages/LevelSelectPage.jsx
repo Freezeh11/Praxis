@@ -2,15 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useNavigate } from 'react-router-dom'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
-import { usePopupPlacement } from '../hooks/usePopupPlacement'
-import { useTutorialReplay } from '../hooks/useTutorialReplay'
+import { usePageOverlays } from '../hooks/usePageOverlays'
 import { TIMING } from '../config/gameRules.js'
 import { signOut } from '../services/authActions.js'
 import { toast } from 'sonner'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
-import LawsDrawer from '../components/laws/LawsDrawer'
-import TutorialReplayModal from '../components/tutorial/TutorialReplayModal'
+import PageOverlays from '../components/layout/PageOverlays'
 import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
 
@@ -37,21 +35,12 @@ export default function LevelSelectPage() {
   const { levels, laws, loading, error } = useGameContent()
   const { progress, isLevelCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into the carousel entries
-  const [showLawsDrawer, setShowLawsDrawer] = useState(false)
 
+  // Tutorial-replay prompt, laws drawer, and the placement both are measured against.
   const {
-    showTutorialPrompt,
-    dontAskTutorialAgain,
-    setDontAskTutorialAgain,
-    handleTutorialClick,
-    handleRestartTutorial,
-    closeTutorialPrompt,
-  } = useTutorialReplay({ navigate, hasSeenTutorial, resetLevelProgress })
-
-  // Each overlay belongs to the control that opened it, so its band/shift is
-  // measured against that control.
-  const popupAnchorSelector = showLawsDrawer ? '[data-popup-anchor="laws"]' : '[data-popup-anchor="tutorial"]'
-  const popupPlacement = usePopupPlacement(popupAnchorSelector, showTutorialPrompt || showLawsDrawer)
+    showTutorialPrompt, dontAskTutorialAgain, setDontAskTutorialAgain, handleTutorialClick,
+    handleRestartTutorial, closeTutorialPrompt, showLawsDrawer, setShowLawsDrawer, popupPlacement,
+  } = usePageOverlays({ navigate, hasSeenTutorial, resetLevelProgress })
 
   // Real levels plus the always-available Sandbox entry, rendered as one list.
   const entries = [...(levels || []), SANDBOX_LEVEL]
@@ -379,22 +368,13 @@ export default function LevelSelectPage() {
         </button>
       </div>
 
-      {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
-      <TutorialReplayModal
-        show={showTutorialPrompt}
-        onClose={closeTutorialPrompt}
-        dontAskAgain={dontAskTutorialAgain}
-        onDontAskAgainChange={setDontAskTutorialAgain}
-        shift={popupPlacement ? popupPlacement.shift : 0}
-        onRestart={handleRestartTutorial}
-      />
-
-      {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
-      <LawsDrawer
-        show={showLawsDrawer}
-        onClose={() => setShowLawsDrawer(false)}
-        laws={laws}
-        placement={popupPlacement}
+      {/* ── OVERLAYS: TUTORIAL REPLAY PROMPT + LAWS DRAWER ── */}
+      <PageOverlays
+        showTutorialPrompt={showTutorialPrompt} onCloseTutorialPrompt={closeTutorialPrompt}
+        dontAskTutorialAgain={dontAskTutorialAgain} onDontAskAgainChange={setDontAskTutorialAgain}
+        onRestartTutorial={handleRestartTutorial} shift={popupPlacement ? popupPlacement.shift : 0}
+        placement={popupPlacement} showLawsDrawer={showLawsDrawer}
+        onCloseLawsDrawer={() => setShowLawsDrawer(false)} laws={laws}
       />
     </div>
   )
