@@ -9,7 +9,7 @@
  * Requires: vite dev server on 5173, FastAPI on 8000, e2e user to exist.
  * Run:  node .e2e/acceptance-features.mjs [--section=1,2,3,4,5,6]
  */
-import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX, resetE2eProgress } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
@@ -25,6 +25,17 @@ const log = (name, ok, extra = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name}${extra ? ' | ' + extra : ''}`)
 }
 const section = (t) => console.log(`\n──── ${t} ────`)
+
+// Wipe the dedicated learner's server progress BEFORE the seeded snapshot is
+// taken: ensureSeededState() logs in and copies the server's stage progress and
+// saved solutions into localStorage, which is what every emulated device then
+// replays. Wiping later leaves stage 5 seeded as "already solved with a saved
+// derivation", so the first-time assertions in section 7 grade a completed stage
+// and fail for reasons that have nothing to do with the app.
+const resetUserId = await resetE2eProgress()
+console.log(resetUserId
+  ? `INFO | reset progress for ${resetUserId} before seeding`
+  : 'INFO | server reset unavailable — section 7 first-time checks may reflect earlier progress')
 
 const browser = await launch()
 
@@ -898,6 +909,8 @@ if (want(7)) {
     const data = JSON.parse(raw)
     return (data.stageProgress && data.stageProgress['1']) || []
   }, progressKey)
+  // The learner's progress was wiped at the top of this suite (before the seeded
+  // snapshot), so this is genuinely a stage they have not finished.
   const freshStage = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].find(i => !doneStages.includes(i))
 
   if (freshStage === undefined) {
@@ -947,7 +960,7 @@ if (want(7)) {
     solved = solved || await page.locator('text=Stage Complete!').count() > 0
     const ledgerAfter = await pointsOf()
     log('7.5 first-time completion awards points', solved && (ledgerAfter ?? 0) > (ledgerBefore ?? 0),
-      `stage=${freshStage} solved=${solved} before=${ledgerBefore} after=${ledgerAfter}`)
+      `stage=${freshStage} solved=${solved} before=${ledgerBefore} after=${ledgerAfter}${resetUserId ? '' : ' (SERVER RESET UNAVAILABLE)'}`)
   }
 
   await page.waitForTimeout(1500)

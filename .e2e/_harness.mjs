@@ -83,6 +83,37 @@ export const DEVICES = {
   desktop: { name: 'desktop-1440x900', viewport: { width: 1440, height: 900 } },
 }
 
+/**
+ * Wipes the dedicated e2e learner's SERVER progress (stage_progress,
+ * user_progress, score_history) so a suite can assert first-time behaviour.
+ *
+ * Suites that grade a stage must call this before they start: the assertions
+ * "completing a stage awards points" and "the derivation has steps to undo" are
+ * only meaningful for a stage the learner has not already finished, and the
+ * shared account keeps its progress between runs. Returns the user id, or null
+ * when the credentials/user are unavailable (callers should then skip the
+ * first-time assertions rather than fail).
+ */
+export async function resetE2eProgress() {
+  const env = readEnv()
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) return null
+  const supabaseUrl = String(env.SUPABASE_URL).replace(/\/$/, '')
+  const headers = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+
+  const adminRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=50`, { headers })
+  if (!adminRes.ok) return null
+  const user = ((await adminRes.json()).users || []).find(u => u.email === EMAIL)
+  if (!user) return null
+
+  for (const table of ['stage_progress', 'user_progress', 'score_history']) {
+    await fetch(`${supabaseUrl}/rest/v1/${table}?user_id=eq.${user.id}`, {
+      method: 'DELETE',
+      headers: { ...headers, Prefer: 'return=minimal' },
+    })
+  }
+  return user.id
+}
+
 export async function launch() {
   // `import { chromium } from <variable>` is not valid ESM — resolve at call time.
   const { chromium } = await import(PLAYWRIGHT_MODULE)
