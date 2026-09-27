@@ -537,7 +537,7 @@ export function useGameState(options = {}) {
     if (puzzle) loadPuzzle(puzzle)
   }, [loadPuzzle])
 
-  const useHint = useCallback((puzzle) => {
+  const requestHint = useCallback((puzzle) => {
     // Always try to generate a contextual hint from the current expression first
     if (expr) {
       const scanResults = scanHints(expr, 'R', { allowExpand })
@@ -651,6 +651,6 @@ export function useGameState(options = {}) {
     isAnimating, animationData,
     loadPuzzle,
     handleClickLit, handleClickNot, handleClickTerm,
-    applyLaw, undoAction, resetPuzzle, useHint, swapTerms, activateGuide,
+    applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
   }
 }
