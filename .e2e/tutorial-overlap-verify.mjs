@@ -6,7 +6,7 @@
  * the floating coach card (`[data-tutorial-card]`):
  *
  *   HARD  does not intersect the element the step highlights (target /
- *         secondaryTarget from frontend/src/lib/tutorialData.js, which is the
+ *         secondaryTarget from frontend/src/content/tutorialContent.js, which is the
  *         same source the component reads) — a violation is a failure;
  *   SOFT  does not intersect any actionable control the learner may need
  *         (canvas literals, law cards, term grips, header buttons, step
@@ -45,7 +45,7 @@
  *   the PASS/FAIL lines and the summary printed at the end.
  */
 import { launch, seededState, device, nav, reporter, shot, noHorizontalScroll, DEVICES } from './_harness.mjs'
-import { TUTORIAL_STAGES } from '../frontend/src/lib/tutorialData.js'
+import { TUTORIAL_STAGES } from '../frontend/src/content/tutorialContent.js'
 
 /* ── CLI ──────────────────────────────────────────────────────────────── */
 const argv = process.argv.slice(2)

@@ -1,90 +1,26 @@
-/* ═══════════════════════════════════════════════
-   BooleanQuest — Design System
-   Wireframe-accurate, clean light aesthetic
-   ═══════════════════════════════════════════════ */
-
-/* ── Google Fonts are loaded in index.html ── */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ═══ TOKENS ═══ */
-@layer base {
-  :root {
-    --color-bg:          #f0f2f7;
-    --color-bg-card:     #ffffff;
-    --color-border:      #e2e5ed;
-    --color-border-dark: #c8ccd6;
-    --color-text-1:      #1a2035;
-    --color-text-2:      #4b5468;
-    --color-text-3:      #9aa0b0;
-    --color-accent:      #1a2035;
-    --color-teal:        #0ea5e9;
-    --color-teal-light:  #e0f4fd;
-    --color-amber:       #f59e0b;
-    --color-amber-light: #fef3c7;
-    --color-green:       #10b981;
-    --color-green-light: #d1fae5;
-    --color-red:         #ef4444;
-
-    --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-    --shadow-lg:  0 16px 40px rgba(0,0,0,0.14);
-
-    --radius-sm:  6px;
-    --radius-md:  12px;
-    --radius-lg:  20px;
-
-    --font-sans:  'Inter', system-ui, sans-serif;
-    --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
-    --transition: 0.18s ease;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body, #root { height: 100%; font-family: var(--font-sans); }
-  body { background: var(--color-bg); color: var(--color-text-1); -webkit-font-smoothing: antialiased; }
-  button { font-family: var(--font-sans); cursor: pointer; border: none; background: none; }
-  a { text-decoration: none; }
-}
-
+/**
+ * Animation keyframes.
+ *
+ * Owned by the law-animation modules (components/animations/*), which set the
+ * per-animation custom properties (--cdx/--cdy, --abs-dx/--abs-dy, --idem-dx/-dy,
+ * --fact-dx2, --annul-dx/-dy) that these keyframes consume. Keyframes and the
+ * JSX that drives them must move together: a renamed keyframe or variable here
+ * silently disables that law's animation.
+ *
+ * guidePulse belongs to ExpressionDisplay's guide highlight.
+ */
 @keyframes guidePulse {
   0% { box-shadow: 0 0 0 0 rgba(46, 196, 182, 0.6); }
   70% { box-shadow: 0 0 0 6px rgba(46, 196, 182, 0); }
   100% { box-shadow: 0 0 0 0 rgba(46, 196, 182, 0); }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* ── Merge animations (annulment / identity / idempotent) ── */
 /* Victim slides toward survivor */
-@keyframes slideMerge {
-  0%   { transform: translate(0, 0); opacity: 1; }
-  70%  { transform: translate(var(--slide-dx), var(--slide-dy)); opacity: 1; }
-  100% { transform: translate(var(--slide-dx), var(--slide-dy)) scale(0.3); opacity: 0; }
-}
-
 /* Single-element identity (e.g. A·1 — the 1 shrinks away) */
-@keyframes singleFade {
-  0%   { transform: scale(1); opacity: 1; }
-  50%  { transform: scale(1.15); opacity: 0.8; }
-  100% { transform: scale(0); opacity: 0; }
-}
 
 /* Plus sign fades out as terms approach */
-@keyframes fadeOut {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
-
 /* Survivor glows amber when merge lands */
-@keyframes mergeGlow {
-  0%   { box-shadow: none; border-color: #e2e5ed; background: #ffffff; }
-  50%  { box-shadow: 0 0 20px 5px rgba(14,165,233,0.5); border-color: #0ea5e9; background: rgba(14,165,233,0.12); }
-  100% { box-shadow: 0 0 8px 1px rgba(14,165,233,0.2); border-color: #0ea5e9; background: rgba(14,165,233,0.05); }
-}
 
 /* ── Complement Law High-Velocity Collision & Fusion Burst ── */
 @keyframes complementCollide1 {
@@ -230,11 +166,6 @@
   0%   { opacity: 0.7; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.8); }
 }
-@keyframes doubleNegCancel {
-  0%   { opacity: 1; transform: scale(1); }
-  50%  { opacity: 0.8; transform: scale(1.1); filter: brightness(1.4); }
-  100% { opacity: 0; transform: scale(0.8); }
-}
 
 /* ── Absorption Suction & Evaporation ── */
 @keyframes absorbSurvivorPulse {
@@ -290,155 +221,4 @@
 }
 
 /* ── Transformation Subtitle Pill ── */
-@keyframes bannerPopIn {
-  0%   { opacity: 0; transform: translate(-50%, 8px) scale(0.9); }
-  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-
 /* ── Left-to-Right Step Cascade Animations ── */
-@keyframes revealFromLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE / ORIENTATION GATE  — appended block.
-   Owned by the orientation gate (rotate overlay + rotate banner).
-   Everything above this line is untouched; this block only ADDS
-   keyframes, one scoped body state, and one reusable utility.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* RotateOverlay: the device glyph turns 90° to demonstrate the gesture. */
-@keyframes praxisRotateDevice {
-  0%   { transform: rotate(0deg); }
-  18%  { transform: rotate(0deg); }
-  46%  { transform: rotate(90deg); }
-  62%  { transform: rotate(90deg); }
-  90%  { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
-}
-
-.praxis-rotate-device {
-  transform-origin: 50% 50%;
-  animation: praxisRotateDevice 2.6s ease-in-out infinite;
-  will-change: transform;
-}
-
-/* Applied to <body> while the rotate overlay is mounted: hard scroll lock. */
-body.praxis-overlay-open {
-  overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
-}
-
-/* Minimum 44x44 tap target (WCAG 2.5.5) for icon-only controls. */
-.praxis-touch-target {
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .praxis-rotate-device {
-    animation: none;
-  }
-}
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE UX UTILITIES (shared contract)
-   ───────────────────────────────────────────────────────────────────────────
-   Used by every screen so popups, sheets and chip rails behave the same way on
-   a phone. Teammates: use these class names rather than re-inventing them.
-
-   .praxis-modal-panel    scrollable dialog panel that always fits a short
-                          landscape phone (max-height + contained overscroll)
-   .praxis-modal-actions  sticky action row pinned inside such a panel, so the
-                          primary button is reachable without scrolling to it
-   .praxis-sheet-panel    full-width bottom sheet for narrow screens
-   .praxis-rail           horizontal chip rail (laws, examples) that never
-                          widens the page; children snap and never shrink
-   .praxis-page-x         page gutters that respect notches in landscape
-   .praxis-safe-b         bottom padding that respects the home indicator
-   .praxis-hide-short     hides decorative content on very short viewports
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.praxis-modal-panel {
-  max-height: calc(100dvh - 1.5rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.praxis-modal-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98) 72%, rgba(255, 255, 255, 0));
-}
-
-.praxis-sheet-panel {
-  width: 100%;
-  max-height: calc(100dvh - 0.75rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 1.25rem 1.25rem 0 0;
-}
-
-.praxis-rail {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.praxis-rail > * {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-}
-
-.praxis-page-x {
-  padding-left: max(1rem, env(safe-area-inset-left, 0px));
-  padding-right: max(1rem, env(safe-area-inset-right, 0px));
-}
-
-.praxis-safe-b {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
-}
-
-/* Landscape phones are ~360-420px tall: decorative hero copy has to give way. */
-@media (max-height: 480px) {
-  .praxis-hide-short {
-    display: none !important;
-  }
-}
-
-/* ── Toasts on phones: keep them inside the viewport and readable ──────────
-   NOTE: only the width/typography are constrained here. Sonner stacks toasts
-   downwards from its anchor, so re-anchoring the top-positioned toaster to the
-   bottom via CSS pushed the toast off-screen — position is left to Sonner. */
-@media (max-width: 767px), (max-height: 480px) {
-  [data-sonner-toaster] {
-    --width: min(92vw, 420px) !important;
-    --offset-top: max(12px, env(safe-area-inset-top, 0px)) !important;
-  }
-
-  [data-sonner-toast],
-  [data-sonner-toast] [data-title],
-  [data-sonner-toast] [data-description] {
-    font-size: 14px !important;
-  }
-}

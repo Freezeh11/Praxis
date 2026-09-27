@@ -4,7 +4,7 @@
  * and the Skip/Back/Continue action row. Copy comes from WELCOME_SLIDES.
  */
 import { motion, AnimatePresence } from 'framer-motion'
-import { WELCOME_SLIDES } from '../../lib/tutorialData'
+import { WELCOME_SLIDES } from '../../content/tutorialContent.js'
 import logoFull from '../../assets/logo-full.png'
 
 export default function WelcomeModal({

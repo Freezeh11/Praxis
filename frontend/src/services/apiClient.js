@@ -79,7 +79,7 @@ export async function apiRequest(path, { method = 'GET', body, auth = true, sile
     try {
       detail = await response.json()
     } catch {
-      detail = null
+      // A failed request whose body is not JSON — status code is all we have.
     }
     throw new ApiError(detail?.error?.message || detail?.detail || `Request failed (${response.status})`, {
       status: response.status,

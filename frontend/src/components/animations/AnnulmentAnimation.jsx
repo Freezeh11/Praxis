@@ -16,7 +16,6 @@ export default function AnnulmentAnimation({ rects, lawId, data }) {
   const isOne = dominantConst === '1'
 
   const themeColor = isOne ? '#d97706' : '#6366f1'
-  const shockColor = isOne ? '#f59e0b' : '#818cf8'
   const bgColor = isOne ? 'rgba(245, 158, 11, 0.12)' : 'rgba(99, 102, 241, 0.12)'
   const borderColor = isOne ? '#f59e0b' : '#6366f1'
 

@@ -5,7 +5,7 @@
  * manual action-button handler.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { TUTORIAL_STAGES } from '../../lib/tutorialData'
+import { TUTORIAL_STAGES } from '../../content/tutorialContent.js'
 
 export function useTutorialProgress({
   stageIdx,

@@ -23,9 +23,6 @@ const transitionConfig = { type: 'spring', bounce: 0.15, duration: 0.5 }
 /** True only inside an ExpressionDisplay rendered with `touchTargets`. */
 const TouchTargetsContext = createContext(false)
 
-/** Smallest comfortable tap area (CSS px) as required by the mobile tier. */
-const MIN_TAP = 'min-w-[44px] min-h-[44px]'
-
 function isSelected(sel, path) {
   return sel.some(s => s.path === path)
 }
