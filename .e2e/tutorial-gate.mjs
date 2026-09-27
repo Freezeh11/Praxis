@@ -16,7 +16,7 @@
 import { readFileSync } from 'node:fs'
 import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
 
-const BASE = 'http://localhost:5173'
+const BASE = 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
 
@@ -102,7 +102,7 @@ const readStoredProgress = () => page.evaluate(() => {
 
 /* ── Login ────────────────────────────────────────────────────────────── */
 await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
-await page.goto(BASE + '/login', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })
 await page.fill('input[type="email"]', EMAIL)
 await page.fill('input[type="password"]', PASSWORD)
 await page.click('button[type="submit"]')
@@ -123,8 +123,21 @@ const GATED_ROUTES = [
 ]
 
 for (const [route, label] of GATED_ROUTES) {
-  await page.goto(BASE + route, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(3000)
+  await page.goto(BASE + route, { waitUntil: 'domcontentloaded' })
+  // The gate decides only once progress has hydrated from the server (1.5-4.5s
+  // on this box) and the redirect then has to land. A fixed 3s wait read the
+  // page mid-hydration and recorded a false failure.
+  await page.waitForFunction(() => {
+    const t = document.body.innerText
+    if (!t || !t.trim()) return false
+    if (t.includes('Loading your progress') || t.includes('Loading...')) return false
+    return true
+  }, null, { timeout: 30000 }).catch(() => {})
+  await page.waitForFunction(
+    () => location.pathname.includes('/level/0/stage/0') || document.querySelector('[data-tutorial="canvas"]'),
+    null, { timeout: 15000 },
+  ).catch(() => {})
+  await page.waitForTimeout(1200)
   const url = page.url()
   const gated = url.includes('/level/0/stage/0')
   const onTutorialUi = (await page.locator('[data-tutorial="canvas"]').count()) > 0
@@ -134,7 +147,7 @@ for (const [route, label] of GATED_ROUTES) {
 }
 
 /* ── The redirect target itself must never be gated (no redirect loop) ── */
-await page.goto(BASE + '/level/0/stage/0?tutorial=true', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/level/0/stage/0?tutorial=true', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3000)
 const tutorialReachable = page.url().includes('/level/0/stage/0') &&
   (await page.locator('[data-tutorial="canvas"]').count()) > 0
@@ -145,7 +158,7 @@ log('the tutorial itself stays reachable (no redirect loop)', tutorialReachable,
 await freshUser.dispose()
 
 // The tutorial page must be genuinely interactive (not just reachable).
-await page.goto(BASE + '/level/0/stage/0?tutorial=true', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/level/0/stage/0?tutorial=true', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3000)
 const tutorialControls = await page.evaluate(() => ({
   welcomeCta: [...document.querySelectorAll('button')].filter(b => /Continue|Skip/.test(b.textContent || '')).length,
@@ -167,7 +180,7 @@ await page.evaluate(() => {
   localStorage.setItem(key, JSON.stringify(data))
 })
 
-await page.goto(BASE + '/levels', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3500)
 log('level select opens once the tutorial is done', page.url().includes('/levels'),
   page.url().replace(BASE, ''))
@@ -175,10 +188,14 @@ const storedAfter = await readStoredProgress()
 log('tutorial progress is persisted', storedAfter?.hasSeenTutorial === true,
   `hasSeenTutorial=${storedAfter?.hasSeenTutorial} stage0=${JSON.stringify(storedAfter?.stageProgress?.['0'])}`)
 
-await page.goto(BASE + '/sandbox', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/sandbox', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3000)
+// /sandbox is now the Sandbox INPUT screen (type your own expression, validated).
+// The randomizer moved into the workspace it opens: /sandbox/play in random mode.
+// So "the gate lets a post-tutorial learner into the sandbox" is asserted on the
+// input screen, and the workspace itself is covered by .e2e/sandbox-ui.mjs.
 log('sandbox opens once the tutorial is done',
-  page.url().includes('/sandbox') && (await page.locator('#randomize-btn').count()) === 1,
+  page.url().includes('/sandbox') && (await page.locator('[data-testid="sandbox-input"]').count()) === 1,
   page.url().replace(BASE, ''))
 
 /* ── Server-only signal: local flag gone, tutorial done elsewhere ─────── */
@@ -187,14 +204,23 @@ log('sandbox opens once the tutorial is done',
 await clearServerProgress(userId)
 await seedTutorialCompleteOnServer(userId)
 const freshAgain = await asFreshUser()
-await page.goto(BASE + '/levels', { waitUntil: 'networkidle' })
-await page.waitForTimeout(3500)
+await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
+// Wait for the gate to finish hydrating: the decision needs the SERVER snapshot,
+// and networkidle/domcontentloaded alone can assert while the loading shell is
+// still up. Then give the redirect decision a moment to land.
+await page.waitForFunction(() => {
+  const t = document.body.innerText
+  if (!t || !t.trim()) return false
+  if (t.includes('Loading your progress')) return false
+  return true
+}, null, { timeout: 30000 }).catch(() => {})
+await page.waitForTimeout(2500)
 log('server-side tutorial completion alone satisfies the gate',
   page.url().includes('/levels'), page.url().replace(BASE, ''))
 
 /* ── Returning user with local progress ───────────────────────────────── */
 await freshAgain.dispose()
-await page.goto(BASE + '/sandbox', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/sandbox', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(2500)
 log('returning user is not re-gated', page.url().includes('/sandbox'), page.url().replace(BASE, ''))
 

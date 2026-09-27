@@ -31,18 +31,32 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
 })
 const page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
-await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+// The tutorial gate redirects any learner whose progress says the tutorial is
+// unfinished into the interactive tutorial, whose overlay intercepts canvas
+// clicks. These suites deliberately wipe SERVER progress for a clean scoring
+// run, so the LOCAL snapshot must carry the post-tutorial flag.
+await page.addInitScript((uid) => {
+  localStorage.setItem('praxis_hide_survey', 'true')
+  const key = `praxis_v1_${uid}`
+  let snap = {}
+  try { snap = JSON.parse(localStorage.getItem(key)) || {} } catch { snap = {} }
+  localStorage.setItem(key, JSON.stringify({
+    ...snap,
+    hasSeenTutorial: true,
+    points: Math.max(Number(snap.points) || 0, 60),
+  }))
+}, user.id)
 
 
-await page.goto(BASE + '/login', { waitUntil: 'networkidle' })
+await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })
 await page.fill('input[type="email"]', EMAIL)
 await page.fill('input[type="password"]', PASSWORD)
 await page.click('button[type="submit"]')
 await page.waitForTimeout(2500)
 
 // L1 stage 3: x'y + xy + xy -> y (3 steps: Idempotent, Distributive, Complement)
-await page.goto(BASE + '/level/1/stage/2', { waitUntil: 'networkidle' })
-await page.waitForSelector('[data-path="R.0"]', { timeout: 8000 })
+await page.goto(BASE + '/level/1/stage/2', { waitUntil: 'domcontentloaded' })
+await page.waitForSelector('[data-path="R.0"]', { timeout: 30000 })
 
 // Step 1: Idempotent on the duplicate xy terms
 await page.locator('[data-path="R.1"]').first().click()
