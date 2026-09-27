@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import LevelSelectPage from './pages/LevelSelectPage'
 import StageSelectorPage from './pages/StageSelectorPage'
 import ProblemPage from './pages/ProblemPage'
+import SandboxPage from './pages/SandboxPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import TutorialGate from './components/TutorialGate'
 
@@ -18,7 +19,7 @@ export default function App() {
         <BrowserRouter>
           {/* Global Toast Notifications */}
           <Toaster position="top-center" richColors />
-          
+
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
@@ -32,11 +33,17 @@ export default function App() {
             <Route path="/levels" element={<ProtectedRoute><TutorialGate><LevelSelectPage /></TutorialGate></ProtectedRoute>} />
             <Route path="/level/:levelId/stages" element={<ProtectedRoute><TutorialGate><StageSelectorPage /></TutorialGate></ProtectedRoute>} />
             <Route path="/level/:levelId/stage/:stageIdx" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
-            {/* Sandbox: same workspace as a level, driven by generated problems.
-                Reached from the always-unlocked Sandbox card on /levels and
-                deliberately free of route params, which is what puts
-                ProblemPage into sandbox mode. Gated behind the tutorial. */}
-            <Route path="/sandbox" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
+
+            {/* Sandbox entry point: the learner types their own Boolean
+                expression and it is validated before it can be played.
+                Gated behind the tutorial like the graded levels. */}
+            <Route path="/sandbox" element={<ProtectedRoute><TutorialGate><SandboxPage /></TutorialGate></ProtectedRoute>} />
+            {/* Sandbox workspace: the exact same workspace as a level, but with
+                no route params — which is what puts ProblemPage into sandbox
+                mode. It is driven either by the expression validated on
+                /sandbox (route state, sessionStorage fallback) or by a
+                generated random problem. */}
+            <Route path="/sandbox/play" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
