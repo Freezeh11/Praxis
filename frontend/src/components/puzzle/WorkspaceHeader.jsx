@@ -10,6 +10,8 @@ import AssistanceControls from './AssistanceControls'
 import { LawsReferenceButton } from './LawsReferenceSheet'
 import TutorialToggle from './TutorialToggle'
 import ZoomControls from './ZoomControls'
+import SurveyButton from '../layout/SurveyButton'
+import SoundToggle from '../ui/SoundToggle'
 
 export default function WorkspaceHeader({
   isSandbox, isCustomSandbox, compactHeader, headerControlRail, showStepHistoryToggle,
@@ -17,6 +19,7 @@ export default function WorkspaceHeader({
   steps, optimalSteps, points, zoom, onZoom, isTutorialActive, onToggleTutorial,
   isComplete, guideCost, onHint, onGuide, onOpenLaws, onBack, stepHistoryOpen,
   onToggleStepHistory, onRandomize, onNewExpression, onUndo, onReset,
+  soundEnabled, onToggleSound,
 }) {
   /** Header title/subtitle — custom sandbox announces the typed expression. */
   const workspaceTitle = isSandbox ? 'Sandbox' : 'Simplify Expression'
@@ -50,6 +53,18 @@ export default function WorkspaceHeader({
       >
         <span>↺</span> Reset
       </button>
+    </div>
+  )
+
+  /**
+   * Survey + sound preference. They ride the same rails as the other chrome:
+   * inline in the wide header row, and in the compact control rail on the tiers
+   * that have no side column.
+   */
+  const utilityControls = (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <SoundToggle enabled={soundEnabled} onToggle={onToggleSound} chromeHeight={chromeHeight} />
+      <SurveyButton chromeHeight={chromeHeight} />
     </div>
   )
 
@@ -155,6 +170,10 @@ export default function WorkspaceHeader({
 
                 {/* Interactive Tutorial Button */}
                 <TutorialToggle compact={false} isTutorialActive={isTutorialActive} onToggle={onToggleTutorial} chromeText={chromeText} chromeHeight={chromeHeight} />
+
+                <div className="w-[1px] h-4 bg-border mx-1" />
+
+                {utilityControls}
               </>
             )}
           </div>
@@ -172,6 +191,7 @@ export default function WorkspaceHeader({
               {undoResetGroup}
               <AssistanceControls compact isComplete={isComplete} isSandbox={isSandbox} guideCost={guideCost} points={points} onHint={onHint} onGuide={onGuide} chromeText={chromeText} chromeHeight={chromeHeight} />
               <LawsReferenceButton compact chromeText={chromeText} chromeHeight={chromeHeight} onOpen={onOpenLaws} />
+              {utilityControls}
             </div>
           )}
         </div>

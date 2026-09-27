@@ -1,14 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
+import SurveyButton from '../components/layout/SurveyButton'
+import SoundToggle from '../components/ui/SoundToggle'
 import { useSession } from '../state/useSession.js'
 import { signOut } from '../services/authActions.js'
 import { TIMING } from '../config/gameRules.js'
+import useSoundEnabled from '../hooks/useSoundEnabled.js'
 import { toast } from 'sonner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
   const { data: session } = useSession()
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
   const handleLogout = async () => {
     try {
@@ -42,7 +46,9 @@ export default function LandingPage() {
         <div className="flex items-center">
           <img src={logoFull} alt="Praxis" className="h-8 [@media(max-height:480px)]:h-6 object-contain" />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+          <SurveyButton compact />
           {session ? (
             <button
               onClick={handleLogout}

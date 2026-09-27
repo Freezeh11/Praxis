@@ -87,6 +87,40 @@ export const TUTORIAL = {
 /** Default difficulty for generated sandbox problems. */
 export const SANDBOX_DIFFICULTY = 'medium'
 
+/**
+ * Sound design — every number services/soundEffects.js turns into audio.
+ *
+ * Each cue is `{ type, notes, noteMs, gapMs, gain }`: an oscillator per note,
+ * with its own attack/decay envelope, spaced by `gapMs`. Adding a cue is one
+ * line here; the engine never hardcodes a frequency or a duration.
+ *
+ * `enabled` is the FIRST-RUN default only — the learner's choice lives in
+ * localStorage under SOUND_ENABLED_KEY.
+ */
+export const SOUND = {
+  enabled: true,
+  /** Master gain every cue is scaled by, 0..1. */
+  volume: 0.16,
+  /** Envelope length of one note, in ms (attack is the first 15%). */
+  attackMs: 12,
+  cues: {
+    /** A law was applied. Short, low, barely-there click. */
+    step: { type: 'triangle', notes: ['E5'], noteMs: 70, gapMs: 0, gain: 0.75 },
+    /** A hint was taken. Soft two-note blip. */
+    hint: { type: 'sine', notes: ['C5', 'G5'], noteMs: 90, gapMs: 45, gain: 0.8 },
+    /** The Guide was activated. Brighter three-note figure. */
+    guide: { type: 'sine', notes: ['E5', 'A5', 'C#6'], noteMs: 85, gapMs: 45, gain: 0.8 },
+    /** The puzzle is solved. Ascending arpeggio. */
+    correct: { type: 'sine', notes: ['C5', 'E5', 'G5', 'C6'], noteMs: 95, gapMs: 55, gain: 0.95 },
+    /** Dead end, or a selection no law applies to. Low descending blip. */
+    wrong: { type: 'sawtooth', notes: ['A3', 'E3'], noteMs: 120, gapMs: 60, gain: 0.7 },
+    /** The problem was reset. Descending sweep. */
+    reset: { type: 'triangle', notes: ['A5', 'F5', 'C5'], noteMs: 85, gapMs: 40, gain: 0.7 },
+    /** Level/stage completed and scored. A fuller arpeggio. */
+    complete: { type: 'sine', notes: ['C5', 'E5', 'G5', 'C6', 'E6'], noteMs: 110, gapMs: 60, gain: 1 },
+  },
+}
+
 /** Solver search budgets — the graded path, the generator and the sandbox all differ. */
 export const SOLVER_BUDGET = {
   /** Defaults used when a graded puzzle is loaded. */

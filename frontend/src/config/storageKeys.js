@@ -23,3 +23,6 @@ export const CUSTOM_SANDBOX_PUZZLE = 'praxis_sandbox_custom_puzzle'
 
 /** sessionStorage: rotate-device banner dismissed for this session. */
 export const HIDE_ROTATE_BANNER = 'praxis_hide_rotate_banner'
+
+/** localStorage: learner's sound-effects preference, 'true' | 'false'. */
+export const SOUND_ENABLED = 'praxis_sound_enabled'

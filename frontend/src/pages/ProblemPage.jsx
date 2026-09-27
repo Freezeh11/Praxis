@@ -37,6 +37,7 @@ import useCollisionPlacement, {
   INSPECT_POPUP_CANDIDATES,
 } from '../hooks/useCollisionPlacement.js'
 import useDeviceTier, { PHONE_MAX_WIDTH, SMALL_TABLET_MAX_WIDTH } from '../hooks/useDeviceTier.js'
+import useSoundEnabled from '../hooks/useSoundEnabled.js'
 
 /** Below this viewport height the popups switch to their compressed layout. */
 const SHORT_VIEWPORT_MAX_HEIGHT = 520
@@ -112,6 +113,9 @@ export default function ProblemPage() {
   const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
   const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
   const [isTutorialActive, setIsTutorialActive] = useState(() => new URLSearchParams(window.location.search).get('tutorial') === 'true')
+  // The sound preference is owned by its hook (storage + AudioContext unlock);
+  // this page only hands it to the header toggle.
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
   const handlePuzzleChange = () => setShowHint(false)
   /** A randomize swaps the problem: every transient overlay goes with it. */
@@ -389,6 +393,7 @@ export default function ProblemPage() {
           onOpenLaws={() => setShowLawsDrawer(true)} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
           onToggleStepHistory={() => setShowStepHistory(prev => !prev)} onRandomize={handleRandomize} onNewExpression={() => navigate('/sandbox')}
           onUndo={handleUndo} onReset={handleResetClick}
+          soundEnabled={soundEnabled} onToggleSound={toggleSound}
         />
 
         <DerivationCanvas

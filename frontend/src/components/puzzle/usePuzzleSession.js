@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 
 import { TIMING, TUTORIAL } from '../../config/gameRules.js'
 import { effectiveOptimalSteps, estimateScore, lawsUsedFromSteps } from '../../engine/index.js'
+import { playSound } from '../../services/soundEffects.js'
 import { useGameContent } from '../../state/useGameContent.js'
 import { useGameState } from '../../state/useGameState.js'
 import { useProgress } from '../../state/useProgress.js'
@@ -155,6 +156,10 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     }
 
     const isFirstTime = !completedSet.has(stageNum)
+
+    // Solve fanfare. Only when the learner actually earned it — a stage merely
+    // re-opened from its saved solution is not news, and stays silent.
+    playSound('complete')
 
     // Derive lawsUsed from step history at this moment
     const lawsUsed = lawsUsedFromSteps(steps)

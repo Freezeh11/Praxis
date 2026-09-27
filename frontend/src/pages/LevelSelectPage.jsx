@@ -9,8 +9,11 @@ import { toast } from 'sonner'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
 import PageOverlays from '../components/layout/PageOverlays'
+import SurveyButton from '../components/layout/SurveyButton'
 import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
+import SoundToggle from '../components/ui/SoundToggle'
+import useSoundEnabled from '../hooks/useSoundEnabled.js'
 
 // Level 4+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = []
@@ -35,6 +38,7 @@ export default function LevelSelectPage() {
   const { levels, laws, loading, error } = useGameContent()
   const { progress, isLevelCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into the carousel entries
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
   // Tutorial-replay prompt, laws drawer, and the placement both are measured against.
   const {
@@ -177,6 +181,10 @@ export default function LevelSelectPage() {
               <span>Tutorial</span>
             </button>
             <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
+            {/* Both keep the 36px desktop height of the rail and grow to 44px on
+                a landscape phone, where the compact variant is used. */}
+            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+            <SurveyButton compact />
             <button 
               onClick={handleLogout}
               className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all sm:ml-1" 
