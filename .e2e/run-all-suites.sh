@@ -1,5 +1,6 @@
 #!/bin/bash
-cd /home/xris/Documents/GitHub/Praxis
+# Repo root, derived from this script's own location (works from any cwd).
+cd "$(dirname "$0")/.."
 R=.e2e/_results
 mkdir -p "$R"
 run() {

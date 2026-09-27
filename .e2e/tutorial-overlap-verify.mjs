@@ -46,6 +46,9 @@
  */
 import { launch, seededState, device, nav, reporter, shot, noHorizontalScroll, DEVICES } from './_harness.mjs'
 import { TUTORIAL_STAGES } from '../frontend/src/content/tutorialContent.js'
+// The obstacle list is owned by the component that must dodge them — importing
+// it keeps this suite honest when a control is added/removed.
+import { TUTORIAL_OBSTACLE_SELECTORS as CONTROL_SELECTORS } from '../frontend/src/components/tutorial/tutorialTargets.js'
 
 /* ── CLI ──────────────────────────────────────────────────────────────── */
 const argv = process.argv.slice(2)
@@ -77,28 +80,6 @@ const rectStr = (r) => r ? `${r.w}x${r.h}@${r.x},${r.y}→${r.x + r.w},${r.y + r
 const norm = (s) => (s || '').replace(/\s+/g, ' ').trim()
 
 /* ── browser-side measurement ─────────────────────────────────────────── */
-const CONTROL_SELECTORS = [
-  '[data-tutorial="canvas"] [data-path]',
-  '[data-tutorial="not-capsule"]',
-  '[data-tutorial^="law-card-"]',
-  '[data-tutorial^="step-history-card-"]',
-  '[data-tutorial="hint-button"]',
-  '[data-tutorial="guide-button"]',
-  '[data-tutorial="laws-reference-button"]',
-  '[data-tutorial="undo-button"]',
-  '[data-tutorial="reset-button"]',
-  '[data-tutorial="reopen-score-btn"]',
-  '[data-tutorial="next-stage-btn"]',
-  '[data-tutorial="review-derivation-btn"]',
-  '[data-tutorial="assistance-group"]',
-  '[data-tutorial="points-and-assistance"]',
-  '[data-tutorial="undo-reset-group"]',
-  '[data-tutorial="new-expression-next-btn"]',
-  '[data-tutorial="randomize-next-btn"]',
-  '[data-tutorial="score-modal"] button',
-  'button[title*="grip" i]',
-]
-
 const measure = (page, targetSel, secondarySel) => page.evaluate(({ controls, targetSel, secondarySel }) => {
   const R = (el) => {
     const r = el.getBoundingClientRect()

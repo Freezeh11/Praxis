@@ -19,14 +19,13 @@
  * Requires: vite dev server on 5173, FastAPI on 8000, e2e user to exist.
  * Run:  node .e2e/mobile-landscape-workspace.mjs [--section=1,2,3,4,5]
  */
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
 
 // The dev server binds to [::1]; 127.0.0.1 also resolves here, localhost is the
 // form the other workspace suites use.
 const BASE = 'http://localhost:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
-const CHROME = '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'
 const MIN_TAP = 44
 
 const onlyArg = process.argv.find(a => a.startsWith('--section='))
@@ -41,10 +40,7 @@ const log = (name, ok, extra = '') => {
 const section = (t) => console.log(`\n──── ${t} ────`)
 const norm = (s) => String(s || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
 
-const browser = await chromium.launch({
-  executablePath: CHROME,
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 
 /** Logs in and seeds a post-tutorial learner (the tutorial gate guards both routes). */
 async function makeLearner(opts = {}) {
@@ -54,7 +50,7 @@ async function makeLearner(opts = {}) {
   page.on('pageerror', e => errors.push(e.message))
   const apiCalls = []
   page.on('request', r => { if (r.url().includes('/api/')) apiCalls.push(`${r.method()} ${r.url().replace(BASE, '')}`) })
-  await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+  await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
   await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })
   await page.fill('input[type="email"]', EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
@@ -65,14 +61,14 @@ async function makeLearner(opts = {}) {
   // the ungated tutorial route, then remount so useProgress re-reads it.
   await page.goto(BASE + '/level/0/stages', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1500)
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.points = Math.max(Number(data.points) || 0, 120)
     data.hasSeenTutorial = true
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, PROGRESS_KEY_PREFIX)
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1200)
   return { ctx, page, errors, apiCalls }
@@ -467,16 +463,16 @@ if (want(6)) {
     await guide.count() === 1 && !(await guide.isDisabled()),
     `disabled=${await guide.isDisabled().catch(() => 'missing')}`)
 
-  const pointsBefore = await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  const pointsBefore = await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     return key ? localStorage.getItem(key) : null
-  })
+  }, PROGRESS_KEY_PREFIX)
   await guide.click()
   await page.waitForTimeout(900)
-  const pointsAfter = await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  const pointsAfter = await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     return key ? localStorage.getItem(key) : null
-  })
+  }, PROGRESS_KEY_PREFIX)
   // The Guide pre-selects the move it recommends, so a guided sandbox shows law
   // cards (or asks for a single highlighted click). It must stay free.
   const guideRun = await page.evaluate(() => ({

@@ -19,18 +19,17 @@
  * Run:  node .e2e/responsive-tiers.mjs
  */
 import { pathToFileURL } from 'node:url'
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, HIDE_SURVEY, HIDE_ROTATE_BANNER, PROGRESS_KEY_PREFIX, REPO_ROOT } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
-const CHROMIUM = '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'
-const HOOK_PATH = '/home/xris/Documents/GitHub/Praxis/frontend/src/hooks/useDeviceTier.js'
+const HOOK_PATH = `${REPO_ROOT}/frontend/src/hooks/useDeviceTier.js`
 const OVERLAY_TESTID = '[data-testid="rotate-overlay"]'
 const BANNER_TESTID = '[data-testid="rotate-banner"]'
 const OVERLAY_TEXT = 'Praxis works best in landscape mode. Please rotate your device.'
 const BANNER_TEXT = 'Rotate for best experience'
-const BANNER_KEY = 'praxis_hide_rotate_banner'
+const BANNER_KEY = HIDE_ROTATE_BANNER
 
 const results = []
 const log = (name, ok, extra = '') => {
@@ -135,10 +134,7 @@ if (hook) {
 /* ══════════════════════════════════════════════════════════════════════
    2. BROWSER — device matrix
    ══════════════════════════════════════════════════════════════════════ */
-const browser = await chromium.launch({
-  executablePath: CHROMIUM,
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 
 const browserErrors = []
 const watchPage = (page, label) => {
@@ -152,7 +148,7 @@ const watchPage = (page, label) => {
 /** Logs in once at desktop size; the session is reused by every device. */
 async function seedAuthState() {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
-  await context.addInitScript(() => { try { localStorage.setItem('praxis_hide_survey', 'true') } catch { /* ignore */ } })
+  await context.addInitScript((key) => { try { localStorage.setItem(key, 'true') } catch { /* ignore */ } }, HIDE_SURVEY)
   const page = watchPage(await context.newPage(), 'auth-seed')
   // Other teammates edit the same dev-server module graph, so a transient
   // compile error can blank the app for a moment — retry rather than flake.
@@ -182,14 +178,14 @@ async function seedAuthState() {
   // It also makes this suite independent of suites that wipe server progress.
   await page.goto(BASE + '/level/0/stages', { waitUntil: 'domcontentloaded' }).catch(() => {})
   await page.waitForTimeout(1500)
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.hasSeenTutorial = true
     data.points = Math.max(Number(data.points) || 0, 150)
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, PROGRESS_KEY_PREFIX)
   await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {})
   await page.waitForTimeout(1500)
 
@@ -203,7 +199,7 @@ async function seedAuthState() {
 
 async function openDevice({ label, viewport, isMobile = false, hasTouch = false, storageState }) {
   const context = await browser.newContext({ viewport, isMobile, hasTouch, storageState })
-  await context.addInitScript(() => { try { localStorage.setItem('praxis_hide_survey', 'true') } catch { /* ignore */ } })
+  await context.addInitScript((key) => { try { localStorage.setItem(key, 'true') } catch { /* ignore */ } }, HIDE_SURVEY)
   const page = watchPage(await context.newPage(), label)
   return { context, page }
 }
@@ -245,7 +241,7 @@ async function openShell(page, path = '/levels') {
  * app-shell presence and the first interactive app control (marked with
  * data-e2e-probe so a hit test can prove whether it is reachable).
  */
-function probe() {
+function probe(bannerKey) {
   const overlay = document.querySelector('[data-testid="rotate-overlay"]')
   const banner = document.querySelector('[data-testid="rotate-banner"]')
   const inGate = el => Boolean(el && el.closest('[data-testid="rotate-overlay"], [data-testid="rotate-banner"]'))
@@ -323,7 +319,7 @@ function probe() {
     bodyTouchAction: bodyStyle.touchAction,
     pageScrollable: document.documentElement.scrollHeight > window.innerHeight + 2,
     scrollY: window.scrollY,
-    storedBannerFlag: (() => { try { return sessionStorage.getItem('praxis_hide_rotate_banner') } catch { return 'THREW' } })(),
+    storedBannerFlag: (() => { try { return sessionStorage.getItem(bannerKey) } catch { return 'THREW' } })(),
   }
 }
 
@@ -340,7 +336,7 @@ const iphone = await openDevice({
   storageState: auth,
 })
 await openShell(iphone.page, '/levels')
-let p = await iphone.page.evaluate(probe)
+let p = await iphone.page.evaluate(probe, HIDE_ROTATE_BANNER)
 
 log('iPhone portrait (390x844): app shell renders behind the gate',
   p.rootChildren > 0 && p.controlCount > 0, `rootChildren=${p.rootChildren} appControls=${p.controlCount} url=${p.url}`)
@@ -430,7 +426,7 @@ log('iPhone portrait: the lock really blocks user scrolling (wheel is inert whil
 await iphone.page.setViewportSize({ width: 844, height: 390 })
 await iphone.page.waitForSelector(OVERLAY_TESTID, { state: 'detached', timeout: 5000 }).catch(() => {})
 await iphone.page.waitForTimeout(400)
-p = await iphone.page.evaluate(probe)
+p = await iphone.page.evaluate(probe, HIDE_ROTATE_BANNER)
 
 log('iPhone rotated to landscape (setViewportSize, no reload): overlay disappears',
   !p.overlay, p.overlay ? screenshotFree(p.overlay) : `no overlay at ${p.viewport.w}x${p.viewport.h}`)
@@ -464,7 +460,7 @@ await iphone.page.waitForSelector(OVERLAY_TESTID, { state: 'visible', timeout: 5
 await iphone.page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {})
 await iphone.page.waitForFunction(() => (document.getElementById('root')?.children.length ?? 0) > 0, null, { timeout: 15000 }).catch(() => {})
 await iphone.page.waitForTimeout(700)
-const landing = await iphone.page.evaluate(probe)
+const landing = await iphone.page.evaluate(probe, HIDE_ROTATE_BANNER)
 log('iPhone portrait: the gate re-arms when rotated back, and is global (covers the public landing page)',
   Boolean(landing.overlay), `url=${landing.url} overlay=${Boolean(landing.overlay)} tier=${landing.overlay?.tier}`)
 log('iPhone portrait: the landing page is likewise not interactive (hit test lands on the overlay)',
@@ -482,7 +478,7 @@ const android = await openDevice({
   storageState: auth,
 })
 await openShell(android.page, '/levels')
-p = await android.page.evaluate(probe)
+p = await android.page.evaluate(probe, HIDE_ROTATE_BANNER)
 log('Android portrait (360x740): overlay present, banner absent',
   Boolean(p.overlay) && !p.banner,
   p.overlay ? `tier=${p.overlay.tier} text="${p.overlay.text.slice(0, 60)}" banner=${Boolean(p.banner)}` : 'no overlay')
@@ -500,7 +496,7 @@ const tablet = await openDevice({
 })
 const tabletPage = tablet.page
 await openShell(tabletPage, '/levels')
-p = await tabletPage.evaluate(probe)
+p = await tabletPage.evaluate(probe, HIDE_ROTATE_BANNER)
 
 log('small tablet portrait (768x1024): banner present, NO overlay',
   Boolean(p.banner) && !p.overlay,
@@ -517,7 +513,7 @@ log('small tablet portrait: banner dismissal flag starts unset',
 await tabletPage.click('[data-testid="rotate-banner-dismiss"]')
 await tabletPage.waitForSelector(BANNER_TESTID, { state: 'detached', timeout: 4000 }).catch(() => {})
 await tabletPage.waitForTimeout(250)
-p = await tabletPage.evaluate(probe)
+p = await tabletPage.evaluate(probe, HIDE_ROTATE_BANNER)
 log('small tablet portrait: ✕ dismisses the banner immediately',
   !p.banner && p.storedBannerFlag === 'true',
   `banner=${Boolean(p.banner)} sessionStorage[${BANNER_KEY}]=${p.storedBannerFlag}`)
@@ -529,7 +525,7 @@ await tabletPage.waitForFunction(() => {
   return (root?.children.length ?? 0) > 0 && hasControls
 }, null, { timeout: 15000 }).catch(() => {})
 await tabletPage.waitForTimeout(800)
-p = await tabletPage.evaluate(probe)
+p = await tabletPage.evaluate(probe, HIDE_ROTATE_BANNER)
 log('small tablet portrait: after a reload in the same session the banner stays gone',
   !p.banner && !p.overlay && p.rootChildren > 0 && p.controlCount > 0,
   `banner=${Boolean(p.banner)} overlay=${Boolean(p.overlay)} appControls=${p.controlCount} url=${p.url}`)
@@ -538,7 +534,7 @@ log('small tablet portrait: after a reload in the same session the banner stays 
 // allowed (and expected) to come back there. Proves the flag is session-scoped.
 const tabletTab2 = watchPage(await tablet.context.newPage(), 'tablet-sm-newtab')
 await openShell(tabletTab2, '/levels')
-const p2 = await tabletTab2.evaluate(probe)
+const p2 = await tabletTab2.evaluate(probe, HIDE_ROTATE_BANNER)
 log('small tablet: dismissal is session-scoped (a fresh tab shows the banner again)',
   Boolean(p2.banner) && p2.storedBannerFlag === null,
   `banner=${Boolean(p2.banner)} sessionStorage[${BANNER_KEY}]=${p2.storedBannerFlag}`)
@@ -553,7 +549,7 @@ const ipad = await openDevice({
   storageState: auth,
 })
 await openShell(ipad.page, '/levels')
-p = await ipad.page.evaluate(probe)
+p = await ipad.page.evaluate(probe, HIDE_ROTATE_BANNER)
 log('iPad portrait (1024x1366): NO overlay, NO banner, app renders',
   !p.overlay && !p.banner && p.rootChildren > 0 && p.controlCount > 0,
   `overlay=${Boolean(p.overlay)} banner=${Boolean(p.banner)} rootChildren=${p.rootChildren} appControls=${p.controlCount} url=${p.url}`)
@@ -563,7 +559,7 @@ await ipad.context.close()
 for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 800 }]) {
   const laptop = await openDevice({ label: `desktop-${viewport.width}`, viewport, storageState: auth })
   await openShell(laptop.page, '/levels')
-  p = await laptop.page.evaluate(probe)
+  p = await laptop.page.evaluate(probe, HIDE_ROTATE_BANNER)
   log(`desktop ${viewport.width}x${viewport.height} (no touch): NO overlay, NO banner, app renders`,
     !p.overlay && !p.banner && p.rootChildren > 0 && p.controlCount > 0,
     `overlay=${Boolean(p.overlay)} banner=${Boolean(p.banner)} appControls=${p.controlCount} url=${p.url}`)

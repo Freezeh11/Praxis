@@ -9,7 +9,7 @@
  * Requires: vite dev server on 5173, FastAPI on 8000, e2e user to exist.
  * Run:  node .e2e/acceptance-features.mjs [--section=1,2,3,4,5,6]
  */
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
@@ -26,10 +26,7 @@ const log = (name, ok, extra = '') => {
 }
 const section = (t) => console.log(`\n──── ${t} ────`)
 
-const browser = await chromium.launch({
-  executablePath: '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 
 /**
  * Auth + progress are seeded ONCE in a desktop context and then replayed into
@@ -44,7 +41,7 @@ async function ensureSeededState() {
   if (SEEDED_STATE) return SEEDED_STATE
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 950 } })
   const page = await ctx.newPage()
-  await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+  await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
   await nav(page, '/login', { waitForProgress: false })
   await page.fill('input[type="email"]', EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
@@ -55,21 +52,21 @@ async function ensureSeededState() {
   // Seed from an ungated route, then remount so useProgress re-reads it.
   await nav(page, '/level/0/stages', { waitForProgress: true })
   await page.waitForTimeout(1500)
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.points = Math.max(Number(data.points) || 0, 120)
     data.hasSeenTutorial = true
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, PROGRESS_KEY_PREFIX)
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1500)
 
-  const hydrated = await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  const hydrated = await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     return key ? { key, hasSeenTutorial: JSON.parse(localStorage.getItem(key)).hasSeenTutorial === true } : null
-  })
+  }, PROGRESS_KEY_PREFIX)
   if (!hydrated?.hasSeenTutorial) {
     console.log('WARNING: could not seed a post-tutorial learner snapshot (login may have failed)')
   }
@@ -86,7 +83,7 @@ async function makeLearner(opts = {}) {
   const page = await ctx.newPage()
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
-  await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+  await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
   return { ctx, page, errors }
 }
 
@@ -343,7 +340,7 @@ if (want(2)) {
   await page.waitForTimeout(700)
 
   // Points / progress isolation.
-  const progressKey = await page.evaluate(() => Object.keys(localStorage).find(k => k.startsWith('praxis_v1_')))
+  const progressKey = await page.evaluate((prefix) => Object.keys(localStorage).find(k => k.startsWith(prefix)), PROGRESS_KEY_PREFIX)
   const before = await page.evaluate(k => localStorage.getItem(k), progressKey)
 
   // Solve one real step through the click interface.
@@ -851,7 +848,7 @@ if (want(7)) {
   await waitForWorkspace(page)
   await page.waitForTimeout(1500)
 
-  const progressKey = await page.evaluate(() => Object.keys(localStorage).find(k => k.startsWith('praxis_v1_')))
+  const progressKey = await page.evaluate((prefix) => Object.keys(localStorage).find(k => k.startsWith(prefix)), PROGRESS_KEY_PREFIX)
   const pointsOf = async () => page.evaluate(k => {
     const raw = localStorage.getItem(k)
     return raw ? Number(JSON.parse(raw).points) || 0 : null

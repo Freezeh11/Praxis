@@ -13,8 +13,7 @@
  * Requires: vite dev server on 5173, backend .env with SUPABASE_SERVICE_KEY.
  * Run:  node .e2e/tutorial-gate.mjs
  */
-import { readFileSync } from 'node:fs'
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, readEnv, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
@@ -27,13 +26,7 @@ const log = (name, ok, extra = '') => {
 }
 
 /* ── Supabase admin access, for a truly fresh server state ────────────── */
-const envText = readFileSync('/home/xris/Documents/GitHub/Praxis/backend/.env', 'utf8')
-const env = Object.fromEntries(
-  envText.split('\n').filter(l => l.includes('=')).map(l => {
-    const [k, ...rest] = l.split('=')
-    return [k.trim(), rest.join('=').trim().replace(/^"|"$/g, '')]
-  }),
-)
+const env = readEnv()
 const SUPABASE_URL = env.SUPABASE_URL.replace(/\/$/, '')
 const SERVICE_KEY = env.SUPABASE_SERVICE_KEY
 const adminHeaders = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
@@ -71,10 +64,7 @@ if (!userId) {
 }
 console.log(`INFO | using e2e account ${EMAIL} (${userId})`)
 
-const browser = await chromium.launch({
-  executablePath: '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
 
 const pageErrors = []
@@ -88,20 +78,20 @@ page.on('pageerror', e => { pageErrors.push(e.message); console.log('PAGE ERROR:
  * Returns a disposable: the script MUST be removed before asserting that the
  * app remembers completed progress, otherwise it wipes that state too.
  */
-const asFreshUser = () => page.addInitScript(() => {
+const asFreshUser = () => page.addInitScript(({ prefix, surveyKey }) => {
   for (const k of Object.keys(localStorage)) {
-    if (k.startsWith('praxis_v1_')) localStorage.removeItem(k)
+    if (k.startsWith(prefix)) localStorage.removeItem(k)
   }
-  localStorage.setItem('praxis_hide_survey', 'true')
-})
+  localStorage.setItem(surveyKey, 'true')
+}, { prefix: PROGRESS_KEY_PREFIX, surveyKey: HIDE_SURVEY })
 
-const readStoredProgress = () => page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+const readStoredProgress = () => page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   return key ? JSON.parse(localStorage.getItem(key)) : null
-})
+}, PROGRESS_KEY_PREFIX)
 
 /* ── Login ────────────────────────────────────────────────────────────── */
-await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
 await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })
 await page.fill('input[type="email"]', EMAIL)
 await page.fill('input[type="password"]', PASSWORD)
@@ -171,14 +161,14 @@ log('the tutorial page is interactive for a new user',
 // Completing the tutorial from the app's point of view: the same progress
 // transition `completeStage(0, 0)` performs when a learner clears a tutorial
 // stage. Verified end-to-end through the app's real save + restore path below.
-await page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+await page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   if (!key) return
   const data = JSON.parse(localStorage.getItem(key))
   data.hasSeenTutorial = true
   data.stageProgress = { ...(data.stageProgress || {}), 0: [0] }
   localStorage.setItem(key, JSON.stringify(data))
-})
+}, PROGRESS_KEY_PREFIX)
 
 await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(3500)

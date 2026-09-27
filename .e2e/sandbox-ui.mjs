@@ -17,7 +17,7 @@
  * Requires: vite dev server on 5173 and the e2e test user to exist.
  * Run:  node .e2e/sandbox-ui.mjs
  */
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
 
 // The dev server is started by the Lead bound to 127.0.0.1 (see package scripts);
 // localhost also resolves here, but 127.0.0.1 is the canonical test target.
@@ -31,12 +31,9 @@ const log = (name, ok, extra = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name}${extra ? ' | ' + extra : ''}`)
 }
 
-const browser = await chromium.launch({
-  executablePath: '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
-await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
 
 const pageErrors = []
 page.on('pageerror', err => {
@@ -72,23 +69,23 @@ log('login succeeds', !page.url().includes('/login'), page.url())
 // tutorial-level stage route, then remount.
 await page.goto(BASE + '/level/0/stages', { waitUntil: 'networkidle' })
 await page.waitForTimeout(1800)
-const seeded = await page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+const seeded = await page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   if (!key) return null
   const data = JSON.parse(localStorage.getItem(key))
   data.points = Math.max(Number(data.points) || 0, 100)
   data.hasSeenTutorial = true
   localStorage.setItem(key, JSON.stringify(data))
   return { points: data.points, hasSeenTutorial: data.hasSeenTutorial }
-})
+}, PROGRESS_KEY_PREFIX)
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(1800)
-const afterReload = await page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+const afterReload = await page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   if (!key) return null
   const data = JSON.parse(localStorage.getItem(key))
   return { points: data.points, hasSeenTutorial: data.hasSeenTutorial }
-})
+}, PROGRESS_KEY_PREFIX)
 log('seeded a post-tutorial learner with enough points',
   Boolean(seeded) && (afterReload?.points ?? 0) >= 20 && afterReload?.hasSeenTutorial === true,
   `seeded=${JSON.stringify(seeded)} afterReload=${JSON.stringify(afterReload)}`)
@@ -156,7 +153,7 @@ log('a generated problem is shown', firstExpr.includes('F =') && firstExpr.repla
 /* ── 4. Progress isolation baseline ───────────────────────────────────── */
 // Snapshot taken here; every interaction from this point on is pure sandbox
 // play, which must not change stored progress.
-const progressKey = await page.evaluate(() => Object.keys(localStorage).find(k => k.startsWith('praxis_v1_')))
+const progressKey = await page.evaluate((prefix) => Object.keys(localStorage).find(k => k.startsWith(prefix)), PROGRESS_KEY_PREFIX)
 
 /* ── 5. Solve the generated problem using the laws dock ───────────────── */
 /**

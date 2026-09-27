@@ -35,6 +35,7 @@
  */
 import {
   launch, seededState, DEVICES, device, nav, reporter, noHorizontalScroll, shot,
+  PROGRESS_KEY_PREFIX, SKIP_TUTORIAL_REPLAY_PROMPT, SKIP_RESET_CONFIRM,
 } from './_harness.mjs'
 
 const { log, section, summary } = reporter('popup-overlap-verify')
@@ -186,15 +187,15 @@ async function openWorkspace(page, path, attempts = 4) {
 
 /** Clears the saved derivation so the graded stage starts from scratch. */
 async function clearStageSolution(page, levelId, stageIdx) {
-  await page.evaluate(({ levelId, stageIdx }) => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate(({ levelId, stageIdx, prefix }) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     const sol = { ...(data.stageSolutions || {}) }
     delete sol[`${levelId}:${stageIdx}`]
     data.stageSolutions = sol
     localStorage.setItem(key, JSON.stringify(data))
-  }, { levelId, stageIdx })
+  }, { levelId, stageIdx, prefix: PROGRESS_KEY_PREFIX })
 }
 
 /**
@@ -320,11 +321,11 @@ async function reachStepInspectionTip(page, { maxActions = 70, budgetMs = 200000
   }
   try {
     if (!(await openWorkspace(page, '/level/0/stage/0?tutorial=true'))) return false
-    await page.evaluate(() => {
+    await page.evaluate((key) => {
       try {
-        sessionStorage.removeItem('praxis_skip_tutorial_replay_prompt')
+        sessionStorage.removeItem(key)
       } catch { /* fresh tab: storage is not available until the origin loads */ }
-    })
+    }, SKIP_TUTORIAL_REPLAY_PROMPT)
 
     const cardButton = () => page.locator('[data-tutorial-card="true"] button').last()
     const welcomeButton = () => page.locator('.praxis-modal-panel button', { hasText: /begin|start|let.?s go|next|got it|continue/i }).last()
@@ -396,17 +397,17 @@ for (const testCase of (wantsSection(1) ? WORKSPACE_CASES : [])) {
   const stagePath = `/level/1/stage/${testCase.stage}`
   await openWorkspace(page, stagePath)
   await clearStageSolution(page, 1, testCase.stage)
-  await page.evaluate(() => {
+  await page.evaluate(({ skipResetKey, prefix }) => {
     try {
-      sessionStorage.removeItem('praxis_skip_reset_confirm')
+      sessionStorage.removeItem(skipResetKey)
     } catch { /* ignore */ }
     // The graded Guide costs 20 points per use; the suite needs ~6 of them.
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.points = Math.max(Number(data.points) || 0, 600)
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, { skipResetKey: SKIP_RESET_CONFIRM, prefix: PROGRESS_KEY_PREFIX })
   const ready = await openWorkspace(page, stagePath)
   log(`1.0 the graded workspace renders (level 1 stage ${testCase.stage}, ${testCase.steps} optimal steps) ${testCase.label}`, ready)
   if (!ready) { await ctx.close(); continue }
@@ -650,9 +651,9 @@ for (const testCase of (wantsSection(2) ? SELECT_CASES : [])) {
   const name = testCase.preset.name
 
   await nav(page, '/levels')
-  await page.evaluate(() => {
-    sessionStorage.removeItem('praxis_skip_tutorial_replay_prompt')
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate(({ skipReplayKey, prefix }) => {
+    sessionStorage.removeItem(skipReplayKey)
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.stageProgress = { ...(data.stageProgress || {}), 1: [0, 1] }
@@ -660,7 +661,7 @@ for (const testCase of (wantsSection(2) ? SELECT_CASES : [])) {
     data.hasSeenTutorial = true
     data.points = Math.max(Number(data.points) || 0, 150)
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, { skipReplayKey: SKIP_TUTORIAL_REPLAY_PROMPT, prefix: PROGRESS_KEY_PREFIX })
   await nav(page, '/levels')
   await page.waitForSelector('#start-level-btn', { timeout: 25000 })
   await page.waitForTimeout(700)
@@ -769,7 +770,7 @@ if (wantsSection(3)) {
   page.on('dialog', d => d.dismiss().catch(() => {}))
   await nav(page, '/level/1/stages')
   await page.waitForSelector('[data-stage-card]', { timeout: 25000 })
-  await page.evaluate(() => sessionStorage.removeItem('praxis_skip_tutorial_replay_prompt'))
+  await page.evaluate((key) => sessionStorage.removeItem(key), SKIP_TUTORIAL_REPLAY_PROMPT)
   await page.waitForTimeout(600)
 
   await page.locator('[data-popup-anchor="tutorial"]').first().click({ force: true })

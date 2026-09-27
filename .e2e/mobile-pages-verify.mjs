@@ -21,7 +21,7 @@
  *       node .e2e/mobile-pages-verify.mjs --quick  (skip the 3 auth pages)
  */
 import {
-  launch, seededState, device, DEVICES, reporter, noHorizontalScroll, shot,
+  launch, seededState, device, DEVICES, reporter, noHorizontalScroll, shot, HIDE_ROTATE_BANNER,
 } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
@@ -113,9 +113,9 @@ async function withDevice(browser, preset, state, body) {
   const d = await device(browser, preset, state)
   d.consoleErrors = []
   d.page.on('console', (m) => { if (m.type() === 'error') d.consoleErrors.push(m.text().slice(0, 160)) })
-  await d.ctx.addInitScript(() => {
-    try { sessionStorage.setItem('praxis_hide_rotate_banner', 'true') } catch { /* ignore */ }
-  })
+  await d.ctx.addInitScript((key) => {
+    try { sessionStorage.setItem(key, 'true') } catch { /* ignore */ }
+  }, HIDE_ROTATE_BANNER)
   try {
     await body(d)
   } catch (err) {
@@ -133,9 +133,9 @@ async function withDevice(browser, preset, state, body) {
 async function withAnon(browser, preset, body) {
   const { name, ...opts } = preset
   const ctx = await browser.newContext(opts)
-  await ctx.addInitScript(() => {
-    try { sessionStorage.setItem('praxis_hide_rotate_banner', 'true') } catch { /* ignore */ }
-  })
+  await ctx.addInitScript((key) => {
+    try { sessionStorage.setItem(key, 'true') } catch { /* ignore */ }
+  }, HIDE_ROTATE_BANNER)
   const page = await ctx.newPage()
   page.__presetName = name
   try {

@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs'
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, readEnv, HIDE_SURVEY, progressKey } from './_harness.mjs'
 
 const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
@@ -10,11 +9,7 @@ const log = (name, ok, extra = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name}${extra ? ' | ' + extra : ''}`)
 }
 
-const envText = readFileSync('/home/xris/Documents/GitHub/Praxis/backend/.env', 'utf8')
-const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=')).map(l => {
-  const [k, ...rest] = l.split('=')
-  return [k.trim(), rest.join('=').trim().replace(/^"|"$/g, '')]
-}))
+const env = readEnv()
 const SERVICE_KEY = env.SUPABASE_SERVICE_KEY
 const authHeaders = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
 const adminRes = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/admin/users?page=1&per_page=50`, { headers: authHeaders })
@@ -26,18 +21,14 @@ for (const table of ['stage_progress', 'user_progress', 'score_history']) {
   })
 }
 
-const browser = await chromium.launch({
-  executablePath: '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
 // The tutorial gate redirects any learner whose progress says the tutorial is
 // unfinished into the interactive tutorial, whose overlay intercepts canvas
 // clicks. These suites deliberately wipe SERVER progress for a clean scoring
 // run, so the LOCAL snapshot must carry the post-tutorial flag.
-await page.addInitScript((uid) => {
-  localStorage.setItem('praxis_hide_survey', 'true')
-  const key = `praxis_v1_${uid}`
+await page.addInitScript(({ key, surveyKey }) => {
+  localStorage.setItem(surveyKey, 'true')
   let snap = {}
   try { snap = JSON.parse(localStorage.getItem(key)) || {} } catch { snap = {} }
   localStorage.setItem(key, JSON.stringify({
@@ -45,7 +36,7 @@ await page.addInitScript((uid) => {
     hasSeenTutorial: true,
     points: Math.max(Number(snap.points) || 0, 60),
   }))
-}, user.id)
+}, { key: progressKey(user.id), surveyKey: HIDE_SURVEY })
 
 
 await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })

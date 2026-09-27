@@ -1,10 +1,8 @@
 // Decisive gate check: wipe the account's server progress, then confirm a
 // browser with NO local snapshot is redirected into the tutorial from every
 // gated route — and that the tutorial is still reachable.
-import { readFileSync } from 'node:fs'
-import { launch, BASE, EMAIL, PASSWORD } from './_harness.mjs'
-const env = Object.fromEntries(readFileSync('/home/xris/Documents/GitHub/Praxis/backend/.env', 'utf8')
-  .split('\n').filter(l => l.includes('=')).map(l => { const [k, ...r] = l.split('='); return [k.trim(), r.join('=').trim().replace(/^"|"$/g, '')] }))
+import { launch, readEnv, HIDE_SURVEY, PROGRESS_KEY_PREFIX, BASE, EMAIL, PASSWORD } from './_harness.mjs'
+const env = readEnv()
 const admin = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` }
 const users = await (await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/admin/users?page=1&per_page=50`, { headers: admin })).json()
 const user = (users.users || []).find(u => u.email === EMAIL)
@@ -14,11 +12,11 @@ for (const t of ['stage_progress', 'user_progress', 'score_history']) {
 const browser = await launch()
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await ctx.newPage()
-await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
 await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(1500)
 await page.fill('input[type="email"]', EMAIL); await page.fill('input[type="password"]', PASSWORD)
 await page.click('button[type="submit"]'); await page.waitForTimeout(2500)
-const clearLocal = () => page.evaluate(() => { Object.keys(localStorage).filter(k => k.startsWith('praxis_v1_')).forEach(k => localStorage.removeItem(k)) })
+const clearLocal = () => page.evaluate((prefix) => { Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k)) }, PROGRESS_KEY_PREFIX)
 let fails = 0
 for (const path of ['/levels', '/level/1/stage/0', '/level/2/stage/0', '/level/1/stages', '/sandbox']) {
   await clearLocal()

@@ -12,13 +12,64 @@
  * so the login form underneath is deliberately unclickable. Auth + a
  * post-tutorial progress snapshot are therefore created once in a desktop
  * context and replayed into every emulated device.
+ *
+ * Machine-specific paths live HERE and nowhere else. Each one is overridable
+ * from the environment, with this box's value as the default:
+ *   PRAXIS_PLAYWRIGHT_MODULE  playwright-core ESM entry
+ *   PRAXIS_CHROMIUM           Chromium binary to drive
+ *   PRAXIS_ENV_FILE           backend/.env with the Supabase admin credentials
+ * Suites import `launch()` / `readEnv()` (or the constants) instead of
+ * re-hardcoding a path.
  */
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  PROGRESS_KEY_PREFIX,
+  progressKey,
+  SKIP_TUTORIAL_REPLAY_PROMPT,
+  SKIP_RESET_CONFIRM,
+  HIDE_ROTATE_BANNER,
+} from '../frontend/src/config/storageKeys.js'
+
+/** Repo root, derived from this file's own location — never hardcoded. */
+export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
+/** Absolute playwright-core entry; `launch()` dynamically imports this. */
+export const PLAYWRIGHT_MODULE = process.env.PRAXIS_PLAYWRIGHT_MODULE || '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+/** Chromium binary used by every suite (override: PRAXIS_CHROMIUM). */
+export const CHROMIUM = process.env.PRAXIS_CHROMIUM || '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'
+/** backend/.env holding SUPABASE_URL / SUPABASE_SERVICE_KEY (override: PRAXIS_ENV_FILE). */
+export const ENV_FILE = process.env.PRAXIS_ENV_FILE || '/home/xris/Documents/GitHub/Praxis/backend/.env'
 
 export const BASE = process.env.PRAXIS_BASE_URL || 'http://localhost:5173'
 export const EMAIL = 'e2e-test@praxis.test'
 export const PASSWORD = 'E2eTest!2345'
-export const CHROMIUM = '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'
+
+/**
+ * Browser storage keys, re-exported from the app's single source of truth so
+ * suites never inline the literals. `HIDE_SURVEY` is the one exception: the app
+ * no longer reads it, so it has no entry in storageKeys.js and is owned here.
+ */
+export {
+  PROGRESS_KEY_PREFIX,
+  progressKey,
+  SKIP_TUTORIAL_REPLAY_PROMPT,
+  SKIP_RESET_CONFIRM,
+  HIDE_ROTATE_BANNER,
+}
+export const HIDE_SURVEY = 'praxis_hide_survey'
+
+/** Parses ENV_FILE into a flat { KEY: value } map (same shape the suites used). */
+export function readEnv() {
+  const envText = readFileSync(ENV_FILE, 'utf8')
+  return Object.fromEntries(
+    envText.split('\n').filter(l => l.includes('=')).map(l => {
+      const [k, ...rest] = l.split('=')
+      return [k.trim(), rest.join('=').trim().replace(/^"|"$/g, '')]
+    }),
+  )
+}
 
 /** Device presets used across the mobile suites. */
 export const DEVICES = {
@@ -33,6 +84,8 @@ export const DEVICES = {
 }
 
 export async function launch() {
+  // `import { chromium } from <variable>` is not valid ESM — resolve at call time.
+  const { chromium } = await import(PLAYWRIGHT_MODULE)
   return chromium.launch({
     executablePath: CHROMIUM,
     args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
@@ -44,7 +97,7 @@ export async function seededState(browser) {
   if (seededState._cache) return seededState._cache
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 950 } })
   const page = await ctx.newPage()
-  await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+  await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
   await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1200)
   await page.fill('input[type="email"]', EMAIL)
@@ -53,14 +106,14 @@ export async function seededState(browser) {
   await page.waitForTimeout(2500)
   await page.goto(BASE + '/level/0/stages', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1500)
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+  await page.evaluate((prefix) => {
+    const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
     if (!key) return
     const data = JSON.parse(localStorage.getItem(key))
     data.hasSeenTutorial = true
     data.points = Math.max(Number(data.points) || 0, 150)
     localStorage.setItem(key, JSON.stringify(data))
-  })
+  }, PROGRESS_KEY_PREFIX)
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(1200)
   seededState._cache = await ctx.storageState()
