@@ -25,13 +25,20 @@ import { SANDBOX_POOL } from '../frontend/src/engine/index.js'
 const WITH_EXPAND = process.argv.includes('--expand')
 const OPTS = WITH_EXPAND ? { allowExpand: true } : {}
 
-/** Level data lives in Python; load it the same way the API serves it. */
+/**
+ * Level data lives in content/levels.json and is served by the API. The API
+ * answers `{ success, data, error }`, so unwrap the envelope; the plain shape is
+ * still accepted so this script works against either backend version.
+ */
+const API_URL = process.env.PRAXIS_API_URL || 'http://127.0.0.1:8000'
+
 async function fetchLevels() {
   const out = []
   for (const id of [0, 1, 2, 3]) {
-    const res = await fetch(`http://127.0.0.1:8000/api/levels/${id}`)
+    const res = await fetch(`${API_URL}/api/levels/${id}`)
     if (!res.ok) continue
-    out.push(await res.json())
+    const body = await res.json()
+    out.push(body && typeof body === 'object' && 'success' in body ? body.data : body)
   }
   return out
 }
