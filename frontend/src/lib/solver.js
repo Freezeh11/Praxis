@@ -1,6 +1,6 @@
 import {
-  cloneN, getNode, nodeText, canonText,
-  isEquivalent, getSumLits
+  cloneN, nodeText, canonText,
+  getSumLits
 } from './expr.js'
 import {
   analyzeNot,
@@ -30,8 +30,11 @@ function findLitPath(node, base, v, n) {
 
 /**
  * Enumerates all valid one-step transitions from an AST state.
+ *
+ * @param {Object} tree - Starting AST tree
+ * @param {Object} [options] - forwarded to analyzeSelection (e.g. { allowExpand: true } for the sandbox)
  */
-export function getLegalTransitions(tree) {
+export function getLegalTransitions(tree, options = {}) {
   const transitions = []
   const seenNextCanons = new Set()
 
@@ -90,7 +93,7 @@ export function getLegalTransitions(tree) {
           const clauseLaws = analyzeSelection(tree, [
             { path: p1, isTermSel: true },
             { path: p2, isTermSel: true },
-          ])
+          ], options)
           clauseLaws.forEach(l => addTransition(l, tree))
 
           // B. Literal-level selections (Dual Distributive, Dual Complement)
@@ -104,7 +107,7 @@ export function getLegalTransitions(tree) {
                 const litLaws = analyzeSelection(tree, [
                   { path: lp1, isTermSel: false },
                   { path: lp2, isTermSel: false },
-                ])
+                ], options)
                 litLaws.forEach(l => addTransition(l, tree))
               }
             }
@@ -129,7 +132,7 @@ export function getLegalTransitions(tree) {
           const termLaws = analyzeSelection(tree, [
             { path: p1, isTermSel: true },
             { path: p2, isTermSel: true },
-          ])
+          ], options)
           termLaws.forEach(l => addTransition(l, tree))
 
           // B. Literal-level selections (Complement, Distributive Factoring)
@@ -143,7 +146,7 @@ export function getLegalTransitions(tree) {
                 const litLaws = analyzeSelection(tree, [
                   { path: lp1, isTermSel: false },
                   { path: lp2, isTermSel: false },
-                ])
+                ], options)
                 litLaws.forEach(l => addTransition(l, tree))
               }
             }
@@ -166,6 +169,7 @@ export function getLegalTransitions(tree) {
  * @param {Object} [options]
  * @param {number} [options.maxDepth=10] - Maximum search depth
  * @param {number} [options.maxStates=3000] - Maximum state budget
+ * @param {boolean} [options.allowExpand=false] - also offer the gated Distributive-Expand law (sandbox)
  * @returns {{ optimalSteps: number, path: Array<{ law: string, from: string, to: string }>, found: boolean }}
  */
 export function findOptimalPath(startExpr, targetCanon, options = {}) {
@@ -197,7 +201,7 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
       continue
     }
 
-    const transitions = getLegalTransitions(current.tree)
+    const transitions = getLegalTransitions(current.tree, options)
     statesExplored += transitions.length
 
     for (const trans of transitions) {
@@ -248,6 +252,7 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
  * @param {Object} [options]
  * @param {number} [options.maxDepth=12] - Maximum search depth
  * @param {number} [options.maxStates=8000] - Maximum state budget
+ * @param {boolean} [options.allowExpand=false] - also offer the gated Distributive-Expand law (sandbox)
  * @returns {{ tree: Object, canon: string, text: string, optimalSteps: number, path: Array, found: boolean }}
  */
 export function findSimplestForm(startExpr, options = {}) {
@@ -271,7 +276,7 @@ export function findSimplestForm(startExpr, options = {}) {
   while (queue.length > 0) {
     const current = queue.shift()
 
-    const transitions = getLegalTransitions(current.tree)
+    const transitions = getLegalTransitions(current.tree, options)
     statesExplored += transitions.length
 
     // Terminal state: no law applies — this is a fully simplified form.

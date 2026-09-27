@@ -29,8 +29,80 @@ export function isSubT(shorter, longer) {
   return sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
 }
 
+/* ===== GATED DISTRIBUTIVE-EXPANSION (sandbox only) ===== */
+
+/**
+ * Detects the shape A(B + A') — a bare literal factor of a product whose
+ * complement appears inside a sibling sum factor. Returns the two factor
+ * indices (works in either selection order) or null.
+ *
+ * Every caller keeps this behind `options.allowExpand`, so graded levels and
+ * the random sandbox generator keep their exact current behaviour.
+ */
+function findExpandablePair(prodNode, i, j) {
+  const a = prodNode?.factors?.[i]
+  const b = prodNode?.factors?.[j]
+  if (!a || !b) return null
+
+  let litNode
+  let clauseNode
+  let litIndex
+  let sumIndex
+  if (a.type === 'lit' && b.type === 'sum') {
+    litNode = a; clauseNode = b; litIndex = i; sumIndex = j
+  } else if (b.type === 'lit' && a.type === 'sum') {
+    litNode = b; clauseNode = a; litIndex = j; sumIndex = i
+  } else {
+    return null
+  }
+
+  // Complement-guarded: for the productive direction we also need A' inside the
+  // clause. A general expansion (A(B+C) = AB + AC) is deliberately NOT offered:
+  // it turns A(B+C) from "already simplest" into "not simplifiable" and makes
+  // the solver search ~20x slower.
+  if (clauseNode.terms.length < 2) return null
+  if (!sumContainsLit(clauseNode, litNode.v, !litNode.n)) return null
+
+  return { litNode, clauseNode, litIndex, sumIndex }
+}
+
+/** Builds the productive Distributive-EXPANSION law for a detected pair. */
+function expandLaw(expr, prodPath, pair) {
+  const { litNode, clauseNode, litIndex, sumIndex } = pair
+  const litText = nodeText(litNode)
+  const clauseText = nodeText(clauseNode)
+  const distributed = clauseNode.terms.map(t => nodeText(prod(cloneN(litNode), cloneN(t)))).join(' + ')
+
+  return {
+    name: 'Distributive (Expand)',
+    id: 'distributive-expand',
+    formula: 'A(B + C) = AB + AC',
+    desc: `Distribute ${litText} over ${clauseText} → ${distributed}`,
+    // Deliberately empty. AnimationOverlay has no 'distributive-expand' branch,
+    // and measurePaths/factoredVar belong to the *factoring* animation, which
+    // would misread this law. Empty animPaths keeps the generic path: the
+    // overlay renders only its empty container and the expression simply
+    // updates to the distributed form.
+    animPaths: [],
+    litPath: `${prodPath}.${litIndex}`,
+    clausePath: `${prodPath}.${sumIndex}`,
+    distributedText: distributed,
+    apply: () => {
+      const tree = cloneN(expr)
+      const pn = getNode(tree, prodPath)
+      const nl = pn.factors[litIndex]
+      const ns = pn.factors[sumIndex]
+      const rest = pn.factors.filter((_, k) => k !== litIndex && k !== sumIndex)
+      const expanded = normalizeFlat(sum(...ns.terms.map(t => prod(cloneN(nl), cloneN(t)))))
+      pn.factors = [...rest, expanded]
+      return normalizeFlat(tree)
+    },
+  }
+}
+
 /* ===== ANALYZE TWO SELECTED ITEMS ===== */
-export function analyzeSelection(expr, sel) {
+export function analyzeSelection(expr, sel, options = {}) {
+  const { allowExpand = false } = options || {}
   if (!expr || sel.length !== 2) return []
   const p1 = sel[0].path
   const p2 = sel[1].path
@@ -62,7 +134,7 @@ export function analyzeSelection(expr, sel) {
               const vLabel = n1.n ? n1.v + "'" : n1.v
 
               // Check if cs.sumNode is nested inside a parent prod
-              let parentPath = null
+              let parentPath
               let outerPrefix = ''
               let outerSuffix = ''
               let animPaths = [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`]
@@ -450,6 +522,14 @@ export function analyzeSelection(expr, sel) {
         },
       })
     }
+
+    // 6. DISTRIBUTIVE (EXPAND) — GATED by options.allowExpand (sandbox only).
+    //    A(B + A') = AB + AA' — a bare literal factor times a sibling sum
+    //    clause that contains its complement.
+    if (allowExpand) {
+      const pair = findExpandablePair(cp.prodNode, cp.fi1, cp.fi2)
+      if (pair) laws.push(expandLaw(expr, cp.prodPath, pair))
+    }
   }
 
   return laws
@@ -658,7 +738,8 @@ function findLitPath(node, base, v, n) {
   return null
 }
 
-export function scanHints(node, path) {
+export function scanHints(node, path, options = {}) {
+  const { allowExpand = false } = options || {}
   const hints = []
   const seen = new Set()
   const add = (law, paths) => {
@@ -705,6 +786,11 @@ export function scanHints(node, path) {
                 }
               }
             }
+          }
+          // GATED: the sandbox also lets the player expand A(B + A') = AB + AA'.
+          if (allowExpand) {
+            const pair = findExpandablePair(n, i, j)
+            if (pair) add('distributive-expand', [`${p}.${pair.litIndex}`, `${p}.${pair.sumIndex}`])
           }
         }
         walk(f1, p1)
