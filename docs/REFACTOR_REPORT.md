@@ -51,7 +51,9 @@ never call `fetch` and never touch the engine's internals.
 | Law identity retyped in builders, reference cards, hints, scoring | `engine/laws/definitions.js` — one table; the name→id map is derived from it |
 | The scoring formula in two places (server + client) | `backend/services/scoring_service.py` (authoritative) and `engine/scoring.js` (instant estimate), both reading their numbers from config |
 | `nameToId` map duplicated inside the puzzle screen, plus the scoring arithmetic inline | deleted; the screen calls `engine/scoring.js` |
-| Law drawer / law card / tutorial-replay modal / popup anchoring / star rating / gate bar / points chip / spinner / header copied between the level and stage screens | shared components (`components/laws/`, `components/ui/`, `components/layout/`, `hooks/usePopupPlacement.js`, `hooks/useTutorialReplay.js`) — the two pages went 597+618 → 400+396 with 419 shared lines, exactly conserved |
+| Law drawer / law card / tutorial-replay modal / popup anchoring / star rating / gate bar / points chip / spinner / header copied between the level and stage screens | shared components (`components/laws/`, `components/ui/`, `components/layout/`, `hooks/usePopupPlacement.js`, `hooks/useTutorialReplay.js`) — the two pages went 597+618 → 400+396, exactly conserved, and a later pass removed their last duplicated blocks (overlay wiring + JSX) for 381+376 |
+| Auth card, email/password field, reveal toggle, submit button copied between login and register | `components/ui/AuthCard|AuthTextField|PasswordField|SubmitButton.jsx` — 394 → 270 page lines, DOM-verified identical |
+| Ghost-text and shockwave inline styles repeated across the 8 law animations | `components/animations/animationStyles.js` — 1,014 → 874 lines, 88/88 deep-equal style objects |
 | `fetch` + auth headers + error handling re-derived per call site | `services/apiClient.js` |
 | Every `useProgress()` call holding its own copy of progress | `state/progressStore.js` with `useSyncExternalStore` |
 | Root and backend `requirements.txt` byte-identical | root uses `-r backend/requirements.txt` |
@@ -133,6 +135,43 @@ is a sizing decision in the pre-existing mobile pass (`min-w-[32px]` on literals
 SANDBOX']` label contract in `mobile-pages-verify.mjs` is likewise pre-existing:
 the page has said `🚀 VIEW LEVEL STAGES` since the carousel redesign commit, which
 predates this branch's restructure.
+
+## 5b. Cleanliness pass (after the restructure)
+
+A dedicated audit of the refactored branch (read-only, evidence per claim) found
+the residue the restructure itself had left behind. Fixed:
+
+- **config was documentation, not the source of truth** — six values
+  (`TIMING.lawAnimationMs`, `preLawHighlightMs`, `sandboxValidationDebounceMs`,
+  `sandboxBusyPaintMs`, `STAGE_COMPLETION_XP`, `SOLVER_BUDGET`) had zero consumers
+  while their literals sat inline at the call sites. Wired in; three new TIMING
+  keys replaced duplicated literals that had no home.
+- **dead exports** — `definitionsForId`, `isHydrated`, `HIDE_SURVEY`, and an
+  `export { useDeviceTier }` alias nothing imported. Deleted. Seventeen more
+  symbols that only their own module used are now private.
+- **naming** — the last two kebab-case modules (`game-rules.js`,
+  `game-content.js`) became camelCase, so the documented convention holds
+  everywhere except `main.jsx` (documented).
+- **`npm run lint` was failing on tooling** — `vite.config.js` reads
+  `process.env` and the shared eslint config only registered browser globals.
+- **duplication** — auth card/fields (login vs register), the level screens'
+  overlay wiring and JSX, and the animation style objects (see the table above).
+- **e2e plumbing** — machine-specific absolute paths lived in 9 suites; they are
+  now three env-overridable defaults in `_harness.mjs`, storage keys come from
+  `config/storageKeys.js`, and a copied 19-selector list imports its source.
+- **a native `alert()`** in the puzzle screen became the app's toast (same text,
+  same condition). The lint gate caught that the first version used `toast`
+  without importing it — a ReferenceError waiting for a learner with no points.
+
+Findings reviewed and deliberately left, with reasons:
+
+| Item | Why it stays |
+|---|---|
+| `content/laws.json` has an `associative` card the engine never emits | The drawer is a *reference*: it documents laws the tool does not automate. Deleting content is not a code fix. |
+| Law-id strings in `components/animations/index.js` and `LawExplanationCard.jsx` | The animation dispatcher and the explanation lookup match on the engine's documented ids; deriving them from the table would add indirection for seven literals that the definition table already documents. |
+| 9 × `react-hooks/set-state-in-effect`, 5 × `exhaustive-deps` | All pre-existing at `HEAD`, all in DOM-measurement/tracking effects. Silencing them means restructuring effects, which is a behaviour risk the refactor was not allowed to take. |
+| Six files still over 250 lines | Each has one job; the audit's seams are listed in the review notes (largest: `state/useGameState.js` 589, `pages/ProblemPage.jsx` 509). |
+| `HIDE_SURVEY` set by some suites | The app never reads it; the harness declares it once for the test-side flag instead of ten literals. |
 
 ## 6. Known issues, deviations and things to know
 

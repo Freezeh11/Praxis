@@ -8,7 +8,7 @@ before/after. Every number was counted on this branch and every command was read
 
 ## Part 1 — Skills demonstrated, with evidence
 
-**A pure domain engine, framework-free.** `frontend/src/engine/` (26 modules, 3,488 lines) does
+**A pure domain engine, framework-free.** `frontend/src/engine/` (26 modules, 3,487 lines) does
 parse → tree edits → law detection → truth-table equivalence → BFS solve → score, with no React,
 DOM or network reference anywhere in it (`grep -rnE "from 'react|document\.|window\.|fetch\("
 src/engine` → 0) — so it runs in bare Node and backs the UI, hints, solver and sandbox alike. Laws
@@ -50,7 +50,7 @@ the frontend bundles the same files through the `@content` Vite alias (`vite.con
 `frontend/src/content/gameContent.js`. Law `id` is the documented join key between
 `content/laws.json` and `engine/laws/definitions.js`.
 
-**State that lives outside React.** `frontend/src/state/progressStore.js` (324 lines) is a
+**State that lives outside React.** `frontend/src/state/progressStore.js` (319 lines) is a
 module-level store exposing `subscribe`, `getSnapshot`, `setUser`, actions and pure selectors;
 persistence is localStorage on every change plus a debounced `progressApi.saveProgress` push. React
 binds to it through `useSyncExternalStore` in `state/useProgress.js`, and the per-puzzle session
@@ -62,13 +62,13 @@ gameplay. `contentApi.js`, `scoreApi.js`, `progressApi.js` and `authActions.js` 
 `supabaseClient.js` (10 lines) is the app's only Supabase connection, and components contain zero
 `fetch(`/axios calls.
 
-**Presentational component architecture.** 44 `.jsx` files in `frontend/src/components/`, grouped by
-feature (`animations/` 8 law animations + registry, `puzzle/` 16 files, `tutorial/`, `laws/`,
+**Presentational component architecture.** 49 `.jsx` files in `frontend/src/components/`, grouped by
+feature (`animations/` 8 law animations + registry + a shared style builder, `puzzle/` 16 files, `tutorial/`, `laws/`,
 `layout/`, `ui/`) plus 10 root-level components and 7 route screens in `pages/`. One component per
 file, named after the file; `App.jsx` composes the gates (`ProtectedRoute`, `TutorialGate`,
 `OrientationGate`, `ErrorBoundary`) around the routes.
 
-**Responsive work by decision, not by sniffing.** `hooks/useDeviceTier.js` (316 lines) exposes a pure
+**Responsive work by decision, not by sniffing.** `hooks/useDeviceTier.js` (311 lines) exposes a pure
 `detectDeviceTier({width, height, isTouch, orientation})` table over `DEVICE_TIERS` `{phone,
 tablet-sm, tablet, desktop}`, driven by pointer coarseness and viewport width, with rAF-throttled
 listeners and StrictMode-safe cleanup; `components/OrientationGate.jsx`, `RotateOverlay.jsx` and
