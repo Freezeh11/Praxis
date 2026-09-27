@@ -1,10 +1,13 @@
 /**
  * LawsReferenceSheet — the Boolean-laws quick reference of the puzzle
  * workspace. Narrow or short viewports get a full-width bottom sheet, wide +
- * tall ones a right-hand drawer; both keep the same chassis and only change the
- * enter/exit axis. The cards are the shared LawCard.
+ * tall ones a right-hand drawer. The two variants share the cards, the header
+ * and the measured band, but not their geometry: the sheet spans the bottom
+ * edge (`inset-x-0`, top-rounded, slides up), the drawer hangs off the right
+ * edge at a bounded width (left-rounded, full height of the band, slides in
+ * from the right). The cards are the shared LawCard.
  *
- * `LawsReferenceButton` is the anchor the sheet hangs from: the compact tiers
+ * `LawsReferenceButton` is the anchor the panel hangs from: the compact tiers
  * put it in the header rail, the wide ones in the side panel.
  */
 import { AnimatePresence, motion } from 'framer-motion'
@@ -29,6 +32,14 @@ export function LawsReferenceButton({ compact, chromeText, chromeHeight, onOpen 
 }
 
 export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, band, ready, onClose }) {
+  const top = Math.round(band ? band.top : 0)
+  const bandHeight = Math.round(band ? band.maxHeight : 0)
+  // The sheet is as tall as its content up to the band; the drawer fills the
+  // band so it reads as a drawer rather than a floating card.
+  const geometry = lawsSheet
+    ? { top: `${top}px`, maxHeight: `${bandHeight}px` }
+    : { top: `${top}px`, height: `${bandHeight}px` }
+
   return (
     <AnimatePresence>
       {show && (
@@ -49,14 +60,15 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
             exit={lawsSheet ? { y: '18%' } : { x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 350 }}
             style={{
-              top: `${Math.round(band ? band.top : 0)}px`,
-              maxHeight: `${Math.round(band ? band.maxHeight : 0)}px`,
+              ...geometry,
               opacity: ready ? 1 : 0,
               pointerEvents: ready ? 'auto' : 'none',
             }}
-            className="praxis-sheet-panel fixed inset-x-0 z-50 bg-white border-t border-border shadow-2xl flex flex-col will-change-transform"
+            className={lawsSheet
+              ? 'praxis-sheet-panel fixed inset-x-0 z-50 bg-white border-t border-border shadow-2xl flex flex-col will-change-transform'
+              : 'praxis-drawer-panel fixed right-0 z-50 w-[25rem] max-w-[92vw] bg-white border-l border-border shadow-2xl flex flex-col will-change-transform'}
           >
-            <div className={`flex items-center justify-between bg-bg ${lawsSheet ? 'px-4 py-2 shrink-0' : 'p-4'}`}>
+            <div className={`flex items-center justify-between bg-bg shrink-0 ${lawsSheet ? 'px-4 py-2' : 'p-4'}`}>
               <div className="font-bold text-sm text-text-1 flex items-center gap-2">
                 <span>📖</span> Boolean Laws Reference
               </div>

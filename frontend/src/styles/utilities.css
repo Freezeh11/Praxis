@@ -17,6 +17,9 @@
    .praxis-modal-actions  sticky action row pinned inside such a panel, so the
                           primary button is reachable without scrolling to it
    .praxis-sheet-panel    full-width bottom sheet for narrow screens
+   .praxis-drawer-panel   right-hand reference drawer: scrolls its own cards
+                          and rounds only its left edge (the right edge is
+                          flush with the viewport)
    .praxis-rail           horizontal chip rail (laws, examples) that never
                           widens the page; children snap and never shrink
    .praxis-page-x         page gutters that respect notches in landscape
@@ -46,6 +49,16 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   border-radius: 1.25rem 1.25rem 0 0;
+}
+
+/* The wide/tall counterpart: a bounded-width column on the right edge. It must
+   NOT inherit .praxis-sheet-panel — `width: 100%` would span the viewport and
+   the top-rounded corners would read as a chopped-down bottom sheet. */
+.praxis-drawer-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1.25rem 0 0 1.25rem;
 }
 
 .praxis-rail {
