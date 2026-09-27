@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 
-import { useSession } from '../services/authClient.jsx'
+import { useSession } from './useSession.js'
 import * as store from './progressStore.js'
 import { GUEST_USER_ID } from './progressStore.js'
 

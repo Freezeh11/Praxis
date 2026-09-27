@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
-import { useSession, signOut } from '../services/authClient.jsx'
+import { useSession } from '../state/useSession.js'
+import { signOut } from '../services/authActions.js'
 import { toast } from 'sonner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { data: session, isPending } = useSession()
+  const { data: session } = useSession()
 
   const handleLogout = async () => {
     try {
@@ -14,7 +15,7 @@ export default function LandingPage() {
       toast.info('You have been securely logged out.')
       // Wait a moment for Better Auth's global state to clear before routing
       setTimeout(() => navigate('/'), 100)
-    } catch (err) {
+    } catch {
       toast.error('Failed to log out.')
     }
   }

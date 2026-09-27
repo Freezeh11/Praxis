@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
-import { signUp, useSession } from '../services/authClient.jsx'
+import { signUp } from '../services/authActions.js'
+import { useSession } from '../state/useSession.js'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -51,7 +52,7 @@ export default function RegisterPage() {
         toast.success('Account created successfully! Welcome to Praxis.')
         // useEffect will handle the navigation once the session state updates globally
       }
-    } catch (err) {
+    } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
