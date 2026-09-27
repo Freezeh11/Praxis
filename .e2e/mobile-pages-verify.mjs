@@ -24,7 +24,7 @@ import {
   launch, seededState, device, DEVICES, reporter, noHorizontalScroll, shot,
 } from './_harness.mjs'
 
-const BASE = 'http://127.0.0.1:5173'
+const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const QUICK = process.argv.includes('--quick')
 
 /**

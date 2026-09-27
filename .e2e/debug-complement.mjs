@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
 
-const BASE = 'http://127.0.0.1:5173'
+const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
 

@@ -15,7 +15,7 @@
  */
 import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
 
-export const BASE = 'http://localhost:5173'
+export const BASE = process.env.PRAXIS_BASE_URL || 'http://localhost:5173'
 export const EMAIL = 'e2e-test@praxis.test'
 export const PASSWORD = 'E2eTest!2345'
 export const CHROMIUM = '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome'

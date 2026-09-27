@@ -21,7 +21,7 @@ import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/pla
 
 // The dev server is started by the Lead bound to 127.0.0.1 (see package scripts);
 // localhost also resolves here, but 127.0.0.1 is the canonical test target.
-const BASE = 'http://127.0.0.1:5173'
+const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
 
