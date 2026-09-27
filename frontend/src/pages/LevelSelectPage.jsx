@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameContent } from '../state/useGameContent.js'
-import { useProgress } from '../hooks/useProgress.js'
+import { useProgress } from '../state/useProgress.js'
 import { usePopupPlacement } from '../hooks/usePopupPlacement'
 import { useTutorialReplay } from '../hooks/useTutorialReplay'
 import { signOut } from '../services/authClient.jsx'

@@ -1,5 +1,5 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom'
-import { useProgress } from '../hooks/useProgress'
+import { useProgress } from '../state/useProgress.js'
 
 /** Where a learner who has not finished the tutorial gets sent. */
 export const TUTORIAL_ENTRY = '/level/0/stage/0?tutorial=true'
