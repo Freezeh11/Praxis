@@ -49,7 +49,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center px-4 relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
+    <div className="min-h-screen min-h-[100dvh] bg-bg flex items-center justify-center praxis-page-x py-6 relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -57,11 +57,11 @@ export default function LoginPage() {
         className="w-full max-w-[400px] z-10"
       >
         {/* Header */}
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center justify-center h-12 mb-6 hover:scale-105 transition-transform drop-shadow-sm">
+        <div className="text-center mb-5 sm:mb-6">
+          <Link to="/" className="inline-flex items-center justify-center h-12 [@media(max-height:480px)]:h-9 mb-4 sm:mb-6 hover:scale-105 transition-transform drop-shadow-sm">
             <img src={logoFull} alt="Praxis" className="h-full object-contain" />
           </Link>
-          <h1 className="text-[28px] font-extrabold text-text-1 tracking-tight">
+          <h1 className="text-[26px] sm:text-[28px] font-extrabold text-text-1 tracking-tight">
             Welcome back
           </h1>
           <p className="text-sm text-text-3 font-medium mt-1.5">
@@ -76,7 +76,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-7">
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-5 sm:p-7">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             
             <div className="flex flex-col gap-1.5">
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-sm text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-[16px] leading-6 text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
               />
             </div>
 
@@ -108,12 +108,12 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-sm text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 pr-10"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-bg text-[16px] leading-6 text-text-1 placeholder:text-text-3/60 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text-1 transition-colors flex items-center justify-center"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 text-text-3 hover:text-text-1 transition-colors flex items-center justify-center"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -128,7 +128,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full py-2.5 bg-accent text-white rounded-lg font-bold text-[14px] transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm flex items-center justify-center gap-2"
+              className="mt-2 w-full min-h-12 py-3 bg-accent text-white rounded-lg font-bold text-[15px] transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm flex items-center justify-center gap-2"
             >
               {loading && (
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -140,7 +140,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-6">
+          <div className="flex items-center gap-3 my-5 sm:my-6">
             <div className="flex-1 h-px bg-border" />
             <span className="text-[11px] text-text-3 font-semibold uppercase tracking-wider">New here?</span>
             <div className="flex-1 h-px bg-border" />
@@ -148,7 +148,7 @@ export default function LoginPage() {
 
           <Link
             to="/register"
-            className="block w-full py-2.5 text-center border-[1.5px] border-border text-text-2 font-bold text-[14px] rounded-lg bg-transparent transition-all hover:bg-bg hover:text-text-1"
+            className="block w-full min-h-11 py-2.5 text-center border-[1.5px] border-border text-text-2 font-bold text-[14px] rounded-lg bg-transparent transition-all hover:bg-bg hover:text-text-1"
           >
             Create an Account
           </Link>
