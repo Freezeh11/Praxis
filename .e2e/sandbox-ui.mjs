@@ -287,10 +287,14 @@ const randomizeOnLevel = await page.locator('#randomize-btn').count()
 log('normal level page still shows LEVEL PROGRESS and no randomizer',
   levelProgressOnLevel === 1 && randomizeOnLevel === 0,
   `levelProgress=${levelProgressOnLevel} randomize=${randomizeOnLevel}`)
-// Baseline for the comparison above: an untouched level page also saves progress.
+// Positive control for the comparison above. Progress is pushed by the shared
+// store (state/progressStore.js) only when it actually CHANGES; before that
+// refactor every useProgress() instance re-saved the identical snapshot on every
+// mount, so an untouched page produced writes. The sandbox must still produce
+// none — that is what this pair of assertions pins.
 const levelPageSaves = apiCalls.filter(c => c.includes('/api/progress/save')).length
-log('level page confirms the progress-save on mount is pre-existing, not sandbox-specific',
-  levelPageSaves > 0, `level page POSTs=${levelPageSaves}`)
+log('an untouched page writes no progress (the store saves only on change)',
+  levelPageSaves === 0, `level page POSTs=${levelPageSaves}`)
 
 /* ── 10. Route protection ─────────────────────────────────────────────── */
 await page.evaluate(() => localStorage.clear())
