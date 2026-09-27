@@ -6,8 +6,6 @@
 
 /**
  * @typedef {Object} WelcomeSlide
- * @property {string} icon Badge icon emoji
- * @property {string} badge Uppercase category tag
  * @property {string} title Main header
  * @property {string} body Primary explanatory body text
  * @property {string} footer Secondary prompt text
@@ -20,16 +18,12 @@
  */
 export const WELCOME_SLIDES = [
   {
-    icon: '✨',
-    badge: 'WELCOME TO PRAXIS',
     title: 'Welcome to Praxis!',
     body: 'Praxis is an interactive workspace designed for simplifying Boolean algebra expressions step-by-step.',
     footer: 'Before we dive into that, let’s get familiar with the basics of our system first!',
     buttonText: 'Continue →',
   },
   {
-    icon: '👆',
-    badge: 'CORE MECHANICS',
     title: 'Interactive Simplification',
     body: 'Praxis is designed to allow you to interact with Boolean expressions in an interactive way.',
     footer: 'Try solving this equation.',

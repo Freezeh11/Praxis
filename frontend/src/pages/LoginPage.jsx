@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import logoFull from '../assets/logo-full.png'
 import { useNavigate, Link } from 'react-router-dom'
-import { signIn, useSession } from '../lib/auth-client'
+import { signIn, useSession } from '../services/authClient.jsx'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 

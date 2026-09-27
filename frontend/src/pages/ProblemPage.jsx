@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { useApi } from '../hooks/useApi'
-import { useProgress } from '../hooks/useProgress'
-import { useGameState } from '../hooks/useGameState'
+import { useGameContent } from '../state/useGameContent.js'
+import { useProgress } from '../hooks/useProgress.js'
+import { useGameState } from '../state/useGameState.js'
 import useDeviceTier, { PHONE_MAX_WIDTH, SMALL_TABLET_MAX_WIDTH } from '../hooks/useDeviceTier.js'
 import ExpressionDisplay from '../components/ExpressionDisplay'
 import AnimationOverlay from '../components/AnimationOverlay'
@@ -529,7 +529,7 @@ export default function ProblemPage() {
   const { levelId, stageIdx } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { fetchLevel, laws, submitScore } = useApi()
+  const { fetchLevel, laws, submitScore } = useGameContent()
   const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, saveSolution, getSavedSolution } = useProgress()
 
   // Sandbox mode: reached via /sandbox, which supplies no route params. It

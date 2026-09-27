@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
-import { useSession, signOut } from '../lib/auth-client'
+import { useSession, signOut } from '../services/authClient.jsx'
 import { toast } from 'sonner'
 
 export default function LandingPage() {

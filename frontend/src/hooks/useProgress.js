@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApi } from './useApi'
-import { useSession } from '../lib/auth-client'
+import { useSession } from '../services/authClient.jsx'
 
 const defaultProgress = {
   points: 0,

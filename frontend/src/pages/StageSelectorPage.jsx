@@ -1,150 +1,44 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import logoFull from '../assets/logo-full.png'
-import { useApi } from '../hooks/useApi'
-import { useProgress } from '../hooks/useProgress'
+import { useGameContent } from '../state/useGameContent.js'
+import { useProgress } from '../hooks/useProgress.js'
+import { usePopupPlacement } from '../hooks/usePopupPlacement'
+import { useTutorialReplay } from '../hooks/useTutorialReplay'
+import { STAR_THRESHOLDS, UNLOCK_AVERAGE_SCORE } from '../config/game-rules'
+import AppHeader from '../components/layout/AppHeader'
+import BackNav from '../components/layout/BackNav'
+import LawsDrawer from '../components/laws/LawsDrawer'
+import TutorialReplayModal from '../components/tutorial/TutorialReplayModal'
 import ExprText from '../components/ExprText'
-
-// Star Rating display helper
-function StarRating({ stars = 0 }) {
-  return (
-    <div className="flex items-center gap-0.5" title={`${stars} of 3 Stars`}>
-      {[1, 2, 3].map((s) => (
-        <span
-          key={s}
-          className={`text-sm leading-none select-none transition-all ${
-            s <= stars
-              ? 'text-amber-400 drop-shadow-[0_1px_2px_rgba(245,158,11,0.4)]'
-              : 'text-slate-200'
-          }`}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  )
-}
-
-/**
- * Placement helper for this screen's overlays.
- *
- * The tutorial-replay prompt used to be a plain centred dialog that covered the
- * header button which opened it on a short viewport, and the law drawer was a
- * full-height panel that hid the whole header rail. Both now measure the
- * control they belong to and stay clear of it:
- *
- *   band   → the free strip below that control (`top` + `maxHeight`)
- *   shift  → a vertical nudge that moves a centred dialog clear of it,
- *            clamped so the dialog can never be pushed off the viewport.
- */
-function usePopupPlacement(anchorSelector, active) {
-  const [placement, setPlacement] = useState(null)
-
-  useEffect(() => {
-    if (!active) return undefined
-    let frame = null
-
-    const measure = () => {
-      const vh = window.visualViewport?.height ?? window.innerHeight
-      const MARGIN = 8
-      const anchorEl = document.querySelector(anchorSelector)
-      const ar = anchorEl ? anchorEl.getBoundingClientRect() : null
-      const anchorBottom = ar ? ar.bottom : 0
-
-      const drawerTop = MARGIN
-      // The drawer may be tall, but its left edge must stay clear of the header
-      // controls, so a wide viewport gives it a column that starts after them
-      // and a narrow one gives it the full width under them.
-      const narrow = window.innerWidth <= 640
-      const maxWidth = narrow
-        ? window.innerWidth - MARGIN * 2
-        : Math.max(260, window.innerWidth - Math.max(0, (document.querySelector(anchorSelector)?.getBoundingClientRect().left ?? 0) - 24))
-      const aboveTrigger = Math.max(0, anchorBottom + MARGIN - drawerTop)
-      const fullHeight = (vh - drawerTop - MARGIN) * 0.9
-      const band = {
-        top: drawerTop,
-        maxHeight: Math.max(96, Math.min(fullHeight, narrow ? aboveTrigger : Math.max(aboveTrigger, fullHeight * 0.7))),
-        maxWidth,
-      }
-
-      const panel = document.querySelector('[data-popup-panel="centered"]')
-      let shift = 0
-      if (panel) {
-        const naturalH = panel.offsetHeight || 0
-        const maxH = Math.max(120, vh - MARGIN * 2)
-        const height = Math.min(naturalH, maxH)
-        if (naturalH > 0 && anchorBottom + MARGIN > (vh - height) / 2) {
-          shift = Math.min(anchorBottom + MARGIN - (vh - height) / 2, Math.max(0, vh - MARGIN - ((vh - height) / 2 + height)))
-        }
-      }
-      publish({ band, shift })
-    }
-
-    const publish = (next) => {
-      setPlacement(prev => (prev
-        && Math.abs(prev.band.top - next.band.top) < 0.6
-        && Math.abs(prev.band.maxHeight - next.band.maxHeight) < 0.6
-        && Math.abs(prev.shift - next.shift) < 0.6
-        ? prev
-        : next))
-    }
-    const schedule = () => {
-      if (frame) cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(measure)
-    }
-
-    schedule()
-    window.addEventListener('resize', schedule)
-    window.addEventListener('orientationchange', schedule)
-    window.visualViewport?.addEventListener('resize', schedule)
-    return () => {
-      if (frame) cancelAnimationFrame(frame)
-      window.removeEventListener('resize', schedule)
-      window.removeEventListener('orientationchange', schedule)
-      window.visualViewport?.removeEventListener('resize', schedule)
-    }
-  }, [anchorSelector, active])
-
-  return placement
-}
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+import PointsChip from '../components/ui/PointsChip'
+import ScoreGateBar from '../components/ui/ScoreGateBar'
+import StarRating from '../components/ui/StarRating'
 
 export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
-  const { fetchLevel, laws } = useApi()
-  const { progress, getStagesCompleted, getLevelProgress, getSavedSolution, resetLevelProgress, hasSeenTutorial } = useProgress()
+  const { fetchLevel, laws } = useGameContent()
+  const { progress, getStagesCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
-  const [showTutorialPrompt, setShowTutorialPrompt] = useState(false)
-  const [dontAskTutorialAgain, setDontAskTutorialAgain] = useState(false)
+
+  const {
+    showTutorialPrompt,
+    dontAskTutorialAgain,
+    setDontAskTutorialAgain,
+    handleTutorialClick,
+    handleRestartTutorial,
+    closeTutorialPrompt,
+  } = useTutorialReplay({ navigate, hasSeenTutorial, resetLevelProgress })
 
   // Each overlay belongs to the control that opened it, so its band/shift is
   // measured against that control.
   const popupAnchorSelector = showLawsDrawer ? '[data-popup-anchor="laws"]' : '[data-popup-anchor="tutorial"]'
   const popupPlacement = usePopupPlacement(popupAnchorSelector, showTutorialPrompt || showLawsDrawer)
-
-  const handleTutorialClick = () => {
-    const skipPrompt = sessionStorage.getItem('praxis_skip_tutorial_replay_prompt') === 'true'
-
-    if (hasSeenTutorial && !skipPrompt) {
-      setDontAskTutorialAgain(false)
-      setShowTutorialPrompt(true)
-    } else {
-      navigate('/level/0/stage/0?tutorial=true')
-    }
-  }
-
-  const handleRestartTutorial = () => {
-    if (dontAskTutorialAgain) {
-      sessionStorage.setItem('praxis_skip_tutorial_replay_prompt', 'true')
-    }
-    resetLevelProgress(0)
-    setShowTutorialPrompt(false)
-    navigate('/level/0/stage/0?tutorial=true')
-  }
 
   const numLevelId = Number(levelId)
 
@@ -179,9 +73,9 @@ export default function StageSelectorPage() {
     const score = getStageScore(idx)
     if (!isDone && score === null) return 0
     if (score !== null) {
-      if (score >= 90) return 3
-      if (score >= 75) return 2
-      if (score > 0) return 1
+      if (score >= STAR_THRESHOLDS.three) return 3
+      if (score >= STAR_THRESHOLDS.two) return 2
+      if (score >= STAR_THRESHOLDS.one) return 1
     }
     return isDone ? 1 : 0
   }
@@ -196,58 +90,49 @@ export default function StageSelectorPage() {
   const lp = getLevelProgress(numLevelId, puzzles.length || 12)
   const isMaxLevel = numLevelId >= 3
   const nextLevelId = numLevelId + 1
-  const isMastered = lp.allDone && lp.avgScore >= 80
+  const isMastered = lp.allDone && lp.avgScore >= UNLOCK_AVERAGE_SCORE
 
   return (
     <div className="flex flex-col min-h-screen min-h-[100dvh] bg-bg relative overflow-x-hidden selection:bg-teal selection:text-white">
-      <header className="relative w-full h-[64px] [@media(max-height:480px)]:h-[52px] px-3 sm:px-6 md:px-10 flex items-center justify-between bg-bg-card/85 backdrop-blur-md border-b border-border z-20 shrink-0">
-        <button
-          data-testid="back-to-levels-btn"
-          className="flex items-center gap-2 px-3.5 py-1.5 min-h-9 [@media(max-height:480px)]:min-h-11 text-xs sm:text-sm font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-xs hover:shadow-sm rounded-xl transition-all cursor-pointer active:scale-95"
-          onClick={() => navigate('/levels')}
-          title="Return to Level Selection"
-        >
-          <span className="text-sm font-extrabold text-teal leading-none">←</span>
-          <span>All Levels</span>
-        </button>
-
-        <Link to="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center hover:opacity-85 transition-opacity">
-          <img src={logoFull} alt="Praxis" className="h-7 [@media(max-height:480px)]:h-6 object-contain" />
-        </Link>
-
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <button
-            data-popup-anchor="tutorial"
-            onClick={handleTutorialClick}
-            className="h-8 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
-            title="Interactive Tutorial"
-          >
-            <span>Tutorial</span>
-          </button>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50/80 border border-amber/30 rounded-full text-xs font-bold text-amber-700">
-            <span>⭐ {progress.points || 0}</span>
-            <span className="opacity-40">•</span>
-            <span>🔥 {progress.streak || 0}</span>
+      <AppHeader
+        variant="stage"
+        left={(
+          <BackNav
+            variant="levels"
+            label="All Levels"
+            onClick={() => navigate('/levels')}
+            title="Return to Level Selection"
+            testId="back-to-levels-btn"
+          />
+        )}
+        right={(
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <button
+              data-popup-anchor="tutorial"
+              onClick={handleTutorialClick}
+              className="h-8 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+              title="Interactive Tutorial"
+            >
+              <span>Tutorial</span>
+            </button>
+            <PointsChip variant="header" points={progress.points || 0} streak={progress.streak || 0} />
+            <button
+              data-popup-anchor="laws"
+              className="h-8 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-text-2 bg-white border border-border hover:border-text-1 hover:text-text-1 transition-all shadow-xs"
+              title="Open Law Reference"
+              onClick={() => setShowLawsDrawer(true)}
+            >
+              <span>📖</span>
+              <span className="hidden sm:inline">Laws</span>
+            </button>
           </div>
-          <button
-            data-popup-anchor="laws"
-            className="h-8 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-text-2 bg-white border border-border hover:border-text-1 hover:text-text-1 transition-all shadow-xs"
-            title="Open Law Reference"
-            onClick={() => setShowLawsDrawer(true)}
-          >
-            <span>📖</span>
-            <span className="hidden sm:inline">Laws</span>
-          </button>
-        </div>
-      </header>
+        )}
+      />
 
       {/* ── LOADING STATE ── */}
       {loading && (
         <div className="flex-1 flex flex-col items-center justify-center p-12 gap-3">
-          <svg className="animate-spin h-8 w-8 text-accent" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <LoadingSpinner size="h-8 w-8" />
           <span className="text-sm font-semibold text-text-3">Loading stages...</span>
         </div>
       )}
@@ -374,24 +259,13 @@ export default function StageSelectorPage() {
               </div>
 
               {/* Progress bar with 80% threshold notch */}
-              <div className="relative w-full h-2.5 bg-border rounded-full overflow-visible my-0.5">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: isTutorialLevel
-                      ? `${puzzles.length > 0 ? (completedSet.size / puzzles.length) * 100 : 0}%`
-                      : `${Math.min(100, lp.avgScore)}%`,
-                    background: isTutorialLevel || lp.unlocked || isMastered ? '#22c55e' : lp.avgScore >= 50 ? '#f59e0b' : '#ef4444',
-                  }}
-                />
-                {!isTutorialLevel && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-[2px] h-4 bg-text-1 rounded-full shadow-xs"
-                    style={{ left: '80%' }}
-                    title="80% Target Gate"
-                  />
-                )}
-              </div>
+              <ScoreGateBar
+                variant="hero"
+                score={lp.avgScore}
+                percent={isTutorialLevel ? (puzzles.length > 0 ? (completedSet.size / puzzles.length) * 100 : 0) : Math.min(100, lp.avgScore)}
+                success={isTutorialLevel || lp.unlocked || isMastered}
+                notch={!isTutorialLevel}
+              />
 
               <div className="praxis-hide-short flex justify-between items-center text-[10px] text-text-3 font-semibold px-0.5">
                 <span>0%</span>
@@ -501,118 +375,22 @@ export default function StageSelectorPage() {
       )}
 
       {/* ── TUTORIAL REPLAY MODAL BEFORE ENTERING LEVEL 0 ── */}
-      {showTutorialPrompt && (
-        <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs transition-opacity"
-          onClick={() => setShowTutorialPrompt(false)}
-        >
-          <div 
-            data-popup-panel="centered"
-            className="praxis-modal-panel relative bg-white rounded-3xl pt-9 pb-8 [@media(max-height:480px)]:pt-6 [@media(max-height:480px)]:pb-3 px-6 sm:px-10 max-w-[460px] w-full shadow-2xl border border-border/80 flex flex-col items-center text-center gap-5 [@media(max-height:480px)]:gap-2.5"
-            style={{ transform: `translateY(${Math.round(popupPlacement ? popupPlacement.shift : 0)}px)` }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              type="button"
-              className="absolute top-2 right-2 w-11 h-11 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
-              onClick={() => setShowTutorialPrompt(false)}
-            >
-              ✕
-            </button>
-
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-3">
-                Tutorial Replay
-              </span>
-              <h3 className="text-xl font-extrabold text-text-1 tracking-tight">
-                Restart the Walkthrough?
-              </h3>
-            </div>
-
-            <p className="text-[13.5px] text-text-2 leading-relaxed max-w-[380px]">
-              You've already made progress in the tutorial. Would you like to reset your derivation and experience the full guided walkthrough again?
-            </p>
-
-            {/* Don't ask again checkbox */}
-            <label className="flex items-center gap-2.5 px-3 py-1 rounded-lg hover:bg-bg cursor-pointer select-none -mt-1">
-              <input
-                type="checkbox"
-                checked={dontAskTutorialAgain}
-                onChange={e => setDontAskTutorialAgain(e.target.checked)}
-                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
-              />
-              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
-            </label>
-
-            {/* Actions */}
-            <div className="praxis-modal-actions flex items-center gap-3 w-full mt-1">
-              <button
-                type="button"
-                className="flex-1 min-h-11 py-3 px-4 text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 hover:text-text-1 rounded-xl transition-all cursor-pointer"
-                onClick={() => setShowTutorialPrompt(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="flex-1 min-h-11 py-3 px-4 text-xs font-bold text-white bg-teal hover:bg-teal-600 active:scale-[0.98] rounded-xl transition-all shadow-sm cursor-pointer"
-                onClick={handleRestartTutorial}
-              >
-                Restart Walkthrough
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <TutorialReplayModal
+        show={showTutorialPrompt}
+        onClose={closeTutorialPrompt}
+        dontAskAgain={dontAskTutorialAgain}
+        onDontAskAgainChange={setDontAskTutorialAgain}
+        shift={popupPlacement ? popupPlacement.shift : 0}
+        onRestart={handleRestartTutorial}
+      />
 
       {/* ── LAWS DRAWER (SLIDING OVERLAY) ── */}
-      <div
-        className={`fixed inset-0 bg-accent/30 z-[100] transition-opacity duration-300 ${
-          showLawsDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setShowLawsDrawer(false)}
+      <LawsDrawer
+        show={showLawsDrawer}
+        onClose={() => setShowLawsDrawer(false)}
+        laws={laws}
+        placement={popupPlacement}
       />
-      <div
-        data-testid="laws-drawer"
-        className={`praxis-sheet-panel fixed right-0 max-w-[92vw] bg-white shadow-2xl z-[110] flex flex-col transition-transform duration-300 ${
-          showLawsDrawer ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        style={{
-          top: `${Math.round(popupPlacement ? popupPlacement.band.top : 0)}px`,
-          maxHeight: `${Math.round(popupPlacement ? popupPlacement.band.maxHeight : 0)}px`,
-          width: `${Math.round(popupPlacement ? popupPlacement.band.maxWidth : 340)}px`,
-          opacity: popupPlacement ? 1 : 0,
-        }}
-      >
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-base font-bold text-text-1">Law Reference</h2>
-          <button
-            data-testid="laws-close"
-            className="praxis-touch-target shrink-0 rounded-full border-none bg-bg text-lg text-text-2 flex items-center justify-center hover:bg-border transition-all"
-            onClick={() => setShowLawsDrawer(false)}
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 flex flex-col gap-3 praxis-safe-b">
-          {laws &&
-            laws.map((law) => (
-              <div key={law.id} className="bg-bg border border-border rounded-xl p-3.5 text-left">
-                <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
-                <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded-lg px-3 py-2 shadow-xs">
-                  {law.formulas &&
-                    law.formulas.map((f, idx) => (
-                      <div key={idx} className="font-mono text-xs font-semibold text-text-1">
-                        {f}
-                      </div>
-                    ))}
-                </div>
-                <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
-              </div>
-            ))}
-        </div>
-      </div>
     </div>
   )
 }
