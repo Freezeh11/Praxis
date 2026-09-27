@@ -93,6 +93,7 @@ Praxis/
 | `progressStore.js` | points, streak, per-stage scores/solutions, tutorial gates. Module-level store: `subscribe`, `getSnapshot`, `setUser`, actions, pure selectors. localStorage is the fast path, `/api/progress/save` the durable one. |
 | `useProgress.js` | React binding (`useSyncExternalStore`) |
 | `useGameState.js` | the current puzzle session: tree, selection, step history, hints, animations, optimal path |
+| `hintText.js` | hint/guide wording built from an engine suggestion (pure) |
 | `useGameContent.js` | levels/laws + score submission, as the screens consume them |
 
 ### services/ — the only network boundary
@@ -223,9 +224,11 @@ it in `laws/{sum,product,not,const}Laws.js`. Nothing else.
   from `components/` except other components.
 - **Public interfaces**: each folder has a barrel (`engine/index.js`,
   `services/index.js`) or a documented entry module. Internals stay private.
-- **Size**: target < ~250 lines per file. Anything longer is doing two jobs;
-  the only remaining large files are the two route screens
-  (`ProblemPage.jsx` composition root, `LevelSelectPage.jsx` carousel).
+- **Size**: target < ~250 lines per file; the largest files left are
+  `state/useGameState.js` (589, the puzzle session state machine — one job, still
+  long), `pages/ProblemPage.jsx` (509, composition root) and
+  `hooks/useCollisionPlacement.js` (407, mostly verbatim geometry). Anything much
+  larger than these is almost certainly doing two jobs.
 - **Tunables**: a number that a designer might change belongs in
   `config/game-rules.js` (frontend) or `backend/config/constants.py` (backend) —
   never inline at a call site.
