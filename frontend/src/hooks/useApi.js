@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase'
-import { STATIC_LAWS, STATIC_LEVELS, STATIC_LEVEL_SUMMARIES } from '../lib/gameData'
+import { LAWS, LEVELS, LEVEL_SUMMARIES } from '../content/game-content'
 
-let cachedLevels = STATIC_LEVEL_SUMMARIES
-let cachedLaws = STATIC_LAWS
+let cachedLevels = LEVEL_SUMMARIES
+let cachedLaws = LAWS
 let fetchAllPromise = null
 const levelCache = new Map()
 
 // Prepopulate levelCache with static bundled levels for 0ms loads
-for (const lv of STATIC_LEVELS) {
+for (const lv of LEVELS) {
   levelCache.set(lv.id, lv)
   levelCache.set(String(lv.id), lv)
 }
@@ -16,8 +16,8 @@ for (const lv of STATIC_LEVELS) {
 const levelRequestCache = new Map()
 
 export function useApi() {
-  const [levels, setLevels] = useState(cachedLevels || STATIC_LEVEL_SUMMARIES)
-  const [laws, setLaws] = useState(cachedLaws || STATIC_LAWS)
+  const [levels, setLevels] = useState(cachedLevels || LEVEL_SUMMARIES)
+  const [laws, setLaws] = useState(cachedLaws || LAWS)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 

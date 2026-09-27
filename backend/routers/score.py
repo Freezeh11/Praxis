@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
-from data.levels_data import LEVELS
+from repositories.content_repository import get_level
 from auth_middleware import optional_user
 
 router = APIRouter()
@@ -68,7 +68,7 @@ def save_score_to_db(user, req: ScoreRequest, efficiency, target_law, hint_indep
 @router.post("/score", response_model=ScoreResponse)
 async def compute_score(req: ScoreRequest, background_tasks: BackgroundTasks, user: Optional[dict] = Depends(optional_user)):
     """Compute the three-metric score for a completed puzzle. Optionally saves to DB if authenticated."""
-    level = next((lv for lv in LEVELS if lv["id"] == req.levelId), None)
+    level = get_level(req.levelId)
     if not level:
         raise HTTPException(status_code=404, detail=f"Level {req.levelId} not found")
     if req.stageIdx >= len(level["puzzles"]):

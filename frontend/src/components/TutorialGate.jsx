@@ -4,7 +4,7 @@ import { useProgress } from '../hooks/useProgress'
 /** Where a learner who has not finished the tutorial gets sent. */
 export const TUTORIAL_ENTRY = '/level/0/stage/0?tutorial=true'
 
-/** Tutorial lives at level 0 (see backend/data/levels_data.py). */
+/** Tutorial lives at level 0 (see content/levels.json). */
 const TUTORIAL_LEVEL_ID = 0
 
 /**

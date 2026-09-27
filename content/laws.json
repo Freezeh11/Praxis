@@ -1,0 +1,89 @@
+[
+  {
+    "id": "complement",
+    "name": "Complement Law",
+    "formulas": [
+      "A + A' = 1",
+      "A · A' = 0"
+    ],
+    "desc": "A variable OR its complement is 1; AND with its complement is 0."
+  },
+  {
+    "id": "idempotent",
+    "name": "Idempotent Law",
+    "formulas": [
+      "A + A = A",
+      "A · A = A"
+    ],
+    "desc": "Duplicate terms or maxterm clauses can be merged."
+  },
+  {
+    "id": "absorption",
+    "name": "Absorption Law",
+    "formulas": [
+      "A + AB = A",
+      "A(A+B) = A"
+    ],
+    "desc": "A shorter term or literal absorbs a longer clause containing it."
+  },
+  {
+    "id": "identity",
+    "name": "Identity Law",
+    "formulas": [
+      "A + 0 = A",
+      "A · 1 = A"
+    ],
+    "desc": "OR with 0 or AND with 1 preserves the original expression."
+  },
+  {
+    "id": "annulment",
+    "name": "Annulment Law",
+    "formulas": [
+      "A + 1 = 1",
+      "A · 0 = 0"
+    ],
+    "desc": "OR with 1 is always 1; AND with 0 is always 0."
+  },
+  {
+    "id": "distributive",
+    "name": "Distributive (Factoring & Dual)",
+    "formulas": [
+      "AB + AC = A(B+C)",
+      "(A+B)(A+C) = A + BC"
+    ],
+    "desc": "Factor out common variables from terms or maxterm clauses."
+  },
+  {
+    "id": "double-neg",
+    "name": "Double Negation",
+    "formulas": [
+      "(A')' = A"
+    ],
+    "desc": "Negating a value twice returns the original."
+  },
+  {
+    "id": "demorgan-and",
+    "name": "De Morgan's (AND→OR)",
+    "formulas": [
+      "(AB)' = A' + B'"
+    ],
+    "desc": "The complement of a product equals the sum of complements."
+  },
+  {
+    "id": "demorgan-or",
+    "name": "De Morgan's (OR→AND)",
+    "formulas": [
+      "(A+B)' = A'B'"
+    ],
+    "desc": "The complement of a sum equals the product of complements."
+  },
+  {
+    "id": "associative",
+    "name": "Associative Law",
+    "formulas": [
+      "A+(B+C) = (A+B)+C",
+      "A(BC) = (AB)C"
+    ],
+    "desc": "Terms or factors can be regrouped freely."
+  }
+]

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from data.levels_data import LAWS
+from repositories.content_repository import list_laws
 
 router = APIRouter()
 
@@ -7,4 +7,4 @@ router = APIRouter()
 @router.get("/laws")
 def get_laws():
     """Return all Boolean law reference cards."""
-    return LAWS
+    return list_laws()
