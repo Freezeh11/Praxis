@@ -44,7 +44,7 @@ Each entry has the same four parts, in the same order:
 Two terminology notes that apply to every figure. **Level ids are 0-based**: content level `0` is the
 Tutorial and Levels 1–3 are ids `1`, `2`, `3` (`content/levels.json`, `frontend/src/config/gameRules.js:83`).
 A **step** is one law application; it is committed to the derivation only after its animation, never
-before (`frontend/src/state/useGameState.js:423-425`).
+before (`frontend/src/state/useGameState.js:467-469`).
 
 ---
 
@@ -245,13 +245,14 @@ normalizer → laws → solver" pipeline would get wrong.
    `buildSandboxPuzzle` (`frontend/src/engine/sandbox/input.js:113`). Merging them into one "validator"
    box is the most likely error in this figure.
 3. **Truth-table equivalence is not on the play path.** `isEquivalent` is used by the law helpers for
-   absorption decisions and by the sandbox builders to verify generated puzzles — never to validate a
+   absorption decisions — each behind the Module 4 constant guard — and by the sandbox builders to
+   verify generated puzzles — never to validate a
    learner's step. See [D5](#d5--sequence-one-derivation-step-end-to-end).
 
-The engine is 23 modules and 3,182 lines of source (4,428 including its tests) and is the only Boolean
+The engine is 23 modules and 3,303 lines of source (4,664 including its tests) and is the only Boolean
 algebra implementation in the repository; the backend never re-implements it.
 
-**Source of truth:** `frontend/src/engine/index.js:8-13`, `frontend/src/engine/parser.js:75`, `frontend/src/engine/parser.js:160-166`, `frontend/src/engine/normalize.js:14-69`, `frontend/src/engine/validate.js:16`, `frontend/src/engine/sandbox/validate.js:155`, `frontend/src/engine/sandbox/generator.js:84`, `frontend/src/engine/laws/definitions.js:29-54`, `frontend/src/engine/laws/helpers.js:73`, `frontend/src/engine/laws/helpers.js:94`, `frontend/src/engine/laws/helpers.js:127`, `frontend/src/engine/solver.js:37`, `frontend/src/engine/solver.js:175`, `frontend/src/engine/solver.js:258`.
+**Source of truth:** `frontend/src/engine/index.js:8-13`, `frontend/src/engine/parser.js:75`, `frontend/src/engine/parser.js:160-166`, `frontend/src/engine/normalize.js:14-69`, `frontend/src/engine/validate.js:16`, `frontend/src/engine/sandbox/validate.js:155`, `frontend/src/engine/sandbox/generator.js:84`, `frontend/src/engine/laws/definitions.js:29-54`, `frontend/src/engine/laws/helpers.js:73`, `frontend/src/engine/laws/helpers.js:100`, `frontend/src/engine/laws/helpers.js:142`, `frontend/src/engine/solver.js:38`, `frontend/src/engine/solver.js:176`, `frontend/src/engine/solver.js:271`, `frontend/src/engine/solver.js:364`.
 
 ```mermaid
 flowchart TB
@@ -288,10 +289,10 @@ flowchart TB
             NOT["laws/notLaws.js:21"]
             CONST["laws/constLaws.js:19,61"]
             SCAN["laws/scanHints.js:22"]
-            HELP["laws/helpers.js:73,94 absorbsInSum and absorbsInProduct<br/>:127 findExpandablePair"]
+            HELP["laws/helpers.js:73,100 absorbsInSum and absorbsInProduct<br/>:142 findExpandablePair"]
         end
 
-        SOLVER["solver.js:37 getLegalTransitions<br/>:175 findOptimalPath, :258 findSimplestForm"]
+        SOLVER["solver.js:38 getLegalTransitions<br/>:176 findOptimalPath, :271 findOptimalPathWithLaws<br/>:364 findSimplestForm"]
         SCORE["scoring.js:54 estimateScore - client mirror"]
         SB["sandbox/input.js:109 buildSandboxPuzzle<br/>sandbox/generator.js:139 generateRandomPuzzle<br/>sandbox/expand.js, sandbox/pool.js"]
     end
@@ -380,7 +381,7 @@ this path. A dead end is an empty `scanHints`.
 There is no network hop anywhere in this figure. The only API calls in the puzzle flow are
 `GET /api/levels/{id}` when the puzzle loads and `POST /api/score` at completion.
 
-**Source of truth:** `frontend/src/components/ExpressionDisplay.jsx:59-60`, `frontend/src/components/puzzle/DerivationCanvas.jsx:194-199`, `frontend/src/pages/ProblemPage.jsx:307`, `frontend/src/pages/ProblemPage.jsx:315`, `frontend/src/pages/ProblemPage.jsx:321`, `frontend/src/state/useGameState.js:147`, `frontend/src/state/useGameState.js:199`, `frontend/src/state/useGameState.js:308`, `frontend/src/state/useGameState.js:354`, `frontend/src/state/useGameState.js:363-373`, `frontend/src/state/useGameState.js:423-425`, `frontend/src/state/useGameState.js:437`, `frontend/src/state/useGameState.js:53-68`, `frontend/src/config/gameRules.js:60`, `frontend/src/config/gameRules.js:62`.
+**Source of truth:** `frontend/src/components/ExpressionDisplay.jsx:59-60`, `frontend/src/components/puzzle/DerivationCanvas.jsx:194-199`, `frontend/src/pages/ProblemPage.jsx:307`, `frontend/src/pages/ProblemPage.jsx:315`, `frontend/src/pages/ProblemPage.jsx:321`, `frontend/src/state/useGameState.js:165`, `frontend/src/state/useGameState.js:240`, `frontend/src/state/useGameState.js:351`, `frontend/src/state/useGameState.js:398`, `frontend/src/state/useGameState.js:407-417`, `frontend/src/state/useGameState.js:467-469`, `frontend/src/state/useGameState.js:481`, `frontend/src/state/useGameState.js:54-69`, `frontend/src/config/gameRules.js:60`, `frontend/src/config/gameRules.js:62`.
 
 ```mermaid
 sequenceDiagram
@@ -434,7 +435,7 @@ sequenceDiagram
   browser. Validity is structural rather than provational: the learner picks a law and that law's own
   `apply()` produces the next AST, with soundness resting on the law implementations and their property
   tests (`frontend/src/engine/__tests__/law-soundness.property.test.js`).
-- A law that changes nothing is rejected before the animation (`frontend/src/state/useGameState.js:363-373`).
+- A law that changes nothing is rejected before the animation (`frontend/src/state/useGameState.js:407-417`).
 - The dead-end message states a fact about the implemented law registry, not a proof of unsolvability
   (`frontend/src/state/hintText.js:10`).
 
@@ -611,7 +612,7 @@ committed only after its animation, and only as an append. Two exits from the wo
 failures: an out-of-range stage returns to the stage list, and a fetch failure returns to the level
 carousel.
 
-**Source of truth:** `frontend/src/state/useGameState.js:29`, `frontend/src/state/useGameState.js:53-68`, `frontend/src/state/useGameState.js:147-197`, `frontend/src/state/useGameState.js:354-459`, `frontend/src/state/useGameState.js:437`, `frontend/src/state/useGameState.js:461-499`, `frontend/src/state/useGameState.js:501-520`, `frontend/src/state/useGameState.js:560-603`, `frontend/src/components/puzzle/usePuzzleSession.js:118`, `frontend/src/components/puzzle/usePuzzleSession.js:123`, `frontend/src/components/puzzle/usePuzzleSession.js:150-221`, `frontend/src/components/puzzle/usePuzzleSession.js:185-188`, `frontend/src/state/hintText.js:10`, `frontend/src/config/gameRules.js:60`, `frontend/src/config/gameRules.js:62`, `frontend/src/config/gameRules.js:66`.
+**Source of truth:** `frontend/src/state/useGameState.js:30`, `frontend/src/state/useGameState.js:54-69`, `frontend/src/state/useGameState.js:165-215`, `frontend/src/state/useGameState.js:354-459`, `frontend/src/state/useGameState.js:481`, `frontend/src/state/useGameState.js:505-543`, `frontend/src/state/useGameState.js:545-564`, `frontend/src/state/useGameState.js:604-647`, `frontend/src/components/puzzle/usePuzzleSession.js:118`, `frontend/src/components/puzzle/usePuzzleSession.js:123`, `frontend/src/components/puzzle/usePuzzleSession.js:150-221`, `frontend/src/components/puzzle/usePuzzleSession.js:185-188`, `frontend/src/state/hintText.js:10`, `frontend/src/config/gameRules.js:60`, `frontend/src/config/gameRules.js:62`, `frontend/src/config/gameRules.js:66`.
 
 ```mermaid
 stateDiagram-v2
@@ -765,6 +766,11 @@ counted as one assistance figure. The total is rounded once to one decimal and i
 the frontend's base 10 XP. Persistence is best-effort in a background task, so a slow database never
 delays the response.
 
+The optimum itself comes from the browser: for a graded puzzle it is the **objective-aware** optimum —
+the fewest steps that reach the goal *and* apply every `targetLaws` id (`findOptimalPathWithLaws`,
+`frontend/src/engine/solver.js:271`) — not the raw shortest path. The efficiency band therefore measures
+the learner against the shortest route that teaches the puzzle's laws.
+
 **The server does not verify the derivation.** `stepsUsed`, `lawsUsed`, `hintsUsed` and `guidesUsed` are
 all submitted by the browser, the algebra engine is frontend-only, and the server scores the numbers it
 is handed. \(stepsUsed = 0\) with a claimed law id returns a total of **100.0**, and
@@ -803,6 +809,18 @@ flowchart TD
 
 - **The clamp matters.** The `optimalSteps` echoed in the response is not always the value authored in
   `content/levels.json` (`backend/services/scoring_service.py:87-88`).
+- **The client's optimum is objective-aware, and not always the shortest path.** The browser solves the
+  state graph for the fewest steps that reach the goal **and** apply every `targetLaws` id
+  (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271-346`; wired at
+  `frontend/src/state/useGameState.js:87-113`). An empty `targetLaws` list falls back to the plain
+  shortest path (`frontend/src/engine/solver.js:274`), and an unsatisfiable objective reports
+  `found: false`, which makes the workspace fall back to that plain optimum
+  (`frontend/src/state/useGameState.js:101-105`). Consequence: a route shorter than the optimum that
+  skips a required law still earns the full 40 efficiency points but forfeits that law's target-law
+  credit. The two optima now coincide on Tutorial stage 1 — the shortcut there was a semantic
+  absorption collapse, forbidden by the proposal's Module 4 — and still differ on 11 of the 40
+  puzzles. Worked example and full arithmetic: [scoring-and-rewards.md](../06-reference/scoring-and-rewards.md)
+  [W9](../06-reference/scoring-and-rewards.md#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1).
 - **The empty-target-laws branch is a guard, not a shipped path:** all 40 puzzles declare at least one
   target law, so that branch is unreachable through today's content
   (`backend/services/scoring_service.py:101-102`).
@@ -905,7 +923,7 @@ attaches the bearer token and unwraps the `{success, data, error}` envelope into
 `ApiError`. Writes land as updates on a module-level progress store whose `publish()` notifies every
 `useSyncExternalStore` subscriber. `localStorage` is the fast path and the server is the durable one.
 
-**Source of truth:** `frontend/src/pages/ProblemPage.jsx:134-135`, `frontend/src/components/puzzle/usePuzzleSession.js:34-35`, `frontend/src/components/puzzle/usePuzzleSession.js:86-100`, `frontend/src/state/useGameState.js:2-6`, `frontend/src/state/useProgress.js:20-24`, `frontend/src/state/progressStore.js:49-57`, `frontend/src/state/progressStore.js:69-94`, `frontend/src/state/progressStore.js:147-166`, `frontend/src/services/apiClient.js:27-31`, `frontend/src/services/apiClient.js:63`, `frontend/src/services/apiClient.js:33-45`, `frontend/src/services/scoreApi.js:31`, `frontend/src/services/progressApi.js:12`, `frontend/src/services/contentApi.js:49`, `frontend/src/state/AuthProvider.jsx:37-42`.
+**Source of truth:** `frontend/src/pages/ProblemPage.jsx:134-135`, `frontend/src/components/puzzle/usePuzzleSession.js:34-35`, `frontend/src/components/puzzle/usePuzzleSession.js:86-100`, `frontend/src/state/useGameState.js:2-7`, `frontend/src/state/useProgress.js:20-24`, `frontend/src/state/progressStore.js:49-57`, `frontend/src/state/progressStore.js:69-94`, `frontend/src/state/progressStore.js:147-166`, `frontend/src/services/apiClient.js:27-31`, `frontend/src/services/apiClient.js:63`, `frontend/src/services/apiClient.js:33-45`, `frontend/src/services/scoreApi.js:31`, `frontend/src/services/progressApi.js:12`, `frontend/src/services/contentApi.js:49`, `frontend/src/state/AuthProvider.jsx:37-42`.
 
 ```mermaid
 flowchart TB
