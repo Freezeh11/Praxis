@@ -38,34 +38,33 @@ function getLawExplanation(lawName) {
     return `Applied ${lawName}.`
 }
 
-export default function LawExplanationCard({ lawName, compactCanvas, shortViewport, ready, onClose }) {
+export default function LawExplanationCard({ lawName, ready, onClose }) {
   return (
     <div
       data-inspect-card="true"
-      className={`bg-white border border-teal/40 shadow-xl rounded-xl text-left select-none pointer-events-auto ${
-        compactCanvas
-          ? 'p-2.5 w-[156px] max-w-full [@media(max-height:359px)]:p-2'
-          : 'p-3.5 w-[260px]'
-      } ${ready ? 'opacity-100' : 'opacity-0'}`}
-      style={{ transition: 'opacity 0.12s ease' }}
+      className={`bg-white/95 backdrop-blur-xs border border-teal/30 shadow-xl rounded-xl text-left select-none pointer-events-auto p-3 w-[280px] max-w-[calc(100vw-32px)] ring-1 ring-teal/10 ${
+        ready ? 'opacity-100' : 'opacity-0'
+      }`}
+      style={{ transition: 'opacity 0.15s ease' }}
     >
-      <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide border-b border-slate-100 pb-1.5 mb-1.5">
-        <span className="truncate">{lawName}</span>
+      <div className="flex items-center justify-between gap-1.5 border-b border-slate-100 pb-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-xs shrink-0 select-none">⚖️</span>
+          <span className="text-[12px] font-bold text-teal uppercase tracking-wide truncate">
+            {lawName}
+          </span>
+        </div>
         <button
           type="button"
           data-testid="inspect-card-close"
           onClick={() => onClose()}
-          className={`text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center font-bold text-xs transition-colors ${
-            compactCanvas ? 'w-6 h-6' : 'praxis-touch-target'
-          }`}
+          className="w-7 h-7 -mr-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg flex items-center justify-center font-bold text-xs transition-colors shrink-0 cursor-pointer"
           title="Close explanation"
         >
           ✕
         </button>
       </div>
-      <div className={`text-slate-600 leading-snug font-sans font-normal ${
-        compactCanvas ? 'text-[12.5px] line-clamp-2' : 'text-[12px] leading-relaxed'
-      } ${shortViewport ? 'praxis-hide-short' : ''}`}>
+      <div className="text-slate-700 text-[12.5px] leading-relaxed font-sans font-normal">
         {getLawExplanation(lawName)}
       </div>
     </div>

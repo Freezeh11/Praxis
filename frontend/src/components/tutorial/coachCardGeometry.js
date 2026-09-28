@@ -51,9 +51,12 @@ export const collectCardObstacles = (cardEl) => {
   const out = []
   const vw = window.innerWidth
   const vh = window.innerHeight
+  const scoreModal = document.querySelector('[data-tutorial="score-modal"]')
 
   for (const el of document.querySelectorAll(CARD_OBSTACLE_SELECTOR)) {
     if (cardEl && cardEl.contains(el)) continue
+    // When a score modal overlay is present, elements outside it are covered and inactive
+    if (scoreModal && !scoreModal.contains(el)) continue
     const r = el.getBoundingClientRect()
     if (r.width < 2 || r.height < 2) continue
     if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) continue

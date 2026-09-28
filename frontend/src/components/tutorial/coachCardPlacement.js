@@ -174,7 +174,7 @@ export function pickCoachPlacement({ naturalW, naturalH, targets, obstacles: all
     }
   }
 
-  const groups = [sidesFull, scan, sheets, columns, sidesFitted]
+  const groups = [sidesFull, sidesFitted, scan, columns, sheets]
   const usable = (rect) => rect.h >= Math.min(naturalH, CARD_USABLE_HEIGHT) - 1
   const readable = (rect) => rect.h >= Math.min(naturalH, 64)
 

@@ -58,9 +58,9 @@ export default function StepHistoryPanel({
               onClick={() => onToggleInspectStep(prev => (prev === i ? null : i))}
               className={`border rounded-xl px-3 py-2.5 font-mono cursor-pointer transition-all ${touchTargets ? 'min-h-[44px] text-[14px]' : 'text-[11px]'} ${
                 isInspected
-                  ? 'border-sky-400 bg-sky-50 shadow-md ring-2 ring-sky-300/80 -translate-y-px'
+                  ? 'border-teal bg-teal-50/90 shadow-md ring-2 ring-teal/30 -translate-y-px'
                   : isLatest
-                  ? 'border-teal bg-teal-light hover:border-teal hover:shadow-xs'
+                  ? 'border-teal/60 bg-teal-light hover:border-teal hover:shadow-xs'
                   : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50'
               }`}
             >
@@ -73,7 +73,7 @@ export default function StepHistoryPanel({
               <div
                 className={`mt-1.5 inline-flex items-center font-sans font-semibold rounded px-2 py-0.5 transition-colors ${touchTargets ? 'text-[12px]' : 'text-[10px]'} ${
                   isInspected
-                    ? 'bg-sky-600 text-white shadow-xs'
+                    ? 'bg-teal text-white shadow-xs'
                     : 'text-teal bg-white border border-teal'
                 }`}
               >

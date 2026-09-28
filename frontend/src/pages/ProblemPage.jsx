@@ -52,7 +52,7 @@ const TINY_VIEWPORT_MAX_HEIGHT = 360
  * measure time so the tier can re-home the anchor without re-registering
  * anything.
  */
-const INSPECT_ANCHOR = '[data-tutorial="active-equation"]'
+const INSPECT_ANCHOR = '[data-inspect-anchor="true"], [data-inspect-trigger], [data-tutorial="active-equation"]'
 const HINT_ANCHOR = '[data-tutorial="hint-button"]'
 
 export default function ProblemPage() {
@@ -151,11 +151,6 @@ export default function ProblemPage() {
   } = useCollisionPlacement({
     anchorSelector: INSPECT_ANCHOR,
     candidates: INSPECT_POPUP_CANDIDATES,
-    // Compact tiers cannot spare a single pixel of the canvas: the expression
-    // fills the whole viewport width there, so the card has to leave it alone
-    // outright and fall back to the header band.
-    hardAvoidSelector: canvasIsHardObstacle ? CANVAS_SELECTOR : null,
-    softAvoidSelector: compactCanvas ? CANVAS_SELECTOR : null,
     fullWidthOnNarrow: 480,
     enabled: inspectedStepIdx !== null || showStepInspectionTip,
   })
@@ -214,7 +209,14 @@ export default function ProblemPage() {
   useEffect(() => {
     if (inspectedStepIdx === null) return
     const handlePointerDown = (e) => {
-      if (e.target.closest('[data-inspect-card]') || e.target.closest('[data-inspect-trigger]')) {
+      if (
+        e.target.closest('[data-inspect-card]') ||
+        e.target.closest('[data-inspect-trigger]') ||
+        e.target.closest('[data-inspect-anchor]') ||
+        e.target.closest('[data-tutorial="step-history-panel"]') ||
+        e.target.closest('[data-testid="step-history-toggle"]') ||
+        e.target.closest('[data-tutorial^="step-history-card-"]')
+      ) {
         return
       }
       setInspectedStepIdx(null)
@@ -464,7 +466,7 @@ export default function ProblemPage() {
             {/* Law explanation — opened by clicking a past step / its connector. */}
             {inspectedStepIdx !== null && (
               <LawExplanationCard
-                lawName={steps[inspectedStepIdx]?.law} compactCanvas={compactCanvas} shortViewport={shortViewport}
+                lawName={steps[inspectedStepIdx]?.law}
                 ready={inspectPopupReady} onClose={() => setInspectedStepIdx(null)}
               />
             )}
@@ -472,7 +474,7 @@ export default function ProblemPage() {
             {/* First-run hint that a past step can be inspected. */}
             {showStepInspectionTip && inspectedStepIdx === null && (
               <StepInspectionTip
-                compactCanvas={compactCanvas} shortViewport={shortViewport} ready={inspectPopupReady}
+                ready={inspectPopupReady}
                 onDismiss={() => setShowStepInspectionTip(false)}
               />
             )}
@@ -488,6 +490,7 @@ export default function ProblemPage() {
           isPreLawHighlight={isPreLawHighlight} isAnimating={isAnimating} showSuccess={showSuccess}
           onResetStage={executeReset}
           onNextStage={() => {
+            setShowStepHistory(false)
             if (stageNum + 1 < (level?.puzzles?.length || 4)) {
               navigate(`/level/0/stage/${stageNum + 1}?tutorial=true`)
             } else {
@@ -497,6 +500,7 @@ export default function ProblemPage() {
           }}
           onFinish={() => {
             setIsTutorialActive(false)
+            setShowStepHistory(false)
             if (stageNum === 1) {
               setShowStepInspectionTip(true)
             }
@@ -506,8 +510,10 @@ export default function ProblemPage() {
           }}
           onSkip={() => {
             setIsTutorialActive(false)
+            setShowStepHistory(false)
             navigate('/level/0/stages')
           }}
+          onOpenStepHistory={() => setShowStepHistory(true)}
         />
       )}
     </div>

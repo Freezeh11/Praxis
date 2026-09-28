@@ -77,9 +77,29 @@ export function useSpotlightRects({
     }
 
     try {
-      const el = document.querySelector(effectiveTarget)
-      if (el) {
-        const nextHighlight = buildTargetHighlight(el.getBoundingClientRect(), effectiveTarget)
+      let el = document.querySelector(effectiveTarget)
+      let elRect = el ? el.getBoundingClientRect() : null
+
+      // If the target element has zero dimensions (e.g. step-history-panel inside a closed drawer on mobile)
+      if (el && (elRect.width === 0 || elRect.height === 0)) {
+        if (effectiveTarget.includes('step-history-panel')) {
+          const fallbackEl = document.querySelector('[data-tutorial="step-history-toggle"], [data-testid="step-history-toggle"]')
+          if (fallbackEl && fallbackEl.getBoundingClientRect().width > 0) {
+            el = fallbackEl
+            elRect = fallbackEl.getBoundingClientRect()
+            effectiveTarget = '[data-tutorial="step-history-toggle"]'
+          } else {
+            el = null
+            elRect = null
+          }
+        } else {
+          el = null
+          elRect = null
+        }
+      }
+
+      if (el && elRect && elRect.width > 0 && elRect.height > 0) {
+        const nextHighlight = buildTargetHighlight(elRect, effectiveTarget)
 
         if (!isSameRect(highlightRectRef.current, nextHighlight)) {
           highlightRectRef.current = nextHighlight

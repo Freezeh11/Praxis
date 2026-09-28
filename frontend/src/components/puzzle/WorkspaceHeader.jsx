@@ -90,6 +90,7 @@ export default function WorkspaceHeader({
               <button
                 type="button"
                 data-testid="step-history-toggle"
+                data-tutorial="step-history-toggle"
                 className={`shrink-0 rounded-lg border border-border bg-bg text-[16px] leading-none text-text-2 transition-all hover:bg-border hover:text-text-1 flex items-center justify-center ${chromeHeight}`}
                 onClick={onToggleStepHistory}
                 title={stepHistoryOpen ? 'Hide step history' : 'Show step history'}

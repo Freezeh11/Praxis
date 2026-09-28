@@ -25,7 +25,13 @@ const POPUP_PROTECTED_SELECTORS = [
   '[data-tutorial="laws-reference-button"]',
   '[data-tutorial="undo-button"]',
   '[data-tutorial="reset-button"]',
+  '[data-tutorial="undo-reset-group"]',
+  '[data-tutorial="laws-dock"]',
   '[data-tutorial="laws-dock"] [data-tutorial^="law-card-"]',
+  '[data-tutorial="reopen-score-btn"]',
+  '[data-tutorial="next-stage-btn"]',
+  '[data-tutorial="randomize-next-btn"]',
+  '[data-testid="bottom-dock"]',
   '[data-tutorial="canvas"] [data-path]',
 ]
 /** Extra breathing room kept around the popup and the viewport edges. */
@@ -131,21 +137,15 @@ const DEFAULT_POPUP_CANDIDATES = [{ side: 'below' }, { side: 'above' }, { side: 
  * header between the title and the right-hand controls.
  */
 export const INSPECT_POPUP_CANDIDATES = [
-  { side: 'below', gap: 6 },
-  { side: 'above', gap: 6 },
-  // A narrow column in the gutter right of the derivation: on a 568x320 phone
-  // the expression stops ~100px short of the edge, and this is the one spot
-  // that covers neither it nor a control.
-  { side: 'right-of-content', gap: 6 },
-  // The free strip above the law dock, then the two bottom corners: on a
-  // 320px-tall phone the expression fills the middle of the screen, so the only
-  // places left are below it (right corner, clear of the dock's buttons) and
-  // the empty header band above it.
-  { side: 'above-dock', gap: 6 },
-  { side: 'bottom-right' },
-  { side: 'bottom-left' },
+  { side: 'right', gap: 10 },
+  { side: 'below', gap: 8 },
+  { side: 'above', gap: 8 },
+  { side: 'right-of-content', gap: 8 },
+  { side: 'above-dock', gap: 8 },
   { side: 'top-right' },
   { side: 'top-left' },
+  { side: 'bottom-left' },
+  { side: 'bottom-right' },
 ]
 /** The hint bubble hangs off the Hint button without covering any control. */
 export const HINT_POPUP_CANDIDATES = [

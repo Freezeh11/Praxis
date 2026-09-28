@@ -132,19 +132,21 @@ export default function DerivationCanvas({
                         <button
                           type="button"
                           data-inspect-trigger="true"
+                          data-inspect-step={line.stepIdx}
                           onClick={(e) => {
                             e.stopPropagation()
                             setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
                           }}
-                          className="group absolute top-[calc(50%+8px)] left-1/2 -translate-x-1/2 w-6 h-[calc(100%-4px)] flex items-center justify-center cursor-pointer p-0 bg-transparent border-0 z-30"
+                          className="group absolute top-[calc(50%+8px)] left-1/2 -translate-x-1/2 w-8 h-[calc(100%-4px)] flex items-center justify-center cursor-pointer p-0 bg-transparent border-0 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 active:outline-none z-30"
+                          style={{ outline: 'none' }}
                           title={`Click to inspect ${line.law}`}
                         >
                           {/* Symmetrical vertical line */}
                           <div
-                            className={`w-[2px] h-full rounded-full transition-all duration-200 ${
+                            className={`h-full rounded-full transition-all duration-200 ${
                               inspectedStepIdx === line.stepIdx
-                                ? 'bg-teal w-[3px] shadow-sm'
-                                : 'bg-slate-300 group-hover:bg-teal group-hover:w-[3px]'
+                                ? 'bg-teal w-[3.5px] shadow-[0_0_8px_rgba(13,148,136,0.4)]'
+                                : 'bg-slate-300 w-[2px] group-hover:bg-teal group-hover:w-[3px]'
                             }`}
                           />
                         </button>
@@ -162,20 +164,22 @@ export default function DerivationCanvas({
                       )}
 
                       {/* The law-explanation card and the step-inspection tip
-                          used to live here, absolutely anchored to this 24px
-                          rail cell with `right-full`. That parked them over
-                          the expression (and, on compact tiers, over the law
-                          dock) with no viewport clamp. They are now rendered
-                          by the collision-aware fixed layer at the end of
-                          this component, which points them at this line. */}
+                          hang off this line in the collision-aware popup layer. */}
                     </div>
 
                     {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                     <div
                       data-tutorial={line.isActive ? "active-equation" : undefined}
+                      data-inspect-anchor={isFromInspected ? "true" : undefined}
+                      onClick={!line.isActive && line.stepIdx !== null ? (e) => {
+                        e.stopPropagation()
+                        setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
+                      } : undefined}
                       className={`relative flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
+                        !line.isActive ? 'cursor-pointer hover:bg-slate-50/70' : ''
+                      } ${
                         isLineHighlighted
-                          ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
+                          ? 'border-teal/30 bg-teal-50/50 shadow-xs ring-1 ring-teal/20'
                           : 'border-transparent'
                       }`}
                     >
