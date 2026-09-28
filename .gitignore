@@ -2,3 +2,23 @@ __pycache__/
 venv/
 .env
 auth-server/node_modules/
+
+# Python
+*.py[cod]
+
+# Node
+node_modules/
+dist/
+
+# Editors
+.idea/
+.vscode/
+
+# Generated test artifacts (regenerable — never commit these)
+.e2e/_results/
+.e2e/shots-mobile/
+.e2e/*.png
+.refactor-tmp/
+
+# OS
+.DS_Store

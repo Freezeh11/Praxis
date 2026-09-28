@@ -73,7 +73,6 @@ function tokenize(str) {
     if (str[i] === '(') {
       const close = findClose(str, i)
       if (close !== -1 && str[close + 1] === "'") {
-        const group = str.slice(i, close + 1) // includes ( and )
         const doubleNeg = str[close + 2] === "'"
         if (doubleNeg) {
           // (…)'' → double negation → render the inner content plain (no bar)

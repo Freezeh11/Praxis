@@ -1,12 +1,15 @@
 /**
- * Browser verification for Sandbox mode (Level 1 workspace + randomizer).
+ * Browser verification for Sandbox mode.
  *
  * Asserts the user-visible contract:
  *  - the Sandbox card exists on /levels, is always unlocked, and opens /sandbox
- *  - /sandbox renders the SAME workspace as a level (step history, canvas,
+ *  - /sandbox is the Sandbox INPUT screen (type your own expression, validated)
+ *  - the "Random problem" action on that screen opens /sandbox/play, which
+ *    renders the SAME workspace as a level (step history, canvas,
  *    applicable-laws dock) and can actually solve a generated problem
  *  - the 🎲 randomizer swaps the problem and resets all derivation state
- *  - the difficulty selector generates a new problem
+ *  - the easy/medium/hard difficulty picker is GONE (user request) and the
+ *    randomizer is the single way to get a new problem
  *  - sandbox play writes NOTHING to progress storage and calls neither
  *    /api/score nor /api/progress/save
  *  - /sandbox is auth-protected
@@ -14,10 +17,11 @@
  * Requires: vite dev server on 5173 and the e2e test user to exist.
  * Run:  node .e2e/sandbox-ui.mjs
  */
-import { chromium } from '/home/xris/.npm/_npx/e41f203b7505f1fb/node_modules/playwright-core/index.mjs'
+import { launch, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
 
-// NOTE: the dev server binds to [::1] only, so 127.0.0.1 refuses the connection.
-const BASE = 'http://localhost:5173'
+// The dev server is started by the Lead bound to 127.0.0.1 (see package scripts);
+// localhost also resolves here, but 127.0.0.1 is the canonical test target.
+const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
 const EMAIL = 'e2e-test@praxis.test'
 const PASSWORD = 'E2eTest!2345'
 
@@ -27,12 +31,9 @@ const log = (name, ok, extra = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name}${extra ? ' | ' + extra : ''}`)
 }
 
-const browser = await chromium.launch({
-  executablePath: '/home/xris/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-  args: ['--no-sandbox', '--disable-gpu', '--no-zygote', '--disable-dev-shm-usage'],
-})
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
-await page.addInitScript(() => localStorage.setItem('praxis_hide_survey', 'true'))
+await page.addInitScript((key) => localStorage.setItem(key, 'true'), HIDE_SURVEY)
 
 const pageErrors = []
 page.on('pageerror', err => {
@@ -68,23 +69,25 @@ log('login succeeds', !page.url().includes('/login'), page.url())
 // tutorial-level stage route, then remount.
 await page.goto(BASE + '/level/0/stages', { waitUntil: 'networkidle' })
 await page.waitForTimeout(1800)
-const seeded = await page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+const seeded = await page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   if (!key) return null
   const data = JSON.parse(localStorage.getItem(key))
   data.points = Math.max(Number(data.points) || 0, 100)
   data.hasSeenTutorial = true
+  data.stageProgress = { ...(data.stageProgress || {}), 0: [0, 1, 2, 3] }
+  data.levelsCompleted = [...new Set([...(data.levelsCompleted || []), 0])]
   localStorage.setItem(key, JSON.stringify(data))
   return { points: data.points, hasSeenTutorial: data.hasSeenTutorial }
-})
+}, PROGRESS_KEY_PREFIX)
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(1800)
-const afterReload = await page.evaluate(() => {
-  const key = Object.keys(localStorage).find(k => k.startsWith('praxis_v1_'))
+const afterReload = await page.evaluate((prefix) => {
+  const key = Object.keys(localStorage).find(k => k.startsWith(prefix))
   if (!key) return null
   const data = JSON.parse(localStorage.getItem(key))
   return { points: data.points, hasSeenTutorial: data.hasSeenTutorial }
-})
+}, PROGRESS_KEY_PREFIX)
 log('seeded a post-tutorial learner with enough points',
   Boolean(seeded) && (afterReload?.points ?? 0) >= 20 && afterReload?.hasSeenTutorial === true,
   `seeded=${JSON.stringify(seeded)} afterReload=${JSON.stringify(afterReload)}`)
@@ -107,12 +110,23 @@ for (let i = 0; i < 8; i++) {
 }
 const startLabel = await page.locator('#start-level-btn').innerText()
 log('carousel exposes an ENTER SANDBOX action', startLabel.includes('SANDBOX'), `label="${startLabel.trim()}"`)
-const randomPracticeBadge = await page.locator('text=Random Practice').count()
-log('sandbox card shows the Random Practice badge', randomPracticeBadge > 0)
+const sandboxBadge = await page.locator('text=/free practice/i').count()
+log('sandbox card shows a free-practice badge', sandboxBadge > 0, `matches=${sandboxBadge}`)
 
 await page.click('#start-level-btn')
 await page.waitForTimeout(2000)
 log('starting the sandbox opens /sandbox', page.url().endsWith('/sandbox'), page.url())
+
+/* ── 2b. Sandbox input screen -> random workspace ─────────────────────── */
+const inputField = await page.locator('[data-testid="sandbox-input"]').count()
+const inputLabel = await page.locator('text=Enter a Boolean expression').count()
+log('the sandbox entry point is the expression input screen',
+  inputField === 1 && inputLabel > 0, `input=${inputField} label=${inputLabel}`)
+
+await page.click('[data-testid="sandbox-random-btn"]')
+await page.waitForTimeout(2200)
+log('the random-problem action opens the workspace at /sandbox/play',
+  page.url().includes('/sandbox/play'), page.url())
 
 /* ── 3. Level 1 workspace parity ──────────────────────────────────────── */
 const hasStepHistory = await page.locator('[data-tutorial="step-history-panel"]').count()
@@ -127,9 +141,9 @@ log('workspace parity with a level page',
   `history=${hasStepHistory} canvas=${hasCanvas} dock=${hasLawsDock} zoom=${hasZoom} undo=${hasUndo} reset=${hasReset} hint=${hasHint}`)
 
 const hasRandomize = await page.locator('#randomize-btn').count()
-const hasDifficulty = await page.locator('[data-difficulty="easy"]').count()
-log('randomizer + difficulty controls are present', hasRandomize === 1 && hasDifficulty === 1,
-  `randomize=${hasRandomize} difficulty=${hasDifficulty}`)
+const hasDifficulty = await page.locator('[data-difficulty]').count()
+log('the randomizer is present', hasRandomize === 1, `randomize=${hasRandomize}`)
+log('the easy/medium/hard difficulty picker is gone', hasDifficulty === 0, `difficultyNodes=${hasDifficulty}`)
 
 // Sandbox must not show level progress / the stage list.
 const levelProgress = await page.locator('text=LEVEL PROGRESS').count()
@@ -141,7 +155,7 @@ log('a generated problem is shown', firstExpr.includes('F =') && firstExpr.repla
 /* ── 4. Progress isolation baseline ───────────────────────────────────── */
 // Snapshot taken here; every interaction from this point on is pure sandbox
 // play, which must not change stored progress.
-const progressKey = await page.evaluate(() => Object.keys(localStorage).find(k => k.startsWith('praxis_v1_')))
+const progressKey = await page.evaluate((prefix) => Object.keys(localStorage).find(k => k.startsWith(prefix)), PROGRESS_KEY_PREFIX)
 
 /* ── 5. Solve the generated problem using the laws dock ───────────────── */
 /**
@@ -195,7 +209,19 @@ const solved = await (async () => {
       await page.waitForTimeout(60)
     }
 
-    if (!progressed) return await isSolved()
+    if (!progressed) {
+      // Pair-scan heuristic exhausted. The sandbox Guide is FREE and always
+      // available, so use it as the deterministic fallback: it pre-selects the
+      // next actionable terms and offers the laws itself. (Without this the
+      // suite flaked on generated POS forms the pair scan cannot discover.)
+      const guide = page.locator('[data-tutorial="guide-button"]')
+      if (await guide.count() > 0 && !(await guide.first().isDisabled())) {
+        await guide.first().click({ force: true })
+        await page.waitForTimeout(700)
+        if ((await lawCards().count()) > 0) continue
+      }
+      return await isSolved()
+    }
   }
   return await isSolved()
 })()
@@ -223,10 +249,12 @@ const noSteps = await page.locator('text=No steps yet.').count()
 log('step history is empty after randomize', noSteps === 1, `noSteps=${noSteps}`)
 
 /* ── 7. Difficulty selector generates a new problem ───────────────────── */
-await page.click('[data-difficulty="hard"]')
-await page.waitForTimeout(1200)
+// The panel randomizer ("New Random Problem") is the remaining way to request
+// a fresh generated problem now that the difficulty picker is gone.
+await page.click('button:has-text("New Random Problem")')
+await page.waitForTimeout(1600)
 const thirdExpr = await canvasExpr()
-log('difficulty selector generates a new problem', thirdExpr !== secondExpr, `"${secondExpr.slice(0, 30)}" -> "${thirdExpr.slice(0, 30)}"`)
+log('the panel randomizer generates a new problem', thirdExpr !== secondExpr, `"${secondExpr.slice(0, 30)}" -> "${thirdExpr.slice(0, 30)}"`)
 
 /* ── 8. Progress isolation ────────────────────────────────────────────── */
 const after = await page.evaluate(k => localStorage.getItem(k), progressKey)
@@ -258,10 +286,14 @@ const randomizeOnLevel = await page.locator('#randomize-btn').count()
 log('normal level page still shows LEVEL PROGRESS and no randomizer',
   levelProgressOnLevel === 1 && randomizeOnLevel === 0,
   `levelProgress=${levelProgressOnLevel} randomize=${randomizeOnLevel}`)
-// Baseline for the comparison above: an untouched level page also saves progress.
+// Positive control for the comparison above. Progress is pushed by the shared
+// store (state/progressStore.js) only when it actually CHANGES; before that
+// refactor every useProgress() instance re-saved the identical snapshot on every
+// mount, so an untouched page produced writes. The sandbox must still produce
+// none — that is what this pair of assertions pins.
 const levelPageSaves = apiCalls.filter(c => c.includes('/api/progress/save')).length
-log('level page confirms the progress-save on mount is pre-existing, not sandbox-specific',
-  levelPageSaves > 0, `level page POSTs=${levelPageSaves}`)
+log('an untouched page writes no progress (the store saves only on change)',
+  levelPageSaves === 0, `level page POSTs=${levelPageSaves}`)
 
 /* ── 10. Route protection ─────────────────────────────────────────────── */
 await page.evaluate(() => localStorage.clear())

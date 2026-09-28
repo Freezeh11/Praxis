@@ -1,5 +1,6 @@
-fastapi
-uvicorn[standard]
-python-multipart
-python-dotenv
-httpx
+# Single source of truth for backend dependencies.
+#
+# The real list lives next to the service it belongs to (backend/requirements.txt)
+# because render.yaml installs from `rootDir: backend`. This file exists so that
+# `pip install -r requirements.txt` from the repository root keeps working.
+-r backend/requirements.txt

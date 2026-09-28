@@ -1,0 +1,129 @@
+/**
+ * Shared layout utilities (the `praxis-*` class contract).
+ *
+ * Used by every screen so popups, sheets and chip rails behave the same way on
+ * phones, short-landscape phones and tablets. Components should use these class
+ * names rather than re-inventing them; the sonner overrides at the end restyle
+ * the global toast host.
+ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE UX UTILITIES (shared contract)
+   ───────────────────────────────────────────────────────────────────────────
+   Used by every screen so popups, sheets and chip rails behave the same way on
+   a phone. Teammates: use these class names rather than re-inventing them.
+
+   .praxis-modal-panel    scrollable dialog panel that always fits a short
+                          landscape phone (max-height + contained overscroll)
+   .praxis-modal-actions  sticky action row pinned inside such a panel, so the
+                          primary button is reachable without scrolling to it
+   .praxis-sheet-panel    full-width bottom sheet for narrow screens
+   .praxis-drawer-panel   right-hand reference drawer: scrolls its own cards
+                          and rounds only its left edge (the right edge is
+                          flush with the viewport)
+   .praxis-rail           horizontal chip rail (laws, examples) that never
+                          widens the page; children snap and never shrink
+   .praxis-page-x         page gutters that respect notches in landscape
+   .praxis-safe-b         bottom padding that respects the home indicator
+   .praxis-hide-short     hides decorative content on very short viewports
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.praxis-modal-panel {
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.praxis-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98) 72%, rgba(255, 255, 255, 0));
+}
+
+.praxis-sheet-panel {
+  width: 100%;
+  max-height: calc(100dvh - 0.75rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+
+/* The wide/tall counterpart: a bounded-width column on the right edge. It must
+   NOT inherit .praxis-sheet-panel — `width: 100%` would span the viewport and
+   the top-rounded corners would read as a chopped-down bottom sheet. */
+.praxis-drawer-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1.25rem 0 0 1.25rem;
+}
+
+.praxis-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.praxis-rail > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.praxis-page-x {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+.praxis-safe-b {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* Landscape phones are ~360-420px tall: decorative hero copy has to give way. */
+@media (max-height: 480px) {
+  .praxis-hide-short {
+    display: none !important;
+  }
+}
+
+/* ── Toasts on phones: keep them inside the viewport and readable ──────────
+   NOTE: only the width/typography are constrained here. Sonner stacks toasts
+   downwards from its anchor, so re-anchoring the top-positioned toaster to the
+   bottom via CSS pushed the toast off-screen — position is left to Sonner. */
+@media (max-width: 767px), (max-height: 480px) {
+  [data-sonner-toaster] {
+    --width: min(92vw, 420px) !important;
+    --offset-top: max(12px, env(safe-area-inset-top, 0px)) !important;
+  }
+
+  [data-sonner-toast],
+  [data-sonner-toast] [data-title],
+  [data-sonner-toast] [data-description] {
+    font-size: 14px !important;
+  }
+}
+
+/* ── Sleek scrollbar for Law Reference drawer ── */
+.praxis-laws-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.praxis-laws-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.praxis-laws-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.praxis-laws-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+.praxis-laws-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}

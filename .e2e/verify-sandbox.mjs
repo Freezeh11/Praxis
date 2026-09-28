@@ -12,11 +12,11 @@
  */
 import {
   parseExpr, canonText, nodeText, extractVariables, validateExpr, isEquivalent,
-} from '../frontend/src/lib/expr.js'
-import { findOptimalPath, findSimplestForm, getLegalTransitions } from '../frontend/src/lib/solver.js'
-import { scanHints } from '../frontend/src/lib/laws.js'
-import { generateRandomPuzzle, generatePuzzlePair, DIFFICULTIES } from '../frontend/src/lib/randomPuzzle.js'
-import { SANDBOX_POOL, randomPoolEquation } from '../frontend/src/lib/sandboxPool.js'
+} from '../frontend/src/engine/index.js'
+import { findOptimalPath, findSimplestForm, getLegalTransitions } from '../frontend/src/engine/index.js'
+import { scanHints } from '../frontend/src/engine/index.js'
+import { generateRandomPuzzle, generatePuzzlePair, DIFFICULTIES } from '../frontend/src/engine/index.js'
+import { SANDBOX_POOL, randomPoolEquation } from '../frontend/src/engine/index.js'
 
 const VAR_POOL = ['x', 'y', 'z']
 const failures = []

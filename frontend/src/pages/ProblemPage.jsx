@@ -1,83 +1,204 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+/**
+ * ProblemPage — the route screen for `/level/:levelId/stage/:stageIdx` and
+ * `/sandbox/play`, and the composition root of the puzzle workspace.
+ *
+ * Everything below it is a single-purpose module: the session (route identity,
+ * puzzle loading, completion + scoring) in components/puzzle/usePuzzleSession,
+ * the sandbox contract in components/puzzle/sandboxPuzzle, the collision-aware
+ * popup layer in hooks/useCollisionPlacement, and one component per surface of
+ * the screen. This file owns the device tier, the transient UI state and the
+ * wiring between them.
+ */
+import { useEffect, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { useApi } from '../hooks/useApi'
-import { useProgress } from '../hooks/useProgress'
-import { useGameState } from '../hooks/useGameState'
-import ExpressionDisplay from '../components/ExpressionDisplay'
-import AnimationOverlay from '../components/AnimationOverlay'
-import ExprText from '../components/ExprText'
+
+import DerivationCanvas from '../components/puzzle/DerivationCanvas'
+import HintBubble from '../components/puzzle/HintBubble'
+import LawExplanationCard from '../components/puzzle/LawExplanationCard'
+import LawPanel from '../components/puzzle/LawPanel'
+import LawsReferenceSheet from '../components/puzzle/LawsReferenceSheet'
+import ResetConfirmModal from '../components/puzzle/ResetConfirmModal'
+import ScoreModal from '../components/puzzle/ScoreModal'
+import SidePanel from '../components/puzzle/SidePanel'
+import StepHistoryPanel from '../components/puzzle/StepHistoryPanel'
+import StepInspectionTip from '../components/puzzle/StepInspectionTip'
+import WorkspaceHeader from '../components/puzzle/WorkspaceHeader'
+import usePuzzleSession from '../components/puzzle/usePuzzleSession'
 import InteractiveTutorial from '../components/InteractiveTutorial'
-import { DIFFICULTIES, generatePuzzlePair } from '../lib/randomPuzzle'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { GUIDE_COST_POINTS, TIMING, TUTORIAL } from '../config/gameRules.js'
+import { SKIP_RESET_CONFIRM } from '../config/storageKeys.js'
+import useBandedOverlay from '../hooks/useBandedOverlay.js'
+import useCollisionPlacement, {
+  CANVAS_SELECTOR,
+  HINT_POPUP_CANDIDATES,
+  INSPECT_POPUP_CANDIDATES,
+} from '../hooks/useCollisionPlacement.js'
+import useDeviceTier, { PHONE_MAX_WIDTH, SMALL_TABLET_MAX_WIDTH } from '../hooks/useDeviceTier.js'
+import useSoundEnabled from '../hooks/useSoundEnabled.js'
+import { primeAudio } from '../services/soundEffects.js'
+
+/** Below this viewport height the popups switch to their compressed layout. */
+const SHORT_VIEWPORT_MAX_HEIGHT = 520
+/** Below this the header rail can be 3 controls wide: nothing fits beside it. */
+const TINY_VIEWPORT_MAX_HEIGHT = 360
+
+/**
+ * All three non-blocking popups hang off the SAME kind of anchor: the
+ * derivation line they explain (the active expression row, marked
+ * `data-tutorial`). The old markup anchored them to a 24px-wide rail cell and
+ * let them spill over the expression and the law dock. Resolved by selector at
+ * measure time so the tier can re-home the anchor without re-registering
+ * anything.
+ */
+const INSPECT_ANCHOR = '[data-inspect-anchor="true"], [data-inspect-trigger], [data-tutorial="active-equation"]'
+const HINT_ANCHOR = '[data-tutorial="hint-button"]'
 
 export default function ProblemPage() {
-  const { levelId, stageIdx } = useParams()
   const navigate = useNavigate()
-  const { fetchLevel, laws, submitScore } = useApi()
-  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, saveSolution, getSavedSolution } = useProgress()
 
-  // Sandbox mode: reached via /sandbox, which supplies no route params. It
-  // reuses this exact workspace but drives it from a locally generated puzzle
-  // and never writes progress.
-  const isSandbox = !levelId && !stageIdx
+  // ── Device tier (Feature 2) ───────────────────────────────────────────
+  // Every tier behaviour below is additive: the desktop branch keeps the exact
+  // markup/classes it has always had.
+  const { isTouch, isPortrait, isLandscape, isPhone, isSmallTablet, isTablet, width, height } = useDeviceTier()
+  // The tier hook classifies by width, so a phone rotated to landscape (844x390)
+  // reports `tablet-sm` because its long edge is > 767px. What actually decides
+  // whether side columns fit is the SHORT edge, so a short touch landscape
+  // viewport is treated as the phone-landscape layout regardless of that label.
+  const isPhoneLandscape = isTouch && isLandscape && (isPhone || height <= 520)
+  const isTabletPortrait = (isTablet || isSmallTablet) && isPortrait
+  const isTabletLandscape = isTablet && isLandscape
+  // A narrow viewport is a compact viewport no matter what the pointer type is:
+  // a 420px desktop window must not be handed the squeezed three-column layout.
+  // Non-touch windows get a wider cutoff (SMALL_TABLET_MAX_WIDTH) because below
+  // 1024px the two side columns leave the canvas unusably thin; >=1024px stays
+  // the full desktop three-column design. Touch keeps the phone cutoff so a
+  // 768-1023px touch device keeps its own tablet rules.
+  const isNarrowViewport = width > 0
+    && width <= (isTouch ? PHONE_MAX_WIDTH : SMALL_TABLET_MAX_WIDTH)
+  // Phone landscape / tablet portrait / any narrow window can't fit a side
+  // column next to the canvas: step history becomes an overlay drawer and the
+  // right panel folds into the header (assistance) or the bottom dock (laws).
+  const useOverlayHistory = isPhoneLandscape || isTabletPortrait || isNarrowViewport
+  const showRightPanel = !useOverlayHistory
+  const lawsAsStrip = isPhoneLandscape || isNarrowViewport
+  const lawsAsGrid = isTabletPortrait && !isNarrowViewport
+  const lawsInRightColumn = isTabletLandscape
+  const compactHeader = useOverlayHistory || isTabletLandscape
+  /** Compact tiers re-home the workspace controls into a second header row. */
+  const headerControlRail = useOverlayHistory
+  const assistanceInHeader = useOverlayHistory
+  /** Only touch tiers get enlarged hit boxes — desktop rendering is untouched. */
+  const touchTargets = isTouch
+  // Landscape phones (390px tall) and short windows: compress every popup so
+  // its actions stay reachable without scrolling.
+  const shortViewport = height > 0 && height < SHORT_VIEWPORT_MAX_HEIGHT
+  // The laws reference is a full-width bottom sheet until the viewport is both
+  // wide AND tall enough to deserve the side drawer.
+  const lawsSheet = width > 0 && (width <= PHONE_MAX_WIDTH || shortViewport)
 
-  /** Builds the synthetic "level" + generated puzzle pair used by sandbox mode. */
-  const buildSandboxState = useCallback((difficulty, excludeExpr = null) => {
-    let puzzle
-    try {
-      puzzle = generatePuzzlePair(excludeExpr, difficulty)
-    } catch (err) {
-      console.warn('Sandbox generator failed, keeping the current problem:', err)
-      throw err
-    }
-    return {
-      level: { id: 'sandbox', name: 'Sandbox', desc: 'Free practice', varCount: 3, puzzles: [] },
-      stageNum: 0,
-      puzzle,
-    }
-  }, [])
-
-  // First sandbox problem. The sandbox has no level metadata to fetch, so the
-  // synthetic stub below is all the workspace ever needs for `level`.
-  const [levelPuzzle, setLevelPuzzle] = useState(() => {
-    if (!isSandbox) return null
-    try {
-      return buildSandboxState('medium').puzzle
-    } catch (err) {
-      console.error('Failed to generate the first sandbox problem:', err)
-      return null
-    }
-  })
-  const [level, setLevel] = useState(() => (
-    isSandbox ? { id: 'sandbox', name: 'Sandbox', desc: 'Free practice', varCount: 3, puzzles: [] } : null
-  ))
-  const [sandboxDifficulty, setSandboxDifficulty] = useState('medium')
-  // Bumping the nonce remounts the workspace so no selection/history survives
-  // a randomize — the same pattern the removed PracticeWorkspace used.
-  const [sandboxNonce, setSandboxNonce] = useState(0)
+  // ── Transient UI state (the page owns every popup and overlay) ─────────
   const [showHint, setShowHint] = useState(false)
   const [currentHint, setCurrentHint] = useState('')
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [earnedPoints, setEarnedPoints] = useState(0)
-  const [toastMessage, setToastMessage] = useState(null)
   const [zoom, setZoom] = useState(1.0)
   const [inspectedStepIdx, setInspectedStepIdx] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
-  const [scoreResult, setScoreResult] = useState(null)
+  const [showStepHistory, setShowStepHistory] = useState(false)
+  // Derived, never stored: the drawer cannot outlive the tier that owns it, so
+  // leaving phone landscape/tablet portrait closes it without an effect.
+  const stepHistoryOpen = showStepHistory && useOverlayHistory
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
   const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
   const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
   const [isTutorialActive, setIsTutorialActive] = useState(() => new URLSearchParams(window.location.search).get('tutorial') === 'true')
-  const loadedAsSavedRef = useRef(false)
+  // The sound preference is owned by its hook (storage + AudioContext unlock);
+  // this page only hands it to the header toggle.
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
-  const stageNum = isSandbox ? 0 : parseInt(stageIdx)
-  const isTutorialLevel = !isSandbox && Number(levelId) === 0
-  const completedSet = new Set(isSandbox ? [] : getStagesCompleted(Number(levelId)))
+  const handlePuzzleChange = () => setShowHint(false)
+  /** A randomize swaps the problem: every transient overlay goes with it. */
+  const handleWorkspaceReset = () => {
+    setShowHint(false)
+    setInspectedStepIdx(null)
+    setShowResetConfirm(false)
+  }
 
-  /** The puzzle currently being played — generated in sandbox, fetched otherwise. */
-  const puzzle = levelPuzzle
+  /**
+   * The panels cue their own open/close (hooks/usePanelSound), so these only
+   * have to unlock audio: a learner whose first action is opening the laws or
+   * the step history has not clicked a term yet, and an unprimed AudioContext
+   * would swallow the cue.
+   */
+  const openLaws = () => {
+    primeAudio()
+    setShowLawsDrawer(true)
+  }
+  const toggleStepHistory = () => {
+    primeAudio()
+    setShowStepHistory(prev => !prev)
+  }
+  const openStepHistory = () => {
+    primeAudio()
+    setShowStepHistory(true)
+  }
+
+  const {
+    levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
+    stageNum, completedSet, showSuccess, setShowSuccess, scoreResult, setScoreResult,
+    handleOpenScoreSummary, handleRandomize, clearLoadedAsSaved, progress, deductPoints, laws,
+    expr, sel, steps, applicableLaws, isComplete, earnedXp, status, statusMsg,
+    activeGuidePaths, isPreLawHighlight, isAnimating, animationData,
+    handleClickLit, handleClickNot, handleClickTerm,
+    applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
+    hintsUsed, guidesUsed, optimalSteps,
+  } = usePuzzleSession({ onPuzzleChange: handlePuzzleChange, onWorkspaceReset: handleWorkspaceReset })
+
+  // The compact tiers scroll/crop the derivation inside this box, so a popup
+  // that can leave it at all should. A 568x320 phone has no free band left
+  // once the header rail is counted, so there the canvas becomes a soft
+  // obstacle (costed) instead of a hard one and the card is allowed to sit on
+  // the expression rather than on a control the learner still needs.
+  const compactCanvas = shortViewport || isNarrowViewport || isPhoneLandscape || isTabletPortrait
+  const canvasIsHardObstacle = compactCanvas && !(height > 0 && height <= TINY_VIEWPORT_MAX_HEIGHT)
+
+  const {
+    nodeRef: inspectPopupNode,
+    layerStyle: inspectPopupStyle,
+    ready: inspectPopupReady,
+  } = useCollisionPlacement({
+    anchorSelector: INSPECT_ANCHOR,
+    candidates: INSPECT_POPUP_CANDIDATES,
+    fullWidthOnNarrow: 480,
+    enabled: inspectedStepIdx !== null || showStepInspectionTip,
+  })
+
+  const {
+    nodeRef: lawsPanelNode,
+    band: lawsPanelBand,
+    ready: lawsPanelReady,
+  } = useBandedOverlay(
+    // The panel hangs under whichever control opened it — the header rail button
+    // on the compact tiers, the right panel's Laws Quick Reference on the wide
+    // ones — so it never buries its own trigger.
+    ['[data-testid="laws-sheet-anchor"]', '[data-tutorial="laws-reference-button"]'],
+    showLawsDrawer,
+  )
+
+  const {
+    nodeRef: hintPopupNode,
+    layerStyle: hintPopupStyle,
+    ready: hintPopupReady,
+  } = useCollisionPlacement({
+    anchorSelector: HINT_ANCHOR,
+    candidates: HINT_POPUP_CANDIDATES,
+    hardAvoidSelector: canvasIsHardObstacle ? CANVAS_SELECTOR : null,
+    softAvoidSelector: compactCanvas ? CANVAS_SELECTOR : null,
+    fullWidthOnNarrow: 480,
+    enabled: showHint,
+  })
 
   // Reset review reminder and inspection tip on stage changes
   useEffect(() => {
@@ -100,208 +221,22 @@ export default function ProblemPage() {
       return
     }
     const isTutQuery = new URLSearchParams(window.location.search).get('tutorial') === 'true'
-    const isTutLevel = Number(levelId) === 0
+    const isTutLevel = Number(levelId) === TUTORIAL.levelId
     setIsTutorialActive(isTutQuery || isTutLevel)
   }, [levelId, stageIdx, isSandbox])
-
-  function getLawExplanation(lawName) {
-    if (!lawName) return null
-    const lower = String(lawName).toLowerCase()
-    if (lower.includes('initial')) {
-      return 'Starting problem expression.'
-    }
-    if (lower.includes('distributive')) {
-      return 'Factored out a common variable (AB + AC = A(B+C)) or applied POS dual distribution ((A+B)(A+C) = A + BC).'
-    }
-    if (lower.includes('absorption')) {
-      return 'Redundant term absorbed: A + AB = A in sums, and A(A + B) = A in products.'
-    }
-    if (lower.includes('complement')) {
-      return 'Opposites evaluated: A + A\' = 1 in sums, and A · A\' = 0 in products.'
-    }
-    if (lower.includes('idempotent')) {
-      return 'Duplicate terms combined: A + A = A in sums, and A · A = A in products.'
-    }
-    if (lower.includes('identity')) {
-      return 'Neutral element dropped: A + 0 = A in sums, and A · 1 = A in products.'
-    }
-    if (lower.includes('annulment')) {
-      return 'Dominant value takes over: A + 1 = 1 in sums, and A · 0 = 0 in products.'
-    }
-    if (lower.includes('double neg')) {
-      return 'Double NOT cancels out: (A\')\' = A.'
-    }
-    if (lower.includes('demorgan')) {
-      return 'Negated group expanded: (AB)\' = A\' + B\' or (A+B)\' = A\'B\'.'
-    }
-    return `Applied ${lawName}.`
-  }
-  const ZOOM_STEP = 0.15
-  const ZOOM_MIN = 0.5
-  const ZOOM_MAX = 2.0
-
-  const {
-    expr, sel, steps, exprHistory,
-    applicableLaws,
-    isComplete, earnedXp,
-    status, statusMsg,
-    activeGuidePaths,
-    isPreLawHighlight,
-    isAnimating, animationData,
-    loadPuzzle,
-    handleClickLit, handleClickNot, handleClickTerm,
-    applyLaw, undoAction, resetPuzzle, useHint, swapTerms, activateGuide,
-    hintsUsed,
-    optimalSteps, optimalPath,
-  } = useGameState()
-
-  // 1. Fetch level and set current puzzle (skipped entirely in sandbox mode)
-  useEffect(() => {
-    if (isSandbox) return
-
-    let isCancelled = false
-    setShowSuccess(false)
-    setShowHint(false)
-    setScoreResult(null)
-
-    fetchLevel(Number(levelId)).then(data => {
-      if (isCancelled || !data) return
-      setLevel(data)
-      const puz = data.puzzles?.[stageNum]
-      if (puz) {
-        setLevelPuzzle(puz)
-      } else {
-        navigate(`/level/${levelId}/stages`, { replace: true })
-      }
-    }).catch(err => {
-      if (!isCancelled) {
-        console.error('Failed to load level:', err)
-        navigate('/levels', { replace: true })
-      }
-    })
-
-    return () => {
-      isCancelled = true
-    }
-  }, [levelId, stageNum, navigate, isSandbox])
-
-  // 2. Synchronize puzzle derivation with saved solution (reactive to auth hydration).
-  //    Sandbox problems are never saved, so they always start from scratch.
-  useEffect(() => {
-    if (!puzzle) return
-
-    if (isSandbox) {
-      loadedAsSavedRef.current = false
-      loadPuzzle(puzzle, null)
-      return
-    }
-
-    const isTutorial = Number(levelId) === 0 && new URLSearchParams(window.location.search).get('tutorial') === 'true'
-    const savedSteps = isTutorial ? null : getSavedSolution(Number(levelId), stageNum)
-    loadedAsSavedRef.current = Boolean(savedSteps && savedSteps.length > 0)
-    loadPuzzle(puzzle, savedSteps)
-  }, [puzzle, levelId, stageNum, isSandbox])
-
-  // Handle stage completion
-  useEffect(() => {
-    if (!isComplete) return
-
-    // If this stage was simply preloaded from an existing saved solution on visit, do NOT auto-popup
-    if (loadedAsSavedRef.current) {
-      return
-    }
-
-    const isFirstTime = !completedSet.has(stageNum)
-
-    // Derive lawsUsed from step history at this moment
-    const nameToId = {
-      'Absorption Law': 'absorption',
-      'Absorption Law (Product)': 'absorption',
-      'Idempotent Law': 'idempotent',
-      'Idempotent Law (Product)': 'idempotent',
-      'Complement Law': 'complement',
-      'Complement Law (Product)': 'complement',
-      'Identity Law': 'identity',
-      'Identity Law (Product)': 'identity',
-      'Annulment Law': 'annulment',
-      'Annulment Law (Product)': 'annulment',
-      'Double Negation': 'double-neg',
-      "De Morgan's (AND\u2192OR)": 'demorgan-and',
-      "De Morgan's (OR\u2192AND)": 'demorgan-or',
-      'Distributive (Factor)': 'distributive',
-      'Distributive (POS)': 'distributive',
-    }
-    const lawsUsed = steps.map(s => nameToId[s?.law] || s?.law?.toLowerCase() || 'unknown')
-    const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
-
-    // Compute immediate local score result so UI renders instant 0ms breakdown
-    const target_laws = new Set(puzzle?.targetLaws || [])
-    const laws_used = new Set(lawsUsed)
-    const efficiency = steps.length <= effectiveOptimal ? 40.0 : Math.max(0.0, 40.0 - (steps.length - effectiveOptimal) * 10.0)
-    const target_law = target_laws.size === 0 ? 30.0 : Math.round((Array.from(target_laws).filter(l => laws_used.has(l)).length / target_laws.size) * 30.0 * 10) / 10
-    const hint_independence = hintsUsed === 0 ? 30.0 : Math.max(0.0, 30.0 - hintsUsed * 10.0)
-    const total = Math.round((efficiency + target_law + hint_independence) * 10) / 10
-    const earnedPoints = Math.round((total / 100.0) * 5) // +5 bonus for 100% score
-
-    // ── SANDBOX: free practice. Nothing is awarded or persisted — the modal
-    // derives its summary from `steps`/`optimalSteps`/`hintsUsed` directly, so
-    // there is no score result to store.
-    if (isSandbox) {
-      const sandboxTimer = setTimeout(() => setShowSuccess(true), 200)
-      return () => clearTimeout(sandboxTimer)
-    }
-
-    if (isFirstTime) {
-      addPoints(earnedXp + earnedPoints)
-    }
-    completeStage(Number(levelId), stageNum)
-    saveSolution(Number(levelId), stageNum, steps)
-
-    const immediateScore = {
-      efficiency,
-      targetLaw: target_law,
-      hintIndependence: hint_independence,
-      total,
-      earnedPoints,
-      breakdown: {
-        stepsUsed: steps.length,
-        optimalSteps: effectiveOptimal,
-        targetLawsRequired: Array.from(target_laws),
-        targetLawsUsed: Array.from(laws_used).filter(l => target_laws.has(l)),
-        hintsUsed: hintsUsed || 0,
-      },
-    }
-    setScoreResult(immediateScore)
-    saveScore(Number(levelId), stageNum, total)
-
-    // Submit score in background to sync with server/database
-    submitScore({
-      levelId: Number(levelId),
-      stageIdx: stageNum,
-      stepsUsed: steps.length,
-      lawsUsed,
-      hintsUsed,
-      optimalSteps: effectiveOptimal,
-    }).then(result => {
-      if (result) {
-        saveScore(Number(levelId), stageNum, result.total)
-        setScoreResult(result)
-      }
-    })
-
-    // Auto-pop the complete modal promptly after solving
-    const timer = setTimeout(() => setShowSuccess(true), 200)
-    return () => clearTimeout(timer)
-    // Intentionally keyed only on completion: the surrounding values are read
-    // at the moment the puzzle is solved. isSandbox is route-derived and stable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComplete])
 
   // Global click-away listener for derivation step inspection
   useEffect(() => {
     if (inspectedStepIdx === null) return
     const handlePointerDown = (e) => {
-      if (e.target.closest('[data-inspect-card]') || e.target.closest('[data-inspect-trigger]')) {
+      if (
+        e.target.closest('[data-inspect-card]') ||
+        e.target.closest('[data-inspect-trigger]') ||
+        e.target.closest('[data-inspect-anchor]') ||
+        e.target.closest('[data-tutorial="step-history-panel"]') ||
+        e.target.closest('[data-testid="step-history-toggle"]') ||
+        e.target.closest('[data-tutorial^="step-history-card-"]')
+      ) {
         return
       }
       setInspectedStepIdx(null)
@@ -310,114 +245,56 @@ export default function ProblemPage() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [inspectedStepIdx])
 
-  const handleOpenScoreSummary = () => {
-    // Sandbox is unscored: never submit to the server, just show the breakdown.
-    if (isSandbox) {
-      setShowSuccess(true)
-      return
-    }
-
-    if (!scoreResult && isComplete) {
-      const nameToId = {
-        'Absorption Law': 'absorption',
-        'Absorption Law (Product)': 'absorption',
-        'Idempotent Law': 'idempotent',
-        'Idempotent Law (Product)': 'idempotent',
-        'Complement Law': 'complement',
-        'Complement Law (Product)': 'complement',
-        'Identity Law': 'identity',
-        'Identity Law (Product)': 'identity',
-        'Annulment Law': 'annulment',
-        'Annulment Law (Product)': 'annulment',
-        'Double Negation': 'double-neg',
-        "De Morgan's (AND\u2192OR)": 'demorgan-and',
-        "De Morgan's (OR\u2192AND)": 'demorgan-or',
-        'Distributive (Factor)': 'distributive',
-        'Distributive (POS)': 'distributive',
-      }
-      const lawsUsed = steps.map(s => nameToId[s?.law] || s?.law?.toLowerCase() || 'unknown')
-      const effectiveOptimal = (optimalSteps && optimalSteps > 0) ? optimalSteps : (puzzle?.optimalSteps || steps.length)
-      submitScore({
-        levelId: Number(levelId),
-        stageIdx: stageNum,
-        stepsUsed: steps.length,
-        lawsUsed,
-        hintsUsed,
-        optimalSteps: effectiveOptimal,
-      }).then(result => {
-        if (result) {
-          saveScore(Number(levelId), stageNum, result.total)
-          setScoreResult(result)
-        }
-        setShowSuccess(true)
-      })
-    } else {
-      setShowSuccess(true)
-    }
-  }
-
   const handleHint = () => {
     if (!puzzle || isComplete) return
-    const hint = useHint(puzzle)
+    const hint = requestHint(puzzle)
     if (hint) {
       setCurrentHint(hint)
       setShowHint(true)
-      setTimeout(() => setShowHint(false), 6000)
+      setTimeout(() => setShowHint(false), TIMING.hintAutoDismissMs)
     }
   }
 
   const handleNextStage = () => {
     const nextIdx = stageNum + 1
     if (level && nextIdx < level.puzzles.length) {
-      const isTutLevel = Number(levelId) === 0
+      const isTutLevel = Number(levelId) === TUTORIAL.levelId
       const tutParam = isTutLevel ? '?tutorial=true' : ''
       navigate(`/level/${levelId}/stage/${nextIdx}${tutParam}`)
     } else {
-      if (Number(levelId) === 0) {
+      if (Number(levelId) === TUTORIAL.levelId) {
         setIsTutorialActive(false)
       }
       navigate(`/level/${levelId}/stages`)
     }
   }
 
-  /**
-   * Sandbox only: swap in a freshly generated, solver-verified problem.
-   * Bumping the nonce remounts the workspace so the previous derivation,
-   * selection, hint and animation state are all discarded.
-   */
-  const handleRandomize = (nextDifficulty = sandboxDifficulty) => {
-    try {
-      const next = buildSandboxState(nextDifficulty, puzzle?.expr || null)
-      setLevel(next.level)
-      setLevelPuzzle(next.puzzle)
-      setSandboxDifficulty(nextDifficulty)
-      setSandboxNonce(n => n + 1)
-      setShowSuccess(false)
-      setShowHint(false)
-      setInspectedStepIdx(null)
-      setShowResetConfirm(false)
-      setScoreResult(null)
-      loadedAsSavedRef.current = false
-    } catch {
-      toast.error('Could not generate a new problem. Please try again.')
-    }
+  const handleSelectStage = (idx) => {
+    if (!levelId) return
+    const isTutLevel = Number(levelId) === TUTORIAL.levelId
+    const tutParam = isTutLevel ? '?tutorial=true' : ''
+    navigate(`/level/${levelId}/stage/${idx}${tutParam}`)
   }
+
+  // The Guide is a graded-level aid: 20 points there, free in the unscored
+  // sandbox (the spec requires Hint/Guide to stay available while practicing).
+  const guideCost = isSandbox ? 0 : GUIDE_COST_POINTS
 
   const handleGuide = () => {
     if (isComplete) return
-    if (progress.points >= 20) {
+    if (guideCost === 0 || (progress.points ?? 0) >= guideCost) {
       const activated = activateGuide()
-      if (activated) {
-        deductPoints(20)
+      if (activated && guideCost > 0) {
+        deductPoints(guideCost)
       }
     } else {
-      alert("Not enough points! You need 20 points to use the Guide.")
+      toast.error(`Not enough points! You need ${guideCost} points to use the Guide.`)
     }
   }
 
   const handleResetClick = () => {
     // If the stage is completed and user hasn't opted out in this session
-    const skipPrompt = sessionStorage.getItem('praxis_skip_reset_confirm') === 'true'
+    const skipPrompt = sessionStorage.getItem(SKIP_RESET_CONFIRM) === 'true'
     if (isComplete && !skipPrompt) {
       setDontAskResetAgain(false)
       setShowResetConfirm(true)
@@ -428,10 +305,10 @@ export default function ProblemPage() {
 
   const executeReset = () => {
     if (dontAskResetAgain) {
-      sessionStorage.setItem('praxis_skip_reset_confirm', 'true')
+      sessionStorage.setItem(SKIP_RESET_CONFIRM, 'true')
     }
     setInspectedStepIdx(null)
-    loadedAsSavedRef.current = false
+    clearLoadedAsSaved()
     setShowResetConfirm(false)
     setShowSuccess(false)
     setShowHint(false)
@@ -440,7 +317,7 @@ export default function ProblemPage() {
 
   const handleUndo = () => {
     setInspectedStepIdx(null)
-    loadedAsSavedRef.current = false
+    clearLoadedAsSaved()
     undoAction()
   }
 
@@ -459,1047 +336,181 @@ export default function ProblemPage() {
   }
   const onApplyLaw = (law) => {
     setInspectedStepIdx(null)
-    loadedAsSavedRef.current = false
+    clearLoadedAsSaved()
     const enableTutorialPause = isTutorialActive && stageNum < 3
     if (expr) applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)
   }
-  const onSwapTerms = (sumPath, fromIdx, toIdx) => {
-    setInspectedStepIdx(null)
-    loadedAsSavedRef.current = false
-    swapTerms(sumPath, fromIdx, toIdx)
+
+  const handleTutorialToggle = () => {
+    setIsTutorialActive(prev => {
+      const next = !prev
+      if (next && puzzle) {
+        clearLoadedAsSaved()
+        setShowSuccess(false)
+        setShowHint(false)
+        setScoreResult(null)
+        resetPuzzle(puzzle)
+      }
+      return next
+    })
   }
 
   if (!level || !puzzle) {
     return (
       <div className="flex h-screen items-center justify-center bg-bg">
         <div className="flex flex-col items-center gap-3">
-          <svg className="animate-spin h-7 w-7 text-accent" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <LoadingSpinner size="h-7 w-7" />
           <span className="text-sm font-semibold text-text-3">{isSandbox ? 'Generating problem...' : 'Loading stage...'}</span>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-bg">
-      {/* ── LEFT PANEL: Step History ── */}
-      <aside data-tutorial="step-history-panel" className="w-[260px] min-w-[200px] max-w-[300px] bg-white border-r border-border flex flex-col overflow-hidden">
-        <div className="px-4 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-2">
-          <button
-            className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-text-2 bg-transparent hover:bg-border rounded transition-all w-fit"
-            onClick={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)}
-          >
-            {isSandbox ? '← Levels' : '← Stages'}
-          </button>
-          <div className="text-[13px] font-bold text-text-2 tracking-[0.5px] uppercase">Step History</div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-3.5 py-3 flex flex-col gap-2.5">
-          {steps.length === 0 && (
-            <div className="text-[13px] text-text-3 text-center pt-5">No steps yet.</div>
-          )}
-          {steps.map((s, i) => {
-            const isInspected = inspectedStepIdx === i
-            const isLatest = i === steps.length - 1
+  /* ──────────────────────────────────────────────────────────────────────
+     Tier-dependent placement of the shared blocks. Wide tiers render these
+     exactly where they have always been; the touch tiers re-home them so the
+     canvas keeps its full width and every control stays thumb-reachable.
+     ────────────────────────────────────────────────────────────────────── */
 
-            return (
-              <div
-                key={i}
-                data-tutorial={`step-history-card-${i}`}
-                onClick={() => setInspectedStepIdx(prev => (prev === i ? null : i))}
-                className={`border rounded-xl px-3 py-2.5 font-mono text-[11px] cursor-pointer transition-all ${
-                  isInspected
-                    ? 'border-sky-400 bg-sky-50 shadow-md ring-2 ring-sky-300/80 -translate-y-px'
-                    : isLatest
-                    ? 'border-teal bg-teal-light hover:border-teal hover:shadow-xs'
-                    : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <div className="text-text-2 leading-relaxed">
-                  <span className="text-text-3 mr-1">F =</span> <ExprText text={s.from} />
-                </div>
-                <div className="text-text-1 font-semibold leading-relaxed">
-                  <span className="text-text-3 mr-1">F =</span> <ExprText text={s.to} />
-                </div>
-                <div
-                  className={`mt-1.5 inline-flex items-center text-[10px] font-sans font-semibold rounded px-2 py-0.5 transition-colors ${
-                    isInspected
-                      ? 'bg-sky-600 text-white shadow-xs'
-                      : 'text-teal bg-white border border-teal'
-                  }`}
-                >
-                  {s.law}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </aside>
+  const chromeText = touchTargets ? 'text-[14px]' : 'text-xs'
+  const chromeHeight = touchTargets ? 'min-h-[44px] min-w-[44px] praxis-touch-target' : ''
+
+  /**
+   * Applicable-laws / completion panel. It sits under the canvas on every
+   * tier except a landscape tablet, where it becomes the right column so the
+   * laws stay visible next to the expression.
+   */
+  const lawsPanel = (
+    <LawPanel
+      isComplete={isComplete} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
+      steps={steps} optimalSteps={optimalSteps} applicableLaws={applicableLaws}
+      sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
+      touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
+      level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
+      onNextStage={handleNextStage} onBackToStages={() => navigate(`/level/${levelId}/stages`)} onRandomize={handleRandomize}
+      onNewExpression={() => navigate('/sandbox')}
+    />
+  )
+
+  return (
+    <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-bg' : 'flex h-screen overflow-hidden bg-bg'}>
+      <StepHistoryPanel
+        steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={setInspectedStepIdx}
+        useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
+        onCloseStepHistory={() => setShowStepHistory(false)} isSandbox={isSandbox} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)}
+        touchTargets={touchTargets} zoom={zoom} onZoom={setZoom}
+        isTutorialActive={isTutorialActive} onToggleTutorial={handleTutorialToggle} chromeText={chromeText}
+        chromeHeight={chromeHeight}
+      />
 
       {/* ── CENTER PANEL: Expression Workspace ── */}
-      <main className="flex-1 flex flex-col bg-white border border-border m-3 rounded-xl shadow-sm overflow-hidden">
-        {/* Center header */}
-        <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
-          <div>
-            <div className="text-[15px] font-bold text-text-1">
-              {isSandbox ? 'Sandbox' : 'Simplify Expression'}
-            </div>
-            <div className="text-[11px] text-text-3 mt-0.5">
-              {isSandbox
-                ? `${DIFFICULTIES[sandboxDifficulty]?.label || 'Medium'} · random practice · no points awarded`
-                : 'Reduce to its simplest form'}
-            </div>
-          </div>
-          <div className="flex gap-1.5 items-center">
-            {/* Sandbox only: randomize the problem */}
-            {isSandbox && (
-              <>
-                <button
-                  id="randomize-btn"
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md border-[1.5px] border-teal bg-teal-light text-xs font-bold text-sky-700 transition-all hover:bg-teal hover:text-white hover:border-teal cursor-pointer"
-                  onClick={() => handleRandomize()}
-                  title="Swap in a new random, solver-verified problem"
-                >
-                  <span className="text-sm leading-none">🎲</span> Randomize
-                </button>
-                <div className="w-[1px] h-4 bg-border mx-1" />
-              </>
-            )}
+      <main className={`flex-1 flex flex-col bg-white border border-border rounded-xl shadow-sm overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
+        <WorkspaceHeader
+          isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} compactHeader={compactHeader}
+          headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}
+          chromeHeight={chromeHeight} steps={steps} optimalSteps={optimalSteps}
+          points={progress.points} zoom={zoom} onZoom={setZoom}
+          isTutorialActive={isTutorialActive} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
+          guideCost={guideCost} onHint={handleHint} onGuide={handleGuide}
+          onOpenLaws={openLaws} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
+          onToggleStepHistory={toggleStepHistory} onRandomize={handleRandomize} onNewExpression={() => navigate('/sandbox')}
+          onUndo={handleUndo} onReset={handleResetClick}
+          soundEnabled={soundEnabled} onToggleSound={toggleSound}
+        />
 
-            {/* Zoom controls */}
-            <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={() => setZoom(z => Math.max(ZOOM_MIN, parseFloat((z - ZOOM_STEP).toFixed(2))))}
-              disabled={zoom <= ZOOM_MIN}
-              title="Zoom out"
-            >−</button>
-            <button
-              className="h-7 px-2 rounded border border-border bg-bg text-[10px] font-mono text-text-2 hover:bg-border transition-all"
-              onClick={() => setZoom(1)}
-            >100%</button>
-            <button
-              className="w-8 h-8 rounded-md border border-border bg-bg text-[16px] text-text-2 flex items-center justify-center transition-all hover:bg-border hover:text-text-1 disabled:opacity-30 disabled:cursor-not-allowed"
-              onClick={() => setZoom(z => Math.min(ZOOM_MAX, parseFloat((z + ZOOM_STEP).toFixed(2))))}
-              disabled={zoom >= ZOOM_MAX}
-              title="Zoom in"
-            >+</button>
+        <DerivationCanvas
+          expr={expr} sel={sel} steps={steps}
+          status={status} statusMsg={statusMsg} isAnimating={isAnimating}
+          animationData={animationData} inspectedStepIdx={inspectedStepIdx} setInspectedStepIdx={setInspectedStepIdx}
+          activeGuidePaths={activeGuidePaths} onClickLit={onClickLit} onClickNot={onClickNot}
+          onClickTerm={onClickTerm} swapTerms={swapTerms} touchTargets={touchTargets}
+          isPhoneLandscape={isPhoneLandscape} isSandbox={isSandbox} sandboxNonce={sandboxNonce}
+          isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle} zoom={zoom}
+        />
 
-            <div className="w-[1px] h-4 bg-border mx-1" />
-
-            {/* Undo & Reset group */}
-            <div data-tutorial="undo-reset-group" className="flex items-center gap-1.5">
-              <button
-                data-tutorial="undo-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                onClick={handleUndo}
-                disabled={steps.length === 0}
-                title="Undo last step"
-              >
-                <span>↶</span> Undo
-              </button>
-
-              <button
-                data-tutorial="reset-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border-[1.5px] border-border bg-bg text-xs font-semibold text-text-2 transition-all hover:bg-border hover:text-text-1"
-                onClick={handleResetClick}
-                title="Reset problem to start"
-              >
-                <span>↺</span> Reset
-              </button>
-            </div>
-
-            {/* Interactive Tutorial Button (Only in Tutorial Level 0) */}
-            {isTutorialLevel && (
-              <>
-                <div className="w-[1px] h-4 bg-border mx-1" />
-                <button
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-all cursor-pointer ${
-                    isTutorialActive
-                      ? 'bg-teal text-white border-teal shadow-xs'
-                      : 'border-border bg-bg text-text-2 hover:bg-border hover:text-text-1'
-                  }`}
-                  onClick={() => {
-                    setIsTutorialActive(prev => {
-                      const next = !prev
-                      if (next && puzzle) {
-                        loadedAsSavedRef.current = false
-                        setShowSuccess(false)
-                        setShowHint(false)
-                        setScoreResult(null)
-                        resetPuzzle(puzzle)
-                      }
-                      return next
-                    })
-                  }}
-                  title="Toggle Interactive Tutorial Guide"
-                >
-                  Tutorial
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-
-        {/* Expression workspace — grid bg + derivation chain */}
-        <div className={`flex-1 flex flex-col justify-center items-center bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative min-h-[400px] overflow-hidden ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
-          <div className="relative w-full h-full flex flex-col justify-center items-center">
-            {isAnimating && <AnimationOverlay data={animationData} />}
-
-            {/* Status pill — absolutely pinned to top, outside zoom wrapper so it stays fixed size */}
-            {status !== 'select' && (
-              <div className={`absolute top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] whitespace-nowrap z-20 transition-all duration-200
-                ${status === 'error' ? 'bg-red-100 text-red-700 border-red-300' : ''}
-                ${status === 'laws' ? 'bg-teal-light text-sky-700 border-sky-300' : ''}
-                ${status === 'success' ? 'bg-green-light text-green-800 border-green-300' : ''}
-              `}>
-                {status === 'success' && <span className="text-xs font-bold">✓</span>}
-                {status === 'error'   && <span className="text-xs font-bold">✕</span>}
-                {status === 'laws'    && <span className="text-xs font-bold">→</span>}
-                {statusMsg}
-              </div>
-            )}
-
-            {/* Zoom wrapper — scales the entire expression block.
-                In sandbox mode the nonce forces a clean remount on randomize so
-                no stale selection/animation state can leak into a new problem. */}
-            <div data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
-              {/* Derivation chain — clean FIFO top-to-bottom queue */}
-            {expr && (() => {
-              const totalSteps = steps.length
-
-              // Build unified list of derivation lines
-              const lines = []
-              if (totalSteps === 0) {
-                lines.push({
-                  key: 'active-0',
-                  isFirst: true,
-                  isActive: true,
-                  text: null,
-                  stepIdx: null,
-                  law: null,
-                })
-              } else {
-                // Line 0: Starting problem
-                lines.push({
-                  key: 'past-0',
-                  isFirst: true,
-                  isActive: false,
-                  text: steps[0].from,
-                  stepIdx: 0,
-                  law: steps[0].law,
-                })
-                // Intermediate lines
-                for (let i = 1; i < totalSteps; i++) {
-                  lines.push({
-                    key: `past-${i}`,
-                    isFirst: false,
-                    isActive: false,
-                    text: steps[i - 1].to,
-                    stepIdx: i,
-                    law: steps[i].law,
-                  })
-                }
-                // Active bottom line
-                lines.push({
-                  key: `active-${totalSteps}`,
-                  isFirst: false,
-                  isActive: true,
-                  text: null,
-                  stepIdx: null,
-                  law: null,
-                })
-              }
-
-              return (
-                <motion.div
-                  layout
-                  className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start select-none"
-                  onClick={() => setInspectedStepIdx(null)}
-                >
-                  {lines.map((line, idx) => {
-                    const isFromInspected = line.stepIdx !== null && inspectedStepIdx === line.stepIdx
-                    const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
-                    const isLineHighlighted = isFromInspected || isToInspected
-                    return (
-                      <motion.div
-                        layout
-                        key={line.key}
-                        initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
-                        className="relative flex items-center min-h-[44px] gap-2.5"
-                      >
-                        {/* Stepper Left Rail: Dot + Symmetrical Connector Line (Independent Column with z-30) */}
-                        <div className="relative flex items-center justify-center w-6 self-stretch shrink-0 select-none z-30">
-                          {/* Downward connector line centered exactly between node i and node i+1 */}
-                          {line.stepIdx !== null && (
-                            <button
-                              type="button"
-                              data-inspect-trigger="true"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
-                              }}
-                              className="group absolute top-[calc(50%+8px)] left-1/2 -translate-x-1/2 w-6 h-[calc(100%-4px)] flex items-center justify-center cursor-pointer p-0 bg-transparent border-0 z-30"
-                              title={`Click to inspect ${line.law}`}
-                            >
-                              {/* Symmetrical vertical line */}
-                              <div
-                                className={`w-[2px] h-full rounded-full transition-all duration-200 ${
-                                  inspectedStepIdx === line.stepIdx
-                                    ? 'bg-teal w-[3px] shadow-sm'
-                                    : 'bg-slate-300 group-hover:bg-teal group-hover:w-[3px]'
-                                }`}
-                              />
-                            </button>
-                          )}
-
-                          {/* Node Dot */}
-                          {isLineHighlighted ? (
-                            <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200" />
-                          ) : line.isActive ? (
-                            <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-white shadow-xs transition-all">
-                              <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
-                            </div>
-                          ) : (
-                            <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-slate-300 transition-all duration-200" />
-                          )}
-
-                          {/* Floating Law Context Card anchored at the exact midpoint of the transition */}
-                          <AnimatePresence>
-                            {line.stepIdx !== null && inspectedStepIdx === line.stepIdx && (
-                              <div
-                                data-inspect-card="true"
-                                className="absolute right-full top-[calc(100%+6px)] -translate-y-1/2 mr-4 z-40 pointer-events-auto"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <motion.div
-                                  initial={{ opacity: 0, x: -6, scale: 0.96 }}
-                                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                                  exit={{ opacity: 0, x: -6, scale: 0.96 }}
-                                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                                  className="bg-white border border-teal/40 shadow-xl rounded-xl p-3.5 text-left w-[260px] select-none"
-                                >
-                                  <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-teal uppercase tracking-wide border-b border-slate-100 pb-1.5 mb-1.5">
-                                    <span>{line.law}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => setInspectedStepIdx(null)}
-                                      className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 w-5 h-5 rounded flex items-center justify-center font-bold text-xs transition-colors"
-                                      title="Close explanation"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                  <div className="text-[12px] text-slate-600 leading-relaxed font-sans font-normal">
-                                    {getLawExplanation(line.law)}
-                                  </div>
-                                </motion.div>
-                              </div>
-                            )}
-                          </AnimatePresence>
-
-                          {/* Small dismissable modal pointing at the connection line after Stage 2 tutorial */}
-                          <AnimatePresence>
-                            {showStepInspectionTip && idx === 0 && line.stepIdx !== null && inspectedStepIdx === null && (
-                              <div
-                                className="absolute right-full top-[calc(100%+6px)] -translate-y-1/2 mr-4 z-40 pointer-events-auto select-none"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <motion.div
-                                  initial={{ opacity: 0, x: -8, scale: 0.95 }}
-                                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                                  exit={{ opacity: 0, x: -8, scale: 0.95 }}
-                                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                                  className="bg-white border-2 border-teal/70 shadow-2xl rounded-2xl p-3.5 w-[250px] text-left relative flex flex-col gap-2 ring-4 ring-teal/10"
-                                >
-                                  {/* Right Pointer Triangle pointing directly at the connection line */}
-                                  <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-l-[8px] border-l-teal/70" />
-
-                                  <div className="flex items-center gap-1.5 text-xs font-bold text-teal">
-                                    <span>💡</span> Try Inspecting Steps
-                                  </div>
-
-                                  <p className="text-[11.5px] text-text-2 leading-relaxed font-sans font-normal">
-                                    Click any past step in the left history panel OR any connection line between equations to inspect the applied law and reasoning!
-                                  </p>
-
-                                  <div className="flex justify-end pt-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowStepInspectionTip(false)}
-                                      className="px-3.5 py-1 bg-teal hover:bg-teal-dark text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
-                                    >
-                                      Okay
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              </div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Formula Display with Highlight Box wrapping ONLY the equation */}
-                        <div
-                          data-tutorial={line.isActive ? "active-equation" : undefined}
-                          className={`relative flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
-                            isLineHighlighted
-                              ? 'border-sky-300 bg-sky-50/70 shadow-xs ring-1 ring-sky-200/60'
-                              : 'border-transparent'
-                          }`}
-                        >
-                          <span
-                            className={`font-mono text-[22px] whitespace-pre shrink-0 select-none mr-1 transition-colors duration-300 ${
-                              isLineHighlighted ? 'text-teal font-semibold' : 'text-text-2 font-medium'
-                            }`}
-                          >
-                            {line.isFirst ? 'F =' : '\u00a0\u00a0='}
-                          </span>
-                          {line.isActive ? (
-                            <ExpressionDisplay
-                              expr={expr}
-                              sel={sel}
-                              onClickLit={onClickLit}
-                              onClickNot={onClickNot}
-                              onClickTerm={onClickTerm}
-                              onSwapTerms={swapTerms}
-                              activeGuidePaths={activeGuidePaths}
-                              animationPaths={isAnimating ? animationData?.paths : []}
-                              animationLaw={isAnimating ? animationData?.lawId : null}
-                            />
-                          ) : (
-                            <ExprText
-                              text={line.text}
-                              className={isLineHighlighted ? 'text-slate-900 font-semibold' : 'text-text-1'}
-                            />
-                          )}
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-                </motion.div>
-              )
-            })()}
-            </div>{/* end zoom wrapper */}
-
-            {/* Hint bubble */}
-            {showHint && (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber rounded-md text-[13px] text-amber-900 max-w-[480px]">
-                <span className="text-base">💡</span>
-                <span className="line-height-1.5">{currentHint}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-
-        {/* ── APPLICABLE LAWS / STAGE COMPLETE BAR ── */}
-        <div data-tutorial="laws-dock" className="border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0">
-          {isComplete ? (
-            <div className="flex items-center justify-between gap-4 flex-wrap py-1">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                  ✓
-                </div>
-                <div>
-                  <div className="text-[13px] font-bold text-text-1">
-                    {isSandbox ? 'Problem Simplified! 🎉' : 'Stage Completed! 🎉'}
-                  </div>
-                  <div className="text-[11px] text-text-3">
-                    {isSandbox
-                      ? `Solved in ${steps.length} step${steps.length === 1 ? '' : 's'}${optimalSteps > 0 ? ` (optimal: ${optimalSteps})` : ''}. Randomize for a new problem whenever you're ready.`
-                      : 'Click past steps above to review derivations, or move on to the next puzzle.'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                {isSandbox ? (
-                  <button
-                    data-tutorial="randomize-next-btn"
-                    className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px cursor-pointer"
-                    onClick={() => handleRandomize()}
-                  >
-                    🎲 Randomize
-                  </button>
-                ) : (
-                  <>
-                <button
-                  data-tutorial="reopen-score-btn"
-                  className="px-3.5 py-2 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all cursor-pointer"
-                  onClick={handleOpenScoreSummary}
-                >
-                  📊 Score Summary
-                </button>
-                {level && stageNum + 1 < level.puzzles.length ? (
-                  <button
-                    data-tutorial="next-stage-btn"
-                    className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px"
-                    onClick={handleNextStage}
-                  >
-                    Next Stage →
-                  </button>
-                ) : (
-                  <button
-                    data-tutorial="next-stage-btn"
-                    className="px-5 py-2 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px"
-                    onClick={() => navigate(`/level/${levelId}/stages`)}
-                  >
-                    Back to Stages
-                  </button>
-                )}
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 mb-2.5">
-                <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">APPLICABLE LAWS</span>
-                {applicableLaws.length === 0 && (
-                  <span className="text-xs text-text-3 italic">
-                    {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply for this selection. Try different terms.'}
-                  </span>
-                )}
-              </div>
-              {applicableLaws.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {applicableLaws.map((law, i) => (
-                    <button
-                      key={i}
-                      data-tutorial={`law-card-${i}`}
-                      data-law-id={law.id}
-                      className="bg-white border-[1.5px] border-border rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all min-w-[160px] max-w-[240px] hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px]"
-                      onClick={() => onApplyLaw(law)}
-                    >
-                      <div className="text-[13px] font-semibold text-text-1 mb-0.5">{law.name}</div>
-                      <div className="font-mono text-[11px] text-teal mb-1">{law.formula}</div>
-                      <div className="text-[11px] text-text-3 leading-tight">{law.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        {!lawsInRightColumn && lawsPanel}
       </main>
 
-      {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages ── */}
-      <aside className="w-[320px] min-w-[280px] xl:w-[340px] bg-white border-l border-border flex flex-col overflow-hidden">
-        {/* Top: Stage / Level Progress (sandbox shows problem stats instead) */}
-        {isSandbox ? (
-          <div data-tutorial="sandbox-stats" className="border-b border-border p-4 pt-4.5 bg-bg/30">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">SANDBOX</span>
-              <span className="text-xs font-bold text-sky-700">Free Practice</span>
-            </div>
-            <div className="h-2 bg-border rounded-full mb-2.5 overflow-hidden">
-              <div
-                className="h-full bg-teal transition-all duration-300 rounded-full"
-                style={{ width: `${optimalSteps > 0 ? Math.min(100, (steps.length / optimalSteps) * 100) : (isComplete ? 100 : 0)}%` }}
+      <SidePanel
+        showRightPanel={showRightPanel} lawsInRightColumn={lawsInRightColumn} lawsPanel={lawsPanel}
+        isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} level={level}
+        stageNum={stageNum} completedSet={completedSet} points={progress.points}
+        steps={steps} optimalSteps={optimalSteps} isComplete={isComplete}
+        showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={() => setDismissReviewReminder(true)}
+        isTutorialActive={isTutorialActive} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
+        assistanceInHeader={assistanceInHeader} guideCost={guideCost} onHint={handleHint}
+        onGuide={handleGuide} onOpenLaws={openLaws} onRandomize={handleRandomize}
+        chromeText={chromeText} chromeHeight={chromeHeight}
+      />
+
+      <LawsReferenceSheet
+        show={showLawsDrawer} lawsSheet={lawsSheet} laws={laws}
+        nodeRef={lawsPanelNode} band={lawsPanelBand} ready={lawsPanelReady}
+        onClose={() => setShowLawsDrawer(false)}
+      />
+
+      <ScoreModal
+        showSuccess={showSuccess} onClose={() => setShowSuccess(false)} isTutorialActive={isTutorialActive}
+        shortViewport={shortViewport} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
+        steps={steps} optimalSteps={optimalSteps} hintsUsed={hintsUsed}
+        guidesUsed={guidesUsed} scoreResult={scoreResult} earnedXp={earnedXp}
+        puzzle={puzzle} level={level} stageNum={stageNum}
+        onNewExpression={() => navigate('/sandbox')} onRandomize={handleRandomize} onNextStage={handleNextStage}
+        onBackToStages={() => navigate(`/level/${levelId}/stages`)} onReset={executeReset}
+      />
+
+      <ResetConfirmModal
+        show={showResetConfirm} shortViewport={shortViewport} isSandbox={isSandbox}
+        dontAskResetAgain={dontAskResetAgain} onToggleDontAsk={setDontAskResetAgain} onClose={() => setShowResetConfirm(false)}
+        onConfirm={executeReset}
+      />
+
+      {/* ── NON-BLOCKING POPUP LAYER ──
+           Hint bubble + step-inspection tip + law-explanation card. One fixed
+           layer, collision-aware, clamped into the viewport, never over the
+           controls the learner still needs (see useCollisionPlacement). */}
+      <HintBubble
+        show={showHint} hint={currentHint} isPhoneLandscape={isPhoneLandscape}
+        isNarrowViewport={isNarrowViewport} ready={hintPopupReady} nodeRef={hintPopupNode}
+        layerStyle={hintPopupStyle} onClose={() => setShowHint(false)}
+      />
+
+      <div
+        data-testid="inspect-popup-layer"
+        style={{ ...inspectPopupStyle, pointerEvents: 'none' }}
+        aria-hidden={!showStepInspectionTip && inspectedStepIdx === null}
+        onClick={e => e.stopPropagation()}
+      >
+        <div ref={inspectPopupNode}>
+          <AnimatePresence>
+            {/* Law explanation — opened by clicking a past step / its connector. */}
+            {inspectedStepIdx !== null && (
+              <LawExplanationCard
+                lawName={steps[inspectedStepIdx]?.law}
+                ready={inspectPopupReady} onClose={() => setInspectedStepIdx(null)}
               />
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-text-3 font-medium">
-              <span>{DIFFICULTIES[sandboxDifficulty]?.label || 'Medium'} problem</span>
-              <span>
-                <span className="font-bold text-text-2">{steps.length}</span> steps
-                {optimalSteps > 0 && <span> · optimal {optimalSteps}</span>}
-              </span>
-            </div>
-          </div>
-        ) : (
-        <div className="border-b border-border p-4 pt-4.5 bg-bg/30">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">LEVEL PROGRESS</span>
-            <span className="text-xs font-bold text-teal">{completedSet.size} / {level?.puzzles.length ?? '?'} Completed</span>
-          </div>
-          <div className="h-2 bg-border rounded-full mb-2 overflow-hidden">
-            <div
-              className="h-full bg-teal transition-all duration-300 rounded-full"
-              style={{ width: `${level && level.puzzles.length > 0 ? (completedSet.size / level.puzzles.length) * 100 : 0}%` }}
-            />
-          </div>
-          <div className="text-[11px] text-text-3 font-medium">
-            {level?.name || 'Level Stages'}
-          </div>
-        </div>
-        )}
+            )}
 
-        {/* Middle: User Points & Assistance Controls (Replaced Target Box) */}
-        <div data-tutorial="points-and-assistance" className="p-4 border-b border-border flex flex-col gap-3 bg-white">
-          {/* User Points Card — sandbox play is unscored, so it shows a notice instead */}
-          {isSandbox ? (
-            <div data-tutorial="sandbox-notice" className="flex items-start gap-3 px-3.5 py-3 bg-sky-50/70 border border-sky-200 rounded-xl">
-              <span className="text-xl leading-none">🧪</span>
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-sky-900/80">SANDBOX MODE</div>
-                <div className="text-[11.5px] text-sky-900/90 leading-snug mt-0.5">
-                  Free practice: no points, stars, or progress are recorded.
-                </div>
-              </div>
-            </div>
-          ) : (
-          <div data-tutorial="points-card" className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">⭐</span>
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900/80">TOTAL POINTS</div>
-                <div className="text-base font-extrabold text-amber-600 leading-none mt-0.5">
-                  {progress.points ?? 0} <span className="text-[11px] font-semibold text-amber-700">pts</span>
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-teal bg-teal/10 border border-teal/30 px-2 py-0.5 rounded-full">
-                +10 to +15 on clear
-              </span>
-            </div>
-          </div>
-          )}
-
-          {/* Sandbox difficulty picker */}
-          {isSandbox && (
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">DIFFICULTY</span>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(DIFFICULTIES).map(([key, preset]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    data-difficulty={key}
-                    onClick={() => handleRandomize(key)}
-                    className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
-                      sandboxDifficulty === key
-                        ? 'bg-accent text-white border-accent shadow-xs'
-                        : 'bg-bg border-border text-text-2 hover:border-text-1 hover:text-text-1'
-                    }`}
-                    title={`Generate a new ${preset.label.toLowerCase()} problem`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="w-full py-2.5 rounded-xl border-[1.5px] border-teal bg-teal-light text-xs font-bold text-sky-700 hover:bg-teal hover:text-white hover:border-teal transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                onClick={() => handleRandomize()}
-              >
-                <span>🎲</span> New Random Problem
-              </button>
-            </div>
-          )}
-
-          {/* Hint & Guide Action Buttons */}
-          <div data-tutorial="assistance-group" className="flex gap-2">
-            <button
-              data-tutorial="hint-button"
-              className="flex-1 py-2.5 px-2.5 rounded-xl text-xs font-semibold border border-border bg-bg text-text-2 transition-all hover:bg-border/60 hover:text-text-1 flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-bg disabled:hover:text-text-2"
-              onClick={handleHint}
-              disabled={isComplete}
-              title={isComplete ? "Expression is already simplified" : "Get a hint for the next step"}
-            >
-              <span>💡</span> Hint
-            </button>
-            <button
-              data-tutorial="guide-button"
-              className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold border border-amber/50 bg-amber-50/80 text-amber-900 transition-all hover:bg-amber-100 hover:border-amber flex items-center justify-center gap-1 shadow-xs disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:border-amber/50"
-              onClick={handleGuide}
-              disabled={isComplete || isSandbox || (progress.points ?? 0) < 20}
-              title={isSandbox ? "Guide is disabled in the sandbox" : isComplete ? "Expression is already simplified" : "Highlight terms for the next move (Costs 20 pts)"}
-            >
-              <span>🎯</span> Guide <span className="text-[10px] text-amber-700 font-normal">(20p)</span>
-            </button>
-          </div>
-
-          {/* Quick Laws Reference Drawer Trigger */}
-          <button
-            data-tutorial="laws-reference-button"
-            className="w-full py-2.5 px-3 bg-bg border border-border rounded-xl text-xs font-semibold text-text-2 hover:bg-border/60 transition-all flex items-center justify-between shadow-xs"
-            onClick={() => setShowLawsDrawer(true)}
-          >
-            <span>📖 Laws Quick Reference</span>
-            <span className="text-text-3">→</span>
-          </button>
-        </div>
-
-        {/* Level Puzzles List (Quick Stage Select) — hidden in sandbox mode */}
-        <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2">
-          {isSandbox ? (
-            <div className="text-[11.5px] text-text-3 leading-relaxed px-1 pt-1">
-              <div className="font-bold tracking-[1px] uppercase text-text-3 mb-2.5">HOW IT WORKS</div>
-              <p className="mb-2.5">
-                Every problem is generated from an inverse Boolean law, so the engine can always simplify it back down.
-              </p>
-              <p>
-                Press <span className="font-bold text-sky-700">🎲 New Random Problem</span> any time to swap in a
-                fresh expression. Your current derivation will reset.
-              </p>
-            </div>
-          ) : (
-          <>
-          <div className="text-[10px] font-bold tracking-[1px] uppercase text-text-3 mb-1 px-1">STAGES</div>
-          {level?.puzzles.map((p, idx) => {
-            const isCurrent = idx === stageNum
-            const isCompleted = completedSet.has(idx)
-            const isAvailable = idx === 0 || completedSet.has(idx - 1) || isCompleted
-            const isLocked = !isAvailable && !isCompleted
-            const isNextAvailable = isComplete && !showSuccess && idx === stageNum + 1 && (idx === 0 || completedSet.has(idx - 1) || isCompleted)
-
-            return (
-              <button
-                key={p.id || idx}
-                disabled={isLocked || isTutorialActive}
-                onClick={() => {
-                  if (!isLocked && !isTutorialActive && levelId) {
-                    const isTutLevel = Number(levelId) === 0
-                    const tutParam = isTutLevel ? '?tutorial=true' : ''
-                    navigate(`/level/${levelId}/stage/${idx}${tutParam}`)
-                  }
-                }}
-                className={`flex items-center justify-between p-2.5 rounded-lg text-left transition-all border ${
-                  isTutorialActive
-                    ? isCurrent
-                      ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
-                      : 'bg-transparent border-transparent text-text-3 opacity-40 cursor-not-allowed pointer-events-none'
-                    : isNextAvailable
-                    ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-md animate-pulse cursor-pointer'
-                    : isCurrent
-                    ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
-                    : isCompleted
-                    ? 'bg-bg/50 border-transparent text-text-2 hover:bg-bg hover:border-border cursor-pointer'
-                    : isAvailable
-                    ? 'bg-transparent border-border text-text-1 hover:bg-bg cursor-pointer'
-                    : 'bg-transparent border-transparent text-text-3 opacity-40 cursor-not-allowed pointer-events-none'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs w-4">{idx + 1}.</span>
-                  <span className="font-mono text-xs">{p.initial || `Stage ${idx + 1}`}</span>
-                </div>
-                {isNextAvailable && (
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Next →</span>
-                )}
-                {!isNextAvailable && isCompleted && <span className="text-teal text-xs font-bold">✓</span>}
-                {!isNextAvailable && isLocked && <span className="text-xs text-text-3 opacity-60">🔒</span>}
-              </button>
-            )
-          })}
-          </>
-          )}
-        </div>
-      </aside>
-
-      {/* ── LAWS QUICK REFERENCE DRAWER (Smooth 60FPS Framer Motion) ── */}
-      <AnimatePresence>
-        {showLawsDrawer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/25"
-              onClick={() => setShowLawsDrawer(false)}
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 350 }}
-              className="fixed top-0 right-0 h-full w-[360px] bg-white border-l border-border z-50 shadow-2xl flex flex-col will-change-transform"
-            >
-              <div className="p-4 border-b border-border flex items-center justify-between bg-bg">
-                <div className="font-bold text-sm text-text-1 flex items-center gap-2">
-                  <span>📖</span> Boolean Laws Reference
-                </div>
-                <button
-                  type="button"
-                  className="w-7 h-7 rounded-md hover:bg-border text-text-3 hover:text-text-1 flex items-center justify-center font-bold text-sm transition-colors"
-                  onClick={() => setShowLawsDrawer(false)}
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-                {laws && laws.map(law => (
-                  <div key={law.id} className="bg-bg border border-border rounded-lg p-3.5 text-left">
-                    <div className="text-[13px] font-bold text-text-1 mb-1">{law.name}</div>
-                    <div className="flex flex-col gap-1 my-2 bg-white border border-border rounded px-3 py-2 shadow-xs">
-                      {law.formulas && law.formulas.map((f, idx) => (
-                        <div key={idx} className="font-mono text-xs font-semibold text-text-1">{f}</div>
-                      ))}
-                    </div>
-                    <div className="text-[12px] text-text-3 leading-relaxed mt-2">{law.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── SUCCESS OVERLAY ── */}
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div
-            key="success-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={`fixed inset-0 z-50 flex items-center justify-center cursor-pointer ${
-              isTutorialActive ? 'bg-transparent' : 'bg-white/60 backdrop-blur-[8px]'
-            }`}
-            onClick={() => setShowSuccess(false)}
-          >
-            <motion.div
-              data-tutorial="score-modal"
-              initial={{ opacity: 0, scale: 0.96, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: -6 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-2xl px-8 py-8 flex flex-col items-center shadow-2xl max-w-[420px] w-full border border-border cursor-default"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="text-[44px] mb-1 leading-none">🎉</div>
-              <h2 className="text-[26px] font-extrabold text-accent mb-1">
-                {isSandbox ? 'Problem Simplified!' : 'Stage Complete!'}
-              </h2>
-              <p className="text-xs text-text-3 mb-5">
-                {isSandbox
-                  ? 'Sandbox practice is unscored: here is how this attempt went'
-                  : "Here's how you did across the three metrics"}
-              </p>
-
-              {/* Sandbox: compact attempt summary instead of a score breakdown */}
-              {isSandbox && (
-                <div className="w-full flex flex-col gap-3 mb-5">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <span className={`text-3xl font-extrabold ${
-                      optimalSteps === 0 || steps.length <= optimalSteps ? 'text-green-600' : 'text-amber-600'
-                    }`}>{steps.length}</span>
-                    <span className="text-sm text-text-3 font-medium">
-                      step{steps.length === 1 ? '' : 's'}
-                      {optimalSteps > 0 ? ` / optimal ${optimalSteps}` : ''}
-                    </span>
-                  </div>
-                  <div className="bg-bg rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-text-2 font-semibold">Difficulty</span>
-                      <span className="text-text-1 font-bold">{DIFFICULTIES[sandboxDifficulty]?.label || 'Medium'}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-text-2 font-semibold">Hints used</span>
-                      <span className="text-text-1 font-bold">{hintsUsed || 0}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] gap-3">
-                      <span className="text-text-2 font-semibold shrink-0">Laws applied</span>
-                      <span className="text-text-1 font-bold text-right">
-                        {steps.length === 0
-                          ? 'None'
-                          : [...new Set(steps.map(s => s?.law).filter(Boolean))].join(', ')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-sky-900 bg-sky-50 border border-sky-200 p-2.5 rounded-lg leading-relaxed text-center">
-                    🧪 No points, stars, or progress were recorded for this attempt.
-                  </div>
-                </div>
-              )}
-
-              {!isSandbox && scoreResult && (
-                <div className="w-full flex flex-col gap-3 mb-5">
-                  {/* Total score badge */}
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <span className={`text-3xl font-extrabold ${
-                      scoreResult.total >= 80 ? 'text-green-600' :
-                      scoreResult.total >= 50 ? 'text-amber-600' : 'text-red-500'
-                    }`}>{scoreResult.total}</span>
-                    <span className="text-sm text-text-3 font-medium">/ 100</span>
-                  </div>
-
-                  {/* Metric rows */}
-                  {[
-                    { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
-                      sub: `${scoreResult.breakdown?.stepsUsed ?? 0} steps (optimal: ${scoreResult.breakdown?.optimalSteps ?? 1})`,
-                      color: 'bg-sky-500' },
-                    { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
-                      sub: (scoreResult.breakdown?.targetLawsRequired || []).length === 0
-                        ? 'No required laws'
-                        : `Used ${(scoreResult.breakdown?.targetLawsUsed || []).length} / ${(scoreResult.breakdown?.targetLawsRequired || []).length} required`,
-                      color: 'bg-violet-500' },
-                    { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
-                      sub: `${scoreResult.breakdown?.hintsUsed ?? 0} hint${scoreResult.breakdown?.hintsUsed !== 1 ? 's' : ''} used`,
-                      color: 'bg-teal' },
-                  ].map(({ label, score, max, sub, color }) => (
-                    <div key={label} className="bg-bg rounded-xl px-4 py-3">
-                      <div className="flex justify-between items-baseline mb-1.5">
-                        <span className="text-[13px] font-semibold text-text-1">{label}</span>
-                        <span className="text-[13px] font-bold text-text-1">{score}<span className="text-text-3 font-normal text-xs"> / {max}</span></span>
-                      </div>
-                      <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${color} transition-all duration-700`}
-                          style={{ width: `${(score / max) * 100}%` }}
-                        />
-                      </div>
-                      <div className="text-[11px] text-text-3 mt-1">{sub}</div>
-                    </div>
-                  ))}
-
-                  {/* Optimal hint shown if efficiency < max */}
-                  {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
-                    <div className="text-[12px] text-amber-800 bg-amber-50 border border-amber/30 p-3 rounded-lg w-full leading-relaxed">
-                      <strong>💡 Tip:</strong> {puzzle.optimalHint}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!isSandbox && (
-                <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mb-5">
-                  +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2.5 w-full">
-                <div className="flex gap-3 w-full">
-                  {isSandbox ? (
-                    <button
-                      data-tutorial="randomize-modal-btn"
-                      className="flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:bg-text-1 hover:shadow-lg hover:-translate-y-px cursor-pointer"
-                      onClick={() => handleRandomize()}
-                    >
-                      🎲 New Problem
-                    </button>
-                  ) : level && stageNum + 1 < level.puzzles.length ? (
-                    <button
-                      disabled={isTutorialActive}
-                      className={`flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md ${
-                        isTutorialActive
-                          ? 'opacity-40 cursor-not-allowed'
-                          : 'hover:bg-text-1 hover:shadow-lg hover:-translate-y-px cursor-pointer'
-                      }`}
-                      onClick={handleNextStage}
-                    >
-                      Next Stage →
-                    </button>
-                  ) : (
-                    <button
-                      disabled={isTutorialActive}
-                      className={`flex-1 py-3 bg-accent text-white rounded-lg font-semibold text-sm transition-all shadow-md ${
-                        isTutorialActive
-                          ? 'opacity-40 cursor-not-allowed'
-                          : 'hover:bg-text-1 hover:shadow-lg hover:-translate-y-px cursor-pointer'
-                      }`}
-                      onClick={() => navigate(`/level/${levelId}/stages`)}
-                    >
-                      Back to Stages
-                    </button>
-                  )}
-                  <button
-                    disabled={isTutorialActive}
-                    className={`px-5 py-3 border-[1.5px] border-border text-text-2 font-semibold text-sm rounded-lg bg-transparent transition-all ${
-                      isTutorialActive
-                        ? 'opacity-40 cursor-not-allowed'
-                        : 'hover:bg-bg hover:border-border-dark cursor-pointer'
-                    }`}
-                    onClick={executeReset}
-                  >
-                    {isSandbox ? 'Replay' : 'Try Again'}
-                  </button>
-                </div>
-
-                {/* Review Completed Derivation Button */}
-                <button
-                  data-tutorial="review-derivation-btn"
-                  className="w-full py-2.5 border border-slate-200 text-text-2 font-semibold text-xs rounded-lg bg-slate-50 transition-all hover:bg-slate-100 hover:text-text-1 flex items-center justify-center gap-1.5 cursor-pointer"
-                  onClick={() => setShowSuccess(false)}
-                >
-                  <span>🔍</span> Review Completed Derivation
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── RESET CONFIRMATION MODAL ── */}
-      {showResetConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer"
-          onClick={() => setShowResetConfirm(false)}
-        >
-          <div
-            className="bg-white rounded-2xl p-6 flex flex-col shadow-2xl max-w-[380px] w-full border border-border cursor-default"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold shrink-0">
-                ↺
-              </div>
-              <div>
-                <h3 className="text-[16px] font-bold text-text-1">
-                  {isSandbox ? 'Reset this problem?' : 'Reset this stage?'}
-                </h3>
-                <p className="text-xs text-text-3 mt-0.5">
-                  {isSandbox
-                    ? 'This clears your current derivation so you can solve the same random problem again.'
-                    : 'Are you sure you want to reset the stage? This will clear your current derivation so you can solve it from scratch.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Don't ask me again checkbox */}
-            <label className="flex items-center gap-2.5 mt-2 mb-5 px-1 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={dontAskResetAgain}
-                onChange={e => setDontAskResetAgain(e.target.checked)}
-                className="w-4 h-4 rounded border-border text-teal focus:ring-teal cursor-pointer accent-teal"
+            {/* First-run hint that a past step can be inspected. */}
+            {showStepInspectionTip && inspectedStepIdx === null && (
+              <StepInspectionTip
+                ready={inspectPopupReady}
+                onDismiss={() => setShowStepInspectionTip(false)}
               />
-              <span className="text-xs text-text-2 font-medium">Don't ask me again for this session</span>
-            </label>
-
-            {/* Action buttons: Go back & Reset */}
-            <div className="flex items-center gap-3 w-full mt-1">
-              <button
-                type="button"
-                className="flex-1 py-2.5 px-4 text-xs font-bold text-text-2 bg-bg hover:bg-border/70 hover:text-text-1 border border-border rounded-xl transition-all shadow-xs"
-                onClick={() => setShowResetConfirm(false)}
-              >
-                Go back
-              </button>
-              <button
-                type="button"
-                className="flex-1 py-2.5 px-4 text-xs font-bold text-white bg-red hover:opacity-90 rounded-xl transition-all shadow-sm active:scale-[0.98]"
-                style={{ backgroundColor: '#ef4444', color: '#ffffff' }}
-                onClick={executeReset}
-              >
-                Reset Stage
-              </button>
-            </div>
-          </div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+      </div>
 
       {/* ── INTERACTIVE TUTORIAL OVERLAY ── */}
       {isTutorialActive && (
         <InteractiveTutorial
-          stageIdx={stageNum}
-          sel={sel}
-          steps={steps}
-          expr={expr}
-          applicableLaws={applicableLaws}
-          isComplete={isComplete}
-          isPreLawHighlight={isPreLawHighlight}
-          isAnimating={isAnimating}
-          showSuccess={showSuccess}
+          stageIdx={stageNum} sel={sel} steps={steps}
+          expr={expr} applicableLaws={applicableLaws} isComplete={isComplete}
+          isPreLawHighlight={isPreLawHighlight} isAnimating={isAnimating} showSuccess={showSuccess}
           onResetStage={executeReset}
           onNextStage={() => {
+            setShowStepHistory(false)
             if (stageNum + 1 < (level?.puzzles?.length || 4)) {
               navigate(`/level/0/stage/${stageNum + 1}?tutorial=true`)
             } else {
@@ -1509,6 +520,7 @@ export default function ProblemPage() {
           }}
           onFinish={() => {
             setIsTutorialActive(false)
+            setShowStepHistory(false)
             if (stageNum === 1) {
               setShowStepInspectionTip(true)
             }
@@ -1518,8 +530,10 @@ export default function ProblemPage() {
           }}
           onSkip={() => {
             setIsTutorialActive(false)
+            setShowStepHistory(false)
             navigate('/level/0/stages')
           }}
+          onOpenStepHistory={openStepHistory}
         />
       )}
     </div>

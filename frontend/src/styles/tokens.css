@@ -1,0 +1,30 @@
+/**
+ * Design tokens + base element styles.
+ *
+ * tailwind.config.js is the source of truth for anything reached through a class
+ * name. The custom properties here exist for the few inline styles that cannot
+ * use a class (the rotate banner/overlay chrome) and for the base element rules
+ * below. Every var listed has at least one consumer — check with
+ * `grep -rn "var(--" src` before adding another.
+ *
+ * Deliberately NOT wrapped in `@layer base`: this file is processed on its own
+ * (Tailwind rejects `@layer base` without a matching `@tailwind base` directive),
+ * and main.jsx imports it right after the Tailwind entry, so these rules land
+ * after preflight exactly as they did when everything lived in one file.
+ */
+:root {
+  --color-bg:          #f0f2f7;
+  --color-text-1:      #1a2035;
+  --color-text-2:      #4b5468;
+  --color-accent:      #1a2035;
+  --color-amber:       #f59e0b;
+  --color-amber-light: #fef3c7;
+
+  --font-sans:  'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; font-family: var(--font-sans); }
+body { background: var(--color-bg); color: var(--color-text-1); -webkit-font-smoothing: antialiased; }
+button { font-family: var(--font-sans); cursor: pointer; border: none; background: none; }
+a { text-decoration: none; }

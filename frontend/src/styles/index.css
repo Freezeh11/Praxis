@@ -1,0 +1,19 @@
+/**
+ * Tailwind entry — imported FIRST by main.jsx.
+ *
+ * The order of the style imports in main.jsx is load-bearing:
+ *   index.css        Tailwind layers (preflight/base/components/utilities)
+ *   tokens.css       the custom properties JavaScript reads + base element styles
+ *   utilities.css    the shared `praxis-*` contract
+ *   orientation.css  rotate gate
+ *   animations.css   law-animation keyframes
+ *
+ * The shared utilities must come after Tailwind's utilities so a `praxis-*`
+ * class wins a same-specificity conflict, exactly as it did when this was one
+ * 444-line file. Do not fold the parts into @import statements in this file:
+ * an `@import` placed after the @tailwind directives is dropped by the build,
+ * which silently deleted every utility and keyframe the first time it was tried.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,23 +1,28 @@
-import os
+"""Thin Supabase REST/Auth shim over httpx (no pyiceberg/build toolchain needed).
+
+Imported by ``repositories/progress_repository.py`` and ``core/security.py``.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
 import httpx
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+from config.settings import settings
 
-if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-    raise RuntimeError(
-        "Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables. "
-        "Check backend/.env file."
-    )
 
 class SupabaseRESTClient:
+    """A lightweight wrapper around the Supabase REST API using httpx.
+
+    This avoids the official 'supabase' Python package, which can pull complex
+    compilation dependencies (pyiceberg / C++ build tools).
     """
-    A lightweight wrapper around the Supabase REST API using httpx.
-    This avoids needing the official 'supabase' Python package, which
-    can have complex compilation dependencies (like pyiceberg/C++ Build Tools).
-    """
-    def __init__(self, url: str, key: str):
-        self.base_url = f"{url.rstrip('/')}/rest/v1"
+
+    def __init__(self, url: str, key: str) -> None:
+        self.url = url.rstrip("/")
+        self.base_url = f"{self.url}/rest/v1"
+        self.key = key
         self.headers = {
             "apikey": key,
             "Authorization": f"Bearer {key}",
@@ -26,38 +31,40 @@ class SupabaseRESTClient:
         }
 
     class QueryBuilder:
-        def __init__(self, client, table: str):
+        """Chainable PostgREST query: ``select``/``insert``/``upsert`` + filters."""
+
+        def __init__(self, client: SupabaseRESTClient, table: str) -> None:
             self.client = client
             self.table = table
-            self.filters = {}
+            self.filters: dict[str, Any] = {}
             self.select_fields = "*"
             self.action = "select"
-            self.data = None
-        
-        def select(self, fields: str = "*"):
+            self.data: dict[str, Any] | None = None
+
+        def select(self, fields: str = "*") -> QueryBuilder:
             self.action = "select"
             self.select_fields = fields
             return self
-            
-        def eq(self, column: str, value: any):
+
+        def eq(self, column: str, value: Any) -> QueryBuilder:
             self.filters[column] = f"eq.{value}"
             return self
-            
-        def insert(self, data: dict):
+
+        def insert(self, data: dict[str, Any]) -> QueryBuilder:
             self.action = "insert"
             self.data = data
             return self
-            
-        def upsert(self, data: dict):
+
+        def upsert(self, data: dict[str, Any]) -> QueryBuilder:
             self.action = "upsert"
             self.data = data
             return self
 
-        def on_conflict(self, columns: str):
+        def on_conflict(self, columns: str) -> QueryBuilder:
             self.filters["on_conflict"] = columns
             return self
 
-        def execute(self):
+        def execute(self) -> Any:
             url = f"{self.client.base_url}/{self.table}"
             with httpx.Client() as c:
                 if self.action == "select":
@@ -73,14 +80,15 @@ class SupabaseRESTClient:
                 response.raise_for_status()
                 return type('Response', (), {'data': response.json() if response.content else []})()
 
-    def table(self, table_name: str):
+    def table(self, table_name: str) -> QueryBuilder:
+        """Start a query against one table."""
         return self.QueryBuilder(self, table_name)
 
-    async def get_user(self, jwt_token: str) -> dict | None:
+    async def get_user(self, jwt_token: str) -> dict[str, Any] | None:
         """Fetch the authenticated user from Supabase using their JWT."""
-        url = f"{SUPABASE_URL.rstrip('/')}/auth/v1/user"
+        url = f"{self.url}/auth/v1/user"
         headers = {
-            "apikey": SUPABASE_SERVICE_KEY,
+            "apikey": self.key,
             "Authorization": f"Bearer {jwt_token}"
         }
         async with httpx.AsyncClient() as c:
@@ -89,5 +97,6 @@ class SupabaseRESTClient:
                 return None
             return response.json()
 
+
 # Expose a singleton instance that mimics the official client interface
-supabase = SupabaseRESTClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+supabase = SupabaseRESTClient(settings.supabase_url, settings.supabase_service_key)

@@ -1,0 +1,48 @@
+/**
+ * Orientation gate styles — rotate overlay + rotate banner.
+ * Owned by components/OrientationGate.jsx, RotateOverlay.jsx, RotateBanner.jsx.
+ */
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE / ORIENTATION GATE  — appended block.
+   Owned by the orientation gate (rotate overlay + rotate banner).
+   Everything above this line is untouched; this block only ADDS
+   keyframes, one scoped body state, and one reusable utility.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* RotateOverlay: the device glyph turns 90° to demonstrate the gesture. */
+@keyframes praxisRotateDevice {
+  0%   { transform: rotate(0deg); }
+  18%  { transform: rotate(0deg); }
+  46%  { transform: rotate(90deg); }
+  62%  { transform: rotate(90deg); }
+  90%  { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.praxis-rotate-device {
+  transform-origin: 50% 50%;
+  animation: praxisRotateDevice 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Applied to <body> while the rotate overlay is mounted: hard scroll lock. */
+body.praxis-overlay-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+/* Minimum 44x44 tap target (WCAG 2.5.5) for icon-only controls. */
+.praxis-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .praxis-rotate-device {
+    animation: none;
+  }
+}

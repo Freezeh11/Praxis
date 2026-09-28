@@ -18,4 +18,10 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Build/tooling config runs in Node, not the browser: vite.config.js reads
+    // process.env for the API target, so it needs the node globals.
+    files: ['*.config.js', 'vite.config.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])
