@@ -54,7 +54,7 @@ export {
 } from './laws/index.js'
 
 /* Search */
-export { getLegalTransitions, findOptimalPath, findSimplestForm } from './solver.js'
+export { getLegalTransitions, findOptimalPath, findOptimalPathWithLaws, findSimplestForm } from './solver.js'
 
 /* Scoring (client mirror of the backend scoring service) */
 export {

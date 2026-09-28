@@ -2,6 +2,7 @@ import { SOLVER_BUDGET } from '../config/gameRules.js'
 import { cloneN } from './node.js'
 import { getSumLits } from './tree.js'
 import { nodeText, canonText } from './render.js'
+import { lawIdOf } from './scoring.js'
 import {
   analyzeNot,
   analyzeProductConst,
@@ -228,6 +229,111 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
           canon: trans.nextCanon,
           depth: current.depth + 1,
           path: newPath,
+        })
+      }
+    }
+  }
+
+  return {
+    optimalSteps: 0,
+    path: [],
+    found: false,
+  }
+}
+
+/**
+ * Finds the shortest derivation that reaches the goal AND applies every law in
+ * `requiredLawIds`.
+ *
+ * `findOptimalPath` answers "what is the shortest route to the answer?". For a
+ * graded puzzle that is the wrong question. A puzzle's `targetLaws` state which
+ * laws the learner is meant to practise, and using them often costs an extra
+ * step compared with a clever shortcut. Scoring against the shortcut punishes a
+ * learner for following the puzzle's own teaching, and can make a perfect total
+ * unreachable. This variant scores the puzzle's *objective* instead: the fewest
+ * steps in which the goal is reached while every required law has been used.
+ *
+ * Consequences, both intended:
+ *   - following the taught route earns full marks;
+ *   - finding a shorter route that skips a required law still earns full
+ *     efficiency, but gives up the target-law credit that law was worth.
+ *
+ * The search state is (canonical form, laws used so far), so it is larger than
+ * the plain BFS and is bounded by the same budget options. Returns `found:false`
+ * when no route satisfies the objective, so callers can fall back.
+ *
+ * @param {Object} startExpr - Starting AST tree
+ * @param {string} targetCanon - Canonical text of the goal
+ * @param {string[]} requiredLawIds - Law ids that must all appear on the path
+ * @param {Object} [options] - maxDepth / maxStates / allowExpand
+ * @returns {{ optimalSteps: number, path: Array, found: boolean }}
+ */
+export function findOptimalPathWithLaws(startExpr, targetCanon, requiredLawIds, options = {}) {
+  const required = Array.from(new Set(requiredLawIds || []))
+  // No objective beyond reaching the goal: the plain shortest path is correct.
+  if (!required.length) return findOptimalPath(startExpr, targetCanon, options)
+  if (!startExpr) return { optimalSteps: 0, path: [], found: false }
+
+  const maxDepth = options.maxDepth ?? SOLVER_BUDGET.graded.maxDepth
+  const maxStates = options.maxStates ?? SOLVER_BUDGET.graded.maxStates
+
+  const stateKey = (canon, used) => canon + '|' + used.join(',')
+
+  const initialCanon = canonText(startExpr)
+  const queue = [{
+    tree: cloneN(startExpr),
+    canon: initialCanon,
+    depth: 0,
+    path: [],
+    used: [],
+  }]
+  const visited = new Set([stateKey(initialCanon, [])])
+  let statesExplored = 0
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+
+    if (current.depth >= maxDepth || statesExplored >= maxStates) {
+      continue
+    }
+
+    const transitions = getLegalTransitions(current.tree, options)
+    statesExplored += transitions.length
+
+    for (const trans of transitions) {
+      const stepInfo = {
+        law: trans.law,
+        from: trans.from,
+        to: trans.to,
+      }
+      const newPath = [...current.path, stepInfo]
+
+      // Same id the scoring layer will credit for this step, so the optimum and
+      // the target-law band can never disagree about what a route used.
+      const lawId = lawIdOf(trans.law)
+      const used = current.used.includes(lawId)
+        ? current.used
+        : [...current.used, lawId].sort()
+
+      if (trans.nextCanon === targetCanon && required.every((id) => used.includes(id))) {
+        return {
+          optimalSteps: newPath.length,
+          path: newPath,
+          found: true,
+        }
+      }
+
+      // A goal state that has not yet collected every required law is still
+      // worth expanding: the route may leave the goal and come back.
+      const k = stateKey(trans.nextCanon, used)
+      if (!visited.has(k)) {
+        visited.add(k)
+        queue.push({
+          tree: trans.nextTree,
+          canon: trans.nextCanon,
+          depth: current.depth + 1,
+          path: newPath,
+          used,
         })
       }
     }
