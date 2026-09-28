@@ -285,7 +285,7 @@ The learner must first factor the common literal out (Distributive), producing `
 then does the complement pair become two bare literals inside one clause.
 
 **Worked example (SOP) — Tutorial stage 0.1**, `content/levels.json` puzzle
-`x'y + z + xy → y + z`, authored `optimalSteps: 2`, `targetLaws: ["distributive","complement","identity"]`.
+`x'y + z + xy → y + z`, authored `optimalSteps: 3`, `targetLaws: ["distributive","complement","identity"]`.
 Real engine output, graded move set:
 
 ```text
@@ -359,7 +359,7 @@ Both expressions denote the same function. The reordered one is still solvable �
 absorption path catches it — but the *law the learner expected* is not offered.
 
 **Worked example (SOP) — Tutorial stage 0.2**, `(x + y)' + x'y' → x'y'`, `targetLaws:
-["demorgan-or","idempotent"]`, authored `optimalSteps: 1`. Real output:
+["demorgan-or","idempotent"]`, authored `optimalSteps: 2`. Real output:
 
 ```text
 De Morgan's (OR→AND)   (x + y)' + x'y'   ->  x'y' + x'y'
@@ -397,27 +397,29 @@ Idempotent Law (Product)  (x' + y)(x + y)(x + y)  ->  (x' + y)(x + y)
 | mode | `term` |
 | form | `sum` and `product` |
 | card | `content/laws.json:20-28`: "A shorter term or literal absorbs a longer clause containing it." |
-| source | SOP `sumLaws.js:206-256`; POS `productLaws.js:149-187`; decision `helpers.js:73-99`; hints `scanHints.js:53-54,98-99` |
+| source | SOP `sumLaws.js:206-256`; POS `productLaws.js:149-187`; decision `helpers.js:73-114`; hints `scanHints.js:53-54,98-99` |
 
 **Plain language.** If one side of an OR is already true whenever the other is, the more specific
 side adds nothing: `A + AB = A`. The dual: if one factor is already true, adding a weaker clause in
 parallel changes nothing: `A(A + B) = A`.
 
-**This law is decided semantically, not syntactically — on purpose.** `absorbsInSum` is
-(`frontend/src/engine/laws/helpers.js:73-78`):
+**The shape rule: absorption never collapses a clause to a constant.** `absorbsInSum` is
+(`frontend/src/engine/laws/helpers.js:73-84`):
 
 ```js
 export function absorbsInSum(survivor, absorbed) {
   if (!survivor || !absorbed) return false
   if (survivor.type === 'lit' && termContainsLit(absorbed, survivor.v, survivor.n)) return true
   if (isLitProduct(survivor) && litsContained(survivor, absorbed)) return true
+  // Structure-preserving normalization (proposal Module 4). …
+  if (isEquivalent(cloneN(absorbed), con(0))) return false
   return isEquivalent(prod(cloneN(survivor), cloneN(absorbed)), absorbed)
 }
 ```
 
-The first two tests are **fast accepts only**; the decision is the truth-table comparison
-`isEquivalent` (`equivalence.js:45-57`). `helpers.js:26-34` explains why the syntactic shortcut is
-not a decision procedure:
+The first two tests are **fast accepts only**; the third line is the Module 4 guard, and the last is
+the semantic decision — the truth-table comparison `isEquivalent` (`equivalence.js:45-57`).
+`helpers.js:26-34` explains why the syntactic shortcut is not a decision procedure:
 
 > It only looks at literal factors, so it reads `B'(A'C' + AC)` as the bare literal `B'` and
 > `B + B + B'B'` as `B + B`. Using it as the absorption test produced invalid steps (the survivor
@@ -425,6 +427,32 @@ not a decision procedure:
 
 That bug is now guarded by a property test that re-checks every offered law with `isEquivalent`
 (`frontend/src/engine/__tests__/law-soundness.property.test.js:1-13, 218-230`).
+
+**The constant guard (proposal Module 4).** `y + x·x'` *is* equivalent to `y`, and the truth table
+agrees — but only because `x·x'` collapses to the constant `0`, and the proposal requires every
+constant factor to render as its own clickable intermediate state. The semantic fallback therefore
+**refuses to swallow a clause that is equivalent to a constant**:
+
+| Survivor | Clause that would be absorbed | Decision |
+|---|---|---|
+| `y` | `x·x'` (≡ `0`) | **refused** — `helpers.js:82`; the learner must take `Complement Law (Product)` to `y + 0`, then `Identity Law` to `y` |
+| `y` | `x + x'` (≡ `1`) | **refused** — the dual guard at `helpers.js:112` in `absorbsInProduct`; `y(x + x')` → `y · 1` → `y` |
+| `x` | `x + y` (textbook `A(A + B) = A`) | offered in one step — the survivor literal really is in the clause, so no constant is involved |
+| `AB` | `ABC` (textbook `AB + ABC = AB`) | offered in one step — no constant is involved |
+
+Only the semantic fallback is guarded; the syntactic fast accepts are deliberately untouched, so
+textbook absorption still works normally. Verified:
+
+```text
+transitions(y(x + x')) = 1        Complement Law            y(x + x')  ->  y1
+transitions(y1)        = 1        Identity Law              y1         ->  y
+transitions(y(y + x')) = 1        Absorption Law (Product)  y(y + x')  ->  y
+transitions(x + y·y')  = 1        Complement Law (Product)  x + yy'    ->  x + 0
+```
+
+`y + x·x'` behaves the same way as `x + y·y'`: its only move is
+`Complement Law (Product) → y + 0`, then `Identity Law → y`. Textbook absorption is untouched:
+`x + xy → x` and `x(x + y) → x` are still one step each.
 
 **Worked example (SOP) — Tutorial stage 0.0**, `x + xy → x`, authored `optimalSteps: 1`,
 `targetLaws: ["absorption"]`. Real output:
@@ -439,20 +467,30 @@ Absorption Law   x + xy  ->  x
 Absorption Law (Product)   x(x + y)  ->  x
 ```
 
-**The semantic decision in action.** Because the decision is a truth table, absorption also fires
-where the syntactic shape is not the textbook one. In the walkthrough expression `A(B + A')`,
-expanding gives `AB + AA'`; `AA'` is equivalent to `0`, so `AB · AA' ≡ AA'` holds and the engine
-offers absorption — collapsing the expression in one step to `AB`:
+**The semantic decision in action.** Because the decision is a truth table, absorption still fires
+where the syntactic shape is not the textbook one — as long as no constant is involved. The clearest
+case is a clause that *contains* another clause:
 
 ```text
-AB + AA'  moves: absorption :: AB + AA' -> AB | distributive :: AB + AA' -> A(B + A') | complement :: AB + AA' -> AB + 0
+(x + y)(x + y + z)  moves: Absorption Law (Product) :: (x + y)(x + y + z) -> x + y | Distributive (POS) :: (x + y)(x + y + z) -> x + y(y + z) | Distributive (POS) :: (x + y)(x + y + z) -> y + x(x + z)
+```
+
+`(x + y)` is neither a literal nor a conjunction of literals, so the fast paths decline; the truth
+table decides `(x + y)(x + y + z) ≡ (x + y)`, so absorption is offered and the clause collapses in one
+step. The constant case goes the other way. In the walkthrough expression `A(B + A')`, expanding gives
+`AB + AA'`, and `AA' ≡ 0` used to be enough for the semantic decision to offer absorption from there.
+**It no longer is** — that is the Module 4 guard — and the state's moves are now:
+
+```text
+AB + AA'  moves: Distributive (Factor) :: AB + AA' -> A(B + A') | Complement Law (Product) :: AB + AA' -> AB + 0
 ```
 
 **Common learner errors**
 
-1. **Reading `A + AB` backwards.** The engine offers *both* directions when both hold: at `AB + AA'`
-   the panel lists `absorption` (→ `AB`), `distributive` (→ back to `A(B + A')`) and `complement`
-   (→ `AB + 0`). Reverting a step is legal; it just costs a step.
+1. **Reading `A + AB` backwards.** The engine offers *both* directions when both hold. At the
+   walkthrough state `AB + AA'` it no longer offers absorption at all: the panel lists `distributive`
+   (→ back to `A(B + A')`) and `complement` (→ `AB + 0`), and `AB` is reached by taking complement and
+   then identity. Reverting a step is legal; it just costs a step.
 2. **Choosing the wrong survivor.** The engine removes the *second* selected node in the SOP builder
    (`sumLaws.js:224-229` removes `cs.ti2`) and emits a separate law for the reversed order
    (`sumLaws.js:232-256`). If the learner selects the long term first, the panel offers the
@@ -462,8 +500,8 @@ AB + AA'  moves: absorption :: AB + AA' -> AB | distributive :: AB + AA' -> A(B 
    factor, but `getLits` only sees *literal* factors (`helpers.js:14-19`), so selecting the two terms
    offers nothing. Verified: `[]`.
 4. **Trusting a shape rule over the truth table.** Any explanation of absorption as "drop the longer
-   term" is wrong here; `helpers.js:56-72` documents the two sound fast paths and the semantic
-   fallback.
+   term" is wrong here; `helpers.js:56-84` documents the two sound fast paths, the semantic fallback
+   and the Module 4 constant guard.
 
 ---
 
@@ -485,7 +523,7 @@ multiplying by `1` changes nothing.
 **Two ways to trigger it.** This is the only law with a *single-node* path as well as a pairwise one:
 
 - click the `0` (or `1`) alone → `analyzeSumConst` / `analyzeProductConst`
-  (`frontend/src/engine/laws/constLaws.js:19,61`), routed by `useGameState.js:232-246`;
+  (`frontend/src/engine/laws/constLaws.js:19,61`), routed by `useGameState.js:274-288`;
 - click the term *and* the constant → the pairwise builder (`sumLaws.js:124-159`).
 
 **Worked example (product form) — Tutorial stage 0.1**, continuing the chain above. Real output:
@@ -526,7 +564,7 @@ desc: "y · 1 = y — remove 1"     animPaths: ["R.0.1"]      activeText: "y"   
 anything AND `0` is `0`.
 
 **Worked example (SOP) — Level 1 stage 2**, `x'y + xy + xy → y`, `targetLaws:
-["idempotent","distributive","complement"]`, authored `optimalSteps: 3`. Real move found in that
+["idempotent","distributive","complement"]`, authored `optimalSteps: 4`. Real move found in that
 puzzle's state graph:
 
 ```text
@@ -545,7 +583,7 @@ desc: "A · 0 = 0 — anything times 0 is 0"       dominantConst: "0"
 
 1. **Selecting the whole expression instead of the constant.** Both the single-constant route and
    the pairwise route exist; clicking the constant alone is the shortest gesture
-   (`useGameState.js:232-246`).
+   (`useGameState.js:274-288`).
 2. **Expecting `A + 1` to reach the goal.** It collapses to `1` *locally*; if the `1` sits inside a
    product factor, the product does not vanish — `y(1 + x)` becomes `y`, not `1`
    (`productLaws.js:200-211` removes only the sibling factor).
@@ -671,7 +709,7 @@ and the law object itself:
    `(x + y)''` (`render.js:20-23`); the tokenizer accepts that back.
 3. **Selecting inside the group instead.** Clicking a literal *inside* the negated group is a
    different selection and opens no law; the `not` container must be clicked
-   (`useGameState.js:272-306`).
+   (`useGameState.js:314-349`).
 
 ---
 
@@ -776,7 +814,7 @@ proposal), and `defineLaw('Associative Law', …)` throws.
    ```
 
 2. **At play time.** The `⠿` handle drags terms/factors to reorder them
-   (`useGameState.js:522-558`). That is a *structural edit*, not a step: it records no derivation
+   (`useGameState.js:566-602`). That is a *structural edit*, not a step: it records no derivation
    entry, costs no scoring step, and is deliberately not a law.
 
 **What a tutor must know.** A learner cannot earn target-law credit for `associative`, because no
@@ -827,7 +865,7 @@ not `A(B + C)`.
 **Who can see it.** Only the sandbox. `allowExpand: true` is set in exactly one place — the puzzle
 builder (`frontend/src/engine/sandbox/input.js:51,153,166,197`) — and is consumed by
 `usePuzzleSession.js:84` (`const allowExpand = Boolean(puzzle && puzzle.allowExpand)`) and
-`useGameState.js:14`. Graded levels never carry the flag.
+`useGameState.js:15`. Graded levels never carry the flag.
 
 Verified — same expression, same selection, different gate:
 
@@ -874,21 +912,45 @@ graded solver (`getLegalTransitions` with no options, exactly what `useGameState
 | Check | Result |
 |---|---|
 | puzzles where the solver finds the authored goal | **40 / 40** |
-| puzzles whose solver step count differs from the authored `optimalSteps` | **0** |
+| puzzles where the scoring route misses a declared target law | **0 / 40** |
+| puzzles whose scoring optimum agrees with the authored `optimalSteps` | **40 / 40** |
+| puzzles whose authored `optimalSteps` equals the *plain* shortest path | **29 / 40** |
 
-Which law names appear on the *shortest* path:
+The **scoring** route is not always the raw shortest path. Graded puzzles are scored against the
+shortest derivation that reaches the goal *and* applies every `targetLaws` id
+(`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`); the plain shortest path is
+`findOptimalPath` (`:176`). The two differ on **11 of the 40** puzzles, and the authored figures were
+re-baselined to the objective-aware value (`frontend/src/state/useGameState.js:87-113`). They agree on
+the other 29 because the Module 4 constant guard removed the semantic-absorption shortcut that used to
+make 25 of them differ ([§5.3](#53-absorption--absorption-law)).
+
+Which law names appear on the **scoring** route:
 
 | display name | count |
 |---|---|
-| `Absorption Law` | 23 |
-| `Distributive (Factor)` | 24 |
-| `Absorption Law (Product)` | 23 |
-| `Distributive (POS)` | 22 |
-| `De Morgan's (AND→OR)` | 5 |
-| `De Morgan's (OR→AND)` | 5 |
-| `Complement Law` | 2 |
-| `Complement Law (Product)` | 2 |
-| `Idempotent Law`, `Idempotent Law (Product)`, `Identity Law`, `Annulment Law`, `Double Negation` | **0 on any shortest path** |
+| `Distributive (Factor)` | 29 |
+| `Distributive (POS)` | 27 |
+| `Identity Law` | 26 |
+| `Complement Law` | 18 |
+| `Complement Law (Product)` | 16 |
+| `Absorption Law` | 9 |
+| `De Morgan's (OR→AND)` | 9 |
+| `De Morgan's (AND→OR)` | 8 |
+| `Absorption Law (Product)` | 6 |
+| `Idempotent Law` | 5 |
+| `Idempotent Law (Product)` | 4 |
+| `Annulment Law`, `Annulment Law (Product)` | 2 each |
+| `Double Negation` | **0 — no authored puzzle needs it** |
+
+On the *plain shortest* path the mix is similar but absorption-heavy: `Absorption Law` (14),
+`Distributive (Factor)` (29), `Absorption Law (Product)` (12), `Distributive (POS)` (27),
+`Complement Law` (18), `Complement Law (Product)` (16), `Identity Law` (24), `De Morgan's (AND→OR)`
+and `(OR→AND)` (5 each). `idempotent`, `annulment` and `double-neg` are never on any shortest path —
+`idempotent` and `annulment` are laws the curriculum exists to teach, which is part of why the
+efficiency bar had to stop being the shortest path. Before the Module 4 guard the shortest paths were
+absorption-dominated (`Absorption Law` 23, `Absorption Law (Product)` 23, `identity` 0, `complement` 4),
+because one semantic step could swallow an entire complement pair; the guard pushed `complement` and
+`identity` back onto the shortest paths.
 
 Reproduce it:
 
@@ -897,25 +959,50 @@ cd frontend && node --input-type=module -e "
 import fs from 'node:fs'
 import { parseExpr } from './src/engine/parser.js'
 import { canonText } from './src/engine/render.js'
-import { findOptimalPath } from './src/engine/solver.js'
+import { findOptimalPath, findOptimalPathWithLaws } from './src/engine/solver.js'
 const levels = JSON.parse(fs.readFileSync('../content/levels.json','utf8'))
-const usage = {}
+const scoring = {}, shortest = {}
+let sameAsAuthored = 0, sameAsPlain = 0, puzzles = 0
 for (const lv of Object.values(levels)) for (const p of lv.puzzles) {
-  const r = findOptimalPath(parseExpr(p.expr), canonText(parseExpr(p.goal)))
-  for (const s of r.path) usage[s.law] = (usage[s.law] || 0) + 1
+  puzzles++
+  const expr = parseExpr(p.expr), goal = canonText(parseExpr(p.goal))
+  const r = findOptimalPathWithLaws(expr, goal, p.targetLaws)
+  for (const s of r.path) scoring[s.law] = (scoring[s.law] || 0) + 1
+  const b = findOptimalPath(expr, goal)
+  for (const s of b.path) shortest[s.law] = (shortest[s.law] || 0) + 1
+  if (r.optimalSteps === p.optimalSteps) sameAsAuthored++
+  if (b.optimalSteps === p.optimalSteps) sameAsPlain++
 }
-console.log(usage)
+console.log('scoring route :', scoring)
+console.log('shortest path :', shortest)
+console.log('authored matches scoring optimum:', sameAsAuthored + '/' + puzzles, '| authored matches plain shortest path:', sameAsPlain + '/' + puzzles)
 "
+```
+
+```text
+scoring route : { 'Absorption Law': 9, 'Distributive (Factor)': 29, 'Complement Law': 18,
+  'Identity Law': 26, "De Morgan's (OR→AND)": 9, 'Idempotent Law': 5,
+  'Absorption Law (Product)': 6, 'Idempotent Law (Product)': 4, 'Distributive (POS)': 27,
+  'Complement Law (Product)': 16, "De Morgan's (AND→OR)": 8, 'Annulment Law': 2,
+  'Annulment Law (Product)': 2 }
+shortest path : { 'Absorption Law': 14, 'Distributive (Factor)': 29, 'Complement Law': 18,
+  'Identity Law': 24, 'Absorption Law (Product)': 12, 'Distributive (POS)': 27,
+  'Complement Law (Product)': 16, "De Morgan's (AND→OR)": 5, "De Morgan's (OR→AND)": 5 }
+authored matches scoring optimum: 40/40 | authored matches plain shortest path: 29/40
 ```
 
 **Two consequences a tutor should know.**
 
-1. **The solver prefers absorption, so it rarely walks the authored chain.** Tutorial stage 0.1 is
-   authored as `distributive → complement → identity` with `targetLaws` naming all three, but the
-   shortest path is `Distributive (Factor) → Absorption Law (Product)`, which credits only
-   `distributive`. A learner who takes the shortest path scores full *efficiency* and partial
-   *target-law* credit. This is a real product behaviour, not a bug in the solver: the target-law
-   band rewards the authored route and the efficiency band rewards the short route.
+1. **The semantic absorption bypass is gone, so the tutoring route is now the shortest route on the
+   stages that relied on it.** Tutorial stage 0.1 is authored as `distributive → complement →
+   identity` with `targetLaws` naming all three. It used to have a 2-step shortcut,
+   `Distributive (Factor) → Absorption Law (Product)`, which swallowed the tautological clause
+   `x' + x` and scored 80. The Module 4 guard refuses that step, so the plain shortest path is now
+   the taught 3-step chain (`Distributive (Factor) → Complement Law → Identity Law`), the objective-aware
+   optimum is the same 3 steps, and the learner following it earns a perfect 100. Shortcuts that only
+   *skip a law* still exist on 11 other stages — Tutorial stage 0.2 solves in 1 absorption step and
+   scores 70 against its 2-step optimum — and taking one remains a legitimate choice that forfeits the
+   skipped laws' target-law credit.
 2. **`double-neg` is not reachable in any authored puzzle**, and neither is a `not`-of-`not` shape
    anywhere in `content/` or in the curated sandbox pool (`sandbox/pool.js:11-40`). Only
    learner-typed sandbox input exercises it.
@@ -933,8 +1020,8 @@ console.log(usage)
 | POS pair builder (5 laws + gated expand) | `frontend/src/engine/laws/productLaws.js` | 63-223 |
 | single-node NOT laws | `frontend/src/engine/laws/notLaws.js` | 21-104 |
 | single-constant laws | `frontend/src/engine/laws/constLaws.js` | 19-99 |
-| semantic absorption decisions | `frontend/src/engine/laws/helpers.js` | 73-99 |
-| complement-guarded expansion detection | `frontend/src/engine/laws/helpers.js` | 119-152 |
+| semantic absorption decisions + the Module 4 constant guard | `frontend/src/engine/laws/helpers.js` | 73-114 |
+| complement-guarded expansion detection | `frontend/src/engine/laws/helpers.js` | 142-167 |
 | full-expression hint scan | `frontend/src/engine/laws/scanHints.js` | 22-134 |
 | public law API + `allowExpand` | `frontend/src/engine/laws/index.js` | 33-70 |
 | animation registry (law id → component) | `frontend/src/components/animations/index.js` | 19-33 |
@@ -972,8 +1059,8 @@ absorption | Absorption Law | A + AB = A | x absorbs xy → x | x
 
 | # | Claim elsewhere | What the code does | Where |
 |---|---|---|---|
-| **D11** | "the engine has 46 unit tests" (`docs/context.md`) | **76 tests, 76 pass** — measured, see the walkthrough tutorial | `frontend/package.json` `test` script; `npm test` output |
-| **D12** | "a 2.5 s law animation" (`docs/context.md`) | `TIMING.lawAnimationMs = 1350`; the step is recorded after that delay | `frontend/src/config/gameRules.js` `TIMING`; applied at `state/useGameState.js:447` |
+| **D11** | "the engine has 46 unit tests" (`docs/context.md`) | **81 tests, 81 pass** — measured, see the walkthrough tutorial | `frontend/package.json` `test` script; `npm test` output |
+| **D12** | "a 2.5 s law animation" (`docs/context.md`) | `TIMING.lawAnimationMs = 1350`; the step is recorded after that delay | `frontend/src/config/gameRules.js` `TIMING`; applied at `state/useGameState.js:491` |
 | — | `content/laws.json` has an `associative` card | The engine never emits it; regrouping is structural | `docs/REFACTOR_REPORT.md:170`, [§5.10](#510-associative--associative-law-the-card-the-engine-does-not-implement) |
 | — | an internal id `distributive-expand` appears in the engine | It is gated to the Sandbox and has no card | [§6](#6-distributive-expand--the-internal-law-that-is-not-a-card) |
 | **D21** | client score estimate equals the server value | JS `Math.round` (half-up) vs Python `round` (half-to-even) can differ by **one bonus point** at totals ending in 5 | `frontend/src/engine/scoring.js:80` vs `backend/services/scoring_service.py:55` |
