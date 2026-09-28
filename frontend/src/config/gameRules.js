@@ -201,7 +201,7 @@ export const SOUND = {
 /** Solver search budgets — the graded path and the generator differ. */
 export const SOLVER_BUDGET = {
   /** Defaults used when a graded puzzle is loaded. */
-  graded: { maxDepth: 10, maxStates: 3000 },
+  graded: { maxDepth: 16, maxStates: 3000 },
   /** Random generator: must reach the simplest form, then the goal. */
   generator: {
     simplestForm: { maxDepth: 12, maxStates: 8000 },
