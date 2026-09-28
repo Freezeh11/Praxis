@@ -31,7 +31,7 @@
           "Factor out y using Distributive Law.",
           "Simplify x' + x using Complement Law."
         ],
-        "optimalSteps": 3,
+        "optimalSteps": 2,
         "optimalHint": "Reorder terms, factor common variable y, and apply Complement Law."
       },
       {
@@ -45,7 +45,7 @@
           "Click the (x + y)' group handle to expand with De Morgan's Law.",
           "Merge identical terms using Idempotent Law."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "Apply De Morgan's Law to expand the negated sum, then merge duplicates."
       },
       {
@@ -60,7 +60,7 @@
           "Spot which terms can be combined directly.",
           "Look for common variables: x'y and xy both share variable y!"
         ],
-        "optimalSteps": 3,
+        "optimalSteps": 2,
         "optimalHint": "Factor y from x'y + xy, simplify x' + x with Complement Law, then eliminate 1 with Identity Law."
       }
     ]
@@ -143,7 +143,7 @@
           "After applying De Morgan's, scan for identical terms.",
           "Use Idempotent Law to merge the duplicate terms."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's (OR→AND) expands the negated group, then Idempotent merges duplicates."
       },
       {
@@ -158,7 +158,7 @@
           "After expanding, look for identical sum clauses.",
           "Use Dual Idempotent to merge the duplicate clauses."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's (AND→OR) breaks the product, then Dual Idempotent simplifies the clauses."
       },
       {
@@ -203,7 +203,7 @@
           "Factor out y, turn x' + x into 1, and simplify x + y·1.",
           "Remove the identity element 1 to finish."
         ],
-        "optimalSteps": 3,
+        "optimalSteps": 2,
         "optimalHint": "Factor y from x'y + xy, cancel x' + x to 1, then apply Identity."
       },
       {
@@ -218,7 +218,7 @@
           "Apply Dual Distributive to factor out y: y + x'x.",
           "x'x collapses to 0 by Complement, leaving y + 0 = y."
         ],
-        "optimalSteps": 3,
+        "optimalSteps": 2,
         "optimalHint": "Extract common y from both clauses, turn x'x into 0, and simplify with Identity."
       },
       {
@@ -274,8 +274,8 @@
           "Factor out xz to isolate y' + y inside parentheses.",
           "Apply Complement Law (y' + y = 1), then remove 1 with Identity Law."
         ],
-        "optimalSteps": 4,
-        "optimalHint": "Factor x and z systematically to isolate y' + y = 1, giving xz in 4 steps."
+        "optimalSteps": 3,
+        "optimalHint": "Factor x and z systematically to isolate y' + y = 1, giving xz in 3 steps."
       },
       {
         "expr": "(x + y' + z)(x + y + z)",
@@ -290,8 +290,8 @@
           "Apply Dual Distributive to extract (x + z), leaving y'y inside.",
           "Apply Dual Complement (y' · y = 0), then simplify (x + z + 0) with Identity."
         ],
-        "optimalSteps": 4,
-        "optimalHint": "Dual Distributive extracts x and z, y'y collapses to 0, leaving x + z in 4 steps."
+        "optimalSteps": 3,
+        "optimalHint": "Dual Distributive extracts x and z, y'y collapses to 0, leaving x + z in 3 steps."
       },
       {
         "expr": "xyz + xz + x'yz",
@@ -304,7 +304,7 @@
           "Apply Absorption Law: xz absorbs xyz, leaving xz + x'yz.",
           "Next, factor z from both terms or observe how yz emerges."
         ],
-        "optimalSteps": 4,
+        "optimalSteps": 3,
         "optimalHint": "xz absorbs xyz directly. Then simplify xz + x'yz to reach xz + yz."
       },
       {
@@ -318,8 +318,8 @@
           "Dual Absorption: clause (x + z) absorbs (x + y + z).",
           "Simplify the remaining clauses to reach (x + z)(y + z)."
         ],
-        "optimalSteps": 4,
-        "optimalHint": "(x + z) absorbs (x + y + z) in 1 step, leaving the simplified dual form."
+        "optimalSteps": 3,
+        "optimalHint": "(x + z) absorbs (x + y + z) in 3 steps, leaving the simplified dual form."
       },
       {
         "expr": "(x + y + z')' + x'y'z",
@@ -333,7 +333,7 @@
           "The expansion produces x'y'z.",
           "Merge the identical x'y'z terms using Idempotent Law."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's (OR→AND) expands the negated group into x'y'z, then Idempotent merges duplicates."
       },
       {
@@ -348,7 +348,7 @@
           "The expansion produces the sum clause (x' + y' + z).",
           "Merge the duplicate sum clauses using Dual Idempotent Law."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's (AND→OR) expands to (x' + y' + z), then Dual Idempotent merges identical clauses."
       },
       {
@@ -364,7 +364,7 @@
           "Factor x'y to create z + z' = 1, leaving x'y' + x'y.",
           "Factor x' from x'y' + x'y and cancel y' + y = 1 to isolate x'."
         ],
-        "optimalSteps": 7,
+        "optimalSteps": 3,
         "optimalHint": "Factor pairs systematically to cancel z + z' and y' + y, reducing the entire expression to x'."
       },
       {
@@ -380,7 +380,7 @@
           "Dual Distributive factors out (x' + y), leaving zz' = 0 inside.",
           "Simplify to (x' + y')(x' + y) and apply Dual Distributive again to isolate x'."
         ],
-        "optimalSteps": 7,
+        "optimalSteps": 3,
         "optimalHint": "Dual factor the clauses to collapse zz' = 0 and y'y = 0, reducing all clauses to x'."
       },
       {
@@ -426,8 +426,8 @@
           "Group and factor the first two terms (sharing x'z) and the last two terms (sharing xz).",
           "Cancel y' + y = 1 in both pairs, then factor z from the remaining terms."
         ],
-        "optimalSteps": 11,
-        "optimalHint": "Factor pairs systematically to eliminate y, then eliminate x, isolating z in 11 steps."
+        "optimalSteps": 4,
+        "optimalHint": "Factor pairs systematically to eliminate y, then eliminate x, isolating z in 4 steps."
       },
       {
         "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
@@ -442,7 +442,7 @@
           "Pair and dual factor the first two clauses (sharing x' + z) and last two (sharing x + z).",
           "Cancel y'y = 0 in both pairs, then dual factor z from the remaining clauses."
         ],
-        "optimalSteps": 10,
+        "optimalSteps": 4,
         "optimalHint": "Dual factor clauses to eliminate y and x, leaving only z."
       }
     ]
@@ -494,8 +494,8 @@
           "Factor out common variables until you isolate the complementary pair y' + y inside parentheses.",
           "Apply Complement Law (y' + y = 1), then remove 1 with Identity Law."
         ],
-        "optimalSteps": 5,
-        "optimalHint": "Factoring w, x, and z systematically isolates y' + y = 1, giving wxz in 5 steps."
+        "optimalSteps": 4,
+        "optimalHint": "Factoring w, x, and z systematically isolates y' + y = 1, giving wxz in 4 steps."
       },
       {
         "expr": "(w + x + y' + z)(w + x + y + z)",
@@ -510,8 +510,8 @@
           "Dual factor (w + x + z) out to leave y'y inside.",
           "Apply Dual Complement (y'y = 0), then simplify with Identity Law."
         ],
-        "optimalSteps": 5,
-        "optimalHint": "Dual factoring isolates y'y = 0, leaving w + x + z in 5 steps."
+        "optimalSteps": 4,
+        "optimalHint": "Dual factoring isolates y'y = 0, leaving w + x + z in 4 steps."
       },
       {
         "expr": "(w + x' + y + z')' + w'xy'z",
@@ -525,7 +525,7 @@
           "The expansion produces w'xy'z.",
           "Merge the identical terms using Idempotent Law."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's produces matching term w'xy'z, merged in 1 step by Idempotent."
       },
       {
@@ -540,7 +540,7 @@
           "The expansion produces clause (w + x' + y + z').",
           "Merge the duplicate sum clauses using Dual Idempotent Law."
         ],
-        "optimalSteps": 2,
+        "optimalSteps": 1,
         "optimalHint": "De Morgan's expands to matching clause (w + x' + y + z'), merged by Dual Idempotent."
       },
       {
@@ -620,7 +620,7 @@
           "Group and factor the first two terms (sharing wx'z) and the last two terms (sharing wxz).",
           "Continue simplifying the complementary pairs until only wz remains."
         ],
-        "optimalSteps": 14,
+        "optimalSteps": 7,
         "optimalHint": "Factoring pairs of minterms systematically eliminates y and then x, leaving the clean 2-variable core wz."
       },
       {
@@ -636,7 +636,7 @@
           "Pair and dual factor first two clauses (sharing w + x' + z) and last two (sharing w + x + z).",
           "Collapse y'y = 0 in both, then dual factor again to isolate w + z."
         ],
-        "optimalSteps": 13,
+        "optimalSteps": 7,
         "optimalHint": "Dual factoring pairs systematically eliminates y and x, leaving w + z."
       }
     ]
