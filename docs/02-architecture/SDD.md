@@ -31,8 +31,8 @@ Three facts keep this document short enough to use:
 
 - **The backend is small.** 28 Python modules / 1,241 lines — including seven one-line
   `__init__.py` files. Every module is listed in §2 and every one is described in §3.
-- **The engine is where the difficulty is.** 23 modules / 3,182 lines of pure JavaScript
-  (30 files / 4,428 lines including its 7 test files). §5.1 covers it module by module.
+- **The engine is where the difficulty is.** 23 modules / 3,303 lines of pure JavaScript
+  (30 files / 4,664 lines including its 7 test files). §5.1 covers it module by module.
 - **Two numbers are conventions, not mistakes.** `hooks/` holds 8 files;
   `components/` holds 10 top-level modules plus 6 feature folders.
 
@@ -357,7 +357,7 @@ build tools)" (`:17-20`). Design consequences:
 
 | Folder | Files | Lines | Role |
 |---|---|---|---|
-| `engine/` | 23 modules + 7 test files (30 total) | 3,182 + 1,246 = 4,428 | Pure Boolean algebra |
+| `engine/` | 23 modules + 7 test files (30 total) | 3,303 + 1,361 = 4,664 | Pure Boolean algebra |
 | `state/` | 8 | 1,217 | Single source of truth: progress store, puzzle session, auth context |
 | `services/` | 7 | 426 | The only network boundary |
 | `hooks/` | 8 | 1,276 | UI mechanics: device tier, popup placement, drag, overlays |
@@ -405,7 +405,7 @@ Component folder detail: `animations/` 10 files / 907 lines · `laws/` 2 / 96 ·
 | Module | Lines | Key exports |
 |---|---|---|
 | `laws/definitions.js` | 85 | `LAW_MODE`, `LAW_FORM`, `LAW_DEFINITIONS` (15 entries), `LAW_NAME_TO_ID`, `defineLaw(name, form)` (`:79`) |
-| `laws/helpers.js` | 152 | `absorbsInSum` (`:73`), `absorbsInProduct` (`:95`) and the shared predicates |
+| `laws/helpers.js` | 167 | `absorbsInSum` (`:73`), `absorbsInProduct` (`:100`) and the shared predicates |
 | `laws/sumLaws.js` | 259 | SOP-level builders (distributive-factor, complement, identity, annulment, idempotent, absorption) |
 | `laws/productLaws.js` | 224 | POS-level duals, plus the gated `distributive-expand` |
 | `laws/notLaws.js` | 105 | `double-neg`, `demorgan-and`, `demorgan-or` |
@@ -417,7 +417,7 @@ Component folder detail: `animations/` 10 files / 907 lines · `laws/` 2 / 96 ·
 
 | Module | Lines | Key exports |
 |---|---|---|
-| `solver.js` | 323 | `getLegalTransitions(tree, options)` (`:37`), `findOptimalPath(startExpr, targetCanon, options)` (`:175`), `findSimplestForm(startExpr, options)` (`:258`) |
+| `solver.js` | 429 | `getLegalTransitions(tree, options)` (`:38`), `findOptimalPath(startExpr, targetCanon, options)` (`:176`), `findSimplestForm(startExpr, options)` (`:364`) |
 
 **Scoring mirror**
 
@@ -448,11 +448,13 @@ cross-folder imports in the whole folder are `../../config/gameRules.js` from `s
 and `sandbox/input.js:36`.
 
 Note the tight coupling the helper naming reveals: `absorbsInSum` and `absorbsInProduct` use
-syntactic fast-accept predicates, then fall back to `isEquivalent` as the decider
-(`laws/helpers.js:77`, `:98`). Absorption detection is therefore truth-table-backed; the
-*window* into the puzzle still uses canonical text (§8.3 and the limitations register).
+syntactic fast-accept predicates, refuse to swallow a clause that is equivalent to a constant
+(the proposal's Module 4 guard, `laws/helpers.js:82`, `:112`), then fall back to `isEquivalent` as
+the decider (`:83`, `:113`). Absorption detection is therefore truth-table-backed, except that the
+constant-collapsing case is deliberately excluded so every constant renders as its own clickable
+state; the *window* into the puzzle still uses canonical text (§8.3 and the limitations register).
 
-**Tests** — 7 files / 1,246 lines, run by `node --test` with no browser and no backend:
+**Tests** — 7 files / 1,361 lines, run by `node --test` with no browser and no backend:
 
 | File | Lines | Covers |
 |---|---|---|
@@ -461,10 +463,10 @@ syntactic fast-accept predicates, then fall back to `isEquivalent` as the decide
 | `__tests__/laws.test.js` | 151 | Law table and detection API |
 | `__tests__/parser.test.js` | 91 | Notation and round-trips |
 | `__tests__/sandbox.test.js` | 198 | The sandbox input/puzzle contract |
-| `__tests__/solver.test.js` | 86 | Transitions, optimal path, simplest form |
+| `__tests__/solver.test.js` | 201 | Transitions, optimal path, the objective-aware optimum, the Module 4 guard, simplest form |
 | `__tests__/validate.test.js` | 89 | The string gate's messages |
 
-Ran: **76 tests, 76 pass, 0 fail** (`cd frontend && npm test`).
+Ran: **81 tests, 81 pass, 0 fail** (`cd frontend && npm test`).
 
 ### 5.2 `state/` — one source of truth
 
@@ -472,7 +474,7 @@ Ran: **76 tests, 76 pass, 0 fail** (`cd frontend && npm test`).
 |---|---|---|
 | `progressStore.js` | 337 | A module-level external store: `subscribe` (`:134`), `getSnapshot` (`:139`), `setUser` (`:147`), imperative actions (`:170-255`) and pure selectors (`:259-335`), plus private `publish`/`update`/`persistLocal`/`scheduleServerSave`/`mergeServerProgress` |
 | `useProgress.js` | 79 | The React binding: `useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)` (`:24`) plus `useCallback`-wrapped selectors and a memoised return (`:48-78`) |
-| `useGameState.js` | 620 | The puzzle-session state machine: history, selection, status, hints, guides, optimal path, animation |
+| `useGameState.js` | 664 | The puzzle-session state machine: history, selection, status, hints, guides, optimal path, animation |
 | `hintText.js` | 78 | Pure hint wording: `DEAD_END_MSG` (`:10`), `buildHintText(law, paths, expr)` (`:18`) |
 | `useGameContent.js` | 25 | Levels/laws/score submission, shaped the way screens consume them |
 | `AuthProvider.jsx` | 55 | Subscribes to Supabase auth once, publishes `{data, isPending, error}` |
@@ -527,10 +529,10 @@ const markDeadEnd = useCallback((next, {silent=false} = {}) => {
 }, [])                                            // :47
 ```
 
-Public API: `loadPuzzle` (`:76`), `handleClickLit` (`:199`), `handleClickNot` (`:272`),
-`handleClickTerm` (`:308`), `applyLaw` (`:354`), `undoAction` (`:461`), `resetPuzzle`
-(`:487`), `requestHint` (`:501`), `swapTerms` (`:523`), `activateGuide` (`:560`); returned as
-one object at `:605-619`.
+Public API: `loadPuzzle` (`:77`), `handleClickLit` (`:240`), `handleClickNot` (`:314`),
+`handleClickTerm` (`:351`), `applyLaw` (`:398`), `undoAction` (`:505`), `resetPuzzle`
+(`:531`), `requestHint` (`:545`), `swapTerms` (`:567`), `activateGuide` (`:604`); returned as
+one object at `:649-663`.
 
 Two timing details live here, both from `config/gameRules.js`:
 
@@ -713,17 +715,17 @@ counts as a change, and it is the win condition (§8.3).
 // A selection item — what the learner has selected.
 { path: 'R.0', isTermSel: true }        // a whole term/clause
 { path: 'R.0.1', isTermSel: false }     // a single literal
-// state: const [sel, setSel] = useState([])   useGameState.js:20
+// state: const [sel, setSel] = useState([])   useGameState.js:21
 
 // A committed derivation step.
-{ law: 'Absorption Law', from: 'x + xy', to: 'x' }    // useGameState.js:425
+{ law: 'Absorption Law', from: 'x + xy', to: 'x' }    // useGameState.js:469
 
 // The history entry that holds both.
-{ expr: <AST>, step: <Step|null> }                    // useGameState.js:15
+{ expr: <AST>, step: <Step|null> }                    // useGameState.js:16
 ```
 
 The history's first entry has `step: null` — that is the puzzle's starting state — which is
-why `steps` is `history.slice(1)` (`:17`).
+why `steps` is `history.slice(1)` (`:18`).
 
 ### 6.3 `ScoreOutcome` and the score payload
 
@@ -810,7 +812,7 @@ unknown pair "so a typo fails loudly in the test suite instead of silently produ
 with a missing id" (`:79-85`).
 
 **Instance** — what a detector returns to the UI and what `applyLaw` consumes
-(`frontend/src/state/useGameState.js:354-459`): `{ id, name, formula, apply(), animPaths,
+(`frontend/src/state/useGameState.js:398-503`): `{ id, name, formula, apply(), animPaths,
 measurePaths, survivorPath, absorbedPath, deMorganTerms, isAndToOr, … }`. The extra fields
 exist so the animation layer can name the exact nodes to highlight, without re-deriving them.
 
@@ -946,7 +948,8 @@ learner picks a law
 The win test is **canonical-text equality**, not `isEquivalent`. That is deliberate in the
 implementation and is documented as a limitation: a logically equivalent but canonically
 different terminal form does not complete the puzzle. `isEquivalent`'s consumers are law
-detection (`engine/laws/helpers.js:77`, `:98`) and the sandbox builders
+detection (`engine/laws/helpers.js:82`, `:112` — the absorption decisions, each behind the Module 4
+constant guard) and the sandbox builders
 (`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`) — never `useGameState`.
 
 ### 8.4 Completion → score → persistence (client side)

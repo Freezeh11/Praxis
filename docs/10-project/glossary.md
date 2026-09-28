@@ -55,8 +55,8 @@ prose uses the left column.
 | **SOP** / **POS** | sum-of-products form (when abbreviating) | Spelled out on first use in a document, then abbreviated. |
 | **dual** | inverse form, mirror | The formal Boolean-algebra dual (AND↔OR, 0↔1). |
 | **law id** (`absorption`, `demorgan-and`) | law name, spelled-out slug | The id is the join key between content, engine and storage — `content/laws.json` and `frontend/src/engine/laws/definitions.js`. |
-| **step** / **derivation step** | move, action | `frontend/src/state/useGameState.js:425`. |
-| **intermediate state** | mid-state | `frontend/src/state/useGameState.js:15-18`. |
+| **step** / **derivation step** | move, action | `frontend/src/state/useGameState.js:469`. |
+| **intermediate state** | mid-state | `frontend/src/state/useGameState.js:16-19`. |
 | **AST** / **expression tree** | parse tree | `frontend/src/engine/node.js:1-13`. |
 | **step-locking** | locking, freezing | `frontend/src/engine/sandbox/input.js:67`. |
 | **engine contract** | API contract for algebra | `frontend/src/engine/index.js:8-13`. |
@@ -282,7 +282,7 @@ entries; the current expression is the last entry and the *intermediate states* 
 ones. That array is what the step-history panel renders and what a saved solution is replayed
 from, so a learner can click any past line to review why it was legal.
 
-**Lives in.** [`frontend/src/state/useGameState.js:15-18`](../../frontend/src/state/useGameState.js#L15-L18),
+**Lives in.** [`frontend/src/state/useGameState.js:16-19`](../../frontend/src/state/useGameState.js#L16-L19),
 rendered by [`frontend/src/components/puzzle/StepHistoryPanel.jsx`](../../frontend/src/components/puzzle/StepHistoryPanel.jsx).
 
 ---
@@ -297,7 +297,7 @@ created at the moment the animation finishes and the new expression becomes curr
 holds the law **display name** (e.g. `'Absorption Law'`), not the law id — `lawIdOf()` maps it back
 to the id for scoring.
 
-**Lives in.** [`frontend/src/state/useGameState.js:425`](../../frontend/src/state/useGameState.js#L425)
+**Lives in.** [`frontend/src/state/useGameState.js:469`](../../frontend/src/state/useGameState.js#L469)
 (creation), [`frontend/src/engine/scoring.js:25`](../../frontend/src/engine/scoring.js#L25)
 (`lawIdOf`).
 
@@ -316,8 +316,8 @@ from the matching state, precisely so a sandbox puzzle replays through the UI's 
 ("this is what step-locking relies on"). The one deliberate exception is drag-reordering terms
 within a sum, which is not a law application.
 
-**Lives in.** [`frontend/src/state/useGameState.js:15-18`](../../frontend/src/state/useGameState.js#L15-L18)
-(the append-only history), [`frontend/src/state/useGameState.js:461`](../../frontend/src/state/useGameState.js#L461)
+**Lives in.** [`frontend/src/state/useGameState.js:16-19`](../../frontend/src/state/useGameState.js#L16-L19)
+(the append-only history), [`frontend/src/state/useGameState.js:505`](../../frontend/src/state/useGameState.js#L505)
 (`undoAction`), [`frontend/src/engine/sandbox/input.js:67`](../../frontend/src/engine/sandbox/input.js#L67)
 and [`:165`](../../frontend/src/engine/sandbox/input.js#L165) (the reliance).
 
@@ -369,8 +369,8 @@ and it has no animation branch, so applying it shows no overlay rather than a wr
 the entry to read if you grep `content/laws.json` for `distributive-expand` and find nothing.
 
 **Lives in.** [`frontend/src/engine/laws/definitions.js:44`](../../frontend/src/engine/laws/definitions.js#L44),
-gated at [`frontend/src/engine/solver.js:172`](../../frontend/src/engine/solver.js#L172) and
-[`:255`](../../frontend/src/engine/solver.js#L255), enabled in the sandbox at
+gated at [`frontend/src/engine/solver.js:173`](../../frontend/src/engine/solver.js#L173) and
+[`:361`](../../frontend/src/engine/solver.js#L361), enabled in the sandbox at
 [`frontend/src/engine/sandbox/input.js:196`](../../frontend/src/engine/sandbox/input.js#L196),
 pinned by [`frontend/src/engine/__tests__/laws.test.js:106-109`](../../frontend/src/engine/__tests__/laws.test.js#L106-L109).
 See also [boolean-laws.md](../06-reference/boolean-laws.md).
@@ -388,7 +388,7 @@ The counter `hintsUsed` goes up by one and costs 10 points of the hint-independe
 also carry two or three **authored** `hints` strings used before the engine has anything to say.
 
 **Lives in.** [`frontend/src/engine/laws/scanHints.js:22`](../../frontend/src/engine/laws/scanHints.js#L22)
-(the scanner), [`frontend/src/state/useGameState.js:501`](../../frontend/src/state/useGameState.js#L501)
+(the scanner), [`frontend/src/state/useGameState.js:545`](../../frontend/src/state/useGameState.js#L545)
 (`requestHint`), [`frontend/src/state/hintText.js`](../../frontend/src/state/hintText.js) (the
 wording), `hints[]` in [`content/levels.json`](../../content/levels.json).
 
@@ -405,7 +405,7 @@ learner which terms to click), plays a sound, and increments `guidesUsed`. It co
 Do not confuse the two numbers: `GUIDE_COST_POINTS = 20` is a *point spend*; the separate
 `ASSISTANCE_PENALTY = 10` is a *score deduction* that a guide also triggers.
 
-**Lives in.** [`frontend/src/state/useGameState.js:560`](../../frontend/src/state/useGameState.js#L560)
+**Lives in.** [`frontend/src/state/useGameState.js:604`](../../frontend/src/state/useGameState.js#L604)
 (`activateGuide`), [`frontend/src/config/gameRules.js:35`](../../frontend/src/config/gameRules.js#L35)
 (`GUIDE_COST_POINTS`), [`backend/config/constants.py:16`](../../backend/config/constants.py#L16)
 (`ASSISTANCE_PENALTY`).

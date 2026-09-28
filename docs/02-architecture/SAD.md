@@ -43,8 +43,8 @@ below:
 
 1. **The client is the computer.** All Boolean algebra, all game state and all progression
    decisions happen in the browser. The API is a small content-and-persistence service:
-   **28 Python modules / 1,241 lines** against a frontend engine of **23 modules / 3,182
-   lines** (30 files / 4,428 lines including its 7 test files). Do not expect the backend to
+   **28 Python modules / 1,241 lines** against a frontend engine of **23 modules / 3,303
+   lines** (30 files / 4,664 lines including its 7 test files). Do not expect the backend to
    hold business logic — it deliberately holds almost none.
 2. **There is exactly one Boolean engine, and it is not in Python.** This is called the
    *engine contract* (§6) and it constrains every design decision in the project.
@@ -238,7 +238,7 @@ below everything.
 ```mermaid
 flowchart TB
     subgraph app["frontend/src"]
-        engine["<b>engine/</b> — 23 modules / 3,182 lines<br/>PURE Boolean algebra<br/>no React · no DOM · no network"]
+        engine["<b>engine/</b> — 23 modules / 3,303 lines<br/>PURE Boolean algebra<br/>no React · no DOM · no network"]
         config["<b>config/</b><br/>gameRules (every tunable)<br/>storageKeys · appLinks"]
         services["<b>services/</b><br/>the ONLY network boundary<br/>apiClient · contentApi · scoreApi<br/>progressApi · authActions · supabaseClient<br/>soundEffects"]
         content["<b>content/</b><br/>gameContent (bundled JSON loader)<br/>tutorialContent"]
@@ -341,7 +341,7 @@ precisely.
   guidesUsed, optimalSteps}` — numbers, a level index, and law **ids** (`backend/api/schemas/score.py:13-20`).
   It looks up the puzzle only to read `targetLaws` (`backend/services/scoring_service.py:43`, `:46`).
 - The engine is a barrel-exported pure library (`frontend/src/engine/index.js:1-84`) with no
-  React, DOM or network dependency, which is why its 76 tests run in plain Node.
+  React, DOM or network dependency, which is why its 81 tests run in plain Node.
 - The only duplication the contract *allows* is arithmetic: the score formula exists twice —
   authoritatively in `backend/services/scoring_service.py:32` and as an instant local estimate
   in `frontend/src/engine/scoring.js:54` — and both read their numbers from their own config
@@ -352,10 +352,11 @@ side does algebra. Adding a law is one engine change, not two. The sandbox can v
 generate puzzles with zero network calls.
 
 > **Known limitation — the win condition is textual, not semantic.** Completion is
-> `canonText(newExpr) === goalCanonRef.current` (`frontend/src/state/useGameState.js:437`,
-> goal canonicalised at `:83`). The exhaustive truth-table checker
+> `canonText(newExpr) === goalCanonRef.current` (`frontend/src/state/useGameState.js:481`,
+> goal canonicalised at `:84`). The exhaustive truth-table checker
 > `frontend/src/engine/equivalence.js:45` is **not** on the win path: its only non-test
-> consumers are law detection (`frontend/src/engine/laws/helpers.js:77`, `:98`) and the
+> consumers are law detection (`frontend/src/engine/laws/helpers.js:82`, `:112` — the absorption
+> decisions and their Module 4 constant guards) and the
 > sandbox builders (`frontend/src/engine/sandbox/generator.js:94`,
 > `frontend/src/engine/sandbox/input.js:161`). Two consequences follow. First, step validity
 > is *structural* rather than provational: the engine trusts its law implementations, backed
@@ -363,7 +364,7 @@ generate puzzles with zero network calls.
 > never re-proves a step. Second, a learner who reaches a terminal form that is logically
 > equivalent to the goal but canonically different is **not** marked solved. Dead-end
 > detection is likewise an empty `scanHints` result
-> (`frontend/src/state/useGameState.js:61`, `:504`, `:562`) — a heuristic over the law
+> (`frontend/src/state/useGameState.js:62`, `:548`, `:606`) — a heuristic over the law
 > registry, not a proof of unsolvability.
 
 **What the contract costs.** The backend is authoritative for **scoring**, not for algebra.

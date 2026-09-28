@@ -765,21 +765,21 @@ npm test
 Expected tail (verified on the development machine):
 
 ```text
-# tests 76
+# tests 81
 # suites 0
-# pass 76
+# pass 81
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 12984.422607
+# duration_ms 12575.576694
 ```
 
-**76 tests, all passing, roughly 9–14 seconds** depending on the machine. These are pure
+**81 tests, all passing, roughly 9–14 seconds** depending on the machine. These are pure
 `node:test` runs of `frontend/src/engine/__tests__/*.test.js` — no browser, no server, no network.
 
 > The proposal in [`docs/context.md`](../context.md) claims "46 unit tests". It is stale; the real
-> figure is 76.
+> figure is 81.
 
 ### 7.2 Lint and production build
 

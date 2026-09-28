@@ -96,14 +96,14 @@ The engine is the largest single subsystem. Splitting `frontend/src/engine/` by 
 | Measure | Count | Verified with |
 |---|---|---|
 | Engine modules excluding tests | **23** | `git ls-files 'frontend/src/engine/*.js' \| grep -v __tests__ \| wc -l` |
-| Engine lines excluding tests | **3,182** | same list piped to `xargs wc -l` |
+| Engine lines excluding tests | **3,303** | same list piped to `xargs wc -l` |
 | Engine test files | **7** | `ls frontend/src/engine/__tests__/*.test.js \| wc -l` |
-| Engine test lines | **1,246** | `xargs wc -l` over `__tests__/` |
+| Engine test lines | **1,361** | `xargs wc -l` over `__tests__/` |
 | Engine files incl. tests | **30** | `git ls-files 'frontend/src/engine/*.js' \| wc -l` |
-| Engine lines incl. tests | **4,428** | `xargs wc -l` over the same list |
+| Engine lines incl. tests | **4,664** | `xargs wc -l` over the same list |
 
-> **Careful with the 4,428 figure.** It is the engine's **total including the 7 test files**. The
-> engine's production code is **23 modules / 3,182 lines**. Do not describe 4,428 lines as "22
+> **Careful with the 4,664 figure.** It is the engine's **total including the 7 test files**. The
+> engine's production code is **23 modules / 3,303 lines**. Do not describe 4,664 lines as "22
 > modules" — an older summary in this repo dropped `frontend/src/engine/render.js`
 > (46 lines) from its list, which is why the two numbers do not line up.
 
@@ -114,7 +114,7 @@ Content and test volumes referenced throughout this map:
 | Laws | **10** | `content/laws.json` is a 10-element array |
 | Levels | **4** | `content/levels.json` is a 4-element array |
 | Puzzles | **40** | `[4, 12, 12, 12]` — Tutorial has 4 stages, Levels 1–3 have 12 each |
-| Engine unit tests | **76 passing** | `npm test` → `# tests 76 / # pass 76 / # fail 0` |
+| Engine unit tests | **81 passing** | `npm test` → `# tests 81 / # pass 81 / # fail 0` |
 | Browser/node e2e suites | **19 `.mjs`** (18 suites + 1 shared harness), of which **16 wired** | `.e2e/run-all-suites.sh` has 16 `run` lines |
 
 ---
@@ -353,7 +353,7 @@ No component, page, hook or state module calls it.
 
 ## 13. `frontend/src/engine/`
 
-**23 modules / 3,182 lines excluding tests**, plus 7 test files. This is the only Boolean-algebra
+**23 modules / 3,303 lines excluding tests**, plus 7 test files. This is the only Boolean-algebra
 implementation in the repository, and it is framework-free, network-free and React-free — verified:
 these three commands all return **nothing**:
 
@@ -394,7 +394,7 @@ never a deep module, and §13.5 shows that nothing in the engine imports upward.
 
 | Path | Responsibility | Key exports / symbols | Depended on by |
 |---|---|---|---|
-| [`frontend/src/engine/solver.js`](../../frontend/src/engine/solver.js) | The search: `getLegalTransitions` enumerates the moves from one state, `findOptimalPath` returns the shortest derivation, `findSimplestForm` returns the simplest reachable form. Bounded by `SOLVER_BUDGET` from `config/gameRules.js`; `allowExpand` (default `false`) opts the sandbox into the gated Distributive-Expand law. 323 lines — the largest engine module. | `getLegalTransitions`, `findOptimalPath`, `findSimplestForm` | 7 modules incl. the barrel |
+| [`frontend/src/engine/solver.js`](../../frontend/src/engine/solver.js) | The search: `getLegalTransitions` enumerates the moves from one state, `findOptimalPath` returns the shortest derivation, `findOptimalPathWithLaws` returns the shortest derivation that also applies every law id it is given (the graded scoring optimum), `findSimplestForm` returns the simplest reachable form. Bounded by `SOLVER_BUDGET` from `config/gameRules.js`; `allowExpand` (default `false`) opts the sandbox into the gated Distributive-Expand law. 429 lines — the largest engine module. | `getLegalTransitions`, `findOptimalPath`, `findOptimalPathWithLaws`, `findSimplestForm` | 7 modules incl. the barrel |
 | [`frontend/src/engine/scoring.js`](../../frontend/src/engine/scoring.js) | The **ONE client-side implementation** of the scoring rules — a mirror of `backend/services/scoring_service.py` so the UI can render a breakdown instantly and offline. Weights and penalties come from `config/gameRules.js`; `round1` is `Math.round(value * 10) / 10`. Must stay in lockstep with the backend. | `lawIdOf`, `lawsUsedFromSteps`, `effectiveOptimalSteps`, `estimateScore` | `engine/index.js` |
 
 ### 13.4 Sandbox
@@ -418,8 +418,8 @@ never a deep module, and §13.5 shows that nothing in the engine imports upward.
 
 ### 13.6 Tests
 
-Run with `npm test` → `node --test src/engine/__tests__/*.test.js`. **76 tests, 76 pass, 0 fail**
-(verified; ~13.7 s in this environment).
+Run with `npm test` → `node --test src/engine/__tests__/*.test.js`. **81 tests, 81 pass, 0 fail**
+(verified; ~12.6 s in this environment).
 
 | Path | Responsibility | Key exports / symbols | Depended on by |
 |---|---|---|---|

@@ -42,10 +42,10 @@ Praxis closes that gap by making the derivation itself the unit of play:
 - the learner **selects parts of an expression** and the engine reports which laws apply to
   that selection (`frontend/src/engine/laws/index.js:33`),
 - applying a law produces an **animation, then a recorded step**, so the rewrite is seen
-  rather than asserted (`frontend/src/state/useGameState.js:354`),
+  rather than asserted (`frontend/src/state/useGameState.js:398`),
 - completion is decided by **order-independent canonical-text equality** between the current
   expression and the goal — `canonText(current) === canonText(goal)`
-  (`frontend/src/state/useGameState.js:437`) — not by raw string equality, and **not** by a
+  (`frontend/src/state/useGameState.js:481`) — not by raw string equality, and **not** by a
   semantic check. FR-23 states what that does and does not guarantee,
 - the finished derivation is **scored on three independent metrics** — efficiency, target
   laws, independence from assistance (`backend/services/scoring_service.py:32`) — and the
@@ -56,8 +56,11 @@ Praxis closes that gap by making the derivation itself the unit of play:
 ### Goal
 
 Give a learner a **graded practice loop** — pick a puzzle, derive the simplified form, get a
-score that rewards the *shortest correct path* and the *intended laws* — plus an **unscored
-sandbox** where they can bring their own expression or roll a random one.
+score that rewards the *shortest route that applies the intended laws* — the efficiency bar, which is
+deliberately not the raw shortest path — plus an **unscored sandbox** where they can bring their own
+expression or roll a random one. The scoring model is
+[scoring-and-rewards.md](../06-reference/scoring-and-rewards.md); worked example W9 shows why the two
+routes differ.
 
 ### Non-goals (deliberately not built)
 
@@ -244,25 +247,25 @@ IDs are stable and are reused verbatim in
 
 | ID | Requirement | Primary evidence |
 |---|---|---|
-| **FR-15** | The workspace renders the current expression as a tree and lets the learner select two literals, two clauses, or a single negated node; it reports which laws apply to that selection and refuses selections with no law. | `frontend/src/state/useGameState.js:199`, `:272`, `:308`, `frontend/src/engine/laws/index.js:33` |
-| **FR-16** | Applying a law plays the law's animation and only then commits the new tree as a derivation step; an application that does not change the expression is rejected with a message and no step. | `frontend/src/state/useGameState.js:363`, `:423` |
-| **FR-17** | Every applied step is recorded in a history the learner can undo, and each past step can be inspected to show the law it applied. | `frontend/src/state/useGameState.js:461`, `frontend/src/components/puzzle/StepHistoryPanel.jsx` |
-| **FR-18** | Terms and factors can be reordered by drag **without** consuming a step or a score penalty. | `frontend/src/state/useGameState.js:523`, `frontend/src/hooks/useTermDrag.js:235` |
-| **FR-19** | The workspace can be reset to the puzzle's initial expression; when the stage is already complete a confirmation modal appears unless the learner has opted out for the session. | `frontend/src/state/useGameState.js:487`, `frontend/src/pages/ProblemPage.jsx:275` |
-| **FR-20** | A dead end — a non-goal expression from which no further legal move exists — is detected and explained, and the UI stops offering laws. | `frontend/src/state/useGameState.js:53`, `frontend/src/state/hintText.js:10` |
+| **FR-15** | The workspace renders the current expression as a tree and lets the learner select two literals, two clauses, or a single negated node; it reports which laws apply to that selection and refuses selections with no law. | `frontend/src/state/useGameState.js:240`, `:314`, `:351`, `frontend/src/engine/laws/index.js:33` |
+| **FR-16** | Applying a law plays the law's animation and only then commits the new tree as a derivation step; an application that does not change the expression is rejected with a message and no step. | `frontend/src/state/useGameState.js:407`, `:467` |
+| **FR-17** | Every applied step is recorded in a history the learner can undo, and each past step can be inspected to show the law it applied. | `frontend/src/state/useGameState.js:505`, `frontend/src/components/puzzle/StepHistoryPanel.jsx` |
+| **FR-18** | Terms and factors can be reordered by drag **without** consuming a step or a score penalty. | `frontend/src/state/useGameState.js:567`, `frontend/src/hooks/useTermDrag.js:235` |
+| **FR-19** | The workspace can be reset to the puzzle's initial expression; when the stage is already complete a confirmation modal appears unless the learner has opted out for the session. | `frontend/src/state/useGameState.js:531`, `frontend/src/pages/ProblemPage.jsx:275` |
+| **FR-20** | A dead end — a non-goal expression from which no further legal move exists — is detected and explained, and the UI stops offering laws. | `frontend/src/state/useGameState.js:54`, `frontend/src/state/hintText.js:10` |
 
 ### Assistance
 
 | ID | Requirement | Primary evidence |
 |---|---|---|
-| **FR-21** | The Hint button returns a contextual suggestion derived from the **current** expression, falling back to the puzzle's authored hints; taking a hint decrements the independence metric and is counted. | `frontend/src/state/useGameState.js:501`, `frontend/src/state/hintText.js:18` |
-| **FR-22** | The Guide highlights the next productive move and either pre-selects the two items or highlights the single node to click; on a graded level it costs 20 points and a learner with insufficient points is told so. | `frontend/src/state/useGameState.js:560`, `frontend/src/pages/ProblemPage.jsx:263-273` |
+| **FR-21** | The Hint button returns a contextual suggestion derived from the **current** expression, falling back to the puzzle's authored hints; taking a hint decrements the independence metric and is counted. | `frontend/src/state/useGameState.js:545`, `frontend/src/state/hintText.js:18` |
+| **FR-22** | The Guide highlights the next productive move and either pre-selects the two items or highlights the single node to click; on a graded level it costs 20 points and a learner with insufficient points is told so. | `frontend/src/state/useGameState.js:604`, `frontend/src/pages/ProblemPage.jsx:263-273` |
 
 ### Completion and scoring
 
 | ID | Requirement | Primary evidence |
 |---|---|---|
-| **FR-23** | A puzzle is complete exactly when the current expression and the goal render to the same **canonical text** — order-independent, but textual rather than semantic. A logically equivalent terminal form with different canonical text does not complete the puzzle. | `frontend/src/state/useGameState.js:437`, `:83`; `frontend/src/engine/render.js:28` |
+| **FR-23** | A puzzle is complete exactly when the current expression and the goal render to the same **canonical text** — order-independent, but textual rather than semantic. A logically equivalent terminal form with different canonical text does not complete the puzzle. | `frontend/src/state/useGameState.js:481`, `:84`; `frontend/src/engine/render.js:28` |
 | **FR-24** | Completion is scored on three independent bands — efficiency (40), target laws (30), independence (30) — and returns a per-metric breakdown. | `backend/services/scoring_service.py:49`, `backend/config/constants.py:9` |
 | **FR-25** | The server score is authoritative; the client renders an immediate local estimate and replaces it when `POST /api/score` answers. | `frontend/src/components/puzzle/usePuzzleSession.js:173`, `:200-213` |
 | **FR-26** | Completion awards a fixed 10 XP plus a bonus of up to 5 points proportional to the total score, **once** per stage, only on first completion. | `frontend/src/config/gameRules.js:32`, `frontend/src/components/puzzle/usePuzzleSession.js:190` |
@@ -275,7 +278,7 @@ IDs are stable and are reused verbatim in
 |---|---|---|
 | **FR-29** | Progress is written to `localStorage` on every change and pushed to the server, debounced, for a signed-in learner. | `frontend/src/state/progressStore.js:69`, `:87` |
 | **FR-30** | On load, a signed-in learner's server progress is **merged** into local progress, never overwriting it — best score wins, points take the maximum, completed stages union. | `frontend/src/state/progressStore.js:97-130` |
-| **FR-31** | A completed derivation is stored locally so that revisiting a stage restores the solved state instead of an empty workspace. | `frontend/src/state/progressStore.js:217`, `frontend/src/state/useGameState.js:101` |
+| **FR-31** | A completed derivation is stored locally so that revisiting a stage restores the solved state instead of an empty workspace. | `frontend/src/state/progressStore.js:217`, `frontend/src/state/useGameState.js:119` |
 | **FR-32** | A signed-in learner can load and save a full progress snapshot through two bearer-authenticated endpoints. | `backend/api/routes/progress.py:20`, `:26` |
 
 ### Sandbox
@@ -293,7 +296,7 @@ IDs are stable and are reused verbatim in
 | ID | Requirement | Primary evidence |
 |---|---|---|
 | **FR-38** | The tutorial is a 4-stage guided walkthrough on the real workspace: coach cards, a spotlight on the control under discussion, and a welcome deck before the first stage. | `frontend/src/content/tutorialContent.js`, `frontend/src/components/InteractiveTutorial.jsx:194` |
-| **FR-39** | The tutorial pauses 1500 ms on the law about to be applied before running its 1350 ms animation, so the learner can see what is about to happen. | `frontend/src/config/gameRules.js:60-62`, `frontend/src/state/useGameState.js:450` |
+| **FR-39** | The tutorial pauses 1500 ms on the law about to be applied before running its 1350 ms animation, so the learner can see what is about to happen. | `frontend/src/config/gameRules.js:60-62`, `frontend/src/state/useGameState.js:494` |
 | **FR-40** | Sound cues exist for step, hint, guide, correct, wrong, reset and completion, with a persisted on/off preference defaulting to on. | `frontend/src/config/gameRules.js:148`, `frontend/src/services/soundEffects.js:43` |
 | **FR-41** | Phones in portrait see a blocking rotate overlay; small tablets in portrait see a dismissible banner; pointer-fine windows are never reclassified as phones. | `frontend/src/hooks/useDeviceTier.js:57-94`, `frontend/src/components/OrientationGate.jsx:16` |
 | **FR-42** | The workspace re-homes its panels per device tier so the canvas keeps usable width and every control stays reachable, while the desktop three-column layout is unchanged. | `frontend/src/pages/ProblemPage.jsx:64-99`, `:363-424` |
@@ -306,7 +309,7 @@ IDs are stable and are reused verbatim in
 | **NFR-1** | **Single source of algebraic truth.** Exactly one Boolean engine exists, in JS. The backend serves content and scores numbers; it never parses or rewrites algebra. | `frontend/src/engine/index.js` is the only engine; no algebra in `backend/`. See [why-this-architecture.md](../07-explanation/why-this-architecture.md). |
 | **NFR-2** | **Engine purity.** `frontend/src/engine/**` imports only `config/` and itself — no React, no DOM, no network, no `fetch`. | Verified by import analysis: the only cross-folder imports in `engine/` are `../../config/gameRules.js` (`frontend/src/engine/scoring.js:18`, `frontend/src/engine/sandbox/input.js:36`). |
 | **NFR-3** | **Evidence for correctness.** Every rewrite is accepted only if it preserves semantics under exhaustive truth-table equivalence, and the law table is property-tested. | `frontend/src/engine/equivalence.js:45`, `frontend/src/engine/__tests__/law-soundness.property.test.js` |
-| **NFR-4** | **Engine test suite passes.** 76 tests, 0 failures, no browser and no backend required. | Ran `cd frontend && npm test` → `# tests 76 / # pass 76 / # fail 0`. |
+| **NFR-4** | **Engine test suite passes.** 81 tests, 0 failures, no browser and no backend required. | Ran `cd frontend && npm test` → `# tests 81 / # pass 81 / # fail 0`. |
 | **NFR-5** | **Uniform API contract.** Every `/api/*` response is `{success, data, error}`, including framework 404 and validation 422. `GET /` is deliberately the one exception. | `backend/core/responses.py:24`, `backend/main.py:50-66`, `backend/api/routes/health.py:15` |
 | **NFR-6** | **Honest auth boundary.** Progress routes require a valid Supabase bearer token and answer `401 unauthorized` without one. | `backend/core/security.py:17`, live-verified: `GET /api/progress` → `401 {"code":"unauthorized","message":"Not authenticated"}`. |
 | **NFR-7** | **No secret in the repository or in documentation.** Credentials come from gitignored env files; docs use placeholders only. | `.gitignore:3` (`backend/.env`), `frontend/.gitignore:15` (`frontend/.env.local`), `backend/config/settings.py:19`, `frontend/src/services/supabaseClient.js:7` |
@@ -391,6 +394,6 @@ D0–D23 register lives in
 | D5 | Nine routes, `/` is the landing page, level selection is `/levels`. | Four routes, `/` is the carousel, "no landing page exists". | Route table in §4 above reflects `frontend/src/App.jsx:30-57`. |
 | D9 | 80 % average unlock, and Level 3 is fully playable. | "≥ 70 %", Level 3 "permanently Coming Soon". | `frontend/src/config/gameRules.js:49`, `backend/config/constants.py:26`; Level 3 has 12 puzzles in `content/levels.json`. |
 | D10 | **4 levels; the Tutorial (id 0) has 4 stages and Levels 1–3 have 12 each → 40 puzzles total.** | "3 levels… 6 puzzles each", Level 3 empty. | Counted from `content/levels.json` (`[4,12,12,12]`) and live-verified via `GET /api/levels` → `puzzleCount` `[4,12,12,12]`. |
-| D11 | 76 engine tests (NFR-4). | 46 unit tests. | Ran `npm test`: 76/76 pass. |
+| D11 | 81 engine tests (NFR-4). | 46 unit tests. | Ran `npm test`: 81/81 pass. |
 | D12 | 1350 ms law animation (FR-39). | 2.5 s animation. | `frontend/src/config/gameRules.js:60`. |
 | D20 | RLS is permissive, not per-user (out of scope). | RLS described as a safety feature. | `database/init.sql:56-58` is `FOR ALL USING (true)`. |
