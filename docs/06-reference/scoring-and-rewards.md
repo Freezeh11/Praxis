@@ -2,7 +2,7 @@
 
 **What this is:** the complete, arithmetic-level reference for how Praxis turns one finished puzzle
 into a score, stars, an unlock decision and points — every constant with its source line, every
-formula, and eight worked examples whose numbers were produced by running the real scorer.
+formula, and nine worked examples whose numbers were produced by running the real scorer.
 **Who it's for:** a new teammate who has to change a weight, explain a score to a learner, or debug
 why two places disagree about the same total. The authoritative implementation is
 `backend/services/scoring_service.py`; the UI mirror is `frontend/src/engine/scoring.js`.
@@ -124,7 +124,7 @@ only, the same outcome is persisted in the background (`backend/api/routes/score
 
 > **Terminology.** A "step" here is one law application — the same unit as a *derivation step*
 > elsewhere in these docs. A reorder or drag is not a step: `swapTerms` records no law and no history
-> entry (`frontend/src/state/useGameState.js:522-523`).
+> entry (`frontend/src/state/useGameState.js:566-567`).
 
 ## The three components
 
@@ -137,12 +137,29 @@ sometimes *not* the figure in `content/levels.json`. Worked example
 [W2](#worked-examples) shows exactly that.
 
 This exists because the frontend solves the puzzle for real and sends its own optimum
-(`frontend/src/components/puzzle/usePuzzleSession.js:166-170,207`), so the two can differ when the
-solver finds a shorter derivation than the author recorded. Note that the frontend's
+(`frontend/src/components/puzzle/usePuzzleSession.js:166-170,207`), so the two can differ whenever the
+runtime solver disagrees with the authored figure. Note that the frontend's
 `effectiveOptimalSteps` (`frontend/src/engine/scoring.js:39-42`) does **not** clamp; the clamp is
 server-side only. Scores still agree, because `stepsUsed <= optimal` holds on both sides; only the
 `breakdown.optimalSteps` number differs, and the server's response overwrites the local one
 (`frontend/src/components/puzzle/usePuzzleSession.js:208-213`).
+
+**What the client sends is the objective-aware optimum.** When a stage opens, the workspace
+BFS-searches the graded state graph for the fewest steps that reach the goal **and** apply every law
+id in the puzzle's `targetLaws` (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`, wired
+at `frontend/src/state/useGameState.js:87-113`). A puzzle that declares no target laws keeps the plain
+shortest path (`findOptimalPath`, `frontend/src/engine/solver.js:176`), and when no route satisfies the
+objective — or the search budget runs out — the workspace falls back to that plain optimum
+(`frontend/src/state/useGameState.js:101-105`). The authored `optimalSteps` in `content/levels.json`
+is used only when the solver cannot confirm a figure at all (`frontend/src/state/useGameState.js:107-117`).
+
+Because the optimum is objective-aware, the raw shortest path to the goal is **not necessarily** the
+efficiency bar. That is deliberate, and the consequence is spelled out under [Efficiency](#efficiency)
+and worked through in [W9](#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1). The two figures
+still differ on **11 of the 40** shipped puzzles (verified with `findOptimalPath` versus
+`findOptimalPathWithLaws`); they coincide on Tutorial stage 1 only because the shortcut that used to
+demonstrate the difference was a semantic absorption collapse, which is now forbidden — see
+[boolean-laws.md §5.3](boolean-laws.md#53-absorption--absorption-law).
 
 ### Efficiency
 
@@ -156,6 +173,14 @@ efficiency = max(0, 40 - (stepsUsed - optimal)*10) otherwise
 - Each extra step costs 10. Four steps over the optimum floors the band at 0, and further steps cost
   nothing more.
 - The value is always one of `0, 10, 20, 30, 40` in practice.
+- **The optimum is the objective-aware one, not necessarily the raw shortest path.** Full marks are
+  measured against the fewest steps that reach the goal *and* apply every target law ([above](#the-optimal-step-count--mindeclared-used)).
+  Where a deliberately clever route arrives in fewer steps *without* using a required law, it still
+  earns the full 40 efficiency points — it just forfeits that law's share of the target-law band
+  (10 points per law when three are declared). Efficiency asks "did you get there as efficiently as
+  the intended route?", not "did you find the shortest path?". The two optima coincide on Tutorial
+  stage 1 and still differ on the other 11 puzzles that have a shortcut;
+  [W9](#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1) works through both cases.
 
 ### Target laws
 
@@ -190,9 +215,9 @@ hintIndependence = max(0, 30 - assistance * 10)
 - A hint and a Guide destroy the same 10 score points. Three or more assistance events floor the band
   at 0; the counter keeps incrementing but the score no longer changes.
 - The hint counter is unbounded and has no cap: every hint request increments it
-  (`frontend/src/state/useGameState.js:501-520`), including repeats of the last static hint
-  (`frontend/src/state/useGameState.js:515-518`).
-- The two counters reset when a puzzle is loaded (`frontend/src/state/useGameState.js:136-137`), so a
+  (`frontend/src/state/useGameState.js:545-564`), including repeats of the last static hint
+  (`frontend/src/state/useGameState.js:559-562`).
+- The two counters reset when a puzzle is loaded (`frontend/src/state/useGameState.js:154-155`), so a
   reset does not erase the assistance the learner already consumed within the session's attempt.
 
 ## The breakdown object
@@ -242,20 +267,20 @@ reproduces it exactly.
 ### W2 — `stepsUsed` **shorter than** the recorded optimum (the clamp)
 
 Puzzle: Level 1 (`levelId: 1`), stage 2 — `x'y + xy + xy → y`, `targetLaws: ["idempotent",
-"distributive", "complement"]`, `optimalSteps: 3` in `content/levels.json`.
+"distributive", "complement"]`, `optimalSteps: 4` in `content/levels.json`.
 
 | Input | `stepsUsed: 2` (fewer than the authored optimum), all three target laws applied, no hints, no Guides |
 |---|---|
 
 | Step | Arithmetic | Result |
 |---|---|---|
-| optimal | declared 3, but `min(3, 2)` | **`2`** ← the clamp |
+| optimal | declared 4, but `min(4, 2)` | **`2`** ← the clamp |
 | efficiency | `2 <= 2` → full band | `40.0` |
 | targetLaw | `3/3 × 30` | `30.0` |
 | hintIndependence | `30 − 0` | `30.0` |
 | total | `40 + 30 + 30` | **`100.0`** |
 | earnedPoints | `round(5.0)` | **`5`** |
-| `breakdown.optimalSteps` | the clamped value | **`2`** — while the puzzle file says `3` |
+| `breakdown.optimalSteps` | the clamped value | **`2`** — while the puzzle file says `4` |
 
 The learner is **not** penalised for beating the recorded optimum, and the breakdown reports the
 lowered bar. The same clamp applies to a caller-supplied override: submitting `optimalSteps: 5` with
@@ -264,23 +289,26 @@ lowered bar. The same clamp applies to a caller-supplied override: submitting `o
 ### W3 — over the optimum, one hint, one Guide, partial target laws
 
 Puzzle: Level 2 (`levelId: 2`), stage 0 — `xy'z + xyz → xz`, `targetLaws: ["distributive",
-"complement", "identity"]`, `optimalSteps: 3`.
+"complement", "identity"]`, `optimalSteps: 4`.
 
 | Input | `stepsUsed: 5`, `lawsUsed: ["distributive"]`, `hintsUsed: 1`, `guidesUsed: 1` |
 |---|---|
 
 | Step | Arithmetic | Result |
 |---|---|---|
-| optimal | `min(3, 5)` | `3` |
-| efficiency | 2 steps over → `40 − 2 × 10` | `20.0` |
+| optimal | `min(4, 5)` | `4` |
+| efficiency | 1 step over → `40 − 10` | `30.0` |
 | targetLaw | 1 of 3 matched → `round(10.0, 1)` | `10.0` |
 | assistance | `1 + 1` | `2` |
 | hintIndependence | `30 − 2 × 10` | `10.0` |
-| total | `20 + 10 + 10` | **`40.0`** |
-| earnedPoints | `round(2.0)` | **`2`** |
+| total | `30 + 10 + 10` | **`50.0`** |
+| earnedPoints — **server** | `round(2.5)` in Python → half-to-**even** | **`2`** |
+| earnedPoints — **browser** | `Math.round(2.5)` in JS → half-**up** | **`3`** |
 
 Note the double cost of the Guide: `−10` score points here **and** `−20` spendable points at
-activation time (see [Hints and Guides](#hints-and-guides)).
+activation time (see [Hints and Guides](#hints-and-guides)). Note also that this total lands on
+`.5`, so it is one of the three totals where the server and the browser disagree — see
+[The rounding trap](#the-rounding-trap).
 
 ### W4 — the 90.0 case where the two implementations disagree
 
@@ -302,38 +330,43 @@ This is register row **D21**. See [The rounding trap](#the-rounding-trap).
 
 ### W5 — a 50.0 total, the second disagreement
 
-Puzzle: Level 1, stage 2 (`optimalSteps: 3`, three target laws).
+Puzzle: Level 1, stage 2 (`optimalSteps: 4`, three target laws).
 
-| Input | `stepsUsed: 5`, `lawsUsed: []`, no hints |
+| Input | `stepsUsed: 5`, `lawsUsed: []`, `hintsUsed: 1` |
 |---|---|
 
 | Step | Arithmetic | Result |
 |---|---|---|
-| optimal | `min(3, 5)` | `3` |
-| efficiency | 2 steps over | `20.0` |
+| optimal | `min(4, 5)` | `4` |
+| efficiency | 1 step over | `30.0` |
 | targetLaw | 0 of 3 | `0.0` |
-| hintIndependence | unaided | `30.0` |
-| total | `20 + 0 + 30` | **`50.0`** |
+| hintIndependence | `30 − 10` | `20.0` |
+| total | `30 + 0 + 20` | **`50.0`** |
 | earnedPoints — server | `round(2.5)` → half-to-even | **`2`** |
 | earnedPoints — browser | `Math.round(2.5)` → half-up | **`3`** |
 
 ### W6 — every band floored at zero
 
-Puzzle: Level 3, stage 10 — `wx'y'z + wx'yz + wxy'z + wxyz → wz`, `optimalSteps: 7`, three target
+Puzzle: Level 3, stage 10 — `wx'y'z + wx'yz + wxy'z + wxyz → wz`, `optimalSteps: 14`, three target
 laws.
 
-| Input | `stepsUsed: 15`, `lawsUsed: []`, `hintsUsed: 3`, `guidesUsed: 1` |
+| Input | `stepsUsed: 19`, `lawsUsed: []`, `hintsUsed: 3`, `guidesUsed: 1` |
 |---|---|
 
 | Step | Arithmetic | Result |
 |---|---|---|
-| optimal | `min(7, 15)` | `7` |
-| efficiency | 8 steps over → `40 − 80 = −40` → clamped | `0.0` |
+| optimal | `min(14, 19)` | `14` |
+| efficiency | 5 steps over → `40 − 50 = −10` → clamped | `0.0` |
 | targetLaw | 0 of 3 | `0.0` |
 | assistance | `3 + 1` | `4` |
 | hintIndependence | `30 − 40 = −10` → clamped | `0.0` |
 | total | `0 + 0 + 0` | **`0.0`** |
 | earnedPoints | `round(0.0)` | **`0`** |
+
+*(The input moved from `stepsUsed: 15` to `19` in the same change that lengthened this puzzle's
+optimum from `10` to `14` — at 15 steps it is now only one step over, which no longer floors the
+efficiency band. The point of the example is the floors, so the overshoot had to grow with the
+optimum.)*
 
 A total of `0.0` is still a completed stage: it is stored in `stage_progress` with
 `best_score = 0`, and the learner still collects the 10-point base XP. Stars: see
@@ -386,6 +419,76 @@ compute_score(level_id=1, stage_idx=0, steps_used=2, laws_used=[],
 Direct confirmation of the guard alone: `_target_law(set(), set())` → `30.0`
 (`backend/services/scoring_service.py:99-102`). The same rule exists in the frontend mirror
 (`frontend/src/engine/scoring.js:70-72`).
+
+### W9 — the taught route is now the only route (Tutorial, stage 1)
+
+Puzzle: Tutorial (`levelId: 0`), stage 1 — `x'y + z + xy → y + z`, `targetLaws: ["distributive",
+"complement", "identity"]`, `optimalSteps: 3`.
+
+Until the structure-preserving guard landed, this puzzle had **two** routes: the taught 3-step chain
+and a 2-step shortcut, `Distributive (Factor) → Absorption Law (Product)`, which swallowed the
+tautological clause `x' + x` in one semantic step and scored 80. The proposal's Module 4 forbids
+exactly that collapse — every constant factor must be rendered as its own clickable state — so
+`y(x' + x)` may only become `y · 1` (Complement) and then `y` (Identity). **The shortcut is no longer
+offered at all:** the plain shortest path and the objective-aware optimum are now the same 3-step
+chain.
+
+| | Taught route = plain shortest path = objective-aware optimum |
+|---|---|
+| Steps | 3 |
+| Derivation | `Distributive (Factor)`, then `Complement Law`, then `Identity Law` |
+| Law ids | `distributive`, `complement`, `identity` |
+
+| Step | Arithmetic | Result |
+|---|---|---|
+| optimal | `min(3, 3)` | `3` |
+| efficiency | `3 <= 3` → full band | `40.0` |
+| targetLaw | 3 of 3 → `round(30.0, 1)` | `30.0` |
+| hintIndependence | unaided | `30.0` |
+| total | `40 + 30 + 30` | **`100.0`** |
+| earnedPoints | `round(5.0)` | **`5`** |
+
+The objective-aware optimum is still a **separate** rule, and what it exists to express still holds:
+a route that reaches the goal in fewer steps while skipping a required law keeps the full 40
+efficiency points and forfeits only the skipped laws' share of the target-law band. The live case is
+now Tutorial stage 2 — `(x + y)' + x'y' → x'y'`, `targetLaws: ["demorgan-or", "idempotent"]`,
+`optimalSteps: 2`:
+
+| | 1-step route (absorption) | Taught route (objective-aware optimum) |
+|---|---|---|
+| Derivations | `Absorption Law` | `De Morgan's (OR→AND)`, then `Idempotent Law` |
+| Law ids | `absorption` | `demorgan-or`, `idempotent` |
+| Steps | 1 | 2 |
+
+| Step | 1-step route | Taught route (2 steps) |
+|---|---|---|
+| optimal | `min(2, 1)` → **`1`** (the clamp) | `min(2, 2)` → **`2`** |
+| efficiency | `1 <= 2` → `40.0` | `2 <= 2` → `40.0` |
+| targetLaw | 0 of 2 → `0.0` | 2 of 2 → `30.0` |
+| hintIndependence | unaided → `30.0` | unaided → `30.0` |
+| total | **`70.0`** | **`100.0`** |
+| earnedPoints | `round(3.5)` → **`4`** on both sides | `round(5.0)` → **`5`** |
+
+Read the two tables together and the two deliberate rules are visible at once:
+
+- **A shorter route that skips a required law keeps full efficiency and forfeits only that law's
+  target-law credit.** The Tutorial stage 2 shortcut is *not* punished for being clever; it is simply
+  not credited with `demorgan-or` or `idempotent`. With two laws declared, each skipped law costs 15
+  of the 30 target-law points.
+- **Following the puzzle's own teaching earns a perfect 100.** Before `findOptimalPathWithLaws`,
+  stage 1's taught 3-step route was scored against a 2-step bar — one step over, so `30.0` efficiency
+  and a total of `90.0`, with 100 out of reach on this puzzle (verified by running the scorer). Across
+  the shipped content a perfect 100 was unreachable on 25 of the 40 puzzles; it is now reachable on
+  all 40 (see
+  [known-limitations.md §10](../07-explanation/known-limitations.md#10-things-that-look-wrong-but-are-correct),
+  and the guard test at `frontend/src/engine/__tests__/solver.test.js:162-201`). The Module 4 guard
+  then removed the last shortcut that made the two bars differ on a *taught* route: on all 40 puzzles
+  the route that applies every target law now scores 100, and the shortest path reaching the goal only
+  scores less when it genuinely skips a declared law.
+
+The `optimalHint` no longer fires for the taught route either: the modal renders it behind
+`scoreResult.efficiency < 40` (`frontend/src/components/puzzle/ScoreModal.jsx:154-156`), and the
+taught route now reaches that band. It still fires for a learner who overshoots the optimum.
 
 ## The rounding trap
 
@@ -558,11 +661,11 @@ Per **first** completion of a stage, on a graded level:
 
 | Effect | Amount | Evidence |
 |---|---|---|
-| Base XP | `+10` (`STAGE_COMPLETION_XP`) | `frontend/src/config/gameRules.js:32`; set at completion in `frontend/src/state/useGameState.js:439` |
+| Base XP | `+10` (`STAGE_COMPLETION_XP`) | `frontend/src/config/gameRules.js:32`; set at completion in `frontend/src/state/useGameState.js:483` |
 | Score bonus | `+0 … +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:55` |
 | Streak | `+1` on `streak`, and `best_streak` raised to the new high-water mark | `frontend/src/state/progressStore.js:170-175` |
 | Guide spend | `−20` per Guide activated, floored at 0 | `frontend/src/pages/ProblemPage.jsx:261-270`; `frontend/src/state/progressStore.js:178` |
-| Hints | no point cost | the only `deductPoints` call site in the app is the Guide activation (`frontend/src/pages/ProblemPage.jsx:268`); the hint path at `frontend/src/state/useGameState.js:501-520` never spends points |
+| Hints | no point cost | the only `deductPoints` call site in the app is the Guide activation (`frontend/src/pages/ProblemPage.jsx:268`); the hint path at `frontend/src/state/useGameState.js:545-564` never spends points |
 
 Points are credited **only the first time** a stage is completed on that profile: the credit is
 guarded by `if (isFirstTime)` (`frontend/src/components/puzzle/usePuzzleSession.js:190-192`). Replays
@@ -593,11 +696,15 @@ it says so.
 > arithmetic. There are no backend test files at all (`find . -name "test_*.py"` outside `venv`
 > returns nothing), and `compute_score` is referenced only by its own definition and the route
 > (`backend/services/scoring_service.py:32`, `backend/api/routes/score.py:27`). The seven frontend
-> engine test files in `frontend/src/engine/__tests__/` do not mention `estimateScore`,
-> `earnedPoints` or `scoring` (`grep -rln` returns no file). The e2e suites only check that a
-> `+N Points` pill appears (`.e2e/acceptance-features.mjs:900`). The numbers in this document were
-> produced by executing the scorer directly, because there is no test that would catch a regression
-> in them — in particular, nothing would catch the D21 divergence.
+> engine test files in `frontend/src/engine/__tests__/` do not mention `estimateScore` or
+> `earnedPoints` (`grep -rln` returns no file); `solver.test.js` does import `lawIdOf` from
+> `scoring.js`, but only to read the law ids a derivation used, not to check a score. The e2e suites
+> only check that a `+N Points` pill appears (`.e2e/acceptance-features.mjs:900`). The numbers in this
+> document were produced by executing the scorer directly, because there is no test that would catch a
+> regression in them — in particular, nothing would catch the D21 divergence. What *is* now guarded is
+> the input to the efficiency band: `frontend/src/engine/__tests__/solver.test.js:162-201` asserts that
+> every authored puzzle has an objective route covering all its `targetLaws` and that
+> `content/levels.json`'s `optimalSteps` matches it, so stale content now fails the suite.
 
 ## Known discrepancies
 
@@ -626,7 +733,7 @@ print(o.efficiency, o.target_law, o.hint_independence, o.total, o.earned_points)
 "
 # -> 40.0 30.0 30.0 100.0 5
 
-# W2 — stepsUsed below the recorded optimum (Level 1 stage 2 declares optimalSteps 3)
+# W2 — stepsUsed below the recorded optimum (Level 1 stage 2 declares optimalSteps 4)
 ./venv/bin/python -c "
 from services.scoring_service import compute_score
 o = compute_score(level_id=1, stage_idx=2, steps_used=2,
@@ -634,7 +741,16 @@ o = compute_score(level_id=1, stage_idx=2, steps_used=2,
                   hints_used=0, guides_used=0, optimal_steps=None)
 print(o.total, o.earned_points, o.breakdown['optimalSteps'])
 "
-# -> 100.0 5 2      (note the clamped optimum: content says 3)
+# -> 100.0 5 2      (note the clamped optimum: content says 4)
+
+# W5 — a 50.0 total, where the server and the browser disagree
+./venv/bin/python -c "
+from services.scoring_service import compute_score
+o = compute_score(level_id=1, stage_idx=2, steps_used=5, laws_used=[],
+                  hints_used=1, guides_used=0, optimal_steps=None)
+print(o.total, o.earned_points)
+"
+# -> 50.0 2
 
 # W4 — the 90.0 disagreement: server says 4 bonus points
 ./venv/bin/python -c "
@@ -645,6 +761,51 @@ o = compute_score(level_id=2, stage_idx=0, steps_used=3,
 print(o.total, o.earned_points)
 "
 # -> 90.0 4
+
+# W6 — every band floored at zero (Level 3 stage 10 now authors optimalSteps 14)
+./venv/bin/python -c "
+from services.scoring_service import compute_score
+o = compute_score(level_id=3, stage_idx=10, steps_used=19, laws_used=[],
+                  hints_used=3, guides_used=1, optimal_steps=None)
+print(o.breakdown['optimalSteps'], o.efficiency, o.target_law, o.hint_independence, o.total, o.earned_points)
+"
+# -> 14 0.0 0.0 0.0 0.0 0
+```
+
+W9 — the objective-aware optimum, run against the real engine (the command behind the W9 tables;
+`estimateScore` is the frontend mirror of the server's arithmetic):
+
+```bash
+cd /home/xris/Documents/GitHub/Praxis/frontend
+node --input-type=module -e "
+import { parseExpr } from './src/engine/parser.js'
+import { canonText } from './src/engine/render.js'
+import { findOptimalPath, findOptimalPathWithLaws } from './src/engine/solver.js'
+import { estimateScore, lawsUsedFromSteps } from './src/engine/scoring.js'
+const show = (label, exprText, goalText, tl) => {
+  const expr = parseExpr(exprText), goal = canonText(parseExpr(goalText))
+  const raw = findOptimalPath(expr, goal), obj = findOptimalPathWithLaws(expr, goal, tl)
+  console.log(label, '| plain shortest path:', raw.optimalSteps, '| objective-aware optimum:', obj.optimalSteps)
+  console.log('  raw route   :', raw.path.map(s => s.law).join(' > ') || '(none)')
+  console.log('  taught route:', obj.path.map(s => s.law).join(' > '))
+  for (const r of [raw, obj]) {
+    const s = estimateScore({ stepsUsed: r.path.length, optimalSteps: obj.optimalSteps, targetLaws: tl, lawsUsed: lawsUsedFromSteps(r.path) })
+    console.log('  ' + r.path.length + ' steps:', lawsUsedFromSteps(r.path).join(','), '-> efficiency', s.efficiency, '| targetLaw', s.targetLaw, '| total', s.total, '| earnedPoints', s.earnedPoints)
+  }
+}
+show('Tutorial 0:1', \"x'y + z + xy\", 'y + z', ['distributive','complement','identity'])
+show('Tutorial 0:2', \"(x + y)' + x'y'\", \"x'y'\", ['demorgan-or','idempotent'])
+"
+# -> Tutorial 0:1 | plain shortest path: 3 | objective-aware optimum: 3
+# ->   raw route   : Distributive (Factor) > Complement Law > Identity Law
+# ->   taught route: Distributive (Factor) > Complement Law > Identity Law
+# ->   3 steps: distributive,complement,identity -> efficiency 40 | targetLaw 30 | total 100 | earnedPoints 5
+# ->   3 steps: distributive,complement,identity -> efficiency 40 | targetLaw 30 | total 100 | earnedPoints 5
+# -> Tutorial 0:2 | plain shortest path: 1 | objective-aware optimum: 2
+# ->   raw route   : Absorption Law
+# ->   taught route: De Morgan's (OR→AND) > Idempotent Law
+# ->   1 steps: absorption -> efficiency 40 | targetLaw 0 | total 70 | earnedPoints 4
+# ->   2 steps: demorgan-or,idempotent -> efficiency 40 | targetLaw 30 | total 100 | earnedPoints 5
 ```
 
 The browser half of the same comparison:
