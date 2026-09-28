@@ -1,0 +1,1747 @@
+{
+ "stats": {
+  "files": 40,
+  "links": 1538,
+  "anchorLinks": 740,
+  "brokenFiles": 0,
+  "brokenAnchors": 169,
+  "samePageAnchors": 528
+ },
+ "brokenFiles": [],
+ "brokenAnchors": [
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 25,
+   "target": "#22-the-one-route-outside-the-envelope-get",
+   "want": "22-the-one-route-outside-the-envelope-get",
+   "how": "same-page"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 35,
+   "target": "#31-get",
+   "want": "31-get",
+   "how": "same-page"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1700,
+   "target": "#22-the-one-route-outside-the-envelope-get",
+   "want": "22-the-one-route-outside-the-envelope-get",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 20,
+   "target": "#4-stage-1-tokenizing",
+   "want": "4-stage-1-tokenizing",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 21,
+   "target": "#5-stage-2-parsing-into-an-ast",
+   "want": "5-stage-2-parsing-into-an-ast",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 22,
+   "target": "#6-stage-3-rendering-nodetext-vs-canontext",
+   "want": "6-stage-3-rendering-nodetext-vs-canontext",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 23,
+   "target": "#7-stage-4-normalising-normalize-vs-normalizeflat",
+   "want": "7-stage-4-normalising-normalize-vs-normalizeflat",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 24,
+   "target": "#8-stage-5-validation-and-what-is-not-validated",
+   "want": "8-stage-5-validation-and-what-is-not-validated",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 25,
+   "target": "#9-stage-6-semantics-the-truth-table",
+   "want": "9-stage-6-semantics-the-truth-table",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 26,
+   "target": "#10-stage-7-discovering-the-applicable-laws",
+   "want": "10-stage-7-discovering-the-applicable-laws",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 27,
+   "target": "#11-stage-8-choosing-and-applying-a-law",
+   "want": "11-stage-8-choosing-and-applying-a-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 28,
+   "target": "#12-stage-9-the-derivation-to-a-terminal-form",
+   "want": "12-stage-9-the-derivation-to-a-terminal-form",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 29,
+   "target": "#13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "want": "13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 374,
+   "target": "#13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "want": "13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 528,
+   "target": "../../06-reference/boolean-laws.md#53-absorption-absorption-law",
+   "resolved": "docs/06-reference/boolean-laws.md",
+   "want": "53-absorption-absorption-law",
+   "closest": [
+    "53-absorption--absorption-law"
+   ]
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 12,
+   "target": "#1-step-0-pick-the-shape-then-the-module",
+   "want": "1-step-0-pick-the-shape-then-the-module",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 13,
+   "target": "#2-step-1-the-six-fields-of-a-law-identity",
+   "want": "2-step-1-the-six-fields-of-a-law-identity",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 14,
+   "target": "#3-step-2-prove-the-law-before-you-code-it",
+   "want": "3-step-2-prove-the-law-before-you-code-it",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 15,
+   "target": "#4-step-3-wire-the-builders",
+   "want": "4-step-3-wire-the-builders",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 16,
+   "target": "#5-step-4-make-it-reachable-by-the-solver",
+   "want": "5-step-4-make-it-reachable-by-the-solver",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 17,
+   "target": "#6-step-5-hints-guide-and-hint-copy",
+   "want": "6-step-5-hints-guide-and-hint-copy",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 18,
+   "target": "#7-step-6-tests-that-actually-protect-the-law",
+   "want": "7-step-6-tests-that-actually-protect-the-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 19,
+   "target": "#8-step-7-content-animation-docs",
+   "want": "8-step-7-content-animation-docs",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 25,
+   "target": "#6-decision-tree-symptom-cause-fix",
+   "want": "6-decision-tree-symptom-cause-fix",
+   "how": "same-page"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 200,
+   "target": "../tutorials/understanding-the-engine.md#13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "resolved": "docs/05-guides/tutorials/understanding-the-engine.md",
+   "want": "13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation",
+   "closest": [
+    "13-stage-10--terminal-form-dead-ends-and-the-canonical-text-limitation"
+   ]
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 18,
+   "target": "#3-the-cardengine-mismatch-read-this-before-adding-a-law",
+   "want": "3-the-cardengine-mismatch-read-this-before-adding-a-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 21,
+   "target": "#51-complement-complement-law",
+   "want": "51-complement-complement-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 22,
+   "target": "#52-idempotent-idempotent-law",
+   "want": "52-idempotent-idempotent-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 23,
+   "target": "#53-absorption-absorption-law",
+   "want": "53-absorption-absorption-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 24,
+   "target": "#54-identity-identity-law",
+   "want": "54-identity-identity-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 25,
+   "target": "#55-annulment-annulment-law",
+   "want": "55-annulment-annulment-law",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 26,
+   "target": "#56-distributive-distributive-factor-distributive-pos",
+   "want": "56-distributive-distributive-factor-distributive-pos",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 27,
+   "target": "#57-double-neg-double-negation",
+   "want": "57-double-neg-double-negation",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 28,
+   "target": "#58-demorgan-and-de-morgans-andor",
+   "want": "58-demorgan-and-de-morgans-andor",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 29,
+   "target": "#59-demorgan-or-de-morgans-orand",
+   "want": "59-demorgan-or-de-morgans-orand",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 30,
+   "target": "#510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "want": "510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 31,
+   "target": "#6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "want": "6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 158,
+   "target": "#6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "want": "6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 161,
+   "target": "#510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "want": "510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 953,
+   "target": "#510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "want": "510-associative-associative-law-the-card-the-engine-does-not-implement",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 954,
+   "target": "#6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "want": "6-distributive-expand-the-internal-law-that-is-not-a-card",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 23,
+   "target": "#31-not_found-404",
+   "want": "31-not_found-404",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 24,
+   "target": "#32-content_unavailable-503",
+   "want": "32-content_unavailable-503",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 25,
+   "target": "#33-upstream_error-502",
+   "want": "33-upstream_error-502",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 26,
+   "target": "#34-unauthorized-401",
+   "want": "34-unauthorized-401",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 27,
+   "target": "#35-validation_error-422",
+   "want": "35-validation_error-422",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 28,
+   "target": "#36-http_error-404-405-any-framework-status",
+   "want": "36-http_error-404-405-any-framework-status",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 29,
+   "target": "#37-internal_error-500",
+   "want": "37-internal_error-500",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 92,
+   "target": "#31-not_found-404",
+   "want": "31-not_found-404",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 93,
+   "target": "#32-content_unavailable-503",
+   "want": "32-content_unavailable-503",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 94,
+   "target": "#33-upstream_error-502",
+   "want": "33-upstream_error-502",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 95,
+   "target": "#34-unauthorized-401",
+   "want": "34-unauthorized-401",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 96,
+   "target": "#35-validation_error-422",
+   "want": "35-validation_error-422",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 97,
+   "target": "#36-http_error-404-405-any-framework-status",
+   "want": "36-http_error-404-405-any-framework-status",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 98,
+   "target": "#37-internal_error-500",
+   "want": "37-internal_error-500",
+   "how": "same-page"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 363,
+   "target": "#33-upstream_error-502",
+   "want": "33-upstream_error-502",
+   "how": "same-page"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 79,
+   "target": "../../frontend/src/engine/node.js#L4",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L4",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 93,
+   "target": "../../frontend/src/engine/node.js#L7",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L7",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 121,
+   "target": "../../frontend/src/engine/node.js#L6",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L6",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 132,
+   "target": "../../frontend/src/engine/node.js#L7",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L7",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 144,
+   "target": "../../frontend/src/engine/laws/definitions.js#L30-L36",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L30-L36",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 145,
+   "target": "../../frontend/src/engine/sandbox/expand.js#L86",
+   "resolved": "frontend/src/engine/sandbox/expand.js",
+   "want": "L86",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 159,
+   "target": "../../frontend/src/engine/laws/definitions.js#L38-L44",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L38-L44",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 161,
+   "target": "../../frontend/src/engine/sandbox/expand.js#L87",
+   "resolved": "frontend/src/engine/sandbox/expand.js",
+   "want": "L87",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 176,
+   "target": "../../frontend/src/engine/laws/definitions.js#L38-L48",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L38-L48",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 177,
+   "target": "../../frontend/src/engine/laws/definitions.js#L46-L48",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L46-L48",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 192,
+   "target": "../../frontend/src/engine/node.js#L4",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L4",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 208,
+   "target": "../../frontend/src/engine/node.js#L1-L13",
+   "resolved": "frontend/src/engine/node.js",
+   "want": "L1-L13",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 223,
+   "target": "../../frontend/src/engine/tree.js#L4-L8",
+   "resolved": "frontend/src/engine/tree.js",
+   "want": "L4-L8",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 224,
+   "target": "../../frontend/src/engine/tree.js#L14",
+   "resolved": "frontend/src/engine/tree.js",
+   "want": "L14",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 239,
+   "target": "../../frontend/src/engine/normalize.js#L1-L2",
+   "resolved": "frontend/src/engine/normalize.js",
+   "want": "L1-L2",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 240,
+   "target": "../../frontend/src/engine/index.js#L34",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L34",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 253,
+   "target": "../../frontend/src/engine/render.js#L6",
+   "resolved": "frontend/src/engine/render.js",
+   "want": "L6",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 254,
+   "target": "../../frontend/src/engine/render.js#L28",
+   "resolved": "frontend/src/engine/render.js",
+   "want": "L28",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 269,
+   "target": "../../frontend/src/engine/equivalence.js#L45",
+   "resolved": "frontend/src/engine/equivalence.js",
+   "want": "L45",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 285,
+   "target": "../../frontend/src/state/useGameState.js#L15-L18",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L15-L18",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 300,
+   "target": "../../frontend/src/state/useGameState.js#L425",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L425",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 301,
+   "target": "../../frontend/src/engine/scoring.js#L25",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L25",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 319,
+   "target": "../../frontend/src/state/useGameState.js#L15-L18",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L15-L18",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 320,
+   "target": "../../frontend/src/state/useGameState.js#L461",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L461",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 321,
+   "target": "../../frontend/src/engine/sandbox/input.js#L67",
+   "resolved": "frontend/src/engine/sandbox/input.js",
+   "want": "L67",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 322,
+   "target": "../../frontend/src/engine/sandbox/input.js#L165",
+   "resolved": "frontend/src/engine/sandbox/input.js",
+   "want": "L165",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 339,
+   "target": "../../frontend/src/engine/laws/definitions.js#L31-L54",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L31-L54",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 355,
+   "target": "../../backend/services/scoring_service.py#L99-L107",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L99-L107",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 371,
+   "target": "../../frontend/src/engine/laws/definitions.js#L44",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L44",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 372,
+   "target": "../../frontend/src/engine/solver.js#L172",
+   "resolved": "frontend/src/engine/solver.js",
+   "want": "L172",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 373,
+   "target": "../../frontend/src/engine/solver.js#L255",
+   "resolved": "frontend/src/engine/solver.js",
+   "want": "L255",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 374,
+   "target": "../../frontend/src/engine/sandbox/input.js#L196",
+   "resolved": "frontend/src/engine/sandbox/input.js",
+   "want": "L196",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 375,
+   "target": "../../frontend/src/engine/__tests__/laws.test.js#L106-L109",
+   "resolved": "frontend/src/engine/__tests__/laws.test.js",
+   "want": "L106-L109",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 390,
+   "target": "../../frontend/src/engine/laws/scanHints.js#L22",
+   "resolved": "frontend/src/engine/laws/scanHints.js",
+   "want": "L22",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 391,
+   "target": "../../frontend/src/state/useGameState.js#L501",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L501",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 408,
+   "target": "../../frontend/src/state/useGameState.js#L560",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L560",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 409,
+   "target": "../../frontend/src/config/gameRules.js#L35",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L35",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 410,
+   "target": "../../backend/config/constants.py#L16",
+   "resolved": "backend/config/constants.py",
+   "want": "L16",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 434,
+   "target": "../../frontend/src/config/gameRules.js#L83",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L83",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 447,
+   "target": "../../database/init.sql#L24",
+   "resolved": "database/init.sql",
+   "want": "L24",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 448,
+   "target": "../../frontend/src/App.jsx#L42",
+   "resolved": "frontend/src/App.jsx",
+   "want": "L42",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 449,
+   "target": "../../backend/api/schemas/progress.py#L18",
+   "resolved": "backend/api/schemas/progress.py",
+   "want": "L18",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 465,
+   "target": "../../frontend/src/config/gameRules.js#L82-L85",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L82-L85",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 482,
+   "target": "../../frontend/src/components/TutorialGate.jsx#L1-L32",
+   "resolved": "frontend/src/components/TutorialGate.jsx",
+   "want": "L1-L32",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 483,
+   "target": "../../frontend/src/App.jsx#L40-L53",
+   "resolved": "frontend/src/App.jsx",
+   "want": "L40-L53",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 498,
+   "target": "../../frontend/src/components/OrientationGate.jsx#L1-L10",
+   "resolved": "frontend/src/components/OrientationGate.jsx",
+   "want": "L1-L10",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 531,
+   "target": "../../frontend/src/engine/sandbox/generator.js#L1-L11",
+   "resolved": "frontend/src/engine/sandbox/generator.js",
+   "want": "L1-L11",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 532,
+   "target": "../../frontend/src/config/gameRules.js#L173-L181",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L173-L181",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 545,
+   "target": "../../frontend/src/config/gameRules.js#L38-L46",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L38-L46",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 546,
+   "target": "../../frontend/src/state/progressStore.js#L281-L284",
+   "resolved": "frontend/src/state/progressStore.js",
+   "want": "L281-L284",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 560,
+   "target": "../../frontend/src/config/gameRules.js#L48-L49",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L48-L49",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 561,
+   "target": "../../frontend/src/state/progressStore.js#L309",
+   "resolved": "frontend/src/state/progressStore.js",
+   "want": "L309",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 563,
+   "target": "../../backend/config/constants.py#L26",
+   "resolved": "backend/config/constants.py",
+   "want": "L26",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 576,
+   "target": "../../backend/config/constants.py#L9-L12",
+   "resolved": "backend/config/constants.py",
+   "want": "L9-L12",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 577,
+   "target": "../../frontend/src/config/gameRules.js#L14-L18",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L14-L18",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 593,
+   "target": "../../backend/services/scoring_service.py#L55",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L55",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 594,
+   "target": "../../backend/api/schemas/score.py#L28",
+   "resolved": "backend/api/schemas/score.py",
+   "want": "L28",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 595,
+   "target": "../../frontend/src/engine/scoring.js#L80",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L80",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 608,
+   "target": "../../frontend/src/config/gameRules.js#L32",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L32",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 610,
+   "target": "../../database/init.sql#L9",
+   "resolved": "database/init.sql",
+   "want": "L9",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 628,
+   "target": "../../frontend/src/engine/index.js#L1-L14",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L1-L14",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 629,
+   "target": "../../frontend/src/engine/scoring.js#L2-L12",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L2-L12",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 646,
+   "target": "../../backend/core/responses.py#L24-L43",
+   "resolved": "backend/core/responses.py",
+   "want": "L24-L43",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 648,
+   "target": "../../frontend/src/services/apiClient.js#L33",
+   "resolved": "frontend/src/services/apiClient.js",
+   "want": "L33",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 649,
+   "target": "../../backend/api/routes/health.py#L15-L18",
+   "resolved": "backend/api/routes/health.py",
+   "want": "L15-L18",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 666,
+   "target": "../../database/init.sql#L49-L58",
+   "resolved": "database/init.sql",
+   "want": "L49-L58",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 667,
+   "target": "../../database/init.sql#L54-L55",
+   "resolved": "database/init.sql",
+   "want": "L54-L55",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 668,
+   "target": "../../backend/repositories/progress_repository.py#L32",
+   "resolved": "backend/repositories/progress_repository.py",
+   "want": "L32",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 684,
+   "target": "../../backend/config/settings.py#L61",
+   "resolved": "backend/config/settings.py",
+   "want": "L61",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 685,
+   "target": "../../backend/supabase_client.py#L26-L31",
+   "resolved": "backend/supabase_client.py",
+   "want": "L26-L31",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 686,
+   "target": "../../render.yaml#L13-L15",
+   "resolved": "render.yaml",
+   "want": "L13-L15",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 702,
+   "target": "../../frontend/src/services/supabaseClient.js#L6-L10",
+   "resolved": "frontend/src/services/supabaseClient.js",
+   "want": "L6-L10",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 719,
+   "target": "../../frontend/src/services/apiClient.js#L26-L31",
+   "resolved": "frontend/src/services/apiClient.js",
+   "want": "L26-L31",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 720,
+   "target": "../../backend/core/security.py#L17-L35",
+   "resolved": "backend/core/security.py",
+   "want": "L17-L35",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 721,
+   "target": "../../backend/supabase_client.py#L87-L98",
+   "resolved": "backend/supabase_client.py",
+   "want": "L87-L98",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 739,
+   "target": "../../database/init.sql#L4",
+   "resolved": "database/init.sql",
+   "want": "L4",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 740,
+   "target": "../../frontend/vite.config.js#L24-L28",
+   "resolved": "frontend/vite.config.js",
+   "want": "L24-L28",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 767,
+   "target": "../../backend/services/scoring_service.py#L55",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L55",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 768,
+   "target": "../../frontend/src/engine/scoring.js#L80",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L80",
+   "closest": []
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 770,
+   "target": "../../frontend/src/engine/scoring.js#L4-L7",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L4-L7",
+   "closest": []
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 324,
+   "target": "../../frontend/src/services/apiClient.js#L63",
+   "resolved": "frontend/src/services/apiClient.js",
+   "want": "L63",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 63,
+   "target": "../../backend/api/routes/__init__.py#L1",
+   "resolved": "backend/api/routes/__init__.py",
+   "want": "L1",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 65,
+   "target": "../../backend/services/__init__.py#L1",
+   "resolved": "backend/services/__init__.py",
+   "want": "L1",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 66,
+   "target": "../../backend/repositories/__init__.py#L1",
+   "resolved": "backend/repositories/__init__.py",
+   "want": "L1",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 67,
+   "target": "../../backend/api/routes/levels.py#L13",
+   "resolved": "backend/api/routes/levels.py",
+   "want": "L13",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 68,
+   "target": "../../backend/services/content_service.py#L11",
+   "resolved": "backend/services/content_service.py",
+   "want": "L11",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 69,
+   "target": "../../backend/repositories/progress_repository.py#L13",
+   "resolved": "backend/repositories/progress_repository.py",
+   "want": "L13",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 83,
+   "target": "../../backend/repositories/progress_repository.py#L15-L18",
+   "resolved": "backend/repositories/progress_repository.py",
+   "want": "L15-L18",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 84,
+   "target": "../../backend/repositories/progress_repository.py#L29-L73",
+   "resolved": "backend/repositories/progress_repository.py",
+   "want": "L29-L73",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 100,
+   "target": "../../backend/main.py#L15-L20",
+   "resolved": "backend/main.py",
+   "want": "L15-L20",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 102,
+   "target": "../../backend/main.py#L1",
+   "resolved": "backend/main.py",
+   "want": "L1",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 115,
+   "target": "../../backend/api/routes/score.py#L27-L49",
+   "resolved": "backend/api/routes/score.py",
+   "want": "L27-L49",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 117,
+   "target": "../../backend/api/routes/laws.py#L18-L21",
+   "resolved": "backend/api/routes/laws.py",
+   "want": "L18-L21",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 132,
+   "target": "../../backend/core/errors.py#L11-L20",
+   "resolved": "backend/core/errors.py",
+   "want": "L11-L20",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 133,
+   "target": "../../backend/core/errors.py#L52-L81",
+   "resolved": "backend/core/errors.py",
+   "want": "L52-L81",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 134,
+   "target": "../../backend/main.py#L39-L76",
+   "resolved": "backend/main.py",
+   "want": "L39-L76",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 135,
+   "target": "../../backend/services/content_service.py#L28",
+   "resolved": "backend/services/content_service.py",
+   "want": "L28",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 147,
+   "target": "../../backend/core/responses.py#L24-L43",
+   "resolved": "backend/core/responses.py",
+   "want": "L24-L43",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 149,
+   "target": "../../backend/api/routes/levels.py#L18",
+   "resolved": "backend/api/routes/levels.py",
+   "want": "L18",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 150,
+   "target": "../../backend/api/routes/health.py#L1-L3",
+   "resolved": "backend/api/routes/health.py",
+   "want": "L1-L3",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 164,
+   "target": "../../backend/config/settings.py#L30-L38",
+   "resolved": "backend/config/settings.py",
+   "want": "L30-L38",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 165,
+   "target": "../../backend/config/settings.py#L56-L63",
+   "resolved": "backend/config/settings.py",
+   "want": "L56-L63",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 166,
+   "target": "../../backend/config/settings.py#L74-L75",
+   "resolved": "backend/config/settings.py",
+   "want": "L74-L75",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 167,
+   "target": "../../render.yaml#L12-L15",
+   "resolved": "render.yaml",
+   "want": "L12-L15",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 185,
+   "target": "../../frontend/src/services/apiClient.js#L5-L6",
+   "resolved": "frontend/src/services/apiClient.js",
+   "want": "L5-L6",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 188,
+   "target": "../../frontend/src/services/apiClient.js#L63",
+   "resolved": "frontend/src/services/apiClient.js",
+   "want": "L63",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 204,
+   "target": "../../frontend/src/engine/index.js#L8-L13",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L8-L13",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 221,
+   "target": "../../frontend/src/engine/index.js#L12-L13",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L12-L13",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 240,
+   "target": "../../frontend/src/config/gameRules.js#L1-L11",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L1-L11",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 241,
+   "target": "../../frontend/src/config/gameRules.js#L13-L181",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L13-L181",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 260,
+   "target": "../../frontend/src/components/puzzle/ZoomControls.jsx#L1-L5",
+   "resolved": "frontend/src/components/puzzle/ZoomControls.jsx",
+   "want": "L1-L5",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 262,
+   "target": "../../frontend/src/components/laws/LawCard.jsx#L1-L4",
+   "resolved": "frontend/src/components/laws/LawCard.jsx",
+   "want": "L1-L4",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 274,
+   "target": "../../frontend/src/state/authContext.js#L1-L6",
+   "resolved": "frontend/src/state/authContext.js",
+   "want": "L1-L6",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 277,
+   "target": "../../frontend/src/components/ui/authInputStyles.js#L1-L5",
+   "resolved": "frontend/src/components/ui/authInputStyles.js",
+   "want": "L1-L5",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 281,
+   "target": "../../frontend/eslint.config.js#L14",
+   "resolved": "frontend/eslint.config.js",
+   "want": "L14",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 300,
+   "target": "../../backend/repositories/content_repository.py#L19-L43",
+   "resolved": "backend/repositories/content_repository.py",
+   "want": "L19-L43",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 302,
+   "target": "../../backend/api/schemas/score.py#L13-L21",
+   "resolved": "backend/api/schemas/score.py",
+   "want": "L13-L21",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 303,
+   "target": "../../frontend/src/engine/index.js#L1-L14",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L1-L14",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 317,
+   "target": "../../frontend/src/content/gameContent.js#L2-L6",
+   "resolved": "frontend/src/content/gameContent.js",
+   "want": "L2-L6",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 319,
+   "target": "../../frontend/vite.config.js#L14-L16",
+   "resolved": "frontend/vite.config.js",
+   "want": "L14-L16",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 321,
+   "target": "../../backend/repositories/content_repository.py#L16",
+   "resolved": "backend/repositories/content_repository.py",
+   "want": "L16",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 335,
+   "target": "../../frontend/src/engine/laws/definitions.js#L10-L11",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L10-L11",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 338,
+   "target": "../../frontend/src/engine/laws/definitions.js#L63-L65",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L63-L65",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 339,
+   "target": "../../frontend/src/engine/scoring.js#L25-L28",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L25-L28",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 358,
+   "target": "../../frontend/src/engine/sandbox/input.js#L60-L70",
+   "resolved": "frontend/src/engine/sandbox/input.js",
+   "want": "L60-L70",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 382,
+   "target": "../../backend/services/scoring_service.py#L46-L85",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L46-L85",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 383,
+   "target": "../../backend/services/scoring_service.py#L46",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L46",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 384,
+   "target": "../../frontend/src/state/useGameState.js#L514-L515",
+   "resolved": "frontend/src/state/useGameState.js",
+   "want": "L514-L515",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 385,
+   "target": "../../frontend/src/components/puzzle/ScoreModal.jsx#L154-L156",
+   "resolved": "frontend/src/components/puzzle/ScoreModal.jsx",
+   "want": "L154-L156",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 387,
+   "target": "../../frontend/src/engine/sandbox/generator.js#L137",
+   "resolved": "frontend/src/engine/sandbox/generator.js",
+   "want": "L137",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 400,
+   "target": "../../backend/services/scoring_service.py#L99-L107",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L99-L107",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 418,
+   "target": "../../frontend/src/config/gameRules.js#L82-L85",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L82-L85",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 420,
+   "target": "../../frontend/src/components/TutorialGate.jsx#L4-L5",
+   "resolved": "frontend/src/components/TutorialGate.jsx",
+   "want": "L4-L5",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 422,
+   "target": "../../database/init.sql#L24",
+   "resolved": "database/init.sql",
+   "want": "L24",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 437,
+   "target": "../../frontend/src/config/gameRules.js#L115-L132",
+   "resolved": "frontend/src/config/gameRules.js",
+   "want": "L115-L132",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 451,
+   "target": "../../backend/services/scoring_service.py#L80-L88",
+   "resolved": "backend/services/scoring_service.py",
+   "want": "L80-L88",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 453,
+   "target": "../../frontend/src/engine/scoring.js#L39-L42",
+   "resolved": "frontend/src/engine/scoring.js",
+   "want": "L39-L42",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 472,
+   "target": "../../frontend/src/content/tutorialContent.js#L1-L5",
+   "resolved": "frontend/src/content/tutorialContent.js",
+   "want": "L1-L5",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 497,
+   "target": "../../backend/config/constants.py#L9-L26",
+   "resolved": "backend/config/constants.py",
+   "want": "L9-L26",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 511,
+   "target": "../../backend/core/responses.py#L1-L4",
+   "resolved": "backend/core/responses.py",
+   "want": "L1-L4",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 512,
+   "target": "../../backend/supabase_client.py#L1-L4",
+   "resolved": "backend/supabase_client.py",
+   "want": "L1-L4",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 513,
+   "target": "../../backend/services/content_service.py#L1-L4",
+   "resolved": "backend/services/content_service.py",
+   "want": "L1-L4",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 515,
+   "target": "../../backend/repositories/__init__.py#L1",
+   "resolved": "backend/repositories/__init__.py",
+   "want": "L1",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 557,
+   "target": "../../frontend/src/engine/laws/definitions.js#L31-L54",
+   "resolved": "frontend/src/engine/laws/definitions.js",
+   "want": "L31-L54",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 567,
+   "target": "../../frontend/src/config/storageKeys.js#L10-L28",
+   "resolved": "frontend/src/config/storageKeys.js",
+   "want": "L10-L28",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 568,
+   "target": "../../frontend/src/config/storageKeys.js#L1-L6",
+   "resolved": "frontend/src/config/storageKeys.js",
+   "want": "L1-L6",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 570,
+   "target": "../../.e2e/_harness.mjs#L54-L60",
+   "resolved": ".e2e/_harness.mjs",
+   "want": "L54-L60",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 580,
+   "target": "../../frontend/src/styles/utilities.css#L1-L6",
+   "resolved": "frontend/src/styles/utilities.css",
+   "want": "L1-L6",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 581,
+   "target": "../../frontend/src/styles/tokens.css#L1-L9",
+   "resolved": "frontend/src/styles/tokens.css",
+   "want": "L1-L9",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 592,
+   "target": "../../backend/config/settings.py#L60-L62",
+   "resolved": "backend/config/settings.py",
+   "want": "L60-L62",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 593,
+   "target": "../../frontend/src/services/supabaseClient.js#L6-L7",
+   "resolved": "frontend/src/services/supabaseClient.js",
+   "want": "L6-L7",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 595,
+   "target": "../../frontend/vite.config.js#L8",
+   "resolved": "frontend/vite.config.js",
+   "want": "L8",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 613,
+   "target": "../../frontend/package.json#L11",
+   "resolved": "frontend/package.json",
+   "want": "L11",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 630,
+   "target": "../../frontend/src/engine/__tests__/law-soundness.property.test.js#L28-L36",
+   "resolved": "frontend/src/engine/__tests__/law-soundness.property.test.js",
+   "want": "L28-L36",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 632,
+   "target": "../../frontend/src/engine/equivalence.js#L45",
+   "resolved": "frontend/src/engine/equivalence.js",
+   "want": "L45",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 648,
+   "target": "../../.e2e/run-all-suites.sh#L26",
+   "resolved": ".e2e/run-all-suites.sh",
+   "want": "L26",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 680,
+   "target": "../../.e2e/_harness.mjs#L86-L115",
+   "resolved": ".e2e/_harness.mjs",
+   "want": "L86-L115",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 682,
+   "target": "../../.e2e/_harness.mjs#L126-L156",
+   "resolved": ".e2e/_harness.mjs",
+   "want": "L126-L156",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 700,
+   "target": "../../docs/_staging/tools/check-docs.mjs#L161-L193",
+   "resolved": "docs/_staging/tools/check-docs.mjs",
+   "want": "L161-L193",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 714,
+   "target": "../../docs/_staging/tools/check-docs.mjs#L129",
+   "resolved": "docs/_staging/tools/check-docs.mjs",
+   "want": "L129",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 730,
+   "target": "../../.gitignore#L3",
+   "resolved": ".gitignore",
+   "want": "L3",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 731,
+   "target": "../../frontend/.gitignore#L12-L13",
+   "resolved": "frontend/.gitignore",
+   "want": "L12-L13",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 733,
+   "target": "../../render.yaml#L14-L15",
+   "resolved": "render.yaml",
+   "want": "L14-L15",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 735,
+   "target": "../../docs/_staging/tools/check-docs.mjs#L70-L77",
+   "resolved": "docs/_staging/tools/check-docs.mjs",
+   "want": "L70-L77",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 738,
+   "target": "../../.e2e/_harness.mjs#L47",
+   "resolved": ".e2e/_harness.mjs",
+   "want": "L47",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 787,
+   "target": "../../docs/_staging/tools/check-docs.mjs#L228-L249",
+   "resolved": "docs/_staging/tools/check-docs.mjs",
+   "want": "L228-L249",
+   "closest": []
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 857,
+   "target": "../../frontend/src/engine/index.js#L9",
+   "resolved": "frontend/src/engine/index.js",
+   "want": "L9",
+   "closest": []
+  }
+ ]
+}

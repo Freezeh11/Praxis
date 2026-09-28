@@ -1,0 +1,2439 @@
+{"ts": "2026-09-28T06:09:32.017Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "ebe6bd02dcde4094b72e3e0a9b2454f3", "method": "GET", "path": "/", "status": 200, "duration_ms": 1.77}
+{"ts": "2026-09-28T06:09:32.018Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.021Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "cda04c9550684fedaade78e57309725c", "method": "GET", "path": "/api/levels", "status": 200, "duration_ms": 2.71}
+{"ts": "2026-09-28T06:09:32.022Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.024Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "c2ab9175b36b460aac794f0903fb1106", "method": "GET", "path": "/api/levels/0", "status": 200, "duration_ms": 0.81}
+{"ts": "2026-09-28T06:09:32.025Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/0 \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.026Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "b2eb521c49144f198554595b93b3ba2d", "method": "GET", "path": "/api/levels/1", "status": 200, "duration_ms": 0.76}
+{"ts": "2026-09-28T06:09:32.027Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/1 \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.029Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "45951118c6e74b68963ee0ef4622b857", "method": "GET", "path": "/api/levels/2", "status": 200, "duration_ms": 0.61}
+{"ts": "2026-09-28T06:09:32.029Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/2 \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.031Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "941e72f76895480084170ace5afc4cef", "method": "GET", "path": "/api/levels/3", "status": 200, "duration_ms": 0.61}
+{"ts": "2026-09-28T06:09:32.031Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/3 \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.033Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "f3a4c3476dec4bf0b803922460e51861", "method": "GET", "path": "/api/levels/4", "status": 404, "duration_ms": 0.64}
+{"ts": "2026-09-28T06:09:32.034Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/4 \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.035Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "cb097de41824437b86563e7ab2acaae8", "method": "GET", "path": "/api/levels/999", "status": 404, "duration_ms": 0.69}
+{"ts": "2026-09-28T06:09:32.036Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/999 \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.038Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "0162b5caee3443af962bc468acfbbb6a", "method": "GET", "path": "/api/levels/-1", "status": 404, "duration_ms": 0.84}
+{"ts": "2026-09-28T06:09:32.039Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/-1 \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.041Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "2a9fdba854ec4b90b213cd13763784d3", "method": "GET", "path": "/api/levels/abc", "status": 422, "duration_ms": 1.0}
+{"ts": "2026-09-28T06:09:32.042Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/abc \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.044Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "5ab32d08a7ec4941a0ee205e05538d54", "method": "GET", "path": "/api/levels/1.5", "status": 422, "duration_ms": 0.73}
+{"ts": "2026-09-28T06:09:32.045Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/levels/1.5 \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.047Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "bb7469e759864fe1abe4cbcfb5f339b2", "method": "GET", "path": "/api/laws", "status": 200, "duration_ms": 1.49}
+{"ts": "2026-09-28T06:09:32.048Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/laws \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.050Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "924093fa938543a6be06915fa231198f", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 1.96}
+{"ts": "2026-09-28T06:09:32.051Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.052Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "60bdef6fcd2b4a1fbb537b90ee76b064", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.6}
+{"ts": "2026-09-28T06:09:32.053Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.387Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET https://grcxoitaitydjjlfyoes.supabase.co/auth/v1/user \"HTTP/1.1 403 Forbidden\"", "request_id": "5c8c517fcb9349288e86fa2674d74f70"}
+{"ts": "2026-09-28T06:09:32.388Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "5c8c517fcb9349288e86fa2674d74f70", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 333.65}
+{"ts": "2026-09-28T06:09:32.389Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.390Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "bc2726e8a35745d689cacfb6c41f7d2c", "method": "POST", "path": "/api/score", "status": 422, "duration_ms": 0.55}
+{"ts": "2026-09-28T06:09:32.391Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.392Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "aa904003c786418da221da3202cda2e5", "method": "POST", "path": "/api/score", "status": 422, "duration_ms": 0.67}
+{"ts": "2026-09-28T06:09:32.393Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.394Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "d007552839e244118e2aee5a1ed5fc4e", "method": "POST", "path": "/api/score", "status": 422, "duration_ms": 0.5}
+{"ts": "2026-09-28T06:09:32.395Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.396Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "7a262d800ba54e19b9c86d57d8329154", "method": "POST", "path": "/api/score", "status": 422, "duration_ms": 0.46}
+{"ts": "2026-09-28T06:09:32.396Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.398Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "24fe7d856827485b9695466ede502b3a", "method": "POST", "path": "/api/score", "status": 422, "duration_ms": 0.48}
+{"ts": "2026-09-28T06:09:32.398Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 422 Unprocessable Entity\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.400Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "e07948cf88f84b8ea0cf06d75fa799ce", "method": "POST", "path": "/api/score", "status": 404, "duration_ms": 0.47}
+{"ts": "2026-09-28T06:09:32.400Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.402Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "39810991b1764a7eb53ec2e6967956c1", "method": "POST", "path": "/api/score", "status": 404, "duration_ms": 1.42}
+{"ts": "2026-09-28T06:09:32.403Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.404Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "c4439314cfdf40abaf116deb1fc8bf47", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.43}
+{"ts": "2026-09-28T06:09:32.405Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.406Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "fae5ef3834e9464ea6d0ce8bea7427be", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.41}
+{"ts": "2026-09-28T06:09:32.407Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.408Z", "level": "ERROR", "logger": "praxis.request", "message": "unhandled exception", "request_id": "4ab313f1511c43f7919d29893af45674", "method": "POST", "path": "/api/score", "status": 500, "duration_ms": 0.36, "exception": "Traceback (most recent call last):\n  File \"/home/xris/Documents/GitHub/Praxis/backend/core/middleware.py\", line 32, in dispatch\n    response = await call_next(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/middleware/base.py\", line 168, in call_next\n    raise app_exc from app_exc.__cause__ or app_exc.__context__\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/middleware/base.py\", line 144, in coro\n    await self.app(scope, receive_or_disconnect, send_no_error)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/middleware/exceptions.py\", line 63, in __call__\n    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/_exception_handler.py\", line 53, in wrapped_app\n    raise exc\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/_exception_handler.py\", line 42, in wrapped_app\n    await app(scope, receive, sender)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/middleware/asyncexitstack.py\", line 18, in __call__\n    await self.app(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/routing.py\", line 670, in __call__\n    await self.middleware_stack(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 2734, in app\n    await route.handle(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 1780, in handle\n    await self.original_router.handle(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 2789, in handle\n    await included_router._handle_selected(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 1800, in _handle_selected\n    await original_route.handle(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 1279, in handle\n    await app(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 158, in app\n    await wrap_app_handling_exceptions(app, request)(scope, receive, send)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/_exception_handler.py\", line 53, in wrapped_app\n    raise exc\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/starlette/_exception_handler.py\", line 42, in wrapped_app\n    await app(scope, receive, sender)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 144, in app\n    response = await f(request)\n               ^^^^^^^^^^^^^^^^\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 706, in app\n    raw_response = await run_endpoint_function(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n    )\n    ^\n  File \"/home/xris/Documents/GitHub/Praxis/backend/venv/lib64/python3.14/site-packages/fastapi/routing.py\", line 352, in run_endpoint_function\n    return await dependant.call(**values)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/xris/Documents/GitHub/Praxis/backend/api/routes/score.py\", line 27, in compute_score\n    outcome = scoring_service.compute_score(\n        level_id=req.levelId,\n    ...<5 lines>...\n        optimal_steps=req.optimalSteps,\n    )\n  File \"/home/xris/Documents/GitHub/Praxis/backend/services/scoring_service.py\", line 43, in compute_score\n    puzzle = content_service.get_puzzle(level_id, stage_idx)\n  File \"/home/xris/Documents/GitHub/Praxis/backend/services/content_service.py\", line 42, in get_puzzle\n    return puzzles[stage_idx]\n           ~~~~~~~^^^^^^^^^^^\nIndexError: list index out of range"}
+{"ts": "2026-09-28T06:09:32.411Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 500 Internal Server Error\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.412Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "0e0742fcc3904d4ab5f568987dd5a8fc", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.46}
+{"ts": "2026-09-28T06:09:32.413Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.414Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "e0cb8d1ff5264180b67777d56582239c", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.4}
+{"ts": "2026-09-28T06:09:32.414Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.415Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "1d4aa4ef64d34b7882f38bb743ad8e4b", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.38}
+{"ts": "2026-09-28T06:09:32.416Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.417Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "d1116c9f600247d59718818271688f3f", "method": "POST", "path": "/api/score", "status": 200, "duration_ms": 0.43}
+{"ts": "2026-09-28T06:09:32.417Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/score \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:32.420Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "92a5d09ef9824b92ba1ce1aa0642e56e", "method": "GET", "path": "/api/progress", "status": 401, "duration_ms": 1.75}
+{"ts": "2026-09-28T06:09:32.420Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/progress \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.023Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET https://grcxoitaitydjjlfyoes.supabase.co/auth/v1/user \"HTTP/1.1 403 Forbidden\"", "request_id": "09917d7daa9e453eaa60c37000478a8c"}
+{"ts": "2026-09-28T06:09:33.024Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "09917d7daa9e453eaa60c37000478a8c", "method": "GET", "path": "/api/progress", "status": 401, "duration_ms": 603.1}
+{"ts": "2026-09-28T06:09:33.025Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/progress \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.026Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "aa79dd7afd3544a7aa90efcbe345f1f1", "method": "GET", "path": "/api/progress", "status": 401, "duration_ms": 0.25}
+{"ts": "2026-09-28T06:09:33.026Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/progress \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.028Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "b980fb105a16480aaccd53fa2fd337b6", "method": "POST", "path": "/api/progress/save", "status": 401, "duration_ms": 0.59}
+{"ts": "2026-09-28T06:09:33.028Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/progress/save \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.029Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "803363b4fa85408ab9b554e1d91df9e1", "method": "POST", "path": "/api/progress/save", "status": 401, "duration_ms": 0.37}
+{"ts": "2026-09-28T06:09:33.030Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/progress/save \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.300Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET https://grcxoitaitydjjlfyoes.supabase.co/auth/v1/user \"HTTP/1.1 403 Forbidden\"", "request_id": "d26a1afb37d9481ca051e25e092495b1"}
+{"ts": "2026-09-28T06:09:33.301Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "d26a1afb37d9481ca051e25e092495b1", "method": "POST", "path": "/api/progress/save", "status": 401, "duration_ms": 270.4}
+{"ts": "2026-09-28T06:09:33.302Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: POST http://testserver/api/progress/save \"HTTP/1.1 401 Unauthorized\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.316Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "b1fa3eecd1a64f13944305e877c527c6", "method": "GET", "path": "/openapi.json", "status": 200, "duration_ms": 12.95}
+{"ts": "2026-09-28T06:09:33.317Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.318Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "0320275596c346ba8da8759d468a82cd", "method": "GET", "path": "/docs", "status": 200, "duration_ms": 0.15}
+{"ts": "2026-09-28T06:09:33.319Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/docs \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.320Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "5801608d535d4b5d8bd0881b8ed0a135", "method": "GET", "path": "/redoc", "status": 200, "duration_ms": 0.12}
+{"ts": "2026-09-28T06:09:33.320Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/redoc \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.321Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "93109e0fd4844027af4ac9284e9352d1", "method": "GET", "path": "/api/nope", "status": 404, "duration_ms": 0.2}
+{"ts": "2026-09-28T06:09:33.322Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/nope \"HTTP/1.1 404 Not Found\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.322Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "c4f3b6c8581543fea4df3b17791288f8", "method": "DELETE", "path": "/api/levels", "status": 405, "duration_ms": 0.16}
+{"ts": "2026-09-28T06:09:33.323Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: DELETE http://testserver/api/levels \"HTTP/1.1 405 Method Not Allowed\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.324Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "8b1ac0d27a5f4f59b62933a79b6481f2", "method": "GET", "path": "/openapi.json", "status": 200, "duration_ms": 0.17}
+{"ts": "2026-09-28T06:09:33.324Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.326Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "verifier-echo-test", "method": "GET", "path": "/api/laws", "status": 200, "duration_ms": 1.1}
+{"ts": "2026-09-28T06:09:33.326Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/laws \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.328Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "1c211e4c401a4a819fc8f82bf5d8e3af", "method": "GET", "path": "/api/laws", "status": 200, "duration_ms": 0.54}
+{"ts": "2026-09-28T06:09:33.328Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/laws \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.329Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "f8ee14e795e04547839c346663362ea8", "method": "GET", "path": "/api/laws", "status": 200, "duration_ms": 0.46}
+{"ts": "2026-09-28T06:09:33.330Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/laws \"HTTP/1.1 200 OK\"", "request_id": "-"}
+{"ts": "2026-09-28T06:09:33.331Z", "level": "INFO", "logger": "praxis.request", "message": "request completed", "request_id": "42945f8a879f454c846e3883f6c597ff", "method": "GET", "path": "/api/laws", "status": 200, "duration_ms": 0.41}
+{"ts": "2026-09-28T06:09:33.331Z", "level": "INFO", "logger": "httpx", "message": "HTTP Request: GET http://testserver/api/laws \"HTTP/1.1 200 OK\"", "request_id": "-"}
+[
+ {
+  "label": "ROUTE_TABLE",
+  "routes": [
+   {
+    "path": "/openapi.json",
+    "methods": [
+     "GET",
+     "HEAD"
+    ],
+    "name": "openapi"
+   },
+   {
+    "path": "/docs",
+    "methods": [
+     "GET",
+     "HEAD"
+    ],
+    "name": "swagger_ui_html"
+   },
+   {
+    "path": "/docs/oauth2-redirect",
+    "methods": [
+     "GET",
+     "HEAD"
+    ],
+    "name": "swagger_ui_redirect"
+   },
+   {
+    "path": "/redoc",
+    "methods": [
+     "GET",
+     "HEAD"
+    ],
+    "name": "redoc_html"
+   },
+   {
+    "path": null,
+    "methods": [],
+    "name": null
+   },
+   {
+    "path": null,
+    "methods": [],
+    "name": null
+   },
+   {
+    "path": null,
+    "methods": [],
+    "name": null
+   },
+   {
+    "path": null,
+    "methods": [],
+    "name": null
+   },
+   {
+    "path": null,
+    "methods": [],
+    "name": null
+   }
+  ]
+ },
+ {
+  "label": "GET /",
+  "status": 200,
+  "x_request_id": "ebe6bd02dcde4094b72e3e0a9b2454f3",
+  "body": {
+   "message": "Praxis API is running",
+   "docs": "/docs"
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/levels",
+  "status": 200,
+  "x_request_id": "cda04c9550684fedaade78e57309725c",
+  "body": {
+   "success": true,
+   "data": [
+    {
+     "id": 0,
+     "name": "Tutorial",
+     "desc": "Interactive Fundamentals & System Orientation",
+     "varCount": 2,
+     "puzzleCount": 4
+    },
+    {
+     "id": 1,
+     "name": "Level 1",
+     "desc": "Two-variable expressions (SOP & POS Dual Pairs)",
+     "varCount": 2,
+     "puzzleCount": 12
+    },
+    {
+     "id": 2,
+     "name": "Level 2",
+     "desc": "Three-variable expressions (SOP & POS Dual Pairs)",
+     "varCount": 3,
+     "puzzleCount": 12
+    },
+    {
+     "id": 3,
+     "name": "Level 3 \u2014 Boss",
+     "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
+     "varCount": 4,
+     "puzzleCount": 12
+    }
+   ],
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LEVEL_SUMMARIES",
+  "keys": [
+   [
+    "desc",
+    "id",
+    "name",
+    "puzzleCount",
+    "varCount"
+   ],
+   [
+    "desc",
+    "id",
+    "name",
+    "puzzleCount",
+    "varCount"
+   ],
+   [
+    "desc",
+    "id",
+    "name",
+    "puzzleCount",
+    "varCount"
+   ],
+   [
+    "desc",
+    "id",
+    "name",
+    "puzzleCount",
+    "varCount"
+   ]
+  ],
+  "summaries": [
+   {
+    "id": 0,
+    "name": "Tutorial",
+    "desc": "Interactive Fundamentals & System Orientation",
+    "varCount": 2,
+    "puzzleCount": 4
+   },
+   {
+    "id": 1,
+    "name": "Level 1",
+    "desc": "Two-variable expressions (SOP & POS Dual Pairs)",
+    "varCount": 2,
+    "puzzleCount": 12
+   },
+   {
+    "id": 2,
+    "name": "Level 2",
+    "desc": "Three-variable expressions (SOP & POS Dual Pairs)",
+    "varCount": 3,
+    "puzzleCount": 12
+   },
+   {
+    "id": 3,
+    "name": "Level 3 \u2014 Boss",
+    "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
+    "varCount": 4,
+    "puzzleCount": 12
+   }
+  ]
+ },
+ {
+  "label": "GET /api/levels/0",
+  "status": 200,
+  "x_request_id": "c2ab9175b36b460aac794f0903fb1106",
+  "body": {
+   "success": true,
+   "data": {
+    "id": 0,
+    "name": "Tutorial",
+    "desc": "Interactive Fundamentals & System Orientation",
+    "varCount": 2,
+    "puzzles": [
+     {
+      "expr": "x + xy",
+      "goal": "x",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Select x and xy to reveal applicable laws.",
+       "Absorption Law eliminates the redundant term."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "Apply Absorption Law (A + AB = A) to simplify x + xy to x."
+     },
+     {
+      "expr": "x'y + z + xy",
+      "goal": "y + z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Drag xy next to x'y to group common terms.",
+       "Factor out y using Distributive Law.",
+       "Simplify x' + x using Complement Law."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Reorder terms, factor common variable y, and apply Complement Law."
+     },
+     {
+      "expr": "(x + y)' + x'y'",
+      "goal": "x'y'",
+      "targetLaws": [
+       "demorgan-or",
+       "idempotent"
+      ],
+      "hints": [
+       "Click the (x + y)' group handle to expand with De Morgan's Law.",
+       "Merge identical terms using Idempotent Law."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "Apply De Morgan's Law to expand the negated sum, then merge duplicates."
+     },
+     {
+      "expr": "x + x'y + xy",
+      "goal": "x + y",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Spot which terms can be combined directly.",
+       "Look for common variables: x'y and xy both share variable y!"
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Factor y from x'y + xy, simplify x' + x with Complement Law, then eliminate 1 with Identity Law."
+     }
+    ]
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LEVEL_0_SHAPE",
+  "level_keys": [
+   "desc",
+   "id",
+   "name",
+   "puzzles",
+   "varCount"
+  ],
+  "n_puzzles": 4,
+  "puzzle_key_sets": [
+   [
+    "expr",
+    "goal",
+    "hints",
+    "optimalHint",
+    "optimalSteps",
+    "targetLaws"
+   ]
+  ],
+  "varCount": 2,
+  "name": "Tutorial",
+  "desc": "Interactive Fundamentals & System Orientation",
+  "id": 0
+ },
+ {
+  "label": "GET /api/levels/1",
+  "status": 200,
+  "x_request_id": "b2eb521c49144f198554595b93b3ba2d",
+  "body": {
+   "success": true,
+   "data": {
+    "id": 1,
+    "name": "Level 1",
+    "desc": "Two-variable expressions (SOP & POS Dual Pairs)",
+    "varCount": 2,
+    "puzzles": [
+     {
+      "expr": "x + xy",
+      "goal": "x",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "x is shorter than xy.",
+       "x absorbs xy because xy contains x.",
+       "Absorption Law: A + AB = A \u2014 select x and xy to apply it."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "Did you take a longer route? The Absorption Law (A + AB = A) can solve this in a single step."
+     },
+     {
+      "expr": "x(x + y)",
+      "goal": "x",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Notice the standalone literal x multiplied by the clause (x + y).",
+       "A standalone literal absorbs a longer sum clause containing it.",
+       "Dual Absorption: A(A + B) = A \u2014 select x and (x + y) to apply it."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "Dual Absorption (A(A + B) = A) simplifies maxterm clauses in 1 direct step."
+     },
+     {
+      "expr": "x'y + xy + xy",
+      "goal": "y",
+      "targetLaws": [
+       "idempotent",
+       "distributive",
+       "complement"
+      ],
+      "hints": [
+       "Two identical xy terms \u2014 remove the duplicate first.",
+       "Now x'y + xy \u2014 both terms share a common variable.",
+       "Factor out the common variable, then look for a pair that cancels to 1."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Remove duplicates (Idempotent) BEFORE factoring out common terms (Distributive)."
+     },
+     {
+      "expr": "(x' + y)(x + y)(x + y)",
+      "goal": "y",
+      "targetLaws": [
+       "idempotent",
+       "distributive",
+       "complement"
+      ],
+      "hints": [
+       "Two identical (x + y) clauses \u2014 merge the duplicate first.",
+       "Now (x' + y)(x + y) \u2014 both clauses share variable y.",
+       "Factor out y using Dual Distributive: (A+B)(A+C) = A + BC, then simplify x'x."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Merge identical clauses first (Dual Idempotent), then extract the common literal."
+     },
+     {
+      "expr": "(x + y')' + x'y",
+      "goal": "x'y",
+      "targetLaws": [
+       "demorgan-or",
+       "idempotent"
+      ],
+      "hints": [
+       "Click the (x + y')' group to apply De Morgan's Law.",
+       "After applying De Morgan's, scan for identical terms.",
+       "Use Idempotent Law to merge the duplicate terms."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's (OR\u2192AND) expands the negated group, then Idempotent merges duplicates."
+     },
+     {
+      "expr": "(xy')'(x' + y)",
+      "goal": "x' + y",
+      "targetLaws": [
+       "demorgan-and",
+       "idempotent"
+      ],
+      "hints": [
+       "Click the (xy')' product group to apply De Morgan's Law.",
+       "After expanding, look for identical sum clauses.",
+       "Use Dual Idempotent to merge the duplicate clauses."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's (AND\u2192OR) breaks the product, then Dual Idempotent simplifies the clauses."
+     },
+     {
+      "expr": "(xy)' + x'y",
+      "goal": "x' + y'",
+      "targetLaws": [
+       "demorgan-and",
+       "absorption"
+      ],
+      "hints": [
+       "Click (xy)' \u2014 De Morgan's expands it to x' + y'.",
+       "Scan for a shorter term that shares its literal with a longer one.",
+       "Look for a shorter term that absorbs a longer product containing it."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "After De Morgan's expansion, look for Absorption instead of factoring."
+     },
+     {
+      "expr": "(x + y)'(x' + y)",
+      "goal": "x'y'",
+      "targetLaws": [
+       "demorgan-or",
+       "absorption"
+      ],
+      "hints": [
+       "Click (x + y)' to apply De Morgan's (OR\u2192AND).",
+       "Notice the resulting product x'y' alongside clause (x' + y).",
+       "Apply Dual Absorption to simplify."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Expand with De Morgan's, then use Dual Absorption to clear the larger clause."
+     },
+     {
+      "expr": "x + x'y + xy",
+      "goal": "x + y",
+      "targetLaws": [
+       "distributive",
+       "complement"
+      ],
+      "hints": [
+       "Look at the last two terms: x'y + xy. They both share y.",
+       "Factor out y, turn x' + x into 1, and simplify x + y\u00b71.",
+       "Remove the identity element 1 to finish."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Factor y from x'y + xy, cancel x' + x to 1, then apply Identity."
+     },
+     {
+      "expr": "x(x' + y)(x + y)",
+      "goal": "xy",
+      "targetLaws": [
+       "distributive",
+       "complement"
+      ],
+      "hints": [
+       "Look at the two sum clauses (x' + y)(x + y). Both share y.",
+       "Apply Dual Distributive to factor out y: y + x'x.",
+       "x'x collapses to 0 by Complement, leaving y + 0 = y."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Extract common y from both clauses, turn x'x into 0, and simplify with Identity."
+     },
+     {
+      "expr": "(x'y)' + (xy')' + xy",
+      "goal": "1",
+      "targetLaws": [
+       "demorgan-and",
+       "complement",
+       "annulment"
+      ],
+      "hints": [
+       "Expand both negated groups using De Morgan's Law.",
+       "Scan for complementary variable pairs like x + x'.",
+       "Apply Complement to get 1, then Annulment (1 + anything = 1)."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "De Morgan's on both groups, Complement to produce 1, then Annulment collapses everything."
+     },
+     {
+      "expr": "(x' + y)'(x + y')'(x + y)",
+      "goal": "0",
+      "targetLaws": [
+       "demorgan-or",
+       "complement",
+       "annulment"
+      ],
+      "hints": [
+       "Expand the negated sum groups using De Morgan's (OR\u2192AND).",
+       "Scan for complementary variable products like x \u00b7 x'.",
+       "Apply Complement to produce 0, then Annulment (0 \u00b7 anything = 0)."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "De Morgan's on negated sums, Complement produces 0, then Product Annulment collapses to 0."
+     }
+    ]
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LEVEL_1_SHAPE",
+  "level_keys": [
+   "desc",
+   "id",
+   "name",
+   "puzzles",
+   "varCount"
+  ],
+  "n_puzzles": 12,
+  "puzzle_key_sets": [
+   [
+    "expr",
+    "goal",
+    "hints",
+    "optimalHint",
+    "optimalSteps",
+    "targetLaws"
+   ]
+  ],
+  "varCount": 2,
+  "name": "Level 1",
+  "desc": "Two-variable expressions (SOP & POS Dual Pairs)",
+  "id": 1
+ },
+ {
+  "label": "GET /api/levels/2",
+  "status": 200,
+  "x_request_id": "45951118c6e74b68963ee0ef4622b857",
+  "body": {
+   "success": true,
+   "data": {
+    "id": 2,
+    "name": "Level 2",
+    "desc": "Three-variable expressions (SOP & POS Dual Pairs)",
+    "varCount": 3,
+    "puzzles": [
+     {
+      "expr": "xy'z + xyz",
+      "goal": "xz",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Both terms share common variables x and z.",
+       "Factor out xz to isolate y' + y inside parentheses.",
+       "Apply Complement Law (y' + y = 1), then remove 1 with Identity Law."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Factor x and z systematically to isolate y' + y = 1, giving xz in 3 steps."
+     },
+     {
+      "expr": "(x + y' + z)(x + y + z)",
+      "goal": "x + z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Both sum clauses share literals x and z.",
+       "Apply Dual Distributive to extract (x + z), leaving y'y inside.",
+       "Apply Dual Complement (y' \u00b7 y = 0), then simplify (x + z + 0) with Identity."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Dual Distributive extracts x and z, y'y collapses to 0, leaving x + z in 3 steps."
+     },
+     {
+      "expr": "xyz + xz + x'yz",
+      "goal": "xz + yz",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Compare xz with xyz: xz appears entirely within xyz.",
+       "Apply Absorption Law: xz absorbs xyz, leaving xz + x'yz.",
+       "Next, factor z from both terms or observe how yz emerges."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "xz absorbs xyz directly. Then simplify xz + x'yz to reach xz + yz."
+     },
+     {
+      "expr": "(x + y + z)(x + z)(x' + y + z)",
+      "goal": "(x + z)(y + z)",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Look at clause (x + z) and the longer clause (x + y + z).",
+       "Dual Absorption: clause (x + z) absorbs (x + y + z).",
+       "Simplify the remaining clauses to reach (x + z)(y + z)."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "(x + z) absorbs (x + y + z) in 3 steps, leaving the simplified dual form."
+     },
+     {
+      "expr": "(x + y + z')' + x'y'z",
+      "goal": "x'y'z",
+      "targetLaws": [
+       "demorgan-or",
+       "idempotent"
+      ],
+      "hints": [
+       "Click the 3-variable negated group (x + y + z')' to apply De Morgan's Law.",
+       "The expansion produces x'y'z.",
+       "Merge the identical x'y'z terms using Idempotent Law."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's (OR\u2192AND) expands the negated group into x'y'z, then Idempotent merges duplicates."
+     },
+     {
+      "expr": "(xyz')'(x' + y' + z)",
+      "goal": "x' + y' + z",
+      "targetLaws": [
+       "demorgan-and",
+       "idempotent"
+      ],
+      "hints": [
+       "Click the 3-variable negated product (xyz')' to apply De Morgan's Law.",
+       "The expansion produces the sum clause (x' + y' + z).",
+       "Merge the duplicate sum clauses using Dual Idempotent Law."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's (AND\u2192OR) expands to (x' + y' + z), then Dual Idempotent merges identical clauses."
+     },
+     {
+      "expr": "x'y' + x'yz + x'yz'",
+      "goal": "x'",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "absorption"
+      ],
+      "hints": [
+       "The last two terms x'yz and x'yz' share common factor x'y.",
+       "Factor x'y to create z + z' = 1, leaving x'y' + x'y.",
+       "Factor x' from x'y' + x'y and cancel y' + y = 1 to isolate x'."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Factor pairs systematically to cancel z + z' and y' + y, reducing the entire expression to x'."
+     },
+     {
+      "expr": "(x' + y')(x' + y + z)(x' + y + z')",
+      "goal": "x'",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "absorption"
+      ],
+      "hints": [
+       "The last two clauses share literals (x' + y).",
+       "Dual Distributive factors out (x' + y), leaving zz' = 0 inside.",
+       "Simplify to (x' + y')(x' + y) and apply Dual Distributive again to isolate x'."
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Dual factor the clauses to collapse zz' = 0 and y'y = 0, reducing all clauses to x'."
+     },
+     {
+      "expr": "(x + y)' + x'y'z",
+      "goal": "x'y'",
+      "targetLaws": [
+       "demorgan-or",
+       "absorption"
+      ],
+      "hints": [
+       "Apply De Morgan's Law to (x + y)' to get x'y'.",
+       "Notice that x'y' is shorter than x'y'z and contains its literals.",
+       "Apply Absorption Law: x'y' absorbs x'y'z."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "De Morgan's reveals x'y', which immediately absorbs the 3-variable term x'y'z in 2 steps."
+     },
+     {
+      "expr": "(xy)'(x' + y' + z)",
+      "goal": "x' + y'",
+      "targetLaws": [
+       "demorgan-and",
+       "absorption"
+      ],
+      "hints": [
+       "Apply De Morgan's Law to (xy)' to get (x' + y').",
+       "Notice that (x' + y') is a sub-clause of (x' + y' + z).",
+       "Apply Dual Absorption: (x' + y') absorbs the longer clause."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "De Morgan's unlocks (x' + y'), which directly absorbs (x' + y' + z)."
+     },
+     {
+      "expr": "x'y'z + x'yz + xy'z + xyz",
+      "goal": "z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "All 4 terms share the variable z.",
+       "Group and factor the first two terms (sharing x'z) and the last two terms (sharing xz).",
+       "Cancel y' + y = 1 in both pairs, then factor z from the remaining terms."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Factor pairs systematically to eliminate y, then eliminate x, isolating z in 4 steps."
+     },
+     {
+      "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
+      "goal": "z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "All 4 maxterm clauses share the literal z.",
+       "Pair and dual factor the first two clauses (sharing x' + z) and last two (sharing x + z).",
+       "Cancel y'y = 0 in both pairs, then dual factor z from the remaining clauses."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Dual factor clauses to eliminate y and x, leaving only z."
+     }
+    ]
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LEVEL_2_SHAPE",
+  "level_keys": [
+   "desc",
+   "id",
+   "name",
+   "puzzles",
+   "varCount"
+  ],
+  "n_puzzles": 12,
+  "puzzle_key_sets": [
+   [
+    "expr",
+    "goal",
+    "hints",
+    "optimalHint",
+    "optimalSteps",
+    "targetLaws"
+   ]
+  ],
+  "varCount": 3,
+  "name": "Level 2",
+  "desc": "Three-variable expressions (SOP & POS Dual Pairs)",
+  "id": 2
+ },
+ {
+  "label": "GET /api/levels/3",
+  "status": 200,
+  "x_request_id": "941e72f76895480084170ace5afc4cef",
+  "body": {
+   "success": true,
+   "data": {
+    "id": 3,
+    "name": "Level 3 \u2014 Boss",
+    "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
+    "varCount": 4,
+    "puzzles": [
+     {
+      "expr": "wxyz + wxz + wyz + w",
+      "goal": "wxz + w",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Scan for shorter terms that appear inside longer 4-variable terms.",
+       "The standalone term w absorbs any product containing w, such as wyz and wxyz.",
+       "After applying Absorption, verify which terms remain."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "The Absorption Law (A + AB = A) eliminates both 4-variable and 3-variable terms in just 2 quick steps!"
+     },
+     {
+      "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
+      "goal": "(w + x + z)w",
+      "targetLaws": [
+       "absorption"
+      ],
+      "hints": [
+       "Scan for standalone literals and shorter clauses multiplied together.",
+       "The standalone literal w absorbs longer sum clauses containing w.",
+       "w absorbs (w + x + y + z) and (w + y + z), leaving (w + x + z)w."
+      ],
+      "optimalSteps": 2,
+      "optimalHint": "Dual Absorption eliminates longer clauses in 2 direct steps!"
+     },
+     {
+      "expr": "wxy'z + wxyz",
+      "goal": "wxz",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Both 4-variable terms share three common variables: w, x, and z.",
+       "Factor out common variables until you isolate the complementary pair y' + y inside parentheses.",
+       "Apply Complement Law (y' + y = 1), then remove 1 with Identity Law."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Factoring w, x, and z systematically isolates y' + y = 1, giving wxz in 4 steps."
+     },
+     {
+      "expr": "(w + x + y' + z)(w + x + y + z)",
+      "goal": "w + x + z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "Both clauses share three common literals: w, x, and z.",
+       "Dual factor (w + x + z) out to leave y'y inside.",
+       "Apply Dual Complement (y'y = 0), then simplify with Identity Law."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Dual factoring isolates y'y = 0, leaving w + x + z in 4 steps."
+     },
+     {
+      "expr": "(w + x' + y + z')' + w'xy'z",
+      "goal": "w'xy'z",
+      "targetLaws": [
+       "demorgan-or",
+       "idempotent"
+      ],
+      "hints": [
+       "Expand the 4-variable negated sum (w + x' + y + z')' using De Morgan's Law.",
+       "The expansion produces w'xy'z.",
+       "Merge the identical terms using Idempotent Law."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's produces matching term w'xy'z, merged in 1 step by Idempotent."
+     },
+     {
+      "expr": "(w'xy'z)'(w + x' + y + z')",
+      "goal": "w + x' + y + z'",
+      "targetLaws": [
+       "demorgan-and",
+       "idempotent"
+      ],
+      "hints": [
+       "Expand the 4-variable negated product (w'xy'z)' using De Morgan's Law.",
+       "The expansion produces clause (w + x' + y + z').",
+       "Merge the duplicate sum clauses using Dual Idempotent Law."
+      ],
+      "optimalSteps": 1,
+      "optimalHint": "De Morgan's expands to matching clause (w + x' + y + z'), merged by Dual Idempotent."
+     },
+     {
+      "expr": "wx'y + wxy + wx'yz",
+      "goal": "wy",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "absorption"
+      ],
+      "hints": [
+       "Look at the first two terms: wx'y and wxy. They share the common factor wy.",
+       "Factor wy to create x' + x inside parentheses, which cancels to 1.",
+       "After simplifying to wy, notice that wy appears inside wx'yz. Use Absorption!"
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Distributive \u2192 Complement creates wy, which then directly absorbs wx'yz \u2014 4 steps total."
+     },
+     {
+      "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
+      "goal": "w + y",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "absorption"
+      ],
+      "hints": [
+       "The first two clauses share literals (w + y).",
+       "Dual factor to create x'x = 0, simplifying to clause (w + y).",
+       "Clause (w + y) then absorbs the longer clause (w + x' + y + z)."
+      ],
+      "optimalSteps": 4,
+      "optimalHint": "Dual Distributive \u2192 Dual Complement creates (w + y), which absorbs the 4-var clause."
+     },
+     {
+      "expr": "(wx)' + (w'xyz)' + z",
+      "goal": "1",
+      "targetLaws": [
+       "demorgan-and",
+       "complement",
+       "annulment"
+      ],
+      "hints": [
+       "Expand the 4-variable negated group (w'xyz)' using De Morgan's Law.",
+       "Scan the resulting expression for a complementary pair like z' and z.",
+       "Once z' + z = 1, use Annulment \u2014 1 + anything = 1!"
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Expanding the 4-var group reveals z', creating z'+z=1, which allows an instant Annulment collapse to 1."
+     },
+     {
+      "expr": "(w + x)'(w' + x + y + z)'z",
+      "goal": "0",
+      "targetLaws": [
+       "demorgan-or",
+       "complement",
+       "annulment"
+      ],
+      "hints": [
+       "Expand the negated sum groups using De Morgan's (OR\u2192AND).",
+       "Scan for complementary literal product pairs like z' \u00b7 z.",
+       "Once z' \u00b7 z = 0, use Product Annulment \u2014 0 \u00b7 anything = 0!"
+      ],
+      "optimalSteps": 3,
+      "optimalHint": "Expanding reveals z', creating z' \u00b7 z = 0, collapsing the entire product to 0."
+     },
+     {
+      "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
+      "goal": "wz",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "All 4 terms are 4-variable minterms sharing w and z.",
+       "Group and factor the first two terms (sharing wx'z) and the last two terms (sharing wxz).",
+       "Continue simplifying the complementary pairs until only wz remains."
+      ],
+      "optimalSteps": 7,
+      "optimalHint": "Factoring pairs of minterms systematically eliminates y and then x, leaving the clean 2-variable core wz."
+     },
+     {
+      "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
+      "goal": "w + z",
+      "targetLaws": [
+       "distributive",
+       "complement",
+       "identity"
+      ],
+      "hints": [
+       "All 4 maxterms share literals w and z.",
+       "Pair and dual factor first two clauses (sharing w + x' + z) and last two (sharing w + x + z).",
+       "Collapse y'y = 0 in both, then dual factor again to isolate w + z."
+      ],
+      "optimalSteps": 7,
+      "optimalHint": "Dual factoring pairs systematically eliminates y and x, leaving w + z."
+     }
+    ]
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LEVEL_3_SHAPE",
+  "level_keys": [
+   "desc",
+   "id",
+   "name",
+   "puzzles",
+   "varCount"
+  ],
+  "n_puzzles": 12,
+  "puzzle_key_sets": [
+   [
+    "expr",
+    "goal",
+    "hints",
+    "optimalHint",
+    "optimalSteps",
+    "targetLaws"
+   ]
+  ],
+  "varCount": 4,
+  "name": "Level 3 \u2014 Boss",
+  "desc": "Four-variable challenge (SOP & POS Dual Pairs)",
+  "id": 3
+ },
+ {
+  "label": "GET /api/levels/4",
+  "status": 404,
+  "x_request_id": "f3a4c3476dec4bf0b803922460e51861",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "not_found",
+    "message": "Level 4 not found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/levels/999",
+  "status": 404,
+  "x_request_id": "cb097de41824437b86563e7ab2acaae8",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "not_found",
+    "message": "Level 999 not found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/levels/-1",
+  "status": 404,
+  "x_request_id": "0162b5caee3443af962bc468acfbbb6a",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "not_found",
+    "message": "Level -1 not found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/levels/abc",
+  "status": 422,
+  "x_request_id": "2a9fdba854ec4b90b213cd13763784d3",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "int_parsing",
+      "loc": [
+       "path",
+       "level_id"
+      ],
+      "msg": "Input should be a valid integer, unable to parse string as an integer",
+      "input": "abc"
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/levels/1.5",
+  "status": 422,
+  "x_request_id": "5ab32d08a7ec4941a0ee205e05538d54",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "int_parsing",
+      "loc": [
+       "path",
+       "level_id"
+      ],
+      "msg": "Input should be a valid integer, unable to parse string as an integer",
+      "input": "1.5"
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/laws",
+  "status": 200,
+  "x_request_id": "bb7469e759864fe1abe4cbcfb5f339b2",
+  "body": {
+   "success": true,
+   "data": [
+    {
+     "id": "complement",
+     "name": "Complement Law",
+     "formulas": [
+      "A + A' = 1",
+      "A \u00b7 A' = 0"
+     ],
+     "desc": "A variable OR its complement is 1; AND with its complement is 0."
+    },
+    {
+     "id": "idempotent",
+     "name": "Idempotent Law",
+     "formulas": [
+      "A + A = A",
+      "A \u00b7 A = A"
+     ],
+     "desc": "Duplicate terms or maxterm clauses can be merged."
+    },
+    {
+     "id": "absorption",
+     "name": "Absorption Law",
+     "formulas": [
+      "A + AB = A",
+      "A(A+B) = A"
+     ],
+     "desc": "A shorter term or literal absorbs a longer clause containing it."
+    },
+    {
+     "id": "identity",
+     "name": "Identity Law",
+     "formulas": [
+      "A + 0 = A",
+      "A \u00b7 1 = A"
+     ],
+     "desc": "OR with 0 or AND with 1 preserves the original expression."
+    },
+    {
+     "id": "annulment",
+     "name": "Annulment Law",
+     "formulas": [
+      "A + 1 = 1",
+      "A \u00b7 0 = 0"
+     ],
+     "desc": "OR with 1 is always 1; AND with 0 is always 0."
+    },
+    {
+     "id": "distributive",
+     "name": "Distributive (Factoring & Dual)",
+     "formulas": [
+      "AB + AC = A(B+C)",
+      "(A+B)(A+C) = A + BC"
+     ],
+     "desc": "Factor out common variables from terms or maxterm clauses."
+    },
+    {
+     "id": "double-neg",
+     "name": "Double Negation",
+     "formulas": [
+      "(A')' = A"
+     ],
+     "desc": "Negating a value twice returns the original."
+    },
+    {
+     "id": "demorgan-and",
+     "name": "De Morgan's (AND\u2192OR)",
+     "formulas": [
+      "(AB)' = A' + B'"
+     ],
+     "desc": "The complement of a product equals the sum of complements."
+    },
+    {
+     "id": "demorgan-or",
+     "name": "De Morgan's (OR\u2192AND)",
+     "formulas": [
+      "(A+B)' = A'B'"
+     ],
+     "desc": "The complement of a sum equals the product of complements."
+    },
+    {
+     "id": "associative",
+     "name": "Associative Law",
+     "formulas": [
+      "A+(B+C) = (A+B)+C",
+      "A(BC) = (AB)C"
+     ],
+     "desc": "Terms or factors can be regrouped freely."
+    }
+   ],
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "LAWS",
+  "n": 10,
+  "ids": [
+   "complement",
+   "idempotent",
+   "absorption",
+   "identity",
+   "annulment",
+   "distributive",
+   "double-neg",
+   "demorgan-and",
+   "demorgan-or",
+   "associative"
+  ],
+  "key_sets": [
+   [
+    "desc",
+    "formulas",
+    "id",
+    "name"
+   ]
+  ]
+ },
+ {
+  "label": "POST /api/score [ground-truth body]",
+  "status": 200,
+  "x_request_id": "924093fa938543a6be06915fa231198f",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 30.0,
+    "hintIndependence": 30.0,
+    "total": 100.0,
+    "earnedPoints": 5,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [
+      "absorption"
+     ],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [no auth header]",
+  "status": 200,
+  "x_request_id": "60bdef6fcd2b4a1fbb537b90ee76b064",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 30.0,
+    "hintIndependence": 30.0,
+    "total": 100.0,
+    "earnedPoints": 5,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [
+      "absorption"
+     ],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [garbage bearer]",
+  "status": 200,
+  "x_request_id": "5c8c517fcb9349288e86fa2674d74f70",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 30.0,
+    "hintIndependence": 30.0,
+    "total": 100.0,
+    "earnedPoints": 5,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [
+      "absorption"
+     ],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [missing stepsUsed]",
+  "status": 422,
+  "x_request_id": "bc2726e8a35745d689cacfb6c41f7d2c",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "stepsUsed"
+      ],
+      "msg": "Field required",
+      "input": {
+       "levelId": 1,
+       "stageIdx": 0
+      }
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "lawsUsed"
+      ],
+      "msg": "Field required",
+      "input": {
+       "levelId": 1,
+       "stageIdx": 0
+      }
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "hintsUsed"
+      ],
+      "msg": "Field required",
+      "input": {
+       "levelId": 1,
+       "stageIdx": 0
+      }
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [empty body]",
+  "status": 422,
+  "x_request_id": "aa904003c786418da221da3202cda2e5",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "levelId"
+      ],
+      "msg": "Field required",
+      "input": {}
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "stageIdx"
+      ],
+      "msg": "Field required",
+      "input": {}
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "stepsUsed"
+      ],
+      "msg": "Field required",
+      "input": {}
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "lawsUsed"
+      ],
+      "msg": "Field required",
+      "input": {}
+     },
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "hintsUsed"
+      ],
+      "msg": "Field required",
+      "input": {}
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [wrong types]",
+  "status": 422,
+  "x_request_id": "d007552839e244118e2aee5a1ed5fc4e",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "int_parsing",
+      "loc": [
+       "body",
+       "levelId"
+      ],
+      "msg": "Input should be a valid integer, unable to parse string as an integer",
+      "input": "x"
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [lawsUsed missing]",
+  "status": 422,
+  "x_request_id": "7a262d800ba54e19b9c86d57d8329154",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "missing",
+      "loc": [
+       "body",
+       "lawsUsed"
+      ],
+      "msg": "Field required",
+      "input": {
+       "levelId": 1,
+       "stageIdx": 0,
+       "stepsUsed": 1,
+       "hintsUsed": 0
+      }
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [no body / no content-type]",
+  "status": 422,
+  "x_request_id": "24fe7d856827485b9695466ede502b3a",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "detail": [
+     {
+      "type": "missing",
+      "loc": [
+       "body"
+      ],
+      "msg": "Field required",
+      "input": null
+     }
+    ]
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [unknown level 999]",
+  "status": 404,
+  "x_request_id": "e07948cf88f84b8ea0cf06d75fa799ce",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "not_found",
+    "message": "Level 999 not found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [stage 12 on level 1]",
+  "status": 404,
+  "x_request_id": "39810991b1764a7eb53ec2e6967956c1",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "not_found",
+    "message": "Stage 12 not found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [stage -1 on level 1]",
+  "status": 200,
+  "x_request_id": "c4439314cfdf40abaf116deb1fc8bf47",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 0.0,
+    "hintIndependence": 30.0,
+    "total": 70.0,
+    "earnedPoints": 4,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "demorgan-or",
+      "annulment",
+      "complement"
+     ],
+     "targetLawsUsed": [],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [stage -4 on level 0]",
+  "status": 200,
+  "x_request_id": "fae5ef3834e9464ea6d0ce8bea7427be",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 0.0,
+    "hintIndependence": 30.0,
+    "total": 70.0,
+    "earnedPoints": 4,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [stage -5 on level 0]",
+  "status": 500,
+  "x_request_id": "4ab313f1511c43f7919d29893af45674",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "internal_error",
+    "message": "Internal server error",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [D24 stepsUsed 0 + 3 laws]",
+  "status": 200,
+  "x_request_id": "0e0742fcc3904d4ab5f568987dd5a8fc",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 30.0,
+    "hintIndependence": 30.0,
+    "total": 100.0,
+    "earnedPoints": 5,
+    "breakdown": {
+     "stepsUsed": 0,
+     "optimalSteps": 0,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [
+      "absorption"
+     ],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [D24 negative stepsUsed]",
+  "status": 200,
+  "x_request_id": "e0cb8d1ff5264180b67777d56582239c",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 0.0,
+    "hintIndependence": 30.0,
+    "total": 70.0,
+    "earnedPoints": 4,
+    "breakdown": {
+     "stepsUsed": -50,
+     "optimalSteps": -50,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [D24 negative hintsUsed]",
+  "status": 200,
+  "x_request_id": "1d4aa4ef64d34b7882f38bb743ad8e4b",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 0.0,
+    "hintIndependence": 1020.0,
+    "total": 1060.0,
+    "earnedPoints": 53,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [],
+     "hintsUsed": -99,
+     "guidesUsed": 0,
+     "totalAssistance": -99
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/score [optimalSteps 999]",
+  "status": 200,
+  "x_request_id": "d1116c9f600247d59718818271688f3f",
+  "body": {
+   "success": true,
+   "data": {
+    "efficiency": 40.0,
+    "targetLaw": 0.0,
+    "hintIndependence": 30.0,
+    "total": 70.0,
+    "earnedPoints": 4,
+    "breakdown": {
+     "stepsUsed": 1,
+     "optimalSteps": 1,
+     "targetLawsRequired": [
+      "absorption"
+     ],
+     "targetLawsUsed": [],
+     "hintsUsed": 0,
+     "guidesUsed": 0,
+     "totalAssistance": 0
+    }
+   },
+   "error": null
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/progress [no auth]",
+  "status": 401,
+  "x_request_id": "92a5d09ef9824b92ba1ce1aa0642e56e",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Not authenticated",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/progress [garbage bearer]",
+  "status": 401,
+  "x_request_id": "09917d7daa9e453eaa60c37000478a8c",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Invalid session",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /api/progress [malformed header]",
+  "status": 401,
+  "x_request_id": "aa79dd7afd3544a7aa90efcbe345f1f1",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Not authenticated",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/progress/save [no auth]",
+  "status": 401,
+  "x_request_id": "b980fb105a16480aaccd53fa2fd337b6",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Not authenticated",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/progress/save [no auth, negative values]",
+  "status": 401,
+  "x_request_id": "803363b4fa85408ab9b554e1d91df9e1",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Not authenticated",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "POST /api/progress/save [garbage bearer]",
+  "status": 401,
+  "x_request_id": "d26a1afb37d9481ca051e25e092495b1",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "unauthorized",
+    "message": "Invalid session",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /openapi.json",
+  "status": 200,
+  "x_request_id": "b1fa3eecd1a64f13944305e877c527c6",
+  "body": {
+   "openapi": "3.1.0",
+   "info": {
+    "title": "Praxis API",
+    "version": "1.0.0"
+   },
+   "paths": {
+    "/": {
+     "get": {
+      "summary": "Read Health",
+      "description": "Liveness probe: plain payload, no envelope.",
+      "operationId": "read_health__get",
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "additionalProperties": true,
+           "type": "object",
+           "title": "Response Read Health  Get"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/levels": {
+     "get": {
+      "summary": "Read Levels",
+      "description": "Level metadata for the level-select screen (no puzzle detail).",
+      "operationId": "read_levels_api_levels_get",
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/levels/{level_id}": {
+     "get": {
+      "summary": "Read Level",
+      "description": "A single level with full puzzle data; 404 envelope when unknown.",
+      "operationId": "read_level_api_levels__level_id__get",
+      "parameters": [
+       {
+        "name": "level_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+         "type": "integer",
+         "title": "Level Id"
+        }
+       }
+      ],
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       },
+       "422": {
+        "description": "Validation Error",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/HTTPValidationError"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/laws": {
+     "get": {
+      "summary": "Read Laws",
+      "description": "All Boolean law reference cards, in authoring order.",
+      "operationId": "read_laws_api_laws_get",
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/score": {
+     "post": {
+      "summary": "Compute Score",
+      "description": "Score a completed puzzle; authenticated users get it saved in the background.",
+      "operationId": "compute_score_api_score_post",
+      "requestBody": {
+       "content": {
+        "application/json": {
+         "schema": {
+          "$ref": "#/components/schemas/ScoreRequest"
+         }
+        }
+       },
+       "required": true
+      },
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       },
+       "422": {
+        "description": "Validation Error",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/HTTPValidationError"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/progress": {
+     "get": {
+      "summary": "Get Progress",
+      "description": "Full progress snapshot for the authenticated user.",
+      "operationId": "get_progress_api_progress_get",
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "/api/progress/save": {
+     "post": {
+      "summary": "Save Progress",
+      "description": "Save/update the progress snapshot for the authenticated user.",
+      "operationId": "save_progress_api_progress_save_post",
+      "requestBody": {
+       "content": {
+        "application/json": {
+         "schema": {
+          "$ref": "#/components/schemas/SaveProgressRequest"
+         }
+        }
+       },
+       "required": true
+      },
+      "responses": {
+       "200": {
+        "description": "Successful Response",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/Envelope"
+          }
+         }
+        }
+       },
+       "422": {
+        "description": "Validation Error",
+        "content": {
+         "application/json": {
+          "schema": {
+           "$ref": "#/components/schemas/HTTPValidationError"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "components": {
+    "schemas": {
+     "Envelope": {
+      "properties": {
+       "success": {
+        "type": "boolean",
+        "title": "Success"
+       },
+       "data": {
+        "anyOf": [
+         {},
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Data"
+       },
+       "error": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/ErrorBody"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      },
+      "type": "object",
+      "required": [
+       "success"
+      ],
+      "title": "Envelope",
+      "description": "The response shape every ``/api/*`` route declares."
+     },
+     "ErrorBody": {
+      "properties": {
+       "code": {
+        "type": "string",
+        "title": "Code"
+       },
+       "message": {
+        "type": "string",
+        "title": "Message"
+       },
+       "detail": {
+        "anyOf": [
+         {},
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Detail"
+       }
+      },
+      "type": "object",
+      "required": [
+       "code",
+       "message"
+      ],
+      "title": "ErrorBody",
+      "description": "Machine code, user-safe message, developer-safe detail."
+     },
+     "HTTPValidationError": {
+      "properties": {
+       "detail": {
+        "items": {
+         "$ref": "#/components/schemas/ValidationError"
+        },
+        "type": "array",
+        "title": "Detail"
+       }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+     },
+     "ProgressData": {
+      "properties": {
+       "points": {
+        "type": "integer",
+        "title": "Points",
+        "default": 0
+       },
+       "streak": {
+        "type": "integer",
+        "title": "Streak",
+        "default": 0
+       },
+       "bestStreak": {
+        "type": "integer",
+        "title": "Beststreak",
+        "default": 0
+       },
+       "stageProgress": {
+        "additionalProperties": {
+         "items": {
+          "type": "integer"
+         },
+         "type": "array"
+        },
+        "type": "object",
+        "title": "Stageprogress",
+        "default": {}
+       },
+       "stageScores": {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "number"
+          }
+         ]
+        },
+        "type": "object",
+        "title": "Stagescores",
+        "default": {}
+       }
+      },
+      "type": "object",
+      "title": "ProgressData"
+     },
+     "SaveProgressRequest": {
+      "properties": {
+       "progress": {
+        "$ref": "#/components/schemas/ProgressData"
+       }
+      },
+      "type": "object",
+      "required": [
+       "progress"
+      ],
+      "title": "SaveProgressRequest"
+     },
+     "ScoreRequest": {
+      "properties": {
+       "levelId": {
+        "type": "integer",
+        "title": "Levelid"
+       },
+       "stageIdx": {
+        "type": "integer",
+        "title": "Stageidx"
+       },
+       "stepsUsed": {
+        "type": "integer",
+        "title": "Stepsused"
+       },
+       "lawsUsed": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array",
+        "title": "Lawsused"
+       },
+       "hintsUsed": {
+        "type": "integer",
+        "title": "Hintsused"
+       },
+       "guidesUsed": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Guidesused",
+        "default": 0
+       },
+       "optimalSteps": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Optimalsteps"
+       }
+      },
+      "type": "object",
+      "required": [
+       "levelId",
+       "stageIdx",
+       "stepsUsed",
+       "lawsUsed",
+       "hintsUsed"
+      ],
+      "title": "ScoreRequest"
+     },
+     "ValidationError": {
+      "properties": {
+       "loc": {
+        "items": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "integer"
+          }
+         ]
+        },
+        "type": "array",
+        "title": "Location"
+       },
+       "msg": {
+        "type": "string",
+        "title": "Message"
+       },
+       "type": {
+        "type": "string",
+        "title": "Error Type"
+       },
+       "input": {
+        "title": "Input"
+       },
+       "ctx": {
+        "type": "object",
+        "title": "Context"
+       }
+      },
+      "type": "object",
+      "required": [
+       "loc",
+       "msg",
+       "type"
+      ],
+      "title": "ValidationError"
+     }
+    }
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "GET /docs",
+  "status": 200,
+  "x_request_id": "0320275596c346ba8da8759d468a82cd",
+  "body": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css\">\n    <link rel=\"shortcut icon\" href=\"https://fastapi.tiangolo.com/img/favicon.png\">\n    <title>Praxis API - Swagger UI</title>\n    </head>\n    <body>\n    <div id=\"swagger",
+  "note": ""
+ },
+ {
+  "label": "GET /redoc",
+  "status": 200,
+  "x_request_id": "5801608d535d4b5d8bd0881b8ed0a135",
+  "body": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <title>Praxis API - ReDoc</title>\n    <!-- needed for adaptive design -->\n    <meta charset=\"utf-8\"/>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    \n    <link href=\"https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700\" rel=\"stylesheet\">\n    \n    <link rel=\"shortcut icon\" href=\"https://fastapi",
+  "note": ""
+ },
+ {
+  "label": "GET /api/nope",
+  "status": 404,
+  "x_request_id": "93109e0fd4844027af4ac9284e9352d1",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "http_error",
+    "message": "Not Found",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "DELETE /api/levels",
+  "status": 405,
+  "x_request_id": "c4f3b6c8581543fea4df3b17791288f8",
+  "body": {
+   "success": false,
+   "data": null,
+   "error": {
+    "code": "http_error",
+    "message": "Method Not Allowed",
+    "detail": null
+   }
+  },
+  "note": ""
+ },
+ {
+  "label": "OPENAPI_SECURITY_SCHEMES",
+  "schemes": {},
+  "global_security": null
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/",
+  "method": "get",
+  "security": "ABSENT",
+  "response_codes": [
+   "200"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/levels",
+  "method": "get",
+  "security": "ABSENT",
+  "response_codes": [
+   "200"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/levels/{level_id}",
+  "method": "get",
+  "security": "ABSENT",
+  "response_codes": [
+   "200",
+   "422"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/laws",
+  "method": "get",
+  "security": "ABSENT",
+  "response_codes": [
+   "200"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/score",
+  "method": "post",
+  "security": "ABSENT",
+  "response_codes": [
+   "200",
+   "422"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/progress",
+  "method": "get",
+  "security": "ABSENT",
+  "response_codes": [
+   "200"
+  ]
+ },
+ {
+  "label": "OPENAPI_OP",
+  "path": "/api/progress/save",
+  "method": "post",
+  "security": "ABSENT",
+  "response_codes": [
+   "200",
+   "422"
+  ]
+ },
+ {
+  "label": "REQUEST_ID_ECHO",
+  "status": 200,
+  "x_request_id": "verifier-echo-test"
+ },
+ {
+  "label": "REQUEST_ID_GENERATED",
+  "status": 200,
+  "x_request_id": "1c211e4c401a4a819fc8f82bf5d8e3af"
+ },
+ {
+  "label": "CORS_5173",
+  "acao": "http://localhost:5173"
+ },
+ {
+  "label": "CORS_VERCEL",
+  "acao": null
+ }
+]

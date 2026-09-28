@@ -1,0 +1,4551 @@
+{
+ "stats": {
+  "citations": 3984,
+  "resolved": 3907,
+  "missing": 77,
+  "withLine": 2361,
+  "outOfRange": 4,
+  "symbolPairs": 1187,
+  "suspect": 439
+ },
+ "missing": [
+  {
+   "doc": "README.md",
+   "line": 226,
+   "target": "path/to/file.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 221,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 478,
+   "target": "conftest.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 33,
+   "target": "__init__.py",
+   "how": "ambiguous",
+   "hits": 7
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 78,
+   "target": "conftest.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 210,
+   "target": "score.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 211,
+   "target": "progress.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 212,
+   "target": "progress.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 395,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 442,
+   "target": "index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 446,
+   "target": "index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 624,
+   "target": "index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 825,
+   "target": "score.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 825,
+   "target": "progress.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 39,
+   "target": "lib/laws.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 40,
+   "target": "frontend/src/lib/gameData.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 41,
+   "target": "backend/data/levels_data.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 59,
+   "target": "routers/score.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 59,
+   "target": "routers/progress.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 94,
+   "target": "dependencies.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 106,
+   "target": "lib/laws.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 195,
+   "target": "frontend/src/lib/gameData.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 195,
+   "target": "backend/data/levels_data.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 216,
+   "target": "backend/data/levels_data.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 216,
+   "target": "data/__init__.py",
+   "how": "ambiguous",
+   "hits": 7
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 217,
+   "target": "frontend/src/lib/gameData.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 219,
+   "target": "frontend/src/utils/supabase.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 219,
+   "target": "App.css",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 220,
+   "target": "auth_middleware.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 252,
+   "target": "index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 285,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1684,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 310,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 321,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 329,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 332,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 712,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 713,
+   "target": "index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 764,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "05-guides/tutorials/first-contribution.md",
+   "line": 61,
+   "target": "frontend/src/engine/__tests__/combining.test.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/tutorials/first-contribution.md",
+   "line": 318,
+   "target": "frontend/src/engine/__tests__/combining.test.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-level.md",
+   "line": 283,
+   "target": "/tmp/new-level.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-problem.md",
+   "line": 217,
+   "target": "/tmp/new-stage.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 25,
+   "target": "docker-compose.yml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 43,
+   "target": "docker-compose.yml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 43,
+   "target": "docker-compose.yaml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 43,
+   "target": "compose.yml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 43,
+   "target": "compose.yaml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 144,
+   "target": "docker-compose.yml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 947,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 63,
+   "target": "routers/score.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 64,
+   "target": "routers/progress.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 418,
+   "target": "frontend/src/lib/gameData.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 419,
+   "target": "backend/data/levels_data.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 45,
+   "target": "frontend/src/lib/laws.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 46,
+   "target": "frontend/src/lib/gameData.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 47,
+   "target": "backend/data/levels_data.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 683,
+   "target": "conftest.py",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 397,
+   "target": "package.json",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "08-devops/installation-manual.md",
+   "line": 114,
+   "target": "docker-compose.yml",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "08-devops/installation-manual.md",
+   "line": 162,
+   "target": "package.json",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "08-devops/installation-manual.md",
+   "line": 598,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "08-devops/installation-manual.md",
+   "line": 669,
+   "target": "package.json",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "08-devops/deployment.md",
+   "line": 248,
+   "target": "package.json",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "08-devops/deployment.md",
+   "line": 338,
+   "target": "/openapi.json",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 76,
+   "target": "__init__.py",
+   "how": "ambiguous",
+   "hits": 7
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 136,
+   "target": "__init__.py",
+   "how": "ambiguous",
+   "hits": 7
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 114,
+   "target": "score.py",
+   "how": "ambiguous",
+   "hits": 2
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 215,
+   "target": "../engine/index.js",
+   "how": "ambiguous",
+   "hits": 3
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 520,
+   "target": "PascalCase.jsx",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 523,
+   "target": "PascalCase.jsx",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 524,
+   "target": "useSomething.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 525,
+   "target": "somethingApi.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 527,
+   "target": "camelCase.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 528,
+   "target": "something.test.js",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 530,
+   "target": "PascalCase.jsx",
+   "how": "missing",
+   "hits": 0
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 545,
+   "target": "validate.js",
+   "how": "ambiguous",
+   "hits": 2
+  }
+ ],
+ "outOfRange": [
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 57,
+   "target": "frontend/vite.config.js",
+   "resolved": "frontend/vite.config.js",
+   "spec": "34-38",
+   "bad": [
+    38
+   ],
+   "fileLines": 37
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 525,
+   "target": "frontend/vite.config.js",
+   "resolved": "frontend/vite.config.js",
+   "spec": "35-38",
+   "bad": [
+    38
+   ],
+   "fileLines": 37
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 640,
+   "target": "frontend/vite.config.js",
+   "resolved": "frontend/vite.config.js",
+   "spec": "8,34-38",
+   "bad": [
+    38
+   ],
+   "fileLines": 37
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 690,
+   "target": "frontend/vite.config.js",
+   "resolved": "frontend/vite.config.js",
+   "spec": "34-38",
+   "bad": [
+    38
+   ],
+   "fileLines": 37
+  }
+ ],
+ "suspect": [
+  {
+   "doc": "01-product/PRD.md",
+   "line": 270,
+   "ident": "score_history",
+   "target": "backend/services/progress_service.py",
+   "spec": "87",
+   "window": "84-90",
+   "snippet": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_score`, in a background task that cannot fail the response. | `backend/ser"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 270,
+   "ident": "stage_progress.best_score",
+   "target": "backend/services/progress_service.py",
+   "spec": "87",
+   "window": "84-90",
+   "snippet": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_score`, in a background task that cannot fail the response. | `backend/ser"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 270,
+   "ident": "score_history",
+   "target": "backend/api/routes/score.py",
+   "spec": "39",
+   "window": "36-42",
+   "snippet": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_score`, in a background task that cannot fail the response. | `backend/ser"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 270,
+   "ident": "stage_progress.best_score",
+   "target": "backend/api/routes/score.py",
+   "spec": "39",
+   "window": "36-42",
+   "snippet": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_score`, in a background task that cannot fail the response. | `backend/ser"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 307,
+   "ident": "fetch",
+   "target": "frontend/src/engine/scoring.js",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| **NFR-2** | **Engine purity.** `frontend/src/engine/**` imports only `config/` and itself — no React, no DOM, no network, no `fetch`. | Verified by import analysis: the only cross-folder imports in "
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 307,
+   "ident": "fetch",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "36",
+   "window": "33-39",
+   "snippet": "| **NFR-2** | **Engine purity.** `frontend/src/engine/**` imports only `config/` and itself — no React, no DOM, no network, no `fetch`. | Verified by import analysis: the only cross-folder imports in "
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 319,
+   "ident": "render.yaml",
+   "target": "frontend/vercel.json",
+   "spec": "1-12",
+   "window": "1-13",
+   "snippet": "| **NFR-14** | **Deployability.** Backend on Render from `render.yaml` as a single web service; SPA on Vercel with `/api/*` rewritten to the Render host. | `render.yaml:1-16`, `frontend/vercel.json:1-"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 329,
+   "ident": "isComplete",
+   "target": "database/init.sql",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| **M1 Completion rate** | Share of started stages that reach `isComplete`. | `score_history` row count vs `stage_progress` rows per user (`database/init.sql:28`) |"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 329,
+   "ident": "stage_progress",
+   "target": "database/init.sql",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| **M1 Completion rate** | Share of started stages that reach `isComplete`. | `score_history` row count vs `stage_progress` rows per user (`database/init.sql:28`) |"
+  },
+  {
+   "doc": "01-product/PRD.md",
+   "line": 333,
+   "ident": "stage_progress.best_score",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "291",
+   "window": "288-294",
+   "snippet": "| **M5 Mastery reach** | Share of learners who unlock Level 3, i.e. reach an 80 average on Levels 1 and 2. | `stage_progress.best_score` per user, aggregated as `frontend/src/state/progressStore.js:29"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 77,
+   "ident": "absorption",
+   "target": "frontend/src/engine/laws/definitions.js",
+   "spec": "29",
+   "window": "26-32",
+   "snippet": "| **law id** | The stable identifier in `frontend/src/engine/laws/definitions.js:29`, e.g. `absorption`, `demorgan-and`. |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 94,
+   "ident": "name",
+   "target": "frontend/src/pages/RegisterPage.jsx",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| **FR-1** | ① Submitting the register form with `password.length < 6` shows \"Password must be at least 6 characters\" and issues no network request. ② Mismatched confirmation shows \"Passwords do not m"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 103,
+   "ident": "replace",
+   "target": "frontend/src/components/ProtectedRoute.jsx",
+   "spec": "9",
+   "window": "6-12",
+   "snippet": "| **FR-5** | ① Visiting `/levels`, `/level/:id/stages`, `/level/:id/stage/:idx`, `/sandbox` or `/sandbox/play` with no session redirects to `/login` with a `replace` navigation. ② While the session is"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 104,
+   "ident": "returnTo",
+   "target": "frontend/src/components/TutorialGate.jsx",
+   "spec": "47",
+   "window": "44-50",
+   "snippet": "| **FR-6** | ① On a fresh account, visiting `/level/1/stages` lands on `/level/0/stage/0?tutorial=true&returnTo=…`. ② After all 4 tutorial stages are complete the same URL renders the stage matrix. ③ "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 104,
+   "ident": "returnTo",
+   "target": "frontend/src/state/useProgress.js",
+   "spec": "69",
+   "window": "66-72",
+   "snippet": "| **FR-6** | ① On a fresh account, visiting `/level/1/stages` lands on `/level/0/stage/0?tutorial=true&returnTo=…`. ② After all 4 tutorial stages are complete the same URL renders the stage matrix. ③ "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 111,
+   "ident": "puzzles",
+   "target": "backend/api/routes/levels.py",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| **FR-8** | ① `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. ② `GET /api/levels/1` returns that level with a 12-element `puzzles` array. ③ `GET /api/levels/9"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 111,
+   "ident": "IndexError",
+   "target": "backend/api/routes/levels.py",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| **FR-8** | ① `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. ② `GET /api/levels/1` returns that level with a 12-element `puzzles` array. ③ `GET /api/levels/9"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 111,
+   "ident": "puzzles",
+   "target": "backend/services/content_service.py",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| **FR-8** | ① `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. ② `GET /api/levels/1` returns that level with a 12-element `puzzles` array. ③ `GET /api/levels/9"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 111,
+   "ident": "IndexError",
+   "target": "backend/services/content_service.py",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| **FR-8** | ① `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. ② `GET /api/levels/1` returns that level with a 12-element `puzzles` array. ③ `GET /api/levels/9"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 113,
+   "ident": "LEVEL_SUMMARIES",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| **FR-10** | ① The bytes the API serves are the bytes the SPA bundles: both read `<repo>/content/*.json`. ② Deleting `content/` makes every content route answer `503 content_unavailable` with a messa"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 113,
+   "ident": "LEVEL_SUMMARIES",
+   "target": "frontend/vite.config.js",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| **FR-10** | ① The bytes the API serves are the bytes the SPA bundles: both read `<repo>/content/*.json`. ② Deleting `content/` makes every content route answer `503 content_unavailable` with a messa"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 121,
+   "ident": "locked",
+   "target": "frontend/src/pages/StageSelectorPage.jsx",
+   "spec": "56",
+   "window": "53-59",
+   "snippet": "| **FR-13** | ① Stage 0 is always playable. ② Stage *N* is `locked` until stage *N−1* is in the completed set. ③ Locked cards are `disabled` and render a lock glyph. | `frontend/src/pages/StageSelecto"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 121,
+   "ident": "disabled",
+   "target": "frontend/src/pages/StageSelectorPage.jsx",
+   "spec": "56",
+   "window": "53-59",
+   "snippet": "| **FR-13** | ① Stage 0 is always playable. ② Stage *N* is `locked` until stage *N−1* is in the completed set. ③ Locked cards are `disabled` and render a lock glyph. | `frontend/src/pages/StageSelecto"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 128,
+   "ident": "not",
+   "target": "frontend/src/engine/laws/index.js",
+   "spec": "33",
+   "window": "30-36",
+   "snippet": "| **FR-15** | ① Clicking a literal toggles it into the selection; a third click replaces the oldest selection (max 2). ② Clicking a clause grip replaces any of its literals already selected. ③ Selecti"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 129,
+   "ident": "from",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "363-373",
+   "window": "360-376",
+   "snippet": "| **FR-16** | ① Clicking a law plays its animation for 1350 ms, then appends one step whose `from`/`to` are the rendered expressions before and after. ② A law whose application leaves the rendered tex"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 129,
+   "ident": "from",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "60-62",
+   "window": "57-65",
+   "snippet": "| **FR-16** | ① Clicking a law plays its animation for 1350 ms, then appends one step whose `from`/`to` are the rendered expressions before and after. ② A law whose application leaves the rendered tex"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "hintsUsed",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "501-520",
+   "window": "498-523",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "hintsUsed",
+   "target": "frontend/src/state/hintText.js",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "scanHints",
+   "target": "frontend/src/pages/ProblemPage.jsx",
+   "spec": "228-236",
+   "window": "225-239",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "hintsUsed",
+   "target": "frontend/src/pages/ProblemPage.jsx",
+   "spec": "228-236",
+   "window": "225-239",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "null",
+   "target": "frontend/src/pages/ProblemPage.jsx",
+   "spec": "228-236",
+   "window": "225-239",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "scanHints",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "66",
+   "window": "63-69",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "hintsUsed",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "66",
+   "window": "63-69",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 139,
+   "ident": "null",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "66",
+   "window": "63-69",
+   "snippet": "| **FR-21** | ① Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a suggestion exists. ② The fallback is the puzzle's `hints[n]`, advancing one"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "useGameState",
+   "target": "frontend/src/engine/laws/helpers.js",
+   "spec": "77",
+   "window": "74-80",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "useGameState",
+   "target": "frontend/src/engine/sandbox/generator.js",
+   "spec": "94",
+   "window": "91-97",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "useGameState",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "161",
+   "window": "158-164",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "isEquivalent",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "83",
+   "window": "80-86",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "isEquivalent",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "83",
+   "window": "80-86",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "isEquivalent",
+   "target": "frontend/src/engine/render.js",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "useGameState",
+   "target": "frontend/src/engine/render.js",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 146,
+   "ident": "isEquivalent",
+   "target": "frontend/src/engine/render.js",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| **FR-23** | ① Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newExpr) === goalCanonRef.current`, where the goal was canonicalised once a"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 147,
+   "ident": "hintIndependence",
+   "target": "backend/services/scoring_service.py",
+   "spec": "49-77",
+   "window": "46-80",
+   "snippet": "| **FR-24** | ① `efficiency` = 40 when `steps_used ≤ optimal`, else `max(0, 40 − (steps_used − optimal) × 10)`. ② `targetLaw` = `30 × |required ∩ used| / |required|`, and **exactly 30** when the puzzl"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 147,
+   "ident": "efficiency",
+   "target": "backend/config/constants.py",
+   "spec": "9-22",
+   "window": "6-25",
+   "snippet": "| **FR-24** | ① `efficiency` = 40 when `steps_used ≤ optimal`, else `max(0, 40 − (steps_used − optimal) × 10)`. ② `targetLaw` = `30 × |required ∩ used| / |required|`, and **exactly 30** when the puzzl"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 147,
+   "ident": "targetLaw",
+   "target": "backend/config/constants.py",
+   "spec": "9-22",
+   "window": "6-25",
+   "snippet": "| **FR-24** | ① `efficiency` = 40 when `steps_used ≤ optimal`, else `max(0, 40 − (steps_used − optimal) × 10)`. ② `targetLaw` = `30 × |required ∩ used| / |required|`, and **exactly 30** when the puzzl"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 147,
+   "ident": "hintIndependence",
+   "target": "backend/config/constants.py",
+   "spec": "9-22",
+   "window": "6-25",
+   "snippet": "| **FR-24** | ① `efficiency` = 40 when `steps_used ≤ optimal`, else `max(0, 40 − (steps_used − optimal) × 10)`. ② `targetLaw` = `30 × |required ∩ used| / |required|`, and **exactly 30** when the puzzl"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 147,
+   "ident": "breakdown",
+   "target": "backend/config/constants.py",
+   "spec": "9-22",
+   "window": "6-25",
+   "snippet": "| **FR-24** | ① `efficiency` = 40 when `steps_used ≤ optimal`, else `max(0, 40 − (steps_used − optimal) × 10)`. ② `targetLaw` = `30 × |required ∩ used| / |required|`, and **exactly 30** when the puzzl"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 148,
+   "ident": "scoreResult",
+   "target": "frontend/src/components/puzzle/usePuzzleSession.js",
+   "spec": "173-216",
+   "window": "170-219",
+   "snippet": "| **FR-25** | ① The completion modal opens within 200 ms of the solve, before any network answer. ② When `POST /api/score` answers, `scoreResult` is replaced by the server payload and the stored best "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 148,
+   "ident": "scoreResult",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "31",
+   "window": "28-34",
+   "snippet": "| **FR-25** | ① The completion modal opens within 200 ms of the solve, before any network answer. ② When `POST /api/score` answers, `scoreResult` is replaced by the server payload and the stored best "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 148,
+   "ident": "result.total",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "31",
+   "window": "28-34",
+   "snippet": "| **FR-25** | ① The completion modal opens within 200 ms of the solve, before any network answer. ② When `POST /api/score` answers, `scoreResult` is replaced by the server payload and the stored best "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 151,
+   "ident": "score_history",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| **FR-28** | ① With a valid bearer token, `POST /api/score` both answers the score **and** inserts one `score_history` row plus raises `stage_progress.best_score` when the new total is higher. ② With"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 151,
+   "ident": "stage_progress.best_score",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| **FR-28** | ① With a valid bearer token, `POST /api/score` both answers the score **and** inserts one `score_history` row plus raises `stage_progress.best_score` when the new total is higher. ② With"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 151,
+   "ident": "hints_used",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| **FR-28** | ① With a valid bearer token, `POST /api/score` both answers the score **and** inserts one `score_history` row plus raises `stage_progress.best_score` when the new total is higher. ② With"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 157,
+   "ident": "localStorage",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| **FR-29** | ① Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. ② For a signed-in learner with a loaded server snapshot, a mutation schedules a save 500 ms later, "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 157,
+   "ident": "localStorage",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "68",
+   "window": "65-71",
+   "snippet": "| **FR-29** | ① Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. ② For a signed-in learner with a loaded server snapshot, a mutation schedules a save 500 ms later, "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 158,
+   "ident": "setUser",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "97-130",
+   "window": "94-133",
+   "snippet": "| **FR-30** | ① `points` takes the maximum of local and server. ② `bestStreak` takes the maximum; `streak` prefers the server value. ③ `stageScores` keeps the higher score per key. ④ `stageProgress` u"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "addPoints",
+   "target": "frontend/src/pages/SandboxPage.jsx",
+   "spec": "178",
+   "window": "175-181",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "completeStage",
+   "target": "frontend/src/pages/SandboxPage.jsx",
+   "spec": "178",
+   "window": "175-181",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "saveScore",
+   "target": "frontend/src/pages/SandboxPage.jsx",
+   "spec": "178",
+   "window": "175-181",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "submitScore",
+   "target": "frontend/src/pages/SandboxPage.jsx",
+   "spec": "178",
+   "window": "175-181",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "completeStage",
+   "target": "frontend/src/components/puzzle/usePuzzleSession.js",
+   "spec": "185-188",
+   "window": "182-191",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "saveScore",
+   "target": "frontend/src/components/puzzle/usePuzzleSession.js",
+   "spec": "185-188",
+   "window": "182-191",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "submitScore",
+   "target": "frontend/src/components/puzzle/usePuzzleSession.js",
+   "spec": "185-188",
+   "window": "182-191",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "addPoints",
+   "target": "frontend/src/components/puzzle/ScoreModal.jsx",
+   "spec": "100-102",
+   "window": "97-105",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "completeStage",
+   "target": "frontend/src/components/puzzle/ScoreModal.jsx",
+   "spec": "100-102",
+   "window": "97-105",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "saveScore",
+   "target": "frontend/src/components/puzzle/ScoreModal.jsx",
+   "spec": "100-102",
+   "window": "97-105",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 168,
+   "ident": "submitScore",
+   "target": "frontend/src/components/puzzle/ScoreModal.jsx",
+   "spec": "100-102",
+   "window": "97-105",
+   "snippet": "| **FR-35** | ① Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. ② The workspace renders it with the same components as a graded stage. ③ `addPoi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 178,
+   "ident": "localStorage",
+   "target": "frontend/src/services/soundEffects.js",
+   "spec": "43",
+   "window": "40-46",
+   "snippet": "| **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 178,
+   "ident": "AudioContext",
+   "target": "frontend/src/services/soundEffects.js",
+   "spec": "43",
+   "window": "40-46",
+   "snippet": "| **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 178,
+   "ident": "localStorage",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "203",
+   "window": "200-206",
+   "snippet": "| **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 178,
+   "ident": "AudioContext",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "203",
+   "window": "200-206",
+   "snippet": "| **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 178,
+   "ident": "AudioContext",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "28",
+   "window": "25-29",
+   "snippet": "| **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 180,
+   "ident": "TIMING",
+   "target": "frontend/src/pages/ProblemPage.jsx",
+   "spec": "69-99",
+   "window": "66-102",
+   "snippet": "| **FR-42** | ① Width ≥ 1024 px on a pointer-fine device renders the three-column desktop layout. ② A phone landscape, tablet portrait or narrow window moves step history into an overlay drawer, assis"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 188,
+   "ident": "fetch",
+   "target": "scoring.js",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| **NFR-2** | No file under `frontend/src/engine/` imports React, a DOM global, `fetch`, or any folder other than `engine/` and `config/`. | Verified: the only cross-folder imports are `../../config/g"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 188,
+   "ident": "fetch",
+   "target": "sandbox/input.js",
+   "spec": "36",
+   "window": "33-39",
+   "snippet": "| **NFR-2** | No file under `frontend/src/engine/` imports React, a DOM global, `fetch`, or any folder other than `engine/` and `config/`. | Verified: the only cross-folder imports are `../../config/g"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 191,
+   "ident": "stepsUsed",
+   "target": "backend/core/responses.py",
+   "spec": "32-59",
+   "window": "29-61",
+   "snippet": "| **NFR-5** | ① Success is `{success:true, data, error:null}`. ② Failure is `{success:false, data:null, error:{code,message,detail}}`. ③ A framework 404 and a validation 422 are wrapped too. ④ `GET /`"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 191,
+   "ident": "stepsUsed",
+   "target": "backend/main.py",
+   "spec": "50-66",
+   "window": "47-69",
+   "snippet": "| **NFR-5** | ① Success is `{success:true, data, error:null}`. ② Failure is `{success:false, data:null, error:{code,message,detail}}`. ③ A framework 404 and a validation 422 are wrapped too. ④ `GET /`"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "submitScore",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "loadProgress",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "saveProgress",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "null",
+   "target": "frontend/src/services/scoreApi.js",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "submitScore",
+   "target": "frontend/src/services/progressApi.js",
+   "spec": "12",
+   "window": "9-15",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "saveProgress",
+   "target": "frontend/src/services/progressApi.js",
+   "spec": "12",
+   "window": "9-15",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "submitScore",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "53",
+   "window": "50-56",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "loadProgress",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "53",
+   "window": "50-56",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 195,
+   "ident": "saveProgress",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "53",
+   "window": "50-56",
+   "snippet": "| **NFR-9** | ① `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. ② A network failure therefore returns `null` instead of throwing into a component. ③ A failed content fetch for a "
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 200,
+   "ident": "render.yaml",
+   "target": "frontend/vercel.json",
+   "spec": "3-8",
+   "window": "1-11",
+   "snippet": "| **NFR-14** | `render.yaml` declares exactly one Render web service, Python, `rootDir: backend`, start command `uvicorn main:app`. The SPA is deployed separately and rewrites `/api/*` to that service"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 272,
+   "ident": "supabase.auth.signUp",
+   "target": "frontend/src/services/authActions.js",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| Auth — password sign-in / sign-up | SPA → Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/supabase-js`; credentials from `VITE_SUPABASE_URL` and `VITE_SUPABASE_P"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 272,
+   "ident": "VITE_SUPABASE_URL",
+   "target": "frontend/src/services/authActions.js",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| Auth — password sign-in / sign-up | SPA → Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/supabase-js`; credentials from `VITE_SUPABASE_URL` and `VITE_SUPABASE_P"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 272,
+   "ident": "VITE_SUPABASE_PUBLISHABLE_KEY",
+   "target": "frontend/src/services/authActions.js",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| Auth — password sign-in / sign-up | SPA → Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/supabase-js`; credentials from `VITE_SUPABASE_URL` and `VITE_SUPABASE_P"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 273,
+   "ident": "onAuthStateChange",
+   "target": "frontend/src/state/AuthProvider.jsx",
+   "spec": "23",
+   "window": "20-26",
+   "snippet": "| Auth — session | SPA ← Supabase | `supabase.auth.getSession()` and `onAuthStateChange`; the access token is attached as a bearer header on every authenticated API call. `frontend/src/state/AuthProvi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 273,
+   "ident": "onAuthStateChange",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| Auth — session | SPA ← Supabase | `supabase.auth.getSession()` and `onAuthStateChange`; the access token is attached as a bearer header on every authenticated API call. `frontend/src/state/AuthProvi"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 274,
+   "ident": "httpx.HTTPError",
+   "target": "backend/supabase_client.py",
+   "spec": "87-98",
+   "window": "84-101",
+   "snippet": "| Auth — token verification | backend → Supabase | `GET {SUPABASE_URL}/auth/v1/user` with the learner's JWT; non-200 ⇒ `None` ⇒ 401. An `httpx.HTTPError` ⇒ `502 upstream_error`. `backend/supabase_clie"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 282,
+   "ident": "localStorage",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| `praxis_v1_<userId>` | `localStorage` | `progressStore.persistLocal` | The whole progress snapshot per learner. `frontend/src/config/storageKeys.js:10` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 282,
+   "ident": "progressStore.persistLocal",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| `praxis_v1_<userId>` | `localStorage` | `progressStore.persistLocal` | The whole progress snapshot per learner. `frontend/src/config/storageKeys.js:10` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 301,
+   "ident": "VITE_AUTH_URL",
+   "target": "frontend/src/services/supabaseClient.js",
+   "spec": "7-8",
+   "window": "4-11",
+   "snippet": "| Frontend env vars | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (and a vestigial `VITE_AUTH_URL`). `frontend/src/services/supabaseClient.js:7-8` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 372,
+   "ident": "stageProgress",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "123",
+   "window": "120-126",
+   "snippet": "(`frontend/src/state/progressStore.js:123`). `stageProgress` and `stageScores` are the only"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 372,
+   "ident": "stageScores",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "123",
+   "window": "120-126",
+   "snippet": "(`frontend/src/state/progressStore.js:123`). `stageProgress` and `stageScores` are the only"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 390,
+   "ident": "SUPABASE_URL",
+   "target": "backend/config/settings.py",
+   "spec": "75",
+   "window": "72-76",
+   "snippet": "| C-3 | Settings are an **import-time singleton**: `settings = Settings.from_env()` raises if `SUPABASE_URL` or `SUPABASE_SERVICE_KEY` is missing. | The process cannot boot without Supabase credential"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 390,
+   "ident": "SUPABASE_SERVICE_KEY",
+   "target": "backend/config/settings.py",
+   "spec": "75",
+   "window": "72-76",
+   "snippet": "| C-3 | Settings are an **import-time singleton**: `settings = Settings.from_env()` raises if `SUPABASE_URL` or `SUPABASE_SERVICE_KEY` is missing. | The process cannot boot without Supabase credential"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 416,
+   "ident": "live",
+   "target": "backend/api/routes/levels.py",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 416,
+   "ident": "live",
+   "target": "backend/services/content_service.py",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 417,
+   "ident": "live",
+   "target": "backend/api/routes/laws.py",
+   "spec": "18",
+   "window": "15-21",
+   "snippet": "| FR-9 | `backend/api/routes/laws.py:18` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 418,
+   "ident": "live",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| FR-10 | `backend/repositories/content_repository.py:16`, `frontend/vite.config.js:16` | `.e2e/verify-sandbox.mjs`; `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 432,
+   "ident": "live",
+   "target": "backend/services/scoring_service.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| FR-24 | `backend/services/scoring_service.py:32`, `backend/config/constants.py:9` | `live` (11 cases incl. edge cases) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 432,
+   "ident": "live",
+   "target": "backend/config/constants.py",
+   "spec": "9",
+   "window": "6-12",
+   "snippet": "| FR-24 | `backend/services/scoring_service.py:32`, `backend/config/constants.py:9` | `live` (11 cases incl. edge cases) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 436,
+   "ident": "live",
+   "target": "backend/api/routes/score.py",
+   "spec": "39",
+   "window": "36-42",
+   "snippet": "| FR-28 | `backend/api/routes/score.py:39`, `backend/services/progress_service.py:87` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 436,
+   "ident": "live",
+   "target": "backend/services/progress_service.py",
+   "spec": "87",
+   "window": "84-90",
+   "snippet": "| FR-28 | `backend/api/routes/score.py:39`, `backend/services/progress_service.py:87` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 440,
+   "ident": "live",
+   "target": "backend/api/routes/progress.py",
+   "spec": "20",
+   "window": "17-23",
+   "snippet": "| FR-32 | `backend/api/routes/progress.py:20`, `:26` | `live` |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 461,
+   "ident": "live",
+   "target": "backend/core/responses.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| NFR-5 | `backend/core/responses.py:32`, `backend/main.py:50` | `live` (success, 404, 422, 401, unknown path) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 461,
+   "ident": "live",
+   "target": "backend/main.py",
+   "spec": "50",
+   "window": "47-53",
+   "snippet": "| NFR-5 | `backend/core/responses.py:32`, `backend/main.py:50` | `live` (success, 404, 422, 401, unknown path) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 462,
+   "ident": "live",
+   "target": "backend/core/security.py",
+   "spec": "17",
+   "window": "14-20",
+   "snippet": "| NFR-6 | `backend/core/security.py:17` | `live` (401 bodies) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 466,
+   "ident": "live",
+   "target": "backend/core/middleware.py",
+   "spec": "26",
+   "window": "23-29",
+   "snippet": "| NFR-10 | `backend/core/middleware.py:26`, `backend/core/logging.py:34` | `live` (X-Request-ID present; one JSON line per request) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 466,
+   "ident": "live",
+   "target": "backend/core/logging.py",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| NFR-10 | `backend/core/middleware.py:26`, `backend/core/logging.py:34` | `live` (X-Request-ID present; one JSON line per request) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 470,
+   "ident": "live",
+   "target": "render.yaml",
+   "spec": "1",
+   "window": "1-4",
+   "snippet": "| NFR-14 | `render.yaml:1`, `frontend/vercel.json:1` | Read + `live` (deployed host appears in the rewrite target) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 470,
+   "ident": "live",
+   "target": "frontend/vercel.json",
+   "spec": "1",
+   "window": "1-4",
+   "snippet": "| NFR-14 | `render.yaml:1`, `frontend/vercel.json:1` | Read + `live` (deployed host appears in the rewrite target) |"
+  },
+  {
+   "doc": "01-product/SRS.md",
+   "line": 536,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "23-27",
+   "window": "20-30",
+   "snippet": "| D13 | CORS origins are the three dev origins plus `FRONTEND_URL` when set. | Only `localhost:5173` and `127.0.0.1:5173`. | `backend/config/settings.py:23-27`, `:66-71`. |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 195,
+   "ident": "api.schemas",
+   "target": "backend/api/routes/score.py",
+   "spec": "27-35",
+   "window": "24-38",
+   "snippet": "| `api/routes/*` | `api.schemas`, `services`, `core` | a repository, `httpx`, or SQL; hold `if` logic about scoring | `backend/api/routes/score.py:27-35` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 195,
+   "ident": "services",
+   "target": "backend/api/routes/score.py",
+   "spec": "27-35",
+   "window": "24-38",
+   "snippet": "| `api/routes/*` | `api.schemas`, `services`, `core` | a repository, `httpx`, or SQL; hold `if` logic about scoring | `backend/api/routes/score.py:27-35` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 195,
+   "ident": "httpx",
+   "target": "backend/api/routes/score.py",
+   "spec": "27-35",
+   "window": "24-38",
+   "snippet": "| `api/routes/*` | `api.schemas`, `services`, `core` | a repository, `httpx`, or SQL; hold `if` logic about scoring | `backend/api/routes/score.py:27-35` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 197,
+   "ident": "repositories",
+   "target": "backend/services/scoring_service.py",
+   "spec": "11-12",
+   "window": "8-15",
+   "snippet": "| `services/*` | `repositories`, `config`, `core` | `fastapi` request objects (`Request`, `Depends`) | `backend/services/scoring_service.py:11-12` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 197,
+   "ident": "core",
+   "target": "backend/services/scoring_service.py",
+   "spec": "11-12",
+   "window": "8-15",
+   "snippet": "| `services/*` | `repositories`, `config`, `core` | `fastapi` request objects (`Request`, `Depends`) | `backend/services/scoring_service.py:11-12` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 197,
+   "ident": "fastapi",
+   "target": "backend/services/scoring_service.py",
+   "spec": "11-12",
+   "window": "8-15",
+   "snippet": "| `services/*` | `repositories`, `config`, `core` | `fastapi` request objects (`Request`, `Depends`) | `backend/services/scoring_service.py:11-12` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 197,
+   "ident": "Request",
+   "target": "backend/services/scoring_service.py",
+   "spec": "11-12",
+   "window": "8-15",
+   "snippet": "| `services/*` | `repositories`, `config`, `core` | `fastapi` request objects (`Request`, `Depends`) | `backend/services/scoring_service.py:11-12` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 197,
+   "ident": "Depends",
+   "target": "backend/services/scoring_service.py",
+   "spec": "11-12",
+   "window": "8-15",
+   "snippet": "| `services/*` | `repositories`, `config`, `core` | `fastapi` request objects (`Request`, `Depends`) | `backend/services/scoring_service.py:11-12` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 198,
+   "ident": "supabase_client",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "21-26",
+   "window": "18-29",
+   "snippet": "| `repositories/*` | `supabase_client`, `core`, stdlib | business rules; deciding HTTP status codes | `backend/repositories/progress_repository.py:21-26` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 198,
+   "ident": "core",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "21-26",
+   "window": "18-29",
+   "snippet": "| `repositories/*` | `supabase_client`, `core`, stdlib | business rules; deciding HTTP status codes | `backend/repositories/progress_repository.py:21-26` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 199,
+   "ident": "config",
+   "target": "backend/core/security.py",
+   "spec": "13-14",
+   "window": "10-17",
+   "snippet": "| `core/*` | `config` | `services` or `repositories` | `backend/core/security.py:13-14` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 199,
+   "ident": "services",
+   "target": "backend/core/security.py",
+   "spec": "13-14",
+   "window": "10-17",
+   "snippet": "| `core/*` | `config` | `services` or `repositories` | `backend/core/security.py:13-14` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 199,
+   "ident": "repositories",
+   "target": "backend/core/security.py",
+   "spec": "13-14",
+   "window": "10-17",
+   "snippet": "| `core/*` | `config` | `services` or `repositories` | `backend/core/security.py:13-14` |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 386,
+   "ident": "localStorage",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "60",
+   "window": "57-63",
+   "snippet": "| Progress snapshot | `state/progressStore.js` | every screen | `localStorage` + Supabase | The store is the only writer (`frontend/src/state/progressStore.js:60`) |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 402,
+   "ident": "ApiError",
+   "target": "backend/core/errors.py",
+   "spec": "23-81",
+   "window": "20-82",
+   "snippet": "| Rule violation | `AppError` subclass with `code`, `message`, `detail`, `status` (`backend/core/errors.py:23-81`) | `ApiError` with `message`, `status`, `code`, `detail` (`frontend/src/services/apiCl"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 402,
+   "ident": "AppError",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "16-24",
+   "window": "13-27",
+   "snippet": "| Rule violation | `AppError` subclass with `code`, `message`, `detail`, `status` (`backend/core/errors.py:23-81`) | `ApiError` with `message`, `status`, `code`, `detail` (`frontend/src/services/apiCl"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 403,
+   "ident": "ApiError",
+   "target": "backend/core/responses.py",
+   "spec": "32-43",
+   "window": "29-46",
+   "snippet": "| Transport shape | `{success, data, error}` (`backend/core/responses.py:32-43`) | `unwrap()` reads `data` or throws `ApiError` (`frontend/src/services/apiClient.js:33-45`) |"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 404,
+   "ident": "network_error",
+   "target": "backend/core/errors.py",
+   "spec": "11-21",
+   "window": "8-24",
+   "snippet": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_error` / `invalid_response` / `http_<status>` (`frontend/src/services/ap"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 404,
+   "ident": "invalid_response",
+   "target": "backend/core/errors.py",
+   "spec": "11-21",
+   "window": "8-24",
+   "snippet": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_error` / `invalid_response` / `http_<status>` (`frontend/src/services/ap"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 404,
+   "ident": "ErrorCode",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "70",
+   "window": "67-73",
+   "snippet": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_error` / `invalid_response` / `http_<status>` (`frontend/src/services/ap"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 404,
+   "ident": "invalid_response",
+   "target": "frontend/src/services/apiClient.js",
+   "spec": "70",
+   "window": "67-73",
+   "snippet": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_error` / `invalid_response` / `http_<status>` (`frontend/src/services/ap"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 405,
+   "ident": "ErrorBoundary",
+   "target": "backend/core/middleware.py",
+   "spec": "33-45",
+   "window": "30-48",
+   "snippet": "| Unhandled failure | Middleware catches, logs, renders `internal_error_response()` — never leaks internals (`backend/core/middleware.py:33-45`, `backend/core/responses.py:55-59`) | `ErrorBoundary` re"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 405,
+   "ident": "ErrorBoundary",
+   "target": "backend/core/responses.py",
+   "spec": "55-59",
+   "window": "52-61",
+   "snippet": "| Unhandled failure | Middleware catches, logs, renders `internal_error_response()` — never leaks internals (`backend/core/middleware.py:33-45`, `backend/core/responses.py:55-59`) | `ErrorBoundary` re"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 477,
+   "ident": "SUPABASE_URL",
+   "target": "backend/config/settings.py",
+   "spec": "75",
+   "window": "72-76",
+   "snippet": "`backend/config/settings.py:75` is an **import-time singleton**: a missing `SUPABASE_URL` or"
+  },
+  {
+   "doc": "02-architecture/SAD.md",
+   "line": 643,
+   "ident": "render.yaml",
+   "target": "frontend/vercel.json",
+   "spec": "1-12",
+   "window": "1-13",
+   "snippet": "| D19 | `render.yaml` declares one service; the SPA is on Vercel. | Render for the whole app. | `render.yaml:1-16`, `frontend/vercel.json:1-12`. |"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 101,
+   "ident": "http_error",
+   "target": "backend/core/responses.py",
+   "spec": "46-52",
+   "window": "43-55",
+   "snippet": "(`backend/core/responses.py:46-52`); a framework error is re-wrapped as `http_error`; a body"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 209,
+   "ident": "NotFoundError",
+   "target": "levels.py",
+   "spec": "25",
+   "window": "22-28",
+   "snippet": "| `read_level` | `(level_id: int) -> dict[str, Any]` `levels.py:25` | Delegates; the service raises `NotFoundError` → 404 |"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 216,
+   "ident": "persist_score",
+   "target": "progress_service.py",
+   "spec": "123-127",
+   "window": "120-128",
+   "snippet": "response is sent, and `persist_score` swallows every exception (`progress_service.py:123-127`)."
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 760,
+   "ident": "ScoreModal",
+   "target": "frontend/src/engine/scoring.js",
+   "spec": "54-97",
+   "window": "51-99",
+   "snippet": "(`frontend/src/engine/scoring.js:54-97`) and consumed directly by `ScoreModal`"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 763,
+   "ident": "effectiveOptimalSteps",
+   "target": "scoring.js",
+   "spec": "25-28",
+   "window": "22-31",
+   "snippet": "for scoring (`scoring.js:25-28`), and `effectiveOptimalSteps` picks the solver's answer, else"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 950,
+   "ident": "useGameState",
+   "target": "engine/sandbox/generator.js",
+   "spec": "94",
+   "window": "91-97",
+   "snippet": "(`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`) — never `useGameState`."
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 950,
+   "ident": "useGameState",
+   "target": "engine/sandbox/input.js",
+   "spec": "161",
+   "window": "158-164",
+   "snippet": "(`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`) — never `useGameState`."
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 1000,
+   "ident": "compute_score",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| D7 | `compute_score` schedules `persist_score` for a signed-in learner (§8.2, §3.5). | `POST /api/score` \"does NOT save to DB\". | `backend/api/routes/score.py:38-39`. |"
+  },
+  {
+   "doc": "02-architecture/SDD.md",
+   "line": 1004,
+   "ident": "earned_points",
+   "target": "frontend/src/engine/scoring.js",
+   "spec": "80",
+   "window": "77-83",
+   "snippet": "| D21 | `earned_points` uses Python `round()`; the client mirror uses `Math.round`. | — | `backend/services/scoring_service.py:55` vs `frontend/src/engine/scoring.js:80`. |"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 199,
+   "ident": "useState",
+   "target": "frontend/src/state/useProgress.js",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level store plus `useSyncExternalStore` (`frontend/src/state/useProgress.js"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 199,
+   "ident": "update",
+   "target": "frontend/src/state/useProgress.js",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level store plus `useSyncExternalStore` (`frontend/src/state/useProgress.js"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 199,
+   "ident": "useState",
+   "target": "progressStore.js",
+   "spec": "60",
+   "window": "57-63",
+   "snippet": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level store plus `useSyncExternalStore` (`frontend/src/state/useProgress.js"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 199,
+   "ident": "useSyncExternalStore",
+   "target": "progressStore.js",
+   "spec": "60",
+   "window": "57-63",
+   "snippet": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level store plus `useSyncExternalStore` (`frontend/src/state/useProgress.js"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 265,
+   "ident": "nameToId",
+   "target": "definitions.js",
+   "spec": "63",
+   "window": "60-66",
+   "snippet": "| 14 | §3: \"the `nameToId` map duplicated inside the puzzle screen … deleted\" | Absent; `LAW_NAME_TO_ID` is derived at `definitions.js:63` | agrees |"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 269,
+   "ident": "hints_used",
+   "target": "progress_service.py",
+   "spec": "51",
+   "window": "48-54",
+   "snippet": "| 18 | §6.4: \"The database schema is untouched. Guide usage is folded into the existing `hints_used` column\" | `persist_score` writes `\"hints_used\": outcome.assistance_used` where `assistance_used = h"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 269,
+   "ident": "persist_score",
+   "target": "progress_service.py",
+   "spec": "51",
+   "window": "48-54",
+   "snippet": "| 18 | §6.4: \"The database schema is untouched. Guide usage is folded into the existing `hints_used` column\" | `persist_score` writes `\"hints_used\": outcome.assistance_used` where `assistance_used = h"
+  },
+  {
+   "doc": "02-architecture/REFACTOR-NOTES.md",
+   "line": 272,
+   "ident": "server.fs.allow",
+   "target": "vite.config.js",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| 21 | §6.1: Vite `@content` alias, `server.fs.allow`, restart needed | `vite.config.js:16`, `:22`; still true | agrees |"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 86,
+   "ident": "stage_progress",
+   "target": "database/init.sql",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| `\\|\\|--o{` | exactly one → | zero or more | A learner owns **any number** of `stage_progress` rows, but at most one per `(level_id, stage_idx)` thanks to `UNIQUE(user_id, level_id, stage_idx)` (`dat"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 125,
+   "ident": "build_progress",
+   "target": "backend/services/progress_service.py",
+   "spec": "45-47",
+   "window": "42-50",
+   "snippet": "no row, and `build_progress` substitutes zeros (`backend/services/progress_service.py:45-47`)."
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 130,
+   "ident": "stage_idx",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "33-39",
+   "window": "30-42",
+   "snippet": "completed `stage_idx` values per level (`frontend/src/state/progressStore.js:33-39`) and comparing"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 179,
+   "ident": "stageScores",
+   "target": "frontend/src/services/progressApi.js",
+   "spec": "19-24",
+   "window": "16-26",
+   "snippet": "numbers: `frontend/src/services/progressApi.js:19-24` ships `stageScores` as `{ \"1:0\": 87.5 }`"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "hasSeenTutorial",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "281-285",
+   "window": "278-288",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "best_score",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "281-285",
+   "window": "278-288",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "stageSolutions",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "281-285",
+   "window": "278-288",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "hasSeenTutorial",
+   "target": "backend/api/schemas/progress.py",
+   "spec": "11-18",
+   "window": "8-21",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "best_score",
+   "target": "backend/api/schemas/progress.py",
+   "spec": "11-18",
+   "window": "8-21",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/ERD.md",
+   "line": 239,
+   "ident": "stageSolutions",
+   "target": "backend/api/schemas/progress.py",
+   "spec": "11-18",
+   "window": "8-21",
+   "snippet": "| Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 58,
+   "ident": "auth.users",
+   "target": "backend/services/progress_service.py",
+   "spec": "63",
+   "window": "60-66",
+   "snippet": "| `user_progress` | The learner's running totals: points, current streak, best streak. | **At most 1** — the PK *is* the FK to `auth.users`. | `POST /api/progress/save` only (`backend/services/progres"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 98,
+   "ident": "get_current_user",
+   "target": "backend/api/routes/progress.py",
+   "spec": "34",
+   "window": "31-37",
+   "snippet": "| `user_id` | The Supabase Auth user id (`auth.users.id`), passed as `user[\"id\"]` from the bearer token. | `backend/api/routes/progress.py:34`, `backend/core/security.py` (`get_current_user`) |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 101,
+   "ident": "best_streak",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "173",
+   "window": "170-176",
+   "snippet": "| `best_streak` | High-water mark of `streak`, also computed client-side. | `frontend/src/state/progressStore.js:173` |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 102,
+   "ident": "updated_at",
+   "target": "backend/services/progress_service.py",
+   "spec": "63-70",
+   "window": "60-73",
+   "snippet": "| `updated_at` | **Misleading name.** Nothing updates it. There is no `CREATE TRIGGER` and no `ON UPDATE` anywhere in `database/init.sql`, and no writer sends the column, so it holds the time the row "
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 102,
+   "ident": "TRIGGER",
+   "target": "backend/services/progress_service.py",
+   "spec": "63-70",
+   "window": "60-73",
+   "snippet": "| `updated_at` | **Misleading name.** Nothing updates it. There is no `CREATE TRIGGER` and no `ON UPDATE` anywhere in `database/init.sql`, and no writer sends the column, so it holds the time the row "
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 102,
+   "ident": "UPDATE",
+   "target": "backend/services/progress_service.py",
+   "spec": "63-70",
+   "window": "60-73",
+   "snippet": "| `updated_at` | **Misleading name.** Nothing updates it. There is no `CREATE TRIGGER` and no `ON UPDATE` anywhere in `database/init.sql`, and no writer sends the column, so it holds the time the row "
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 150,
+   "ident": "level_id",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "82-85",
+   "window": "79-88",
+   "snippet": "| `level_id` | The **content id** from `content/levels.json`, which is **0-based**: `0` = Tutorial, `1` = Level 1, `2` = Level 2, `3` = Level 3 — Boss. So a Tutorial row is `level_id = 0`. | `content/"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 153,
+   "ident": "true",
+   "target": "backend/services/progress_service.py",
+   "spec": "82,120",
+   "window": "79-123",
+   "snippet": "| `completed` | Always written as `true` by both writers — the row's existence already means \"finished\". | `backend/services/progress_service.py:82,120` |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 154,
+   "ident": "completed_at",
+   "target": "backend/services/progress_service.py",
+   "spec": "114-122",
+   "window": "111-125",
+   "snippet": "| `completed_at` | Set on first insert. A later upsert does not include the column, so it is **not** refreshed by a better score. *(PostgREST upsert updates only the columns present in the payload — d"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 244,
+   "ident": "earned_points",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "29,32",
+   "window": "26-35",
+   "snippet": "| `earned_points` | The **bonus only** (0–5). It is *not* the stage payout, which is `STAGE_COMPLETION_XP (10) + earned_points`. | `backend/services/scoring_service.py:55`; `frontend/src/config/gameRu"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 293,
+   "ident": "idx_stage_progress_user",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "37-42",
+   "window": "34-45",
+   "snippet": "| `idx_stage_progress_user` | `stage_progress` | `(user_id)` | `GET /api/progress` listing every stage row for one learner. | `backend/repositories/progress_repository.py:37-42` |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 294,
+   "ident": "idx_score_history_user",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "57-59",
+   "window": "54-62",
+   "snippet": "| `idx_score_history_user` | `score_history` | `(user_id)` | Per-learner history retrieval. **No application query reads `score_history` today** — the column exists for future analytics and for manual"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 301,
+   "ident": "user_progress_pkey",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| `user_progress_pkey` | `user_progress` | `PRIMARY KEY (user_id)` — also serves the `eq(\"user_id\", …)` lookup at `backend/repositories/progress_repository.py:32`. |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 358,
+   "ident": "auth.uid",
+   "target": "database/init.sql",
+   "spec": "56-58",
+   "window": "53-59",
+   "snippet": "| The policies are `FOR ALL USING (true)` with no `TO` and no `auth.uid()` predicate. | **Verified** by reading `database/init.sql:56-58` and grepping for `auth.uid`. |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 378,
+   "ident": "user_progress",
+   "target": "backend/api/routes/progress.py",
+   "spec": "26-41",
+   "window": "23-42",
+   "snippet": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per completed stage | On the learner's debounced client push (500 ms after any pro"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 378,
+   "ident": "progress_service.save_progress",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "68",
+   "window": "65-71",
+   "snippet": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per completed stage | On the learner's debounced client push (500 ms after any pro"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 378,
+   "ident": "user_progress",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "68",
+   "window": "65-71",
+   "snippet": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per completed stage | On the learner's debounced client push (500 ms after any pro"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 378,
+   "ident": "stage_progress",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "68",
+   "window": "65-71",
+   "snippet": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per completed stage | On the learner's debounced client push (500 ms after any pro"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 379,
+   "ident": "BackgroundTasks",
+   "target": "backend/api/routes/score.py",
+   "spec": "37-39",
+   "window": "34-42",
+   "snippet": "| `POST /api/score` with a valid bearer token | `progress_service.persist_score` (FastAPI `BackgroundTasks`) | `score_history` insert, then `stage_progress` upsert when the total beats the stored best"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 379,
+   "ident": "score_history",
+   "target": "backend/api/routes/score.py",
+   "spec": "37-39",
+   "window": "34-42",
+   "snippet": "| `POST /api/score` with a valid bearer token | `progress_service.persist_score` (FastAPI `BackgroundTasks`) | `score_history` insert, then `stage_progress` upsert when the total beats the stored best"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 379,
+   "ident": "stage_progress",
+   "target": "backend/api/routes/score.py",
+   "spec": "37-39",
+   "window": "34-42",
+   "snippet": "| `POST /api/score` with a valid bearer token | `progress_service.persist_score` (FastAPI `BackgroundTasks`) | `score_history` insert, then `stage_progress` upsert when the total beats the stored best"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 379,
+   "ident": "BackgroundTasks",
+   "target": "backend/services/progress_service.py",
+   "spec": "87-127",
+   "window": "84-128",
+   "snippet": "| `POST /api/score` with a valid bearer token | `progress_service.persist_score` (FastAPI `BackgroundTasks`) | `score_history` insert, then `stage_progress` upsert when the total beats the stored best"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 385,
+   "ident": "score_history",
+   "target": "backend/services/progress_service.py",
+   "spec": "25-50",
+   "window": "22-53",
+   "snippet": "`progress_service.build_progress` (`backend/services/progress_service.py:25-50`). `score_history` is"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 394,
+   "ident": "stageSolutions",
+   "target": "backend/api/schemas/progress.py",
+   "spec": "11-18",
+   "window": "8-21",
+   "snippet": "| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-1"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 394,
+   "ident": "localStorage",
+   "target": "backend/api/schemas/progress.py",
+   "spec": "11-18",
+   "window": "8-21",
+   "snippet": "| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-1"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 395,
+   "ident": "levelsCompleted",
+   "target": "backend/services/progress_service.py",
+   "spec": "44-50",
+   "window": "41-53",
+   "snippet": "| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageS"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 395,
+   "ident": "hasSeenTutorial",
+   "target": "backend/services/progress_service.py",
+   "spec": "44-50",
+   "window": "41-53",
+   "snippet": "| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageS"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 395,
+   "ident": "localStorage",
+   "target": "backend/services/progress_service.py",
+   "spec": "44-50",
+   "window": "41-53",
+   "snippet": "| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageS"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 395,
+   "ident": "build_progress",
+   "target": "backend/services/progress_service.py",
+   "spec": "44-50",
+   "window": "41-53",
+   "snippet": "| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageS"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 396,
+   "ident": "stage_progress.best_score",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "281-285",
+   "window": "278-288",
+   "snippet": "| Star counts | Computed on the fly from `stage_progress.best_score` | No `stars` column; see `frontend/src/state/progressStore.js:281-285`. |"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 410,
+   "ident": "auth.users",
+   "target": "database/init.sql",
+   "spec": "4",
+   "window": "1-7",
+   "snippet": "| **D3** | `database/init.sql:4` — \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\" | There is no Better Auth in this repository. The FK targ"
+  },
+  {
+   "doc": "03-database/SCHEMA.md",
+   "line": 410,
+   "ident": "auth.users",
+   "target": "frontend/src/services/authActions.js",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| **D3** | `database/init.sql:4` — \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\" | There is no Better Auth in this repository. The FK targ"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 93,
+   "ident": "init.sql",
+   "target": "frontend/vite.config.js",
+   "spec": "28-33",
+   "window": "25-36",
+   "snippet": "| A Better Auth server on port 3001 | No Better Auth anywhere in the repo; the `/api/auth` Vite proxy entry and the `init.sql` header comment are dead remnants | `frontend/vite.config.js:28-33`, `data"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 253,
+   "ident": "None",
+   "target": "core/security.py",
+   "spec": "31-32",
+   "window": "28-35",
+   "snippet": "timeout. Any non-`200` answer becomes `None`, which `core/security.py:31-32` turns into"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 267,
+   "ident": "BackgroundTask",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "as a FastAPI `BackgroundTask` (`backend/api/routes/score.py:38-39`); when it is absent — or when"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 324,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "23-27",
+   "window": "20-30",
+   "snippet": "| Allowed origins | `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:3001`, plus `FRONTEND_URL` when set and not already listed | `backend/config/settings.py:23-27`, `:66-71` |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 325,
+   "ident": "true",
+   "target": "backend/main.py",
+   "spec": "33",
+   "window": "30-36",
+   "snippet": "| `allow_credentials` | `true` | `backend/main.py:33` |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 374,
+   "ident": "not_found",
+   "target": "backend/core/errors.py",
+   "spec": "52-57",
+   "window": "49-60",
+   "snippet": "| `not_found` | `404` | `NotFoundError` (`backend/core/errors.py:52-57`) | unknown level id or stage index |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 375,
+   "ident": "content_unavailable",
+   "target": "backend/core/errors.py",
+   "spec": "60-65",
+   "window": "57-68",
+   "snippet": "| `content_unavailable` | `503` | `ContentUnavailableError` (`backend/core/errors.py:60-65`) | `content/*.json` missing or unreadable at runtime |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 376,
+   "ident": "upstream_error",
+   "target": "backend/core/errors.py",
+   "spec": "68-73",
+   "window": "65-76",
+   "snippet": "| `upstream_error` | `502` | `UpstreamError` (`backend/core/errors.py:68-73`) | Supabase Auth or PostgREST transport failure |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 377,
+   "ident": "unauthorized",
+   "target": "backend/core/errors.py",
+   "spec": "76-81",
+   "window": "73-82",
+   "snippet": "| `unauthorized` | `401` | `UnauthorizedError` (`backend/core/errors.py:76-81`) | missing/invalid bearer token on a protected route |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 379,
+   "ident": "http_error",
+   "target": "backend/main.py",
+   "spec": "50-57",
+   "window": "47-60",
+   "snippet": "| `http_error` | `404` / `405` / any | `StarletteHTTPException` handler (`backend/main.py:50-57`) | unknown route, wrong method |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 394,
+   "ident": "stageIdx",
+   "target": "backend/services/content_service.py",
+   "spec": "32-42",
+   "window": "29-43",
+   "snippet": "| Stage index (`stageIdx`, `stage_idx`) | **0-based** within a level | `backend/services/content_service.py:32-42` |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 635,
+   "ident": "LEVEL_SUMMARIES",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "26-31",
+   "window": "23-34",
+   "snippet": "projection `LEVEL_SUMMARIES` from `frontend/src/content/gameContent.js:26-31` and **never"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 721,
+   "ident": "not_found",
+   "target": "backend/services/content_service.py",
+   "spec": "26-28",
+   "window": "23-31",
+   "snippet": "| `404` | `not_found` | `Level 999 not found` | no level has that id (`backend/services/content_service.py:26-28`) |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1004,
+   "ident": "BackgroundTask",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| Valid `Authorization: Bearer <token>` | a `BackgroundTask` calls `progress_service.persist_score(user_id, outcome)` **after** the response is sent (`backend/api/routes/score.py:38-39`) |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1206,
+   "ident": "upstream_error",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "21-26",
+   "window": "18-29",
+   "snippet": "| `502` | `upstream_error` | `Progress storage is unavailable` | Supabase PostgREST unreachable while reading rows (`backend/repositories/progress_repository.py:21-26`) |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1327,
+   "ident": "data",
+   "target": "backend/api/routes/progress.py",
+   "spec": "41",
+   "window": "38-42",
+   "snippet": "`data` has exactly one key, `status`, always the string `\"ok\"` (`backend/api/routes/progress.py:41`)."
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1374,
+   "ident": "upstream_error",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "21-26",
+   "window": "18-29",
+   "snippet": "| `502` | `upstream_error` | `Progress storage is unavailable` | PostgREST rejected or could not be reached during a write (`backend/repositories/progress_repository.py:21-26`) |"
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1477,
+   "ident": "data",
+   "target": "backend/api/schemas/score.py",
+   "spec": "23-29",
+   "window": "20-30",
+   "snippet": "Returned as `data` by `POST /api/score` (`backend/api/schemas/score.py:23-29`)."
+  },
+  {
+   "doc": "04-api/API-REFERENCE.md",
+   "line": 1536,
+   "ident": "error.detail",
+   "target": "backend/main.py",
+   "spec": "60-66",
+   "window": "57-69",
+   "snippet": "`backend/main.py:60-66` (`jsonable_encoder(exc.errors())` becomes `error.detail`)."
+  },
+  {
+   "doc": "05-guides/tutorials/getting-started.md",
+   "line": 406,
+   "ident": "score_history",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "(`backend/api/routes/score.py:38-39`) that inserts into `score_history` and raises the stage's best"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 75,
+   "ident": "react",
+   "target": "frontend/src/engine/index.js",
+   "spec": "8-11",
+   "window": "5-14",
+   "snippet": "| No React | `frontend/src/engine/index.js:8-11` states the layering rule; verified by grep — no `react` import exists under `engine/` |"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 250,
+   "ident": "nodeText",
+   "target": "render.js",
+   "spec": "32-43",
+   "window": "29-46",
+   "snippet": "(`render.js:32-43`). `nodeText` deliberately is not: it renders a `sum` factor inside a product with"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 322,
+   "ident": "buildSandboxPuzzle",
+   "target": "sandbox/validate.js",
+   "spec": "155",
+   "window": "152-158",
+   "snippet": "| `validateSandboxInput` (`sandbox/validate.js:155`) | `pages/SandboxPage.jsx:122` and `:124` — the **sandbox screen** — and `sandbox/input.js:113` inside `buildSandboxPuzzle` | the above **plus** the"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 322,
+   "ident": "buildSandboxPuzzle",
+   "target": "pages/SandboxPage.jsx",
+   "spec": "122",
+   "window": "119-125",
+   "snippet": "| `validateSandboxInput` (`sandbox/validate.js:155`) | `pages/SandboxPage.jsx:122` and `:124` — the **sandbox screen** — and `sandbox/input.js:113` inside `buildSandboxPuzzle` | the above **plus** the"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 322,
+   "ident": "buildSandboxPuzzle",
+   "target": "sandbox/input.js",
+   "spec": "113",
+   "window": "110-116",
+   "snippet": "| `validateSandboxInput` (`sandbox/validate.js:155`) | `pages/SandboxPage.jsx:122` and `:124` — the **sandbox screen** — and `sandbox/input.js:113` inside `buildSandboxPuzzle` | the above **plus** the"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 574,
+   "ident": "findOptimalPath",
+   "target": "solver.js",
+   "spec": "282-292",
+   "window": "279-295",
+   "snippet": "(`solver.js:282-292`), and `findOptimalPath` returns the shortest path to a given canonical target"
+  },
+  {
+   "doc": "05-guides/tutorials/understanding-the-engine.md",
+   "line": 575,
+   "ident": "canonText",
+   "target": "solver.js",
+   "spec": "207-233",
+   "window": "204-236",
+   "snippet": "(`solver.js:207-233`). Both use `canonText` as the visited-set key, which is what makes differently"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-level.md",
+   "line": 226,
+   "ident": "stageScores",
+   "target": "backend/services/progress_service.py",
+   "spec": "41-42",
+   "window": "38-45",
+   "snippet": "`stageScores`, which is exactly the guard in `backend/services/progress_service.py:41-42`."
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-level.md",
+   "line": 392,
+   "ident": "isEquivalent",
+   "target": "frontend/src/engine/equivalence.js",
+   "spec": "11-22",
+   "window": "8-25",
+   "snippet": "walks any tree (`frontend/src/engine/equivalence.js:11-22`), `isEquivalent` is a truth table over"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-level.md",
+   "line": 493,
+   "ident": "SandboxPage",
+   "target": "frontend/src/engine/__tests__/sandbox.test.js",
+   "spec": "121-135",
+   "window": "118-138",
+   "snippet": "`frontend/src/engine/__tests__/sandbox.test.js:121-135`). `SandboxPage` does not pass the option,"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-problem.md",
+   "line": 681,
+   "ident": "useGameContent",
+   "target": "frontend/src/services/contentApi.js",
+   "spec": "36-45",
+   "window": "33-48",
+   "snippet": "(`frontend/src/services/contentApi.js:36-45`), and `useGameContent` hands the stage screen the"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 35,
+   "ident": "identity",
+   "target": "frontend/src/engine/laws/constLaws.js",
+   "spec": "19,61",
+   "window": "16-64",
+   "snippet": "| one `const` node | `frontend/src/engine/laws/constLaws.js:19,61` | a new branch on `constVal` — **and** a pairwise branch in the sum/product module if the solver must find it (see §5) | `identity`, "
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 35,
+   "ident": "annulment",
+   "target": "frontend/src/engine/laws/constLaws.js",
+   "spec": "19,61",
+   "window": "16-64",
+   "snippet": "| one `const` node | `frontend/src/engine/laws/constLaws.js:19,61` | a new branch on `constVal` — **and** a pairwise branch in the sum/product module if the solver must find it (see §5) | `identity`, "
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 40,
+   "ident": "analyzeX",
+   "target": "laws/index.js",
+   "spec": "43-57",
+   "window": "40-60",
+   "snippet": "selections (`laws/index.js:43-57`). A new **single-node** shape does: add an `analyzeX` to"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 43,
+   "ident": "getLegalTransitions",
+   "target": "solver.js",
+   "spec": "70-76",
+   "window": "67-79",
+   "snippet": "`getLegalTransitions` (`solver.js:70-76`, `:83-86`), or the solver will never use it."
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 47,
+   "ident": "findSimplestForm",
+   "target": "laws/helpers.js",
+   "spec": "144-150",
+   "window": "141-153",
+   "snippet": "(`laws/helpers.js:144-150`). Non-simplifying laws also have to survive `findSimplestForm`, which"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 118,
+   "ident": "getLegalTransitions",
+   "target": "useGameState.js",
+   "spec": "366-373",
+   "window": "363-376",
+   "snippet": "2. **`apply()` must return a different text.** `useGameState.js:366-373` and `getLegalTransitions`"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 148,
+   "ident": "analyzeSumConst",
+   "target": "solver.js",
+   "spec": "83-86",
+   "window": "80-89",
+   "snippet": "explicitly (`solver.js:83-86`), the sum branch has **no** `analyzeSumConst` call — constants in sums"
+  },
+  {
+   "doc": "05-guides/how-to/add-a-new-law.md",
+   "line": 179,
+   "ident": "TERM_LEVEL_HINTS",
+   "target": "scanHints.js",
+   "spec": "64-65",
+   "window": "61-68",
+   "snippet": "`distributive` is absent from `TERM_LEVEL_HINTS` for exactly that reason (`scanHints.js:64-65` builds"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 57,
+   "ident": "isComplete",
+   "target": "components/puzzle/usePuzzleSession.js",
+   "spec": "200-213",
+   "window": "197-216",
+   "snippet": "- `POST /api/score` fires once, after `isComplete` (`components/puzzle/usePuzzleSession.js:200-213`);"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 99,
+   "ident": "console.warn",
+   "target": "usePuzzleSession.js",
+   "spec": "61,122",
+   "window": "58-125",
+   "snippet": "| browser console | `console.warn` on a failed saved-derivation restore (`state/useGameState.js:112`), generation/level-load failures (`usePuzzleSession.js:61,122`), sandbox sessionStorage warnings (`"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 196,
+   "ident": "analyzeSelection",
+   "target": "laws/definitions.js",
+   "spec": "29-54",
+   "window": "26-57",
+   "snippet": "| 2 | \"No laws apply — try a different selection\" | `analyzeSelection` returned `[]`: wrong `isTermSel`, or the shape genuinely has no law | §2 script with the same paths | select the literals, not th"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 196,
+   "ident": "isTermSel",
+   "target": "laws/definitions.js",
+   "spec": "29-54",
+   "window": "26-57",
+   "snippet": "| 2 | \"No laws apply — try a different selection\" | `analyzeSelection` returned `[]`: wrong `isTermSel`, or the shape genuinely has no law | §2 script with the same paths | select the literals, not th"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 201,
+   "ident": "Math.round",
+   "target": "usePuzzleSession.js",
+   "spec": "208-213",
+   "window": "205-216",
+   "snippet": "| 7 | Local score and server score differ by exactly 1 point | JS `Math.round` (half-up) vs Python `round` (half-to-even) | `total` ends in 5: `earnedPoints` client 5 vs server 4 at total 90 | known d"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 201,
+   "ident": "round",
+   "target": "usePuzzleSession.js",
+   "spec": "208-213",
+   "window": "205-216",
+   "snippet": "| 7 | Local score and server score differ by exactly 1 point | JS `Math.round` (half-up) vs Python `round` (half-to-even) | `total` ends in 5: `earnedPoints` client 5 vs server 4 at total 90 | known d"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 201,
+   "ident": "earnedPoints",
+   "target": "usePuzzleSession.js",
+   "spec": "208-213",
+   "window": "205-216",
+   "snippet": "| 7 | Local score and server score differ by exactly 1 point | JS `Math.round` (half-up) vs Python `round` (half-to-even) | `total` ends in 5: `earnedPoints` client 5 vs server 4 at total 90 | known d"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 202,
+   "ident": "effectiveOptimalSteps",
+   "target": "scoring_service.py",
+   "spec": "80-88",
+   "window": "77-91",
+   "snippet": "| 8 | Steps taken > `optimalSteps`, but efficiency is full | the solver prefers its own BFS answer over the authored figure | `effectiveOptimalSteps` (`engine/scoring.js:39-42`); server `min(optimal, "
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 203,
+   "ident": "isComplete",
+   "target": "usePuzzleSession.js",
+   "spec": "185-188",
+   "window": "182-191",
+   "snippet": "| 9 | `POST /api/score` never fires | the puzzle is in the Sandbox (never scored) or is not `isComplete` | Network tab; `usePuzzleSession.js:185-188` | expected in sandbox |"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 208,
+   "ident": "content_repository",
+   "target": "content/gameContent.js",
+   "spec": "14-15",
+   "window": "11-18",
+   "snippet": "| 14 | `/api/laws` still shows the old cards after editing `content/laws.json` | `content_repository` caches with `functools.lru_cache` | restart the backend and re-check | restart; a production SPA a"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 208,
+   "ident": "functools.lru_cache",
+   "target": "content/gameContent.js",
+   "spec": "14-15",
+   "window": "11-18",
+   "snippet": "| 14 | `/api/laws` still shows the old cards after editing `content/laws.json` | `content_repository` caches with `functools.lru_cache` | restart the backend and re-check | restart; a production SPA a"
+  },
+  {
+   "doc": "05-guides/how-to/debug-a-failing-step.md",
+   "line": 214,
+   "ident": "LAW_DEFINITIONS",
+   "target": "engine/scoring.js",
+   "spec": "25-28",
+   "window": "22-31",
+   "snippet": "| 20 | The same law name maps to an unexpected scoring credit | the step records the display `name`, scoring maps it through `LAW_NAME_TO_ID` | `engine/scoring.js:25-28` | names must exist in `LAW_DEF"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "localStorage",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "levelsCompleted",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "stageProgress",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "stageScores",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "stageSolutions",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/reset-user-progress.md",
+   "line": 32,
+   "ident": "hasSeenTutorial",
+   "target": "frontend/src/config/storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/"
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 108,
+   "ident": "SUPABASE_URL",
+   "target": "backend/config/settings.py",
+   "spec": "74-75",
+   "window": "71-76",
+   "snippet": "| `backend/.env` | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (required), `FRONTEND_URL` (optional) | `backend/config/settings.py:74-75` builds the settings singleton at **import** time, so the backend wi"
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 108,
+   "ident": "SUPABASE_SERVICE_KEY",
+   "target": "backend/config/settings.py",
+   "spec": "74-75",
+   "window": "71-76",
+   "snippet": "| `backend/.env` | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (required), `FRONTEND_URL` (optional) | `backend/config/settings.py:74-75` builds the settings singleton at **import** time, so the backend wi"
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 108,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "74-75",
+   "window": "71-76",
+   "snippet": "| `backend/.env` | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (required), `FRONTEND_URL` (optional) | `backend/config/settings.py:74-75` builds the settings singleton at **import** time, so the backend wi"
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 118,
+   "ident": "VITE_API_TARGET",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "(`frontend/vite.config.js:30-33`) and reads `VITE_API_TARGET` from `process.env`"
+  },
+  {
+   "doc": "05-guides/how-to/run-locally-with-docker.md",
+   "line": 118,
+   "ident": "process.env",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "(`frontend/vite.config.js:30-33`) and reads `VITE_API_TARGET` from `process.env`"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 167,
+   "ident": "targetLaws",
+   "target": "frontend/src/engine/scoring.js",
+   "spec": "25-33",
+   "window": "22-36",
+   "snippet": "puzzle's `targetLaws` (`frontend/src/engine/scoring.js:25-33`). A name that is missing from"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 217,
+   "ident": "complement",
+   "target": "productLaws.js",
+   "spec": "107-128",
+   "window": "104-131",
+   "snippet": "| 1 | `complement` | `A + A' = 1` | `A · A' = 0` | literal | `sumLaws.js:99-121` | `productLaws.js:107-128` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 218,
+   "ident": "idempotent",
+   "target": "sumLaws.js",
+   "spec": "188-204",
+   "window": "185-207",
+   "snippet": "| 2 | `idempotent` | `A + A = A` | `A · A = A` | term | `sumLaws.js:188-204` | `productLaws.js:131-147` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 218,
+   "ident": "idempotent",
+   "target": "productLaws.js",
+   "spec": "131-147",
+   "window": "128-150",
+   "snippet": "| 2 | `idempotent` | `A + A = A` | `A · A = A` | term | `sumLaws.js:188-204` | `productLaws.js:131-147` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 219,
+   "ident": "absorption",
+   "target": "sumLaws.js",
+   "spec": "207-256",
+   "window": "204-259",
+   "snippet": "| 3 | `absorption` | `A + AB = A` | `A(A+B) = A` | term | `sumLaws.js:207-256` | `productLaws.js:150-187` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 220,
+   "ident": "identity",
+   "target": "sumLaws.js",
+   "spec": "124-159",
+   "window": "121-162",
+   "snippet": "| 4 | `identity` | `A + 0 = A` | `A · 1 = A` | term | `sumLaws.js:124-159` + `constLaws.js:22-42` | `constLaws.js:64-84` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 220,
+   "ident": "identity",
+   "target": "constLaws.js",
+   "spec": "22-42",
+   "window": "19-45",
+   "snippet": "| 4 | `identity` | `A + 0 = A` | `A · 1 = A` | term | `sumLaws.js:124-159` + `constLaws.js:22-42` | `constLaws.js:64-84` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 220,
+   "ident": "identity",
+   "target": "constLaws.js",
+   "spec": "64-84",
+   "window": "61-87",
+   "snippet": "| 4 | `identity` | `A + 0 = A` | `A · 1 = A` | term | `sumLaws.js:124-159` + `constLaws.js:22-42` | `constLaws.js:64-84` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 221,
+   "ident": "annulment",
+   "target": "sumLaws.js",
+   "spec": "162-185",
+   "window": "159-188",
+   "snippet": "| 5 | `annulment` | `A + 1 = 1` | `A · 0 = 0` | term | `sumLaws.js:162-185` + `constLaws.js:43-56` | `productLaws.js:190-213` + `constLaws.js:85-98` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 221,
+   "ident": "annulment",
+   "target": "constLaws.js",
+   "spec": "43-56",
+   "window": "40-59",
+   "snippet": "| 5 | `annulment` | `A + 1 = 1` | `A · 0 = 0` | term | `sumLaws.js:162-185` + `constLaws.js:43-56` | `productLaws.js:190-213` + `constLaws.js:85-98` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 221,
+   "ident": "annulment",
+   "target": "productLaws.js",
+   "spec": "190-213",
+   "window": "187-216",
+   "snippet": "| 5 | `annulment` | `A + 1 = 1` | `A · 0 = 0` | term | `sumLaws.js:162-185` + `constLaws.js:43-56` | `productLaws.js:190-213` + `constLaws.js:85-98` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 221,
+   "ident": "annulment",
+   "target": "constLaws.js",
+   "spec": "85-98",
+   "window": "82-101",
+   "snippet": "| 5 | `annulment` | `A + 1 = 1` | `A · 0 = 0` | term | `sumLaws.js:162-185` + `constLaws.js:43-56` | `productLaws.js:190-213` + `constLaws.js:85-98` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 222,
+   "ident": "distributive",
+   "target": "sumLaws.js",
+   "spec": "38-96",
+   "window": "35-99",
+   "snippet": "| 6 | `distributive` | `AB + AC = A(B+C)` | `(A+B)(A+C) = A + BC` | literal | `sumLaws.js:38-96` | `productLaws.js:69-104` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 222,
+   "ident": "distributive",
+   "target": "productLaws.js",
+   "spec": "69-104",
+   "window": "66-107",
+   "snippet": "| 6 | `distributive` | `AB + AC = A(B+C)` | `(A+B)(A+C) = A + BC` | literal | `sumLaws.js:38-96` | `productLaws.js:69-104` |"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 396,
+   "ident": "isEquivalent",
+   "target": "helpers.js",
+   "spec": "26-34",
+   "window": "23-37",
+   "snippet": "`isEquivalent` (`equivalence.js:45-57`). `helpers.js:26-34` explains why the syntactic shortcut is"
+  },
+  {
+   "doc": "06-reference/boolean-laws.md",
+   "line": 592,
+   "ident": "absorption",
+   "target": "sumLaws.js",
+   "spec": "44-47",
+   "window": "41-50",
+   "snippet": "guard rejects it (`sumLaws.js:44-47`) and the correct move is `absorption`."
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 34,
+   "ident": "SCORE_WEIGHTS.efficiency",
+   "target": "backend/config/constants.py",
+   "spec": "9",
+   "window": "6-12",
+   "snippet": "| `EFFICIENCY_WEIGHT` / `SCORE_WEIGHTS.efficiency` | `40.0` / `40` | `backend/config/constants.py:9` | `frontend/src/config/gameRules.js:15` | Maximum points for solving in at most the optimal number "
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 34,
+   "ident": "EFFICIENCY_WEIGHT",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "| `EFFICIENCY_WEIGHT` / `SCORE_WEIGHTS.efficiency` | `40.0` / `40` | `backend/config/constants.py:9` | `frontend/src/config/gameRules.js:15` | Maximum points for solving in at most the optimal number "
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 35,
+   "ident": "SCORE_WEIGHTS.targetLaw",
+   "target": "backend/config/constants.py",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| `TARGET_LAW_WEIGHT` / `SCORE_WEIGHTS.targetLaw` | `30.0` / `30` | `backend/config/constants.py:10` | `frontend/src/config/gameRules.js:16` | Maximum points for applying the laws the puzzle wants. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 35,
+   "ident": "TARGET_LAW_WEIGHT",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| `TARGET_LAW_WEIGHT` / `SCORE_WEIGHTS.targetLaw` | `30.0` / `30` | `backend/config/constants.py:10` | `frontend/src/config/gameRules.js:16` | Maximum points for applying the laws the puzzle wants. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 36,
+   "ident": "SCORE_WEIGHTS.hintIndependence",
+   "target": "backend/config/constants.py",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| `HINT_INDEPENDENCE_WEIGHT` / `SCORE_WEIGHTS.hintIndependence` | `30.0` / `30` | `backend/config/constants.py:11` | `frontend/src/config/gameRules.js:17` | Maximum points for solving unaided. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 36,
+   "ident": "HINT_INDEPENDENCE_WEIGHT",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "17",
+   "window": "14-20",
+   "snippet": "| `HINT_INDEPENDENCE_WEIGHT` / `SCORE_WEIGHTS.hintIndependence` | `30.0` / `30` | `backend/config/constants.py:11` | `frontend/src/config/gameRules.js:17` | Maximum points for solving unaided. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 38,
+   "ident": "SCORE_PENALTY.stepOverOptimal",
+   "target": "backend/config/constants.py",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "| `STEP_PENALTY` / `SCORE_PENALTY.stepOverOptimal` | `10.0` / `10` | `backend/config/constants.py:15` | `frontend/src/config/gameRules.js:23` | Score points lost per step **beyond** the optimum, off t"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 38,
+   "ident": "STEP_PENALTY",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "23",
+   "window": "20-26",
+   "snippet": "| `STEP_PENALTY` / `SCORE_PENALTY.stepOverOptimal` | `10.0` / `10` | `backend/config/constants.py:15` | `frontend/src/config/gameRules.js:23` | Score points lost per step **beyond** the optimum, off t"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 39,
+   "ident": "SCORE_PENALTY.assistance",
+   "target": "backend/config/constants.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| `ASSISTANCE_PENALTY` / `SCORE_PENALTY.assistance` | `10.0` / `10` | `backend/config/constants.py:16` | `frontend/src/config/gameRules.js:25` | Score points lost per **hint or Guide**, off the hint-i"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 39,
+   "ident": "ASSISTANCE_PENALTY",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "25",
+   "window": "22-28",
+   "snippet": "| `ASSISTANCE_PENALTY` / `SCORE_PENALTY.assistance` | `10.0` / `10` | `backend/config/constants.py:16` | `frontend/src/config/gameRules.js:25` | Score points lost per **hint or Guide**, off the hint-i"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 40,
+   "ident": "SCORE_BONUS_MAX_POINTS",
+   "target": "backend/config/constants.py",
+   "spec": "19",
+   "window": "16-22",
+   "snippet": "| `MAX_BONUS_POINTS` / `SCORE_BONUS_MAX_POINTS` | `5` / `5` | `backend/config/constants.py:19` | `frontend/src/config/gameRules.js:29` | Maximum bonus awarded on a perfect 100. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 40,
+   "ident": "MAX_BONUS_POINTS",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "29",
+   "window": "26-32",
+   "snippet": "| `MAX_BONUS_POINTS` / `SCORE_BONUS_MAX_POINTS` | `5` / `5` | `backend/config/constants.py:19` | `frontend/src/config/gameRules.js:29` | Maximum bonus awarded on a perfect 100. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 41,
+   "ident": "round1",
+   "target": "backend/config/constants.py",
+   "spec": "22",
+   "window": "19-25",
+   "snippet": "| `SCORE_ROUNDING_DP` | `1` | `backend/config/constants.py:22` | `—` (frontend hardcodes `round1`, `frontend/src/engine/scoring.js:22`) | Decimals kept on every reported component. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 41,
+   "ident": "SCORE_ROUNDING_DP",
+   "target": "frontend/src/engine/scoring.js",
+   "spec": "22",
+   "window": "19-25",
+   "snippet": "| `SCORE_ROUNDING_DP` | `1` | `backend/config/constants.py:22` | `—` (frontend hardcodes `round1`, `frontend/src/engine/scoring.js:22`) | Decimals kept on every reported component. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 44,
+   "ident": "UNLOCK_AVERAGE_SCORE",
+   "target": "backend/config/constants.py",
+   "spec": "26",
+   "window": "23-27",
+   "snippet": "| `UNLOCK_AVERAGE` / `UNLOCK_AVERAGE_SCORE` | `80.0` / `80` | `backend/config/constants.py:26` | `frontend/src/config/gameRules.js:49` | Average stage score required to unlock the next level. |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 99,
+   "ident": "NotFoundError",
+   "target": "backend/services/scoring_service.py",
+   "spec": "43",
+   "window": "40-46",
+   "snippet": "(`backend/services/scoring_service.py:43`). Unknown level or stage raises `NotFoundError`, which"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 209,
+   "ident": "null",
+   "target": "backend/services/scoring_service.py",
+   "spec": "73",
+   "window": "70-76",
+   "snippet": "| `hintsUsed` | `int` | Hints submitted (`null` → 0). | `backend/services/scoring_service.py:73` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 210,
+   "ident": "null",
+   "target": "backend/services/scoring_service.py",
+   "spec": "74",
+   "window": "71-77",
+   "snippet": "| `guidesUsed` | `int` | Guides submitted (`null` → 0). | `backend/services/scoring_service.py:74` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 211,
+   "ident": "ASSISTANCE_PENALTY",
+   "target": "backend/services/scoring_service.py",
+   "spec": "75",
+   "window": "72-78",
+   "snippet": "| `totalAssistance` | `int` | `hintsUsed + guidesUsed` — the figure multiplied by `ASSISTANCE_PENALTY`. | `backend/services/scoring_service.py:75` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 562,
+   "ident": "earnedPoints",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "29",
+   "window": "26-32",
+   "snippet": "| Score bonus | `+0 … +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:55` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 562,
+   "ident": "earnedPoints",
+   "target": "backend/services/scoring_service.py",
+   "spec": "55",
+   "window": "52-58",
+   "snippet": "| Score bonus | `+0 … +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:55` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 563,
+   "ident": "best_streak",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "170-175",
+   "window": "167-178",
+   "snippet": "| Streak | `+1` on `streak`, and `best_streak` raised to the new high-water mark | `frontend/src/state/progressStore.js:170-175` |"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 565,
+   "ident": "deductPoints",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "501-520",
+   "window": "498-523",
+   "snippet": "| Hints | no point cost | the only `deductPoints` call site in the app is the Guide activation (`frontend/src/pages/ProblemPage.jsx:268`); the hint path at `frontend/src/state/useGameState.js:501-520`"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 581,
+   "ident": "stepsUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "45-55",
+   "window": "42-58",
+   "snippet": "| 1 | **The whole score is client-trusted.** The request supplies `stepsUsed`, `lawsUsed`, `hintsUsed`, `guidesUsed` **and** `optimalSteps`. A caller can post `stepsUsed: 0`, `lawsUsed: [\"distributive"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 581,
+   "ident": "lawsUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "45-55",
+   "window": "42-58",
+   "snippet": "| 1 | **The whole score is client-trusted.** The request supplies `stepsUsed`, `lawsUsed`, `hintsUsed`, `guidesUsed` **and** `optimalSteps`. A caller can post `stepsUsed: 0`, `lawsUsed: [\"distributive"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 581,
+   "ident": "hintsUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "45-55",
+   "window": "42-58",
+   "snippet": "| 1 | **The whole score is client-trusted.** The request supplies `stepsUsed`, `lawsUsed`, `hintsUsed`, `guidesUsed` **and** `optimalSteps`. A caller can post `stepsUsed: 0`, `lawsUsed: [\"distributive"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 581,
+   "ident": "guidesUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "45-55",
+   "window": "42-58",
+   "snippet": "| 1 | **The whole score is client-trusted.** The request supplies `stepsUsed`, `lawsUsed`, `hintsUsed`, `guidesUsed` **and** `optimalSteps`. A caller can post `stepsUsed: 0`, `lawsUsed: [\"distributive"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 581,
+   "ident": "optimalSteps",
+   "target": "backend/services/scoring_service.py",
+   "spec": "45-55",
+   "window": "42-58",
+   "snippet": "| 1 | **The whole score is client-trusted.** The request supplies `stepsUsed`, `lawsUsed`, `hintsUsed`, `guidesUsed` **and** `optimalSteps`. A caller can post `stepsUsed: 0`, `lawsUsed: [\"distributive"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 584,
+   "ident": "stageIdx",
+   "target": "backend/services/content_service.py",
+   "spec": "39-42",
+   "window": "36-43",
+   "snippet": "| 4 | **Negative `stageIdx` scores the wrong puzzle.** `content_service.get_puzzle` rejects only `stage_idx >= len(puzzles)`, so `stageIdx: -1` resolves Python-style to the **last** puzzle of the leve"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 584,
+   "ident": "content_service.get_puzzle",
+   "target": "backend/services/content_service.py",
+   "spec": "39-42",
+   "window": "36-43",
+   "snippet": "| 4 | **Negative `stageIdx` scores the wrong puzzle.** `content_service.get_puzzle` rejects only `stage_idx >= len(puzzles)`, so `stageIdx: -1` resolves Python-style to the **last** puzzle of the leve"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 585,
+   "ident": "CHECK",
+   "target": "backend/api/schemas/score.py",
+   "spec": "13-20",
+   "window": "10-23",
+   "snippet": "| 5 | **No field-level bounds.** `stepsUsed`, `hintsUsed` and `guidesUsed` are plain `int` with no `ge=0`; only their positive behaviour was tested above. Nothing in the database constrains them eithe"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 590,
+   "ident": "hints_used",
+   "target": "backend/api/schemas/score.py",
+   "spec": "13-20",
+   "window": "10-23",
+   "snippet": "| 10 | The language used by the API is camelCase (`hintsUsed`) while the database columns are snake_case (`hints_used`); the mapping is hand-written in one place. A rename on either side fails at runt"
+  },
+  {
+   "doc": "06-reference/scoring-and-rewards.md",
+   "line": 590,
+   "ident": "hintsUsed",
+   "target": "backend/services/progress_service.py",
+   "spec": "94-107",
+   "window": "91-110",
+   "snippet": "| 10 | The language used by the API is camelCase (`hintsUsed`) while the database columns are snake_case (`hints_used`); the mapping is hand-written in one place. A rename on either side fails at runt"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 38,
+   "ident": "SUPABASE_URL",
+   "target": "backend/supabase_client.py",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| `SUPABASE_URL` | **yes** | no | `https://<project-ref>.supabase.co` | `backend/config/settings.py:60` | `backend/supabase_client.py:24` (`/rest/v1`), `:89` (`/auth/v1/user`) |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 39,
+   "ident": "apikey",
+   "target": "backend/config/settings.py",
+   "spec": "61",
+   "window": "58-64",
+   "snippet": "| `SUPABASE_SERVICE_KEY` | **yes** | **yes** | `<service-role-key>` | `backend/config/settings.py:61` | `backend/supabase_client.py:26-31` (`apikey` + `Authorization` headers) |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 39,
+   "ident": "Authorization",
+   "target": "backend/config/settings.py",
+   "spec": "61",
+   "window": "58-64",
+   "snippet": "| `SUPABASE_SERVICE_KEY` | **yes** | **yes** | `<service-role-key>` | `backend/config/settings.py:61` | `backend/supabase_client.py:26-31` (`apikey` + `Authorization` headers) |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 39,
+   "ident": "SUPABASE_SERVICE_KEY",
+   "target": "backend/supabase_client.py",
+   "spec": "26-31",
+   "window": "23-34",
+   "snippet": "| `SUPABASE_SERVICE_KEY` | **yes** | **yes** | `<service-role-key>` | `backend/config/settings.py:61` | `backend/supabase_client.py:26-31` (`apikey` + `Authorization` headers) |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 40,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "66-71",
+   "window": "63-74",
+   "snippet": "| `FRONTEND_URL` | no | no | `https://<your-spa-domain>` | `backend/config/settings.py:62` | `backend/config/settings.py:66-71` → CORS allow-list → `backend/main.py:31-32` |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 40,
+   "ident": "FRONTEND_URL",
+   "target": "backend/main.py",
+   "spec": "31-32",
+   "window": "28-35",
+   "snippet": "| `FRONTEND_URL` | no | no | `https://<your-spa-domain>` | `backend/config/settings.py:62` | `backend/config/settings.py:66-71` → CORS allow-list → `backend/main.py:31-32` |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 70,
+   "ident": "VITE_API_TARGET",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "| `VITE_API_TARGET` | `http://127.0.0.1:8000` | `frontend/vite.config.js:8` | Read from `process.env` when the config is evaluated, so it must come from the shell — verified: a value in `.env.local` d"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 70,
+   "ident": "process.env",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "| `VITE_API_TARGET` | `http://127.0.0.1:8000` | `frontend/vite.config.js:8` | Read from `process.env` when the config is evaluated, so it must come from the shell — verified: a value in `.env.local` d"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 70,
+   "ident": "process.env",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "| `VITE_API_TARGET` | `http://127.0.0.1:8000` | `frontend/vite.config.js:8` | Read from `process.env` when the config is evaluated, so it must come from the shell — verified: a value in `.env.local` d"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 95,
+   "ident": "earnedPoints",
+   "target": "backend/config/constants.py",
+   "spec": "19",
+   "window": "16-22",
+   "snippet": "| `MAX_BONUS_POINTS` | `5` | `backend/config/constants.py:19` | `earnedPoints` ceiling, paid **on top of** the frontend's base `STAGE_COMPLETION_XP` |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 95,
+   "ident": "STAGE_COMPLETION_XP",
+   "target": "backend/config/constants.py",
+   "spec": "19",
+   "window": "16-22",
+   "snippet": "| `MAX_BONUS_POINTS` | `5` | `backend/config/constants.py:19` | `earnedPoints` ceiling, paid **on top of** the frontend's base `STAGE_COMPLETION_XP` |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 239,
+   "ident": "localStorage",
+   "target": "storageKeys.js",
+   "spec": "10",
+   "window": "7-13",
+   "snippet": "| `progressKey(userId)` | `` `praxis_v1_${userId}` `` | `localStorage` | `storageKeys.js:10` | the learner's progress snapshot; **per user id**, e.g. `praxis_v1_9f1c…` |"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 279,
+   "ident": "content",
+   "target": "frontend/src/styles/tokens.css",
+   "spec": "4-7",
+   "window": "1-10",
+   "snippet": "(`frontend/src/styles/tokens.css:4-7`). The `content` globs are `./index.html` and"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 280,
+   "ident": "plugins",
+   "target": "tailwind.config.js",
+   "spec": "3-6",
+   "window": "1-9",
+   "snippet": "`./src/**/*.{js,ts,jsx,tsx}` (`tailwind.config.js:3-6`); `plugins` is empty"
+  },
+  {
+   "doc": "06-reference/config-reference.md",
+   "line": 368,
+   "ident": "STAGE_COMPLETION_XP",
+   "target": "backend/config/constants.py",
+   "spec": "19",
+   "window": "16-22",
+   "snippet": "| 5 bonus points | `backend/config/constants.py:19` | `gameRules.js:29` | paid on top of `STAGE_COMPLETION_XP` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 110,
+   "ident": "unauthorized",
+   "target": "backend/core/security.py",
+   "spec": "22",
+   "window": "19-25",
+   "snippet": "| `backend/core/security.py:22` | `unauthorized` | `Not authenticated` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 111,
+   "ident": "upstream_error",
+   "target": "backend/core/security.py",
+   "spec": "29",
+   "window": "26-32",
+   "snippet": "| `backend/core/security.py:29` | `upstream_error` | `Authentication service is unavailable` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 112,
+   "ident": "unauthorized",
+   "target": "backend/core/security.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| `backend/core/security.py:32` | `unauthorized` | `Invalid session` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 113,
+   "ident": "content_unavailable",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "25",
+   "window": "22-28",
+   "snippet": "| `backend/repositories/content_repository.py:25` | `content_unavailable` | `Game content is unavailable` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 114,
+   "ident": "upstream_error",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "26",
+   "window": "23-29",
+   "snippet": "| `backend/repositories/progress_repository.py:26` | `upstream_error` | `Progress storage is unavailable` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 115,
+   "ident": "not_found",
+   "target": "backend/services/content_service.py",
+   "spec": "28",
+   "window": "25-31",
+   "snippet": "| `backend/services/content_service.py:28` | `not_found` | `Level {level_id} not found` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 116,
+   "ident": "not_found",
+   "target": "backend/services/content_service.py",
+   "spec": "41",
+   "window": "38-43",
+   "snippet": "| `backend/services/content_service.py:41` | `not_found` | `Stage {stage_idx} not found` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 169,
+   "ident": "submitScore",
+   "target": "frontend/src/services/contentApi.js",
+   "spec": "36-45",
+   "window": "33-48",
+   "snippet": "`fetchLevel` is bundled-first (`frontend/src/services/contentApi.js:36-45`) and `submitScore`"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 195,
+   "ident": "_load",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "25",
+   "window": "22-28",
+   "snippet": "| **Raised at** | `backend/repositories/content_repository.py:25` (inside `_load`, `:19-31`) |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 267,
+   "ident": "stage_progress",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "26",
+   "window": "23-29",
+   "snippet": "| `backend/repositories/progress_repository.py:26` | `Progress storage is unavailable` | any `.execute()` against `user_progress` / `stage_progress` / `score_history` (`:21-26`) |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 267,
+   "ident": "score_history",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "26",
+   "window": "23-29",
+   "snippet": "| `backend/repositories/progress_repository.py:26` | `Progress storage is unavailable` | any `.execute()` against `user_progress` / `stage_progress` / `score_history` (`:21-26`) |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 342,
+   "ident": "None",
+   "target": "backend/core/security.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| `Invalid session` | `backend/core/security.py:32` | the header is well-formed but `supabase.get_user(token)` returned `None` — Supabase answered anything other than `200` (observed `403` for a bogus"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 376,
+   "ident": "progressStore.setUser",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "85",
+   "window": "82-88",
+   "snippet": "(`progressStore.setUser` skips guests — `frontend/src/state/progressStore.js:85`), and both"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 406,
+   "ident": "AppError",
+   "target": "backend/main.py",
+   "spec": "60-66",
+   "window": "57-69",
+   "snippet": "| **Class** | not an `AppError`; rendered by the `RequestValidationError` handler at `backend/main.py:60-66` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 503,
+   "ident": "AppError",
+   "target": "backend/main.py",
+   "spec": "50-57",
+   "window": "47-60",
+   "snippet": "| **Class** | not an `AppError`; rendered by the `StarletteHTTPException` handler at `backend/main.py:50-57` |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 539,
+   "ident": "GET",
+   "target": "backend/api/routes/health.py",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "`backend/api/routes/health.py:15` declares `GET` only. Render's health check uses `GET`, so"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 539,
+   "ident": "GET",
+   "target": "backend/api/routes/health.py",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "`backend/api/routes/health.py:15` declares `GET` only. Render's health check uses `GET`, so"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 551,
+   "ident": "AppError",
+   "target": "backend/core/responses.py",
+   "spec": "55-59",
+   "window": "52-61",
+   "snippet": "| **Class** | not a raised `AppError`; produced by `internal_error_response()` (`backend/core/responses.py:55-59`) |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 567,
+   "ident": "AppError",
+   "target": "backend/core/errors.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "`AppError` default, `backend/core/errors.py:32`)."
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 584,
+   "ident": "IndexError",
+   "target": "backend/services/content_service.py",
+   "spec": "40-41",
+   "window": "37-43",
+   "snippet": "(`backend/services/content_service.py:40-41`), so `IndexError` escapes to the middleware."
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 747,
+   "ident": "api_error",
+   "target": "backend/core/responses.py",
+   "spec": "37-43",
+   "window": "34-46",
+   "snippet": "(`backend/core/responses.py:37-43`). Treat seeing `api_error` in practice as a sign that"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 940,
+   "ident": "conflict",
+   "target": "backend/repositories/progress_repository.py",
+   "spec": "21-26",
+   "window": "18-29",
+   "snippet": "| `conflict` / `409` | PostgREST conflicts are converted to `502 upstream_error` by `raise_for_status()` inside `_execute` (`backend/repositories/progress_repository.py:21-26`). |"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 946,
+   "ident": "internal_error",
+   "target": "backend/core/errors.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but the observed `500` says `Internal server error` (`backend/core/respon"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 946,
+   "ident": "internal_error",
+   "target": "backend/core/responses.py",
+   "spec": "59",
+   "window": "56-61",
+   "snippet": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but the observed `500` says `Internal server error` (`backend/core/respon"
+  },
+  {
+   "doc": "06-reference/error-codes.md",
+   "line": 946,
+   "ident": "AppError.default_message",
+   "target": "backend/core/responses.py",
+   "spec": "59",
+   "window": "56-61",
+   "snippet": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but the observed `500` says `Internal server error` (`backend/core/respon"
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 137,
+   "ident": "isEquivalent",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "437",
+   "window": "434-440",
+   "snippet": "(`frontend/src/state/useGameState.js:437`). `isEquivalent` is used where *soundness* is at"
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 161,
+   "ident": "lru_cache",
+   "target": "content_repository.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "| `content/*.json` | Must be found relative to the source tree, may be missing at deploy time, and is cached process-globally | `content_repository.py:16` (`parents[2]/\"content\"`), `:24-31` (503 with "
+  },
+  {
+   "doc": "07-explanation/why-this-architecture.md",
+   "line": 266,
+   "ident": "targetLaws",
+   "target": "backend/api/schemas/score.py",
+   "spec": "13-20",
+   "window": "10-23",
+   "snippet": "(`backend/api/schemas/score.py:13-20`). It looks up the puzzle only to read `targetLaws`"
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 161,
+   "ident": "useGameState",
+   "target": "engine/sandbox/input.js",
+   "spec": "161",
+   "window": "158-164",
+   "snippet": "`engine/sandbox/input.js:161`) — and never in `useGameState`."
+  },
+  {
+   "doc": "07-explanation/design-decisions.md",
+   "line": 527,
+   "ident": "lru_cache",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "(`backend/repositories/content_repository.py:16`), cached with `lru_cache`."
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "VITE_AUTH_URL",
+   "target": "database/init.sql",
+   "spec": "4",
+   "window": "1-7",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/vite.config.js",
+   "spec": "24-28",
+   "window": "21-31",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "VITE_AUTH_URL",
+   "target": "frontend/vite.config.js",
+   "spec": "24-28",
+   "window": "21-31",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/vite.config.js",
+   "spec": "24-28",
+   "window": "21-31",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/src/pages/LandingPage.jsx",
+   "spec": "21",
+   "window": "18-24",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "VITE_AUTH_URL",
+   "target": "frontend/src/pages/LandingPage.jsx",
+   "spec": "21",
+   "window": "18-24",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/src/pages/LandingPage.jsx",
+   "spec": "21",
+   "window": "18-24",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/src/pages/LevelSelectPage.jsx",
+   "spec": "142",
+   "window": "139-145",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "VITE_AUTH_URL",
+   "target": "frontend/src/pages/LevelSelectPage.jsx",
+   "spec": "142",
+   "window": "139-145",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 67,
+   "ident": "init.sql",
+   "target": "frontend/src/pages/LevelSelectPage.jsx",
+   "spec": "142",
+   "window": "139-145",
+   "snippet": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`\"; `vite.config.js` proxies `/api/auth` to a \"Better Auth server"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 68,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "23-27",
+   "window": "20-30",
+   "snippet": "| **D13** | \"CORS: Backend allows `http://localhost:5173` and `http://127.0.0.1:5173`.\" | Three default origins — the two above **plus `http://localhost:3001`** (the dead Better Auth server) — and `FR"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 87,
+   "ident": "score_history",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| **D7** | \"`POST /api/score` … **does NOT save to DB**\"; \"Scores are computed but discarded\". | It **does** persist, for a signed-in learner, in a background task: inserts a `score_history` row and r"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 87,
+   "ident": "stage_progress.best_score",
+   "target": "backend/api/routes/score.py",
+   "spec": "38-39",
+   "window": "35-42",
+   "snippet": "| **D7** | \"`POST /api/score` … **does NOT save to DB**\"; \"Scores are computed but discarded\". | It **does** persist, for a signed-in learner, in a background task: inserts a `score_history` row and r"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 92,
+   "ident": "AnimationOverlay.jsx",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "60-62",
+   "window": "57-65",
+   "snippet": "| **D12** | \"**Animation pipeline** — When a law is applied, `useGameState.js` triggers a **2.5-second** animation via `AnimationOverlay.jsx` before actually updating the AST. This is important for UX"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 92,
+   "ident": "AnimationOverlay.jsx",
+   "target": "frontend/src/state/useGameState.js",
+   "spec": "447",
+   "window": "444-450",
+   "snippet": "| **D12** | \"**Animation pipeline** — When a law is applied, `useGameState.js` triggers a **2.5-second** animation via `AnimationOverlay.jsx` before actually updating the AST. This is important for UX"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 101,
+   "ident": "SandboxPage.jsx",
+   "target": "frontend/src/engine/sandbox/validate.js",
+   "spec": "155",
+   "window": "152-158",
+   "snippet": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for it. | **No such endpoint exists.** Sandbox validation is 100 % client-s"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 101,
+   "ident": "ProblemPage",
+   "target": "frontend/src/engine/sandbox/validate.js",
+   "spec": "155",
+   "window": "152-158",
+   "snippet": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for it. | **No such endpoint exists.** Sandbox validation is 100 % client-s"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 101,
+   "ident": "SandboxPage.jsx",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "109",
+   "window": "106-112",
+   "snippet": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for it. | **No such endpoint exists.** Sandbox validation is 100 % client-s"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 101,
+   "ident": "ProblemPage",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "109",
+   "window": "106-112",
+   "snippet": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for it. | **No such endpoint exists.** Sandbox validation is 100 % client-s"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 105,
+   "ident": "Security",
+   "target": "backend/core/security.py",
+   "spec": "17",
+   "window": "14-20",
+   "snippet": "| **D22** | Not claimed anywhere; discovered by inspecting the generated spec. | The OpenAPI document declares **no security scheme**, because auth is applied through `Depends(...)` rather than a `Sec"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 107,
+   "ident": "UNLOCK_AVERAGE",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "301-303",
+   "window": "298-306",
+   "snippet": "| **D26** | Not claimed anywhere; discovered by reading the gate. | The unlock gate is **frontend-only and slightly wrong**. `UNLOCK_AVERAGE` and `STAR_THRESHOLDS` in `backend/config/constants.py:25-2"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 107,
+   "ident": "STAR_THRESHOLDS",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "301-303",
+   "window": "298-306",
+   "snippet": "| **D26** | Not claimed anywhere; discovered by reading the gate. | The unlock gate is **frontend-only and slightly wrong**. `UNLOCK_AVERAGE` and `STAR_THRESHOLDS` in `backend/config/constants.py:25-2"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 107,
+   "ident": "STAR_THRESHOLDS",
+   "target": "frontend/src/state/progressStore.js",
+   "spec": "291-313",
+   "window": "288-316",
+   "snippet": "| **D26** | Not claimed anywhere; discovered by reading the gate. | The unlock gate is **frontend-only and slightly wrong**. `UNLOCK_AVERAGE` and `STAR_THRESHOLDS` in `backend/config/constants.py:25-2"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 125,
+   "ident": "stepsUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "so `backend/services/scoring_service.py:32` receives `stepsUsed`, `lawsUsed[]`, `hintsUsed` and"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 125,
+   "ident": "hintsUsed",
+   "target": "backend/services/scoring_service.py",
+   "spec": "32",
+   "window": "29-35",
+   "snippet": "so `backend/services/scoring_service.py:32` receives `stepsUsed`, `lawsUsed[]`, `hintsUsed` and"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 319,
+   "ident": "auth",
+   "target": "frontend/src/services/supabaseClient.js",
+   "spec": "10",
+   "window": "7-11",
+   "snippet": "Supabase client for `auth` only (`frontend/src/services/supabaseClient.js:10`) and sends all data"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 348,
+   "ident": "ProtectedRoute",
+   "target": "frontend/src/components/TutorialGate.jsx",
+   "spec": "31-32",
+   "window": "28-35",
+   "snippet": "user\" (`frontend/src/components/TutorialGate.jsx:31-32`). Likewise `ProtectedRoute` is a"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 418,
+   "ident": "definitionsForId",
+   "target": "engine/laws/definitions.js",
+   "spec": "67",
+   "window": "64-70",
+   "snippet": "| **A dangling doc comment survives a deletion** | `engine/laws/definitions.js:67` documents `definitionsForId`, which no longer exists | Cosmetic, but it reads as if a symbol is missing |"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 435,
+   "ident": "applyLaw",
+   "target": "useGameState.js",
+   "spec": "425",
+   "window": "422-428",
+   "snippet": "| \"Step-locking requires explicit law application at every intermediate stage before the expression advances.\" | **Confirmed.** | The history array advances only through `applyLaw` (`useGameState.js:4"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 446,
+   "ident": "targetLaws",
+   "target": "scoring_service.py",
+   "spec": "102",
+   "window": "99-105",
+   "snippet": "| A puzzle with no `targetLaws` gets the full 30 for that band. | Otherwise such a puzzle would be unwinnable at full marks. | `scoring_service.py:102` |"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 447,
+   "ident": "stageScores",
+   "target": "progress_service.py",
+   "spec": "41",
+   "window": "38-44",
+   "snippet": "| `stageScores` never contains a `0`. | `build_progress` guards with `best_score > 0`, so an unsolved stage is simply absent. | `progress_service.py:41` |"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 447,
+   "ident": "build_progress",
+   "target": "progress_service.py",
+   "spec": "41",
+   "window": "38-44",
+   "snippet": "| `stageScores` never contains a `0`. | `build_progress` guards with `best_score > 0`, so an unsolved stage is simply absent. | `progress_service.py:41` |"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 448,
+   "ident": "saveScore",
+   "target": "progressStore.js",
+   "spec": "61-62",
+   "window": "58-65",
+   "snippet": "| `saveScore` can decline to write. | `update` returns early when the new score is not better, so the state object is identical and no `localStorage` write or server save happens. | `progressStore.js:"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 448,
+   "ident": "localStorage",
+   "target": "progressStore.js",
+   "spec": "61-62",
+   "window": "58-65",
+   "snippet": "| `saveScore` can decline to write. | `update` returns early when the new score is not better, so the state object is identical and no `localStorage` write or server save happens. | `progressStore.js:"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 462,
+   "ident": "fastapi.testclient",
+   "target": "frontend/vercel.json",
+   "spec": "5",
+   "window": "2-8",
+   "snippet": "| **The live deployed API's behaviour** | All API verification was against `backend/main.py` in-process with `fastapi.testclient`. The Render URL in `frontend/vercel.json:5` was read, not called. |"
+  },
+  {
+   "doc": "07-explanation/known-limitations.md",
+   "line": 463,
+   "ident": "STAGE_CONFLICT_COLUMNS",
+   "target": "init.sql",
+   "spec": "24",
+   "window": "21-27",
+   "snippet": "| **Whether Supabase enforces the `UNIQUE(user_id, level_id, stage_idx)` constraint as the upsert conflict target expects** | The schema declares it (`init.sql:24`) and `STAGE_CONFLICT_COLUMNS` names "
+  },
+  {
+   "doc": "08-devops/installation-manual.md",
+   "line": 378,
+   "ident": "FRONTEND_URL",
+   "target": "backend/config/settings.py",
+   "spec": "66-71",
+   "window": "63-74",
+   "snippet": "`build_cors_origins` (`backend/config/settings.py:66-71`) appends `FRONTEND_URL` only when it is not"
+  },
+  {
+   "doc": "08-devops/configuration-guide.md",
+   "line": 169,
+   "ident": "get_current_user",
+   "target": "backend/supabase_client.py",
+   "spec": "96-98",
+   "window": "93-101",
+   "snippet": "`backend/supabase_client.py:96-98`, which `get_current_user` turns into 401,"
+  },
+  {
+   "doc": "08-devops/configuration-guide.md",
+   "line": 202,
+   "ident": "CORSMiddleware",
+   "target": "backend/config/settings.py",
+   "spec": "69",
+   "window": "66-72",
+   "snippet": "(`backend/config/settings.py:69`). The resulting list is passed to `CORSMiddleware`"
+  },
+  {
+   "doc": "08-devops/configuration-guide.md",
+   "line": 288,
+   "ident": "process.env",
+   "target": "frontend/vite.config.js",
+   "spec": "30-33",
+   "window": "27-36",
+   "snippet": "| Read by | `frontend/vite.config.js:8` via `process.env`, used by the `/api` proxy at `frontend/vite.config.js:30-33` |"
+  },
+  {
+   "doc": "08-devops/configuration-guide.md",
+   "line": 426,
+   "ident": "auth.users",
+   "target": "database/init.sql",
+   "spec": "4",
+   "window": "1-7",
+   "snippet": "| `npx auth migrate` instruction | `database/init.sql:4` | Comment only. The four \"Better Auth tables\" it mentions are never created; Supabase Auth owns `auth.users`, and `database/init.sql:8,18,30` r"
+  },
+  {
+   "doc": "08-devops/runbooks.md",
+   "line": 172,
+   "ident": "settings.cors_origins",
+   "target": "backend/config/settings.py",
+   "spec": "23-27",
+   "window": "20-30",
+   "snippet": "in `settings.cors_origins` (`backend/config/settings.py:23-27`, `:66-71`)."
+  },
+  {
+   "doc": "08-devops/runbooks.md",
+   "line": 414,
+   "ident": "httpx.HTTPStatusError",
+   "target": "backend/supabase_client.py",
+   "spec": "80",
+   "window": "77-83",
+   "snippet": "`response.raise_for_status()` (`backend/supabase_client.py:80`) turns into an `httpx.HTTPStatusError`"
+  },
+  {
+   "doc": "09-diagrams/DIAGRAMS.md",
+   "line": 152,
+   "ident": "text_array",
+   "target": "backend/services/scoring_service.py",
+   "spec": "51",
+   "window": "48-54",
+   "snippet": "figure (`backend/services/scoring_service.py:51`). The visual type `text_array` stands for the real"
+  },
+  {
+   "doc": "09-diagrams/DIAGRAMS.md",
+   "line": 236,
+   "ident": "validateSandboxInput",
+   "target": "sandbox/generator.js",
+   "spec": "84",
+   "window": "81-87",
+   "snippet": "*generated* sandbox expressions from `sandbox/generator.js:84`; `validateSandboxInput`"
+  },
+  {
+   "doc": "09-diagrams/DIAGRAMS.md",
+   "line": 239,
+   "ident": "buildSandboxPuzzle",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "113",
+   "window": "110-116",
+   "snippet": "`buildSandboxPuzzle` (`frontend/src/engine/sandbox/input.js:113`). Merging them into one \"validator\""
+  },
+  {
+   "doc": "09-diagrams/DIAGRAMS.md",
+   "line": 679,
+   "ident": "Redirected",
+   "target": "usePuzzleSession.js",
+   "spec": "118",
+   "window": "115-121",
+   "snippet": "- `Redirected` is a real exit, not decoration: `usePuzzleSession.js:118` navigates to the stage list for"
+  },
+  {
+   "doc": "09-diagrams/DIAGRAMS.md",
+   "line": 878,
+   "ident": "render.yaml",
+   "target": "backend/api/routes/health.py",
+   "spec": "15-18",
+   "window": "12-19",
+   "snippet": "reads it (`backend/api/routes/health.py:15-18`). `render.yaml` does not currently map it to a"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 145,
+   "ident": "LAW_FORM.SUM",
+   "target": "frontend/src/engine/sandbox/expand.js",
+   "spec": "86",
+   "window": "83-89",
+   "snippet": "(`LAW_FORM.SUM` arms), [`frontend/src/engine/sandbox/expand.js:86`](../../frontend/src/engine/sandbox/expand.js#L86)"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 321,
+   "ident": "undoAction",
+   "target": "frontend/src/engine/sandbox/input.js",
+   "spec": "67",
+   "window": "64-70",
+   "snippet": "(`undoAction`), [`frontend/src/engine/sandbox/input.js:67`](../../frontend/src/engine/sandbox/input.js#L67)"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 409,
+   "ident": "activateGuide",
+   "target": "frontend/src/config/gameRules.js",
+   "spec": "35",
+   "window": "32-38",
+   "snippet": "(`activateGuide`), [`frontend/src/config/gameRules.js:35`](../../frontend/src/config/gameRules.js#L35)"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 410,
+   "ident": "GUIDE_COST_POINTS",
+   "target": "backend/config/constants.py",
+   "spec": "16",
+   "window": "13-19",
+   "snippet": "(`GUIDE_COST_POINTS`), [`backend/config/constants.py:16`](../../backend/config/constants.py#L16)"
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 610,
+   "ident": "addPoints",
+   "target": "database/init.sql",
+   "spec": "9",
+   "window": "6-12",
+   "snippet": "(`addPoints` / `deductPoints`), [`database/init.sql:9`](../../database/init.sql#L9) (`points INTEGER`)."
+  },
+  {
+   "doc": "10-project/glossary.md",
+   "line": 610,
+   "ident": "deductPoints",
+   "target": "database/init.sql",
+   "spec": "9",
+   "window": "6-12",
+   "snippet": "(`addPoints` / `deductPoints`), [`database/init.sql:9`](../../database/init.sql#L9) (`points INTEGER`)."
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 212,
+   "ident": "repositories",
+   "target": "backend/api/routes/levels.py",
+   "spec": "13",
+   "window": "10-16",
+   "snippet": "| `api/routes/*` import `services` and `core`, never `repositories` | `backend/api/routes/levels.py:13`, `backend/api/routes/score.py:15` |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 212,
+   "ident": "repositories",
+   "target": "backend/api/routes/score.py",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "| `api/routes/*` import `services` and `core`, never `repositories` | `backend/api/routes/levels.py:13`, `backend/api/routes/score.py:15` |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 213,
+   "ident": "api",
+   "target": "backend/services/content_service.py",
+   "spec": "11",
+   "window": "8-14",
+   "snippet": "| `services/*` import `repositories`, never `api` | `backend/services/content_service.py:11`, `backend/services/progress_service.py:12` |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 213,
+   "ident": "api",
+   "target": "backend/services/progress_service.py",
+   "spec": "12",
+   "window": "9-15",
+   "snippet": "| `services/*` import `repositories`, never `api` | `backend/services/content_service.py:11`, `backend/services/progress_service.py:12` |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 215,
+   "ident": "services",
+   "target": "backend/main.py",
+   "spec": "15-20",
+   "window": "12-23",
+   "snippet": "| `main.py` contains wiring only | It imports `api.routes`, `config.settings`, `core.*` and nothing else — no `services`, no `repositories`, no business logic (`backend/main.py:15-20`) |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 215,
+   "ident": "repositories",
+   "target": "backend/main.py",
+   "spec": "15-20",
+   "window": "12-23",
+   "snippet": "| `main.py` contains wiring only | It imports `api.routes`, `config.settings`, `core.*` and nothing else — no `services`, no `repositories`, no business logic (`backend/main.py:15-20`) |"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "complement",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "idempotent",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "absorption",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "identity",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "annulment",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "distributive",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "associative",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "37",
+   "window": "34-40",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "complement",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "idempotent",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "absorption",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "identity",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "annulment",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "distributive",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 227,
+   "ident": "associative",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "14",
+   "window": "11-17",
+   "snippet": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exactly `{ id, name, formulas[], desc }`. Ids, in file order: `complement"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 228,
+   "ident": "varCount",
+   "target": "backend/repositories/content_repository.py",
+   "spec": "43",
+   "window": "40-46",
+   "snippet": "| [`content/levels.json`](../../content/levels.json) | The **4 levels and their 40 puzzles**: Tutorial (id `0`, `varCount` 2, 4 puzzles), Level 1 (id `1`, 2 vars, 12), Level 2 (id `2`, 3 vars, 12), Le"
+  },
+  {
+   "doc": "10-project/file-map.md",
+   "line": 228,
+   "ident": "varCount",
+   "target": "frontend/src/content/gameContent.js",
+   "spec": "15",
+   "window": "12-18",
+   "snippet": "| [`content/levels.json`](../../content/levels.json) | The **4 levels and their 40 puzzles**: Tutorial (id `0`, `varCount` 2, 4 puzzles), Level 1 (id `1`, 2 vars, 12), Level 2 (id `2`, 3 vars, 12), Le"
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 100,
+   "ident": "services",
+   "target": "backend/main.py",
+   "spec": "15-20",
+   "window": "12-23",
+   "snippet": "`services`, no `repositories`, no `supabase_client` ([`backend/main.py:15-20`](../../backend/main.py#L15-L20))."
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 100,
+   "ident": "repositories",
+   "target": "backend/main.py",
+   "spec": "15-20",
+   "window": "12-23",
+   "snippet": "`services`, no `repositories`, no `supabase_client` ([`backend/main.py:15-20`](../../backend/main.py#L15-L20))."
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 100,
+   "ident": "supabase_client",
+   "target": "backend/main.py",
+   "spec": "15-20",
+   "window": "12-23",
+   "snippet": "`services`, no `repositories`, no `supabase_client` ([`backend/main.py:15-20`](../../backend/main.py#L15-L20))."
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 115,
+   "ident": "BackgroundTasks",
+   "target": "backend/api/routes/score.py",
+   "spec": "27-49",
+   "window": "24-50",
+   "snippet": "call plus a `BackgroundTasks` enqueue ([`backend/api/routes/score.py:27-49`](../../backend/api/routes/score.py#L27-L49))."
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 258,
+   "ident": "ZoomControls",
+   "target": "components/puzzle/usePuzzleSession.js",
+   "spec": "1-8",
+   "window": "1-11",
+   "snippet": "`components/puzzle/usePuzzleSession.js:1-8`, `ZoomControls` is documented as \"Presentational: `zoom`"
+  },
+  {
+   "doc": "rules/RULES.md",
+   "line": 258,
+   "ident": "zoom",
+   "target": "components/puzzle/usePuzzleSession.js",
+   "spec": "1-8",
+   "window": "1-11",
+   "snippet": "`components/puzzle/usePuzzleSession.js:1-8`, `ZoomControls` is documented as \"Presentational: `zoom`"
+  }
+ ]
+}
