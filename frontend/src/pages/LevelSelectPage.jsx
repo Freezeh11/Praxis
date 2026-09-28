@@ -361,11 +361,17 @@ export default function LevelSelectPage() {
                   </div>
                 )}
 
+                {/* Status slot.
+                    Rendered for EVERY card, even when it holds no chip, so an
+                    unselected card is always exactly as tall as its neighbours.
+                    An unlocked level with no stars yet used to render nothing
+                    here and so came out ~34px shorter than the cards beside it. */}
+                <div className="mt-auto flex min-h-[26px] w-full flex-col items-center justify-center gap-1">
                 {/* Level star badge if unlocked & played (excluding Tutorial) */}
                 {!locked && !isComingSoon && (() => {
                   if (isSandbox) {
                     return (
-                      <div className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 mt-auto flex items-center gap-1">
+                      <div className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 flex items-center gap-1">
                         <span>🎲</span> Random Practice
                       </div>
                     )
@@ -374,13 +380,13 @@ export default function LevelSelectPage() {
                   if (lv.id === 0) {
                     if (done) {
                       return (
-                        <div className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full border border-teal/30 mt-auto flex items-center gap-1">
+                        <div className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full border border-teal/30 flex items-center gap-1">
                           <span>✓</span> Completed
                         </div>
                       )
                     }
                     return (
-                      <div className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 mt-auto flex items-center gap-1">
+                      <div className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 flex items-center gap-1">
                         <span>Guided Walkthrough</span>
                       </div>
                     )
@@ -390,13 +396,26 @@ export default function LevelSelectPage() {
                   const lp = getLevelProgress(lv.id, totalCount)
                   if (lp.totalStars > 0) {
                     return (
-                      <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 mt-auto flex items-center gap-1">
+                      <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 flex items-center gap-1">
                         <span>★</span> {lp.totalStars} / {lp.maxStars} Stars
                       </div>
                     )
                   }
                   return null
                 })()}
+
+                {/* Tags */}
+                {isComingSoon && (
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">Coming Soon</div>
+                )}
+                {isScoreGated && !isActive && (
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">🔒 80% avg required</div>
+                )}
+                {isTutorialGated && !isActive && (
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">🔒 Tutorial required</div>
+                )}
+
+                </div>
 
                 {/* Direct action button on active card */}
                 {isActive && !locked && (
@@ -422,17 +441,6 @@ export default function LevelSelectPage() {
                   >
                     <span>🔒 {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
                   </button>
-                )}
-
-                {/* Tags */}
-                {isComingSoon && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">Coming Soon</div>
-                )}
-                {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 80% avg required</div>
-                )}
-                {isTutorialGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium mt-auto">🔒 Tutorial required</div>
                 )}
               </div>
             )
