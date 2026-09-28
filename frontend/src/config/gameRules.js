@@ -84,6 +84,16 @@ export const TUTORIAL = {
   stageIndexes: [0, 1, 2, 3],
 }
 
+/** Drag-and-drop interaction tunables for term/factor reordering. */
+export const DRAG = {
+  /** Movement (CSS px) that turns a press into a drag. */
+  thresholdPx: 6,
+  /** How far past a capsule's edge a release still counts as targeting it (the "+" gap). */
+  nearCapsuleTolerancePx: 28,
+  /** How long a stray click stays swallowed after a drag (covers delayed touch clicks). */
+  clickSuppressMs: 400,
+}
+
 /** Default difficulty for generated sandbox problems. */
 export const SANDBOX_DIFFICULTY = 'medium'
 

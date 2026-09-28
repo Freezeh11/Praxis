@@ -58,17 +58,18 @@ export function buildEquationHighlight(rect) {
 /** Highlight for a step's primary target, padded per kind of target. */
 export function buildTargetHighlight(rect, effectiveTarget) {
   const isVar = effectiveTarget.includes('data-path')
-  const isTerm = effectiveTarget.includes('term-') || effectiveTarget.includes('not-capsule')
+  const isNot = effectiveTarget.includes('not-capsule') || effectiveTarget.includes('not-bar')
+  const isTerm = effectiveTarget.includes('term-') || isNot
   const isScoreModal = effectiveTarget.includes('score-modal') || effectiveTarget.includes('review-derivation-btn')
 
   // Snug teal highlight box padding
-  const ringPadTop = isVar ? 2 : isTerm ? 4 : isScoreModal ? 4 : 6
+  const ringPadTop = isVar ? 2 : isNot ? 6 : isTerm ? 4 : isScoreModal ? 4 : 6
   const ringPadBottom = isVar ? 2 : isScoreModal ? 4 : 6
   const ringPadSide = isVar ? 3 : isTerm ? 6 : isScoreModal ? 4 : 8
   const ringRx = isVar ? 6 : isScoreModal ? 24 : 10
 
   // Spacious, soft curved dark backdrop cutout padding
-  const cutoutPadTop = isVar ? 4 : isTerm ? 18 : isScoreModal ? 10 : 12
+  const cutoutPadTop = isVar ? 4 : isTerm ? 26 : isScoreModal ? 10 : 12
   const cutoutPadBottom = isVar ? 4 : isTerm ? 18 : isScoreModal ? 10 : 12
   const cutoutPadSide = isVar ? 5 : isTerm ? 24 : isScoreModal ? 10 : 16
   const cutoutRx = isVar ? 8 : isScoreModal ? 28 : 22
@@ -130,7 +131,7 @@ export function buildSecondaryHighlight(secRect, secondaryTarget) {
   const ringPadSide = isSecVar ? 3 : isSecTerm ? 6 : 8
   const ringRx = isSecVar ? 6 : 10
 
-  const cutoutPadTop = isSecVar ? 4 : isSecTerm ? 18 : 12
+  const cutoutPadTop = isSecVar ? 4 : isSecTerm ? 24 : 12
   const cutoutPadBottom = isSecVar ? 4 : isSecTerm ? 18 : 12
   const cutoutPadSide = isSecVar ? 5 : isSecTerm ? 24 : 16
   const cutoutRx = isSecVar ? 8 : 22

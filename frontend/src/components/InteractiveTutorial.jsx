@@ -45,6 +45,7 @@ export default function InteractiveTutorial({
   onNextStage,
   onFinish,
   onSkip,
+  onOpenStepHistory,
 }) {
   const {
     stepsForStage,
@@ -82,6 +83,13 @@ export default function InteractiveTutorial({
 
   const cardRef = useCoachCardPlacement({ currentStep, highlightRect, secondaryHighlightRect })
 
+  // When introducing Step History on mobile/drawer tiers, automatically open the drawer
+  useEffect(() => {
+    if (currentStep?.id === 't2-history-intro') {
+      onOpenStepHistory?.()
+    }
+  }, [currentStep?.id, onOpenStepHistory])
+
   // Intercept and prevent clicks/pointerdowns on non-target elements during active tutorial steps
   useEffect(() => {
     if (showWelcomeModal || !currentStep || currentStep.noOverlay) return
@@ -100,6 +108,20 @@ export default function InteractiveTutorial({
       if (currentStep.target) {
         const targetEl = document.querySelector(currentStep.target)
         if (targetEl && (targetEl === e.target || targetEl.contains(e.target))) {
+          // If the tutorial specifically asks to click the NOT capsule/overline bar,
+          // ensure that clicking anywhere inside the NOT capsule targets the NOT node,
+          // preventing accidental selection of inner sub-variables like 'x' or 'y'.
+          if (currentStep.actionType === 'click_not') {
+            const notBar = targetEl.querySelector('[data-tutorial="not-bar"]')
+            if (notBar && e.target !== notBar && !notBar.contains(e.target)) {
+              e.stopPropagation()
+              e.preventDefault()
+              if (e.type === 'click') {
+                notBar.click()
+              }
+              return
+            }
+          }
           return
         }
       }

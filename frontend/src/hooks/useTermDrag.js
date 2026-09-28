@@ -40,14 +40,16 @@
  */
 import { useEffect, useReducer, useRef } from 'react'
 
+import { DRAG } from '../config/gameRules.js'
+
 /** Movement (CSS px) that turns a press into a drag. */
-export const DRAG_THRESHOLD_PX = 6
+export const DRAG_THRESHOLD_PX = DRAG.thresholdPx
 
 /** How far past a capsule's edge a release still counts as targeting it (the "+" gap). */
-const NEAR_CAPSULE_TOLERANCE_PX = 16
+const NEAR_CAPSULE_TOLERANCE_PX = DRAG.nearCapsuleTolerancePx
 
 /** How long a stray click stays swallowed after a drag (covers delayed touch clicks). */
-const CLICK_SUPPRESS_MS = 400
+const CLICK_SUPPRESS_MS = DRAG.clickSuppressMs
 
 /** The single live drag session, or null. */
 let session = null
@@ -96,8 +98,9 @@ function capsuleIndexAt(group, x, y, sourceIdx) {
 
 /**
  * Swallows the click that a completed drag would otherwise turn into a term
- * selection. Capture phase on the capsule: the event is stopped before it
- * reaches the grip/literal underneath and before React's root bubble listener.
+ * selection. Capture phase on both the capsule and window: the event is
+ * stopped before it reaches the grip/literal underneath or any drop target
+ * sibling, and before React's root bubble listener.
  *
  * The guard has to outlive the gesture: the browser sends `click` AFTER
  * pointerup (and, on touch, up to a few hundred ms later), so `endSession`
@@ -112,6 +115,7 @@ function armClickGuard(s) {
       dropClickGuard(s)
     }
     s.el.addEventListener('click', s.clickGuard, true)
+    window.addEventListener('click', s.clickGuard, true)
   }
   s.clickGuardTimer = window.setTimeout(() => dropClickGuard(s), CLICK_SUPPRESS_MS)
 }
@@ -123,6 +127,7 @@ function dropClickGuard(s) {
   }
   if (!s.clickGuard) return
   s.el.removeEventListener('click', s.clickGuard, true)
+  window.removeEventListener('click', s.clickGuard, true)
   s.clickGuard = null
 }
 
@@ -248,9 +253,10 @@ export default function useTermDrag({ group, index, onSwapTerms }) {
 
     const el = event.currentTarget
     elementRef.current = el
-    // Pointer capture (and therefore the `touch-none` scroll suppression) only
-    // starts once the drag is armed — on pointerdown it would retarget the
-    // click, breaking a tap on a variable inside the term.
+    // Pointer capture is deferred until the drag is armed past DRAG_THRESHOLD_PX —
+    // taking capture on pointerdown would retarget click events to the capsule,
+    // breaking a plain tap on an inner variable. Touch-action: none is declared on
+    // the capsule CSS so gestures do not turn into native scrolls.
     session = createSession({
       el,
       pointerId: event.pointerId,

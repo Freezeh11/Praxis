@@ -49,7 +49,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
     <motion.span
       layout
       transition={transitionConfig}
-      className={`inline-flex items-baseline rounded-[4px] cursor-pointer transition-all border-[1.5px]
+      className={`inline-flex items-baseline rounded-[4px] cursor-pointer transition-all border-[1.5px] touch-none select-none
         ${touchTargets ? 'px-2 py-0.5 min-w-[32px] justify-center' : 'px-1 py-[2px]'}
         ${selected ? 'bg-teal-light border-teal text-teal font-semibold' : 'border-transparent hover:bg-teal-light/60 hover:border-teal/60 hover:text-teal'}
         ${node.type === 'const' ? 'text-text-3 font-semibold' : ''}
@@ -78,7 +78,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
     <motion.span
       layout
       transition={transitionConfig}
-      className={`inline-flex items-baseline rounded-[5px] cursor-pointer transition-all border-[1.5px]
+      className={`inline-flex items-baseline rounded-[5px] cursor-pointer transition-all border-[1.5px] touch-none select-none
         ${touchTargets ? 'px-1 py-0.5' : 'px-0.5 py-[2px]'}
         ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light/60 hover:border-amber/60'}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
@@ -88,28 +88,54 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
       data-tutorial="not-capsule"
       onClick={e => { e.stopPropagation(); onClickNot(path) }}
     >
-      {/* Parens are OUTSIDE the border-top span so only the inner content gets the bar */}
-      <span className="text-text-3">(</span>
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'baseline',
-        borderTop: '2px solid currentColor',
-        paddingTop: '2px',
-      }}>
-        <ExprNode
-          node={node.child}
-          path={`${path}.0`}
-          sel={sel}
-          onClickLit={onClickLit}
-          onClickNot={onClickNot}
-          onClickTerm={onClickTerm}
-          onSwapTerms={onSwapTerms}
-          activeGuidePaths={activeGuidePaths}
-          animationPaths={animationPaths}
-          animationLaw={animationLaw}
-        />
+      {/* Parens are OUTSIDE the overline container so only the inner content gets the bar */}
+      <span className="text-text-3 select-none self-center">(</span>
+      <span className="relative inline-flex items-baseline">
+        {/* Dedicated overline negation bar button with generous touch target */}
+        <button
+          type="button"
+          data-tutorial="not-bar"
+          aria-label="Negation overline bar — click to apply De Morgan's Law"
+          title="Negation overline bar — click to apply De Morgan's Law"
+          className={`absolute left-0 right-0 z-20 flex items-center justify-center cursor-pointer touch-none group/notbar select-none ${
+            touchTargets ? '-top-3.5 h-7 pt-1' : '-top-2 h-4'
+          }`}
+          onClick={e => {
+            e.stopPropagation()
+            onClickNot(path)
+          }}
+        >
+          {/* Overline bar line */}
+          <span
+            className={`w-full rounded-full transition-all duration-150 ${
+              touchTargets ? 'h-[3px]' : 'h-[2px]'
+            } ${
+              selected
+                ? 'bg-amber-600 shadow-[0_0_8px_rgba(245,158,11,0.5)] ring-1 ring-amber-400'
+                : isGuide
+                  ? 'bg-teal animate-[pulse_1.5s_infinite]'
+                  : 'bg-current group-hover/notbar:bg-amber-500 group-active/notbar:bg-amber-600'
+            }`}
+          />
+        </button>
+
+        {/* Inner expression with clearance under the overline bar */}
+        <span className={`inline-flex items-baseline ${touchTargets ? 'pt-1.5 pb-0.5' : 'pt-0.5'}`}>
+          <ExprNode
+            node={node.child}
+            path={`${path}.0`}
+            sel={sel}
+            onClickLit={onClickLit}
+            onClickNot={onClickNot}
+            onClickTerm={onClickTerm}
+            onSwapTerms={onSwapTerms}
+            activeGuidePaths={activeGuidePaths}
+            animationPaths={animationPaths}
+            animationLaw={animationLaw}
+          />
+        </span>
       </span>
-      <span className="text-text-3">)</span>
+      <span className="text-text-3 select-none self-center">)</span>
     </motion.span>
   )
 }
@@ -131,9 +157,9 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
       data-tutorial={`term-${index}`}
       data-drag-index={index}
       data-drag-group={group}
-      className={`relative inline-flex items-baseline px-1.5 rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group ${touchTargets ? 'py-1' : 'py-[2px]'}
+      className={`relative inline-flex items-baseline px-1.5 rounded-lg border-[1.5px] transition-all cursor-grab active:cursor-grabbing group touch-none select-none ${touchTargets ? 'py-1' : 'py-[2px]'}
         ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
-        ${isDragging ? 'opacity-45 border-border-dark !border-solid touch-none select-none' : ''}
+        ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
         ${selected
           ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid'
           : 'border-transparent hover:border-slate-300/80 hover:bg-slate-50/80 border-dashed'
