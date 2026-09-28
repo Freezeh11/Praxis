@@ -8,7 +8,9 @@
  * or blocks the caller: a browser without Web Audio simply stays silent.
  *
  * The mixer is module state, not React state: gameplay code calls playSound()
- * imperatively from a state transition, never from a render.
+ * imperatively from a state transition, never from a render. Gestures that can
+ * repeat many times a second (a carousel index, a fast scroll) go through
+ * playThrottledSound() instead, which enforces SOUND.throttleMs per cue.
  */
 import { SOUND } from '../config/gameRules.js'
 import { SOUND_ENABLED } from '../config/storageKeys.js'
@@ -18,6 +20,11 @@ const MIDI = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 let enabled = false
 let audioCtx = null
 let pendingResume = null
+/**
+ * When each cue last sounded, for playThrottledSound. Keyed by cue name so a
+ * burst of navigation ticks can never swallow a different cue.
+ */
+const lastPlayedAt = new Map()
 /**
  * False until a user gesture has called primeAudio(). Nothing may CREATE an
  * AudioContext before that: a cue fired by a state transition is not a gesture,
@@ -152,4 +159,20 @@ export function playSound(cue) {
   } catch {
     return false
   }
+}
+
+/**
+ * Play one cue at most once per SOUND.throttleMs. This is the scroll-like path:
+ * a carousel index can change several times inside one fast swipe, and a tick
+ * per change is unbearable, so the leading change of a burst sounds and the
+ * rest inside the window are dropped. Everything else uses playSound directly.
+ *
+ * Returns true when the cue actually played, false when it was throttled (or
+ * when playSound itself no-op'ed — muted, or no Web Audio).
+ */
+export function playThrottledSound(cue) {
+  const now = Date.now()
+  if (now - (lastPlayedAt.get(cue) ?? 0) < SOUND.throttleMs) return false
+  lastPlayedAt.set(cue, now)
+  return playSound(cue)
 }

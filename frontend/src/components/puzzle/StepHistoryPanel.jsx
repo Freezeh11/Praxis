@@ -5,6 +5,7 @@
  * rendered inside an overlay drawer, together with the zoom + tutorial controls
  * that have no header room there.
  */
+import usePanelSound from '../../hooks/usePanelSound'
 import ExprText from '../ExprText'
 import TutorialToggle from './TutorialToggle'
 import ZoomControls from './ZoomControls'
@@ -14,6 +15,10 @@ export default function StepHistoryPanel({
   stepHistoryOpen, onCloseStepHistory, isSandbox, onBack, touchTargets,
   zoom, onZoom, isTutorialActive, onToggleTutorial, chromeText, chromeHeight,
 }) {
+  // Only the overlay-drawer variant opens and closes — on the wide tiers this
+  // panel is a permanent column, so the flag stays false and the cue is unused.
+  usePanelSound(stepHistoryOpen)
+
   const stepHistoryPanel = (
     <aside
       data-tutorial="step-history-panel"

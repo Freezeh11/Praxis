@@ -144,6 +144,10 @@ export const SANDBOX_DIFFICULTY = SANDBOX.difficulty
  *
  * `enabled` is the FIRST-RUN default only — the learner's choice lives in
  * localStorage under SOUND_ENABLED_KEY.
+ *
+ * Cue naming: a cue is what the learner just DID (select, deselect, levelNav,
+ * enter, panelOpen, panelClose), not where it was played from, so one cue can
+ * serve several screens.
  */
 export const SOUND = {
   enabled: true,
@@ -151,6 +155,16 @@ export const SOUND = {
   volume: 0.16,
   /** Envelope length of one note, in ms (attack is the first 15%). */
   attackMs: 12,
+  /**
+   * Shortest gap between two plays of the SAME cue, in ms.
+   *
+   * Only the scroll-like cues use it (services/soundEffects playThrottledSound):
+   * a carousel index changes many times during one fast burst of arrow taps or
+   * a swipe, and a tick per change is unbearable. One-per-action cues (step,
+   * correct, …) keep the unthrottled path — `step` and `correct` deliberately
+   * fire back to back when a law finishes the puzzle.
+   */
+  throttleMs: 90,
   cues: {
     /** A law was applied. Short, low, barely-there click. */
     step: { type: 'triangle', notes: ['E5'], noteMs: 70, gapMs: 0, gain: 0.75 },
@@ -166,6 +180,21 @@ export const SOUND = {
     reset: { type: 'triangle', notes: ['A5', 'F5', 'C5'], noteMs: 85, gapMs: 40, gain: 0.7 },
     /** Level/stage completed and scored. A fuller arpeggio. */
     complete: { type: 'sine', notes: ['C5', 'E5', 'G5', 'C6', 'E6'], noteMs: 110, gapMs: 60, gain: 1 },
+    /**
+     * A literal, term or negated group joined the selection. Higher, shorter
+     * and quieter than `step` so a click-to-select never reads as a step.
+     */
+    select: { type: 'triangle', notes: ['B5'], noteMs: 50, gapMs: 0, gain: 0.5 },
+    /** The same click took the item back out: the lower, quieter mirror of `select`. */
+    deselect: { type: 'triangle', notes: ['F#5'], noteMs: 50, gapMs: 0, gain: 0.34 },
+    /** The level carousel moved to another card. Always via playThrottledSound. */
+    levelNav: { type: 'sine', notes: ['A5'], noteMs: 40, gapMs: 0, gain: 0.32 },
+    /** A level or stage was actually chosen and the app is navigating there. */
+    enter: { type: 'sine', notes: ['G5', 'D6'], noteMs: 75, gapMs: 45, gain: 0.7 },
+    /** A panel, drawer or sheet opened: two quick rising notes. */
+    panelOpen: { type: 'sine', notes: ['D5', 'G5'], noteMs: 55, gapMs: 30, gain: 0.45 },
+    /** A panel, drawer or sheet closed: the same pair, falling and a touch quieter. */
+    panelClose: { type: 'sine', notes: ['G5', 'D5'], noteMs: 55, gapMs: 30, gain: 0.4 },
   },
 }
 

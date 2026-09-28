@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import usePanelSound from '../../hooks/usePanelSound'
 import LawCard from './LawCard'
 
 /**
@@ -8,6 +9,9 @@ import LawCard from './LawCard'
  */
 export default function LawsDrawer({ show, onClose, laws, placement }) {
   const scrollRef = useRef(null)
+
+  // Open/close feedback, whatever closed it (✕, scrim, Escape).
+  usePanelSound(show)
 
   // Reset scroll to top whenever the drawer opens so the first law is never clipped
   useEffect(() => {

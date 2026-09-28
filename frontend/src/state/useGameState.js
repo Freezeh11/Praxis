@@ -196,11 +196,35 @@ export function useGameState(options = {}) {
   }, [isDeadEnd, allowExpand])
 
   /* ---- selection handlers ---- */
+
+  /**
+   * Exactly ONE cue per selection click: a short tick when the clicked item
+   * joins the selection, its lower mirror when that same click takes it back
+   * out. Because the cue is chosen from the clicked path — not from the shape
+   * of the whole new selection — swapping one item for another (a second
+   * literal replacing the term it belonged to, or a third selection evicting
+   * the oldest) still fires only that one tick and cannot double up.
+   *
+   * Fired from the click handler, i.e. the gesture itself, so it lands at
+   * gesture time and never from a render. Programmatic selection changes
+   * (apply, undo, reset, guide pre-selection, reorder) stay silent: they
+   * already have their own cue, and stacking a deselect tick on top of them
+   * would be noise.
+   */
+  const cueSelectionClick = useCallback((path) => {
+    if (sel.some(s => s.path === path)) {
+      playSound('deselect')
+    } else {
+      playSound('select')
+    }
+  }, [sel])
+
   const handleClickLit = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
     // Selection clicks are the app's first user gesture on most sessions: unlock
     // audio here so the cue fired by the verdict is actually audible.
     primeAudio()
+    cueSelectionClick(path)
     if (isDeadEnd) {
       setSel(prev => {
         const existing = prev.findIndex(s => s.path === path)
@@ -267,11 +291,12 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isAnimating, isDeadEnd, updateLaws])
+  }, [isAnimating, isDeadEnd, updateLaws, cueSelectionClick])
 
   const handleClickNot = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
     primeAudio()
+    cueSelectionClick(path)
     if (isDeadEnd) {
       setSel(prev => {
         const existing = prev.findIndex(s => s.path === path)
@@ -303,11 +328,12 @@ export function useGameState(options = {}) {
       )
       return next
     })
-  }, [isAnimating, isDeadEnd])
+  }, [isAnimating, isDeadEnd, cueSelectionClick])
 
   const handleClickTerm = useCallback((path, exprSnapshot) => {
     if (isAnimating) return
     primeAudio()
+    cueSelectionClick(path)
     if (isDeadEnd) {
       setSel(prev => {
         const existing = prev.findIndex(s => s.path === path)
@@ -345,7 +371,7 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isAnimating, isDeadEnd, updateLaws])
+  }, [isAnimating, isDeadEnd, updateLaws, cueSelectionClick])
 
   // currentSteps / hintsCount are part of the positional call signature
   // (ProblemPage calls applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)),

@@ -38,6 +38,7 @@ import useCollisionPlacement, {
 } from '../hooks/useCollisionPlacement.js'
 import useDeviceTier, { PHONE_MAX_WIDTH, SMALL_TABLET_MAX_WIDTH } from '../hooks/useDeviceTier.js'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
+import { primeAudio } from '../services/soundEffects.js'
 
 /** Below this viewport height the popups switch to their compressed layout. */
 const SHORT_VIEWPORT_MAX_HEIGHT = 520
@@ -123,6 +124,25 @@ export default function ProblemPage() {
     setShowHint(false)
     setInspectedStepIdx(null)
     setShowResetConfirm(false)
+  }
+
+  /**
+   * The panels cue their own open/close (hooks/usePanelSound), so these only
+   * have to unlock audio: a learner whose first action is opening the laws or
+   * the step history has not clicked a term yet, and an unprimed AudioContext
+   * would swallow the cue.
+   */
+  const openLaws = () => {
+    primeAudio()
+    setShowLawsDrawer(true)
+  }
+  const toggleStepHistory = () => {
+    primeAudio()
+    setShowStepHistory(prev => !prev)
+  }
+  const openStepHistory = () => {
+    primeAudio()
+    setShowStepHistory(true)
   }
 
   const {
@@ -365,7 +385,7 @@ export default function ProblemPage() {
       isComplete={isComplete} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
       steps={steps} optimalSteps={optimalSteps} applicableLaws={applicableLaws}
       sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
-      touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={() => setShowLawsDrawer(true)}
+      touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
       onNextStage={handleNextStage} onBackToStages={() => navigate(`/level/${levelId}/stages`)} onRandomize={handleRandomize}
       onNewExpression={() => navigate('/sandbox')}
@@ -392,8 +412,8 @@ export default function ProblemPage() {
           points={progress.points} zoom={zoom} onZoom={setZoom}
           isTutorialActive={isTutorialActive} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
           guideCost={guideCost} onHint={handleHint} onGuide={handleGuide}
-          onOpenLaws={() => setShowLawsDrawer(true)} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
-          onToggleStepHistory={() => setShowStepHistory(prev => !prev)} onRandomize={handleRandomize} onNewExpression={() => navigate('/sandbox')}
+          onOpenLaws={openLaws} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
+          onToggleStepHistory={toggleStepHistory} onRandomize={handleRandomize} onNewExpression={() => navigate('/sandbox')}
           onUndo={handleUndo} onReset={handleResetClick}
           soundEnabled={soundEnabled} onToggleSound={toggleSound}
         />
@@ -419,7 +439,7 @@ export default function ProblemPage() {
         showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={() => setDismissReviewReminder(true)}
         isTutorialActive={isTutorialActive} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
         assistanceInHeader={assistanceInHeader} guideCost={guideCost} onHint={handleHint}
-        onGuide={handleGuide} onOpenLaws={() => setShowLawsDrawer(true)} onRandomize={handleRandomize}
+        onGuide={handleGuide} onOpenLaws={openLaws} onRandomize={handleRandomize}
         chromeText={chromeText} chromeHeight={chromeHeight}
       />
 
@@ -513,7 +533,7 @@ export default function ProblemPage() {
             setShowStepHistory(false)
             navigate('/level/0/stages')
           }}
-          onOpenStepHistory={() => setShowStepHistory(true)}
+          onOpenStepHistory={openStepHistory}
         />
       )}
     </div>

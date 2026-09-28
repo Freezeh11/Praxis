@@ -12,6 +12,7 @@
  */
 import { AnimatePresence, motion } from 'framer-motion'
 
+import usePanelSound from '../../hooks/usePanelSound'
 import LawCard from '../laws/LawCard'
 
 export function LawsReferenceButton({ compact, chromeText, chromeHeight, onOpen }) {
@@ -32,6 +33,10 @@ export function LawsReferenceButton({ compact, chromeText, chromeHeight, onOpen 
 }
 
 export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, band, ready, onClose }) {
+  // The sheet and the drawer are the same panel to the ear: one cue per
+  // open/close, however it was dismissed (scrim, ✕, tier change).
+  usePanelSound(show)
+
   const top = Math.round(band ? band.top : 0)
   const bandHeight = Math.round(band ? band.maxHeight : 0)
   // The sheet is as tall as its content up to the band; the drawer fills the

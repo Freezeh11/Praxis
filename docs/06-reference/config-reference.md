@@ -138,7 +138,7 @@ conflate them.
 | Export | Value | Line | Meaning |
 |---|---|---|---|
 | `STAR_THRESHOLDS.three` | `90` | `gameRules.js:39` | score ≥ 90 earns 3 stars |
-| `STAR_THRESHOLDS.two` | `75` | `gameRules.js:41` | score ≥ 75 earns 2 stars |
+| `STAR_THRESHOLDS.two` | `75` | `gameRules.js:40` | score ≥ 75 earns 2 stars |
 | `STAR_THRESHOLDS.one` | `1` | `gameRules.js:42` | any completion earns at least 1 star |
 | `MAX_STARS_PER_STAGE` | `3` | `gameRules.js:46` | ceiling per stage |
 | `UNLOCK_AVERAGE_SCORE` | `80` | `gameRules.js:49` | **every** stage done **and** average ≥ 80 unlocks the next level |
@@ -201,31 +201,57 @@ The unlock rule as implemented: `frontend/src/state/progressStore.js:291-313` co
 
 ### 3.7 Sound
 
-Cue shape is `{ type, notes, noteMs, gapMs, gain }` (`gameRules.js:141`).
+Cue shape is `{ type, notes, noteMs, gapMs, gain }` (`gameRules.js:141`) — one oscillator per note
+inside a gain envelope, with `notes` in scientific pitch (`'C#5'`, `'Eb4'`). Adding a cue is one
+line here; nothing outside this file hardcodes a frequency or a duration.
 
 | Export | Value | Line |
 |---|---|---|
-| `SOUND.enabled` | `true` (first-run default only; the learner's choice lives in `localStorage`) | `gameRules.js:149` |
-| `SOUND.volume` | `0.16` | `gameRules.js:151` |
-| `SOUND.attackMs` | `12` | `gameRules.js:153` |
-| `SOUND.cues.step` | `{ triangle, ['E5'], 70, 0, 0.75 }` | `gameRules.js:156` |
-| `SOUND.cues.hint` | `{ sine, ['C5','G5'], 90, 45, 0.8 }` | `gameRules.js:158` |
-| `SOUND.cues.guide` | `{ sine, ['E5','A5','C#6'], 85, 45, 0.8 }` | `gameRules.js:160` |
-| `SOUND.cues.correct` | `{ sine, ['C5','E5','G5','C6'], 95, 55, 0.95 }` | `gameRules.js:162` |
-| `SOUND.cues.wrong` | `{ sawtooth, ['A3','E3'], 120, 60, 0.7 }` | `gameRules.js:164` |
-| `SOUND.cues.reset` | `{ triangle, ['A5','F5','C5'], 85, 40, 0.7 }` | `gameRules.js:166` |
-| `SOUND.cues.complete` | `{ sine, ['C5','E5','G5','C6','E6'], 110, 60, 1 }` | `gameRules.js:168` |
+| `SOUND.enabled` | `true` (first-run default only; the learner's choice lives in `localStorage`) | `gameRules.js:153` |
+| `SOUND.volume` | `0.16` | `gameRules.js:155` |
+| `SOUND.attackMs` | `12` | `gameRules.js:157` |
+| `SOUND.throttleMs` | `90` — shortest gap between two plays of the **same** cue; enforced only by `playThrottledSound()`, which is what the carousel ticks use | `gameRules.js:167` |
+| `SOUND.cues.step` | `{ triangle, ['E5'], 70, 0, 0.75 }` | `gameRules.js:170` |
+| `SOUND.cues.hint` | `{ sine, ['C5','G5'], 90, 45, 0.8 }` | `gameRules.js:172` |
+| `SOUND.cues.guide` | `{ sine, ['E5','A5','C#6'], 85, 45, 0.8 }` | `gameRules.js:174` |
+| `SOUND.cues.correct` | `{ sine, ['C5','E5','G5','C6'], 95, 55, 0.95 }` | `gameRules.js:176` |
+| `SOUND.cues.wrong` | `{ sawtooth, ['A3','E3'], 120, 60, 0.7 }` | `gameRules.js:178` |
+| `SOUND.cues.reset` | `{ triangle, ['A5','F5','C5'], 85, 40, 0.7 }` | `gameRules.js:180` |
+| `SOUND.cues.complete` | `{ sine, ['C5','E5','G5','C6','E6'], 110, 60, 1 }` | `gameRules.js:182` |
+| `SOUND.cues.select` | `{ triangle, ['B5'], 50, 0, 0.5 }` | `gameRules.js:187` |
+| `SOUND.cues.deselect` | `{ triangle, ['F#5'], 50, 0, 0.34 }` | `gameRules.js:189` |
+| `SOUND.cues.levelNav` | `{ sine, ['A5'], 40, 0, 0.32 }` | `gameRules.js:191` |
+| `SOUND.cues.enter` | `{ sine, ['G5','D6'], 75, 45, 0.7 }` | `gameRules.js:193` |
+| `SOUND.cues.panelOpen` | `{ sine, ['D5','G5'], 55, 30, 0.45 }` | `gameRules.js:195` |
+| `SOUND.cues.panelClose` | `{ sine, ['G5','D5'], 55, 30, 0.4 }` | `gameRules.js:197` |
+
+Cues are named for what the learner just did, not for the screen that plays them, so one cue can
+serve several places. Every cue is called from exactly one kind of moment:
+
+| Cue | Fired when |
+|---|---|
+| `step` / `hint` / `guide` / `correct` / `wrong` / `reset` | the puzzle derivation changes or a dead end is reached (`state/useGameState.js`), and `complete` when a stage is scored (`components/puzzle/usePuzzleSession.js:162`) |
+| `select` / `deselect` | a literal, term or negated group is clicked into or out of the selection (`state/useGameState.js`, one cue per click) |
+| `levelNav` | the level carousel's selected index changes (`pages/LevelSelectPage.jsx`) — always through the throttled path |
+| `enter` | a level or stage is actually chosen and the app navigates there (`pages/LevelSelectPage.jsx`, `pages/StageSelectorPage.jsx`) |
+| `panelOpen` / `panelClose` | a panel or drawer becomes visible or hidden — laws reference, step history (`hooks/usePanelSound.js`) |
+
+`playSound()` no-ops when muted or when no user gesture has unlocked the audio context yet, so a
+call site never re-checks the preference; the gesture that starts a sound on a screen without
+puzzle interactions (the level and stage screens, any panel trigger) calls `primeAudio()` first.
+Nothing plays from a render: selection clicks cue from the event handler, the carousel and the
+panels cue from a guarded state-transition effect.
 
 ### 3.8 Solver budgets
 
 | Export | Value | Line | Meaning |
 |---|---|---|---|
-| `SOLVER_BUDGET.graded.maxDepth` | `10` | `gameRules.js:175` | depth cap for a graded puzzle |
-| `SOLVER_BUDGET.graded.maxStates` | `3000` | `gameRules.js:175` | state cap for a graded puzzle |
-| `SOLVER_BUDGET.generator.simplestForm.maxDepth` | `12` | `gameRules.js:178` | generator must reach the simplest form… |
-| `SOLVER_BUDGET.generator.simplestForm.maxStates` | `8000` | `gameRules.js:178` | …within this budget |
-| `SOLVER_BUDGET.generator.optimalPath.maxDepth` | `12` | `gameRules.js:179` | …then the goal |
-| `SOLVER_BUDGET.generator.optimalPath.maxStates` | `12000` | `gameRules.js:179` | path budget |
+| `SOLVER_BUDGET.graded.maxDepth` | `10` | `gameRules.js:204` | depth cap for a graded puzzle |
+| `SOLVER_BUDGET.graded.maxStates` | `3000` | `gameRules.js:204` | state cap for a graded puzzle |
+| `SOLVER_BUDGET.generator.simplestForm.maxDepth` | `12` | `gameRules.js:207` | generator must reach the simplest form… |
+| `SOLVER_BUDGET.generator.simplestForm.maxStates` | `8000` | `gameRules.js:207` | …within this budget |
+| `SOLVER_BUDGET.generator.optimalPath.maxDepth` | `12` | `gameRules.js:208` | …then the goal |
+| `SOLVER_BUDGET.generator.optimalPath.maxStates` | `12000` | `gameRules.js:208` | path budget |
 
 ---
 
@@ -368,7 +394,7 @@ When a number appears in more than one place, this decides which copy is authori
 | 5 bonus points | `backend/config/constants.py:19` | `gameRules.js:29` | paid on top of `STAGE_COMPLETION_XP` |
 | 10 XP completion | `gameRules.js:32` | — | frontend-only concept; the backend knows only the bonus |
 | 20-point Guide cost | `gameRules.js:35` | — | a spend, not a deduction |
-| 90 / 75 stars | `backend/config/constants.py:25` | `gameRules.js:39-41` | — |
+| 90 / 75 stars | `backend/config/constants.py:25` | `gameRules.js:39-40` | — |
 | 80 % unlock | `backend/config/constants.py:26` | `gameRules.js:49` | plus the "every stage done" rule in `progressStore.js:291-313` |
 | Level indexes (0 = tutorial) | `content/levels.json` | `gameRules.js:83` | `TUTORIAL.levelId` must match the content id |
 | Tutorial stage set | `content/levels.json` (4 puzzles) | `gameRules.js:84` | `stageIndexes` must match |

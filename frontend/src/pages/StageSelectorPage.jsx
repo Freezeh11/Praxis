@@ -5,6 +5,7 @@ import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
 import { usePageOverlays } from '../hooks/usePageOverlays'
 import { STAR_THRESHOLDS, UNLOCK_AVERAGE_SCORE } from '../config/gameRules.js'
+import { playSound, primeAudio } from '../services/soundEffects.js'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
 import PageOverlays from '../components/layout/PageOverlays'
@@ -79,6 +80,10 @@ export default function StageSelectorPage() {
 
   const handleStageClick = (idx) => {
     if (!isAvailable(idx)) return
+    // Picking a stage is the navigate action: one affirmative cue, and this
+    // click is the gesture that unlocks audio for it (no puzzle has primed yet).
+    primeAudio()
+    playSound('enter')
     // Tutorial stages must carry ?tutorial=true or the guided overlay never
     // activates: usePuzzleSession reads the query param, not just the level id.
     const tutParam = numLevelId === 0 ? '?tutorial=true' : ''
@@ -120,7 +125,7 @@ export default function StageSelectorPage() {
               data-popup-anchor="laws"
               className="h-8 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center gap-1.5 text-xs font-bold text-text-2 bg-white border border-border hover:border-text-1 hover:text-text-1 transition-all shadow-xs"
               title="Open Law Reference"
-              onClick={() => setShowLawsDrawer(true)}
+              onClick={() => { primeAudio(); setShowLawsDrawer(true) }}
             >
               <span>📖</span>
               <span className="hidden sm:inline">Laws</span>

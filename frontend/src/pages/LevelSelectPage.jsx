@@ -5,6 +5,7 @@ import { useProgress } from '../state/useProgress.js'
 import { usePageOverlays } from '../hooks/usePageOverlays'
 import { TIMING, TUTORIAL } from '../config/gameRules.js'
 import { signOut } from '../services/authActions.js'
+import { playSound, playThrottledSound, primeAudio } from '../services/soundEffects.js'
 import { toast } from 'sonner'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
@@ -127,6 +128,10 @@ export default function LevelSelectPage() {
     if (!lv) return
     const { locked } = getLockState(lv)
     if (locked) return
+    // Choosing a level is the navigate action: one affirmative cue, and the
+    // gesture that unlocks audio for it (this screen has no puzzle to prime).
+    primeAudio()
+    playSound('enter')
     // Sandbox opens the workspace directly: it has no stage-selection screen.
     if (lv.isSandbox) {
       navigate('/sandbox')
@@ -146,8 +151,35 @@ export default function LevelSelectPage() {
     }
   }
 
-  const prev = () => setSelected(s => Math.max(0, s - 1))
-  const next = () => setSelected(s => Math.min(entries.length - 1, s + 1))
+  const prev = () => {
+    primeAudio()
+    setSelected(s => Math.max(0, s - 1))
+  }
+  const next = () => {
+    primeAudio()
+    setSelected(s => Math.min(entries.length - 1, s + 1))
+  }
+
+  /**
+   * Carousel feedback.
+   *
+   * The cue follows the VALUE of `selected`, not each control: arrows, card
+   * taps and whatever gets added later (dots, swipe, arrow keys) all funnel
+   * through setSelected, so one effect covers every input path without a sound
+   * call per handler. The ref holds the last index that was cued, which keeps
+   * the first render silent and a re-render with an unchanged index silent —
+   * a cue can never come from a render.
+   *
+   * playThrottledSound, not playSound: a fast burst of taps (or a future swipe)
+   * changes the index many times in a few hundred ms, and one tick per change
+   * is unbearable. SOUND.throttleMs owns the rate; the cue name owns nothing else.
+   */
+  const cuedIndexRef = useRef(selected)
+  useEffect(() => {
+    if (cuedIndexRef.current === selected) return
+    cuedIndexRef.current = selected
+    playThrottledSound('levelNav')
+  }, [selected])
 
   /**
    * Carousel centring.
@@ -208,7 +240,7 @@ export default function LevelSelectPage() {
             >
               <span>Tutorial</span>
             </button>
-            <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => setShowLawsDrawer(true)}>📖</button>
+            <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}>📖</button>
             {/* Both keep the 36px desktop height of the rail and grow to 44px on
                 a landscape phone, where the compact variant is used. */}
             <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
@@ -280,6 +312,9 @@ export default function LevelSelectPage() {
                     if (isActive) {
                       if (!locked) handleStart()
                     } else {
+                      // This tap IS the gesture that unlocks audio; the tick
+                      // itself fires from the selected-index effect above.
+                      primeAudio()
                       setSelected(i)
                     }
                   }}
