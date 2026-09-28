@@ -34,6 +34,8 @@ await page.addInitScript(({ key, surveyKey }) => {
   localStorage.setItem(key, JSON.stringify({
     ...snap,
     hasSeenTutorial: true,
+    stageProgress: { ...(snap.stageProgress || {}), 0: [0, 1, 2, 3] },
+    levelsCompleted: [...new Set([...(snap.levelsCompleted || []), 0])],
     points: Math.max(Number(snap.points) || 0, 60),
   }))
 }, { key: progressKey(user.id), surveyKey: HIDE_SURVEY })

@@ -166,7 +166,8 @@ await page.evaluate((prefix) => {
   if (!key) return
   const data = JSON.parse(localStorage.getItem(key))
   data.hasSeenTutorial = true
-  data.stageProgress = { ...(data.stageProgress || {}), 0: [0] }
+  data.stageProgress = { ...(data.stageProgress || {}), 0: [0, 1, 2, 3] }
+  data.levelsCompleted = [...new Set([...(data.levelsCompleted || []), 0])]
   localStorage.setItem(key, JSON.stringify(data))
 }, PROGRESS_KEY_PREFIX)
 

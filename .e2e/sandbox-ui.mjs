@@ -75,6 +75,8 @@ const seeded = await page.evaluate((prefix) => {
   const data = JSON.parse(localStorage.getItem(key))
   data.points = Math.max(Number(data.points) || 0, 100)
   data.hasSeenTutorial = true
+  data.stageProgress = { ...(data.stageProgress || {}), 0: [0, 1, 2, 3] }
+  data.levelsCompleted = [...new Set([...(data.levelsCompleted || []), 0])]
   localStorage.setItem(key, JSON.stringify(data))
   return { points: data.points, hasSeenTutorial: data.hasSeenTutorial }
 }, PROGRESS_KEY_PREFIX)

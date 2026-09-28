@@ -659,6 +659,8 @@ for (const testCase of (wantsSection(2) ? SELECT_CASES : [])) {
     data.stageProgress = { ...(data.stageProgress || {}), 1: [0, 1] }
     data.stageScores = { ...(data.stageScores || {}), '1:0': 40, '1:1': 30 }
     data.hasSeenTutorial = true
+    data.stageProgress = { ...(data.stageProgress || {}), 0: [0, 1, 2, 3], 1: [0, 1] }
+    data.levelsCompleted = [...new Set([...(data.levelsCompleted || []), 0])]
     data.points = Math.max(Number(data.points) || 0, 150)
     localStorage.setItem(key, JSON.stringify(data))
   }, { skipReplayKey: SKIP_TUTORIAL_REPLAY_PROMPT, prefix: PROGRESS_KEY_PREFIX })
@@ -712,7 +714,7 @@ for (const testCase of (wantsSection(2) ? SELECT_CASES : [])) {
       rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height },
       gateText: /80%/.test(card.innerText || ''),
       startCovered: (() => {
-        if (!start) return false
+        if (!start || card.contains(start)) return false
         const sr = start.getBoundingClientRect()
         return !(sr.right <= r.left || r.right <= sr.left || sr.bottom <= r.top || r.bottom <= sr.top)
       })(),

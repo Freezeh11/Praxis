@@ -67,6 +67,8 @@ async function makeLearner(opts = {}) {
     const data = JSON.parse(localStorage.getItem(key))
     data.points = Math.max(Number(data.points) || 0, 120)
     data.hasSeenTutorial = true
+    data.stageProgress = { ...(data.stageProgress || {}), 0: [0, 1, 2, 3] }
+    data.levelsCompleted = [...new Set([...(data.levelsCompleted || []), 0])]
     localStorage.setItem(key, JSON.stringify(data))
   }, PROGRESS_KEY_PREFIX)
   await page.reload({ waitUntil: 'domcontentloaded' })
