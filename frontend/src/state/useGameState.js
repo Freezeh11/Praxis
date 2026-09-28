@@ -160,7 +160,7 @@ export function useGameState(options = {}) {
         setStatusMsg(`Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`)
       } else {
         playSound('wrong')
-        setStatusMsg('No simplification for these selected items — try different terms or variables')
+        setStatusMsg('No simplification for these selected items. Try different terms or variables.')
       }
     } else if (nextSel.length === 1) {
       const item = nextSel[0]
@@ -224,7 +224,7 @@ export function useGameState(options = {}) {
       setStatusMsg(
         laws.length
           ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-          : 'No law applies here — try different terms'
+          : 'No law applies here. Try different terms.'
       )
     }
 
@@ -299,7 +299,7 @@ export function useGameState(options = {}) {
       setStatusMsg(
         laws.length
           ? `Applicable: Choose a law below (${laws.map(l => l.name).join(', ')})`
-          : 'No law applies — try a different element'
+          : 'No law applies. Try a different element.'
       )
       return next
     })

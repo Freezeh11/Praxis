@@ -79,7 +79,10 @@ export default function StageSelectorPage() {
 
   const handleStageClick = (idx) => {
     if (!isAvailable(idx)) return
-    navigate(`/level/${numLevelId}/stage/${idx}`)
+    // Tutorial stages must carry ?tutorial=true or the guided overlay never
+    // activates: usePuzzleSession reads the query param, not just the level id.
+    const tutParam = numLevelId === 0 ? '?tutorial=true' : ''
+    navigate(`/level/${numLevelId}/stage/${idx}${tutParam}`)
   }
 
   // Level progress metrics
@@ -157,7 +160,7 @@ export default function StageSelectorPage() {
                 <p className="praxis-hide-short text-xs sm:text-sm text-text-3 mt-1.5 max-w-2xl leading-relaxed">
                   {isTutorialLevel
                     ? 'Guided walkthrough and orientation for core workspace mechanics, variable selections, drag-and-drop reordering, negation capsules, and efficiency challenges.'
-                    : `${level.desc}. Every Boolean theorem exists as a dual pair — practice both Sum of Products (SOP) and Product of Sums (POS).`
+                    : `${level.desc}. Every Boolean theorem exists as a dual pair: practice both Sum of Products (SOP) and Product of Sums (POS).`
                   }
                 </p>
                 {isTutorialLevel && (

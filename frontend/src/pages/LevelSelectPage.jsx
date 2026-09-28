@@ -21,8 +21,8 @@ const COMING_SOON = []
 
 /**
  * Synthetic carousel entry for Sandbox mode. It is not part of the fetched
- * level data — it has no stages and never participates in score gates or
- * progress tracking — but it rides the exact same card so it sits naturally
+ * level data: it has no stages and never participates in score gates or
+ * progress tracking, but it rides the exact same card so it sits naturally
  * alongside the real levels.
  */
 const SANDBOX_LEVEL = {
@@ -127,7 +127,7 @@ export default function LevelSelectPage() {
     if (!lv) return
     const { locked } = getLockState(lv)
     if (locked) return
-    // Sandbox opens the workspace directly — it has no stage-selection screen.
+    // Sandbox opens the workspace directly: it has no stage-selection screen.
     if (lv.isSandbox) {
       navigate('/sandbox')
       return

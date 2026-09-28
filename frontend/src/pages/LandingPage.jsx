@@ -8,6 +8,7 @@ import { signOut } from '../services/authActions.js'
 import { TIMING } from '../config/gameRules.js'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
 import { toast } from 'sonner'
+import SurveyBanner from '../components/SurveyBanner'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -72,6 +73,13 @@ export default function LandingPage() {
           initial="hidden"
           animate="show"
         >
+          {/* Survey Banner (Only when logged in) */}
+          {session && (
+            <motion.div variants={itemVariants} className="mb-5">
+              <SurveyBanner />
+            </motion.div>
+          )}
+
           {/* Badge */}
           <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
             <span className="px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold uppercase tracking-wider">
