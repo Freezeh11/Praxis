@@ -409,29 +409,32 @@ for (const [exprText, goalText] of candidates) {
   const expr = engine.parseExpr(exprText)
   const target = engine.canonText(engine.parseExpr(goalText))
   const graded = engine.findOptimalPath(expr, target)
-  const raised = engine.findOptimalPath(expr, target, { maxDepth: 16, maxStates: 40000 })
+  const raised = engine.findOptimalPath(expr, target, { maxDepth: 20, maxStates: 40000 })
   console.log(exprText + '  ->  ' + goalText)
   console.log('   literals:', engine.extractVariables(expr).join(''),
-              ' graded(10/3000): found=' + graded.found + ' steps=' + graded.optimalSteps,
-              ' raised(16/40000): found=' + raised.found + ' steps=' + raised.optimalSteps)
+              ' graded(16/3000): found=' + graded.found + ' steps=' + graded.optimalSteps,
+              ' raised(20/40000): found=' + raised.found + ' steps=' + raised.optimalSteps)
 }
 EOF
 ```
 
 ```text
 vwx + vw'x  ->  vx
-   literals: vwx  graded(10/3000): found=true steps=3  raised(16/40000): found=true steps=3
+   literals: vwx  graded(16/3000): found=true steps=4  raised(20/40000): found=true steps=4
 (v + w + x' + y + z)(v + w + x + y + z)  ->  v + w + y + z
-   literals: vwxyz  graded(10/3000): found=true steps=5  raised(16/40000): found=true steps=5
+   literals: vwxyz  graded(16/3000): found=true steps=6  raised(20/40000): found=true steps=6
 v'wxy'z + v'wxyz + vwxy'z + vwxyz  ->  wxz
-   literals: vwxyz  graded(10/3000): found=false steps=0  raised(16/40000): found=true steps=10
+   literals: vwxyz  graded(16/3000): found=false steps=0  raised(20/40000): found=true steps=17
 ```
 
-The third case is the one to plan around. The graded budget is `{ maxDepth: 10, maxStates: 3000 }`
-(`frontend/src/config/gameRules.js:175`) — and `maxStates` counts *transitions explored*, not states
-stored (`frontend/src/engine/solver.js:200-205`), so it is exhausted long before 3000 distinct
+The third case is the one to plan around. The graded budget is `{ maxDepth: 16, maxStates: 3000 }`
+(`frontend/src/config/gameRules.js:204`) — and `maxStates` counts *transitions explored*, not states
+stored (`frontend/src/engine/solver.js:201-206`), so it is exhausted long before 3000 distinct
 intermediate states are seen: that puzzle's reachable state graph contains 2499 canonical states and
-the search still returns `found: false`. A larger variant of the same shape
+the search still returns `found: false`. It is also **deep**: since the Module 4 guard put every
+complement constant back into the derivation, its optimum is 17 steps, so a raised run needs
+`maxDepth` at least 20 as well as the larger state budget — the default depth of 16 fails even with
+40 000 states. A larger variant of the same shape
 (`v'wx'y'z + v'wx'yz + v'wxy'z + v'wxyz + vwx'y'z + vwx'yz + vwxy'z + vwxyz`) has a graph larger than
 60 000 states and needs the raised budget too.
 

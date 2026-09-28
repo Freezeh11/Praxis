@@ -34,13 +34,13 @@ score that looks wrong, or an empty step history.
 |---|---|---|---|---|
 | 1 | literal click → path | `frontend/src/components/ExpressionDisplay.jsx:59-60` (`data-path`, `onClickLit(path)`) | browser | click lands on a group, not a literal |
 | 2 | page wrapper forwards the snapshot | `frontend/src/pages/ProblemPage.jsx:305-308` | browser | `expr` null (puzzle not loaded) |
-| 3 | selection machine | `frontend/src/state/useGameState.js:199-270` | browser | `isAnimating` swallows the click (`:200`) |
+| 3 | selection machine | `frontend/src/state/useGameState.js:240-312` | browser | `isAnimating` swallows the click (`:241`) |
 | 4 | **law discovery** | `analyzeSelection(expr, sel, { allowExpand })` `:156` → `engine/laws/index.js:33` | browser | returns `[]` → "No laws apply" |
 | 5 | panel renders the laws | `components/puzzle/LawPanel.jsx:126-137,164-176` (`data-law-id`) | browser | `applicableLaws` empty |
-| 6 | law click → `applyLaw` | `pages/ProblemPage.jsx:317-322` → `state/useGameState.js:354-459` | browser | no-op guard `:366-373` |
+| 6 | law click → `applyLaw` | `pages/ProblemPage.jsx:317-322` → `state/useGameState.js:398-503` | browser | no-op guard `:410-417` |
 | 7 | **pure rewrite** | `law.apply()` → `laws/*.js` | browser | throws (caught upstream in solver only) |
-| 8 | animation delay | `setTimeout(..., TIMING.lawAnimationMs)` `:423-425,447` = **1350 ms** | browser | nothing visible for 1.35 s (not a bug) |
-| 9 | history update (the "reducer") | `setHistory(h => [...h, { expr, step }])` `:425` | browser | timer cleared by undo/reset/load (`:77-80`, `:461-469`) |
+| 8 | animation delay | `setTimeout(..., TIMING.lawAnimationMs)` `:467-469,491` = **1350 ms** | browser | nothing visible for 1.35 s (not a bug) |
+| 9 | history update (the "reducer") | `setHistory(h => [...h, { expr, step }])` `:469` | browser | timer cleared by undo/reset/load (`:78-81`, `:505-513`) |
 | 10 | step history card | `components/puzzle/StepHistoryPanel.jsx:50-84` | browser | — |
 | 11 | completion check | `canonText(newExpr) === goalCanonRef.current` `:437` | browser | semantically equal ≠ canonically equal (§6, row 6) |
 | 12 | dead-end check | `scanHints(...)` empty `:61-67` | browser | shows `DEAD_END_MSG` (`state/hintText.js:10`) |
@@ -69,7 +69,7 @@ Nine times out of ten the bug is in the *selection*, not the law. Reproduce both
 | click a literal | `{ path: 'R.1.0', isTermSel: false }` |
 | click the `⠿` term handle | `{ path: 'R.1', isTermSel: true }` |
 | click a NOT capsule | `{ path: 'R.0', isTermSel: false }` on the `not` node → `analyzeNot` |
-| click a constant | one element, routed to `analyzeSumConst` / `analyzeProductConst` (`useGameState.js:232-246`) |
+| click a constant | one element, routed to `analyzeSumConst` / `analyzeProductConst` (`useGameState.js:274-288`) |
 
 ```bash
 cd frontend && node --input-type=module <<'EOF'
@@ -96,7 +96,7 @@ check `isTermSel` first, it changes the law set completely (`aggregate` vs `lite
 
 | Where | What you get | How to read it |
 |---|---|---|
-| browser console | `console.warn` on a failed saved-derivation restore (`state/useGameState.js:112`), generation/level-load failures (`usePuzzleSession.js:61,122`), sandbox sessionStorage warnings (`components/puzzle/sandboxPuzzle.js:37`) | DevTools → Console. **The step flow itself logs nothing.** |
+| browser console | `console.warn` on a failed saved-derivation restore (`state/useGameState.js:130`), generation/level-load failures (`usePuzzleSession.js:61,122`), sandbox sessionStorage warnings (`components/puzzle/sandboxPuzzle.js:37`) | DevTools → Console. **The step flow itself logs nothing.** |
 | backend stdout | one JSON object per line per HTTP request | terminal running `uvicorn`, or Render logs |
 | Network tab | URL, status, request/response bodies, `x-request-id` response header | DevTools → Network |
 | localStorage | the progress snapshot under the key from `config/storageKeys.js` | DevTools → Application → Local Storage |
@@ -195,7 +195,7 @@ enabled but the build refuses, that is the *third* verdict — `buildSandboxPuzz
 | 1 | Clicking a term does nothing | a step is animating (`isAnimating`) | the expression is mid-animation | wait 1.35 s (`TIMING.lawAnimationMs`) |
 | 2 | "No laws apply — try a different selection" | `analyzeSelection` returned `[]`: wrong `isTermSel`, or the shape genuinely has no law | §2 script with the same paths | select the literals, not the terms (or vice versa); check `mode` in `laws/definitions.js:29-54` |
 | 3 | No law panel at all, and a *graded* puzzle expression looks simplifiable | the expression needs a gated law | `scanHints(expr,'R')` → `[]` while `scanHints(expr,'R',{allowExpand:true})` is non-empty | the puzzle is only playable in the Sandbox — by design (`A(B + A')` is the canonical example) |
-| 4 | The law button is there but the expression does not change | no-op guard: `before === after` (`state/useGameState.js:366-373`) | the status message reads "That law didn't change the expression." | the law's predicate is over-broad for that shape — a builder bug (see [add-a-new-law.md](add-a-new-law.md)) |
+| 4 | The law button is there but the expression does not change | no-op guard: `before === after` (`state/useGameState.js:410-417`) | the status message reads "That law didn't change the expression." | the law's predicate is over-broad for that shape — a builder bug (see [add-a-new-law.md](add-a-new-law.md)) |
 | 5 | The step appears ~1.35 s late | **not a bug**: the step is recorded after the animation | `:423-425,447` | none |
 | 6 | The expression looks simplified but the stage does not complete, and the dead-end message shows | completion is **canonical-text** equality, not semantic equivalence (`:437`) | §2 script: `canonText(expr)` vs `canonText(parseExpr(goal))` and `isEquivalent(...)` | a real, documented limitation — the learner must take the authored route; see the `x + x'y` example in [understanding-the-engine.md §13](../tutorials/understanding-the-engine.md#13-stage-10--terminal-form-dead-ends-and-the-canonical-text-limitation) |
 | 7 | Local score and server score differ by exactly 1 point | JS `Math.round` (half-up) vs Python `round` (half-to-even) | `total` ends in 5: `earnedPoints` client 5 vs server 4 at total 90 | known divergence D21; the server value wins when it arrives (`usePuzzleSession.js:208-213`) |
@@ -210,7 +210,7 @@ enabled but the build refuses, that is the *third* verdict — `buildSandboxPuzz
 | 16 | Sandbox: type → "Invalid character(s)" for a character you did not type | the live verdict is debounced and still reflects older text | `pages/SandboxPage.jsx:117-124` | wait ~300 ms |
 | 17 | Sandbox: "Valid expression" but Play refuses | the second gate judged solvability, not syntax | the error text is one of `sandbox/input.js:53-54` | simplify the expression; the engine must reach an equivalent terminal form |
 | 18 | An unrelated test starts failing after an engine change | the new law shortened an existing solver path | run `npm test`; read the deep-equal diff | re-baseline the expectation — see [first-contribution.md §4](../tutorials/first-contribution.md#4-what-actually-happens-three-real-failures) |
-| 19 | A step is missing from the history after a re-render | undo/reset/load clears the pending animation timer (`useGameState.js:77-80,461-469`) | the derivation only commits after the timer | expected; the step was never recorded |
+| 19 | A step is missing from the history after a re-render | undo/reset/load clears the pending animation timer (`useGameState.js:78-81,505-513`) | the derivation only commits after the timer | expected; the step was never recorded |
 | 20 | The same law name maps to an unexpected scoring credit | the step records the display `name`, scoring maps it through `LAW_NAME_TO_ID` | `engine/scoring.js:25-28` | names must exist in `LAW_DEFINITIONS` (`laws/definitions.js:62-65`) |
 
 ## 7. What to put in a bug report
@@ -229,10 +229,10 @@ For anything step-related, these five facts make it reproducible in one pass:
 | Stale/implied | Reality | Evidence |
 |---|---|---|
 | a `POST /sandbox/validate` endpoint exists | **no such route**; sandbox validation is 100% client-side | no route in `backend/api/routes/`; `sandbox/validate.js`, `sandbox/input.js` |
-| a step is sent to the backend for validation | a step is local and synchronous; only load and score use the network | `useGameState.js:354-459`; `usePuzzleSession.js:111,200` |
+| a step is sent to the backend for validation | a step is local and synchronous; only load and score use the network | `useGameState.js:398-503`; `usePuzzleSession.js:111,200` |
 | "the validator" is one thing | two gates with different callers | §5 |
-| the law animation is 2.5 s | **1350 ms** (`lawAnimationMs`), tutorial pre-highlight 1500 ms | `config/gameRules.js` `TIMING`; `useGameState.js:447,455` |
-| the engine has 46 tests | **76 tests, 76 pass** | `npm test` |
+| the law animation is 2.5 s | **1350 ms** (`lawAnimationMs`), tutorial pre-highlight 1500 ms | `config/gameRules.js` `TIMING`; `useGameState.js:491,499` |
+| the engine has 46 tests | **81 tests, 81 pass** | `npm test` |
 | `/api/auth` proxy → a Better Auth server on :3001 | dead remnant; no auth server exists; auth is Supabase | `frontend/vite.config.js`; GROUND-TRUTH §7-D3 |
 | client score equals the server score | off by one at totals ending in 5 | `engine/scoring.js:80` vs `scoring_service.py:55` |
 

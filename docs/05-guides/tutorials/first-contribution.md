@@ -11,7 +11,9 @@ know React.
 > **Everything below was performed, not imagined.** The law in this tutorial was added to a throwaway
 > copy of `frontend/src` (no repository file was modified), the real test suite was run at every step,
 > and the three failures it produced are quoted verbatim in
-> [§4](#4-what-actually-happens-three-real-failures). The recipe ends at **81 tests, 81 pass, 0 fail**.
+> [§4](#4-what-actually-happens-three-real-failures). The dry run ended at **81 tests, 81 pass, 0 fail**
+> against the 76-test suite of its day; on today's 81-test suite the same recipe lands at
+> **86 tests, 86 pass**.
 
 ## Contents
 
@@ -57,7 +59,7 @@ what `apply()` must do: **remove one complemented literal** from the longer side
 | 2 | `frontend/src/engine/laws/definitions.js` | one row per form in `LAW_DEFINITIONS` | identity: id, display name, formula; `defineLaw` and `LAW_NAME_TO_ID` |
 | 3 | `frontend/src/engine/laws/sumLaws.js` + `productLaws.js` | the SOP builder and its POS dual | the law actually applies |
 | 4 | `frontend/src/engine/laws/scanHints.js` | a hint rule with the **same** predicate | Hint button, Guide, dead-end detection, tests |
-| 5 | `frontend/src/state/useGameState.js:589` **and** `frontend/src/engine/__tests__/law-soundness.property.test.js:112` | add the law id to the term-level set | Guide pre-selection; the property test's hint reconstruction |
+| 5 | `frontend/src/state/useGameState.js:633` **and** `frontend/src/engine/__tests__/law-soundness.property.test.js:112` | add the law id to the term-level set | Guide pre-selection; the property test's hint reconstruction |
 | 6 | `frontend/src/engine/__tests__/combining.test.js` | your unit test | proof, and a guard against over-broad detection |
 
 Two optional stops, only if the law should *look* like something:
@@ -218,7 +220,7 @@ Four rules this code follows, all of them load-bearing:
 
 1. **The predicate must include the semantic condition, not just the shape.** The dry run's first
    version checked only "one side is a literal, the other is a product" and produced a law whose
-   description read `x + xy = x + xy` — a button that changes nothing. `useGameState.js:366-373` then
+   description read `x + xy = x + xy` — a button that changes nothing. `useGameState.js:410-417` then
    shows "That law didn't change the expression." Always test for the complement
    (`termContainsLit(..., !lit.n)` / `sumContainsLit(..., !lit.n)`).
 2. **`apply()` never mutates.** Clone the tree first (`cloneN(expr)`), then edit the clone. Asserted by
@@ -254,7 +256,7 @@ x(x' + y) -> combining | Combining Law (Product) | x(x' + y) = xy | xy
 ### Stop 4 — the hint scanner
 
 `frontend/src/engine/laws/scanHints.js` powers the Hint button, the Guide and dead-end detection
-(`useGameState.js:504`, `:562`, `:61`). Add the hint with **exactly the builder's predicate**, in both
+(`useGameState.js:548`, `:606`, `:62`). Add the hint with **exactly the builder's predicate**, in both
 branches. First extend the import at the top:
 
 ```js
@@ -296,7 +298,7 @@ A hint carries two node paths, not a selection. The Guide reconstructs a selecti
 know whether the law is term-level. The same set is hard-coded in **two** places and they must agree:
 
 ```js
-// frontend/src/state/useGameState.js:589
+// frontend/src/state/useGameState.js:633
 const isTermSel = ['idempotent', 'absorption', 'complement', 'annulment', 'identity'].includes(hint.law)
 
 // frontend/src/engine/__tests__/law-soundness.property.test.js:112
@@ -374,8 +376,9 @@ npm test                                             # the whole engine suite
 # fail 0
 ```
 
-`npm test` is `node --test src/engine/__tests__/*.test.js` (`frontend/package.json`), so 76 existing
-tests + your 5 = 81.
+`npm test` is `node --test src/engine/__tests__/*.test.js` (`frontend/package.json`), so 81 existing
+tests + your 5 = 86 today; the 81-test transcript above was recorded against the 76-test suite that
+existed when the dry run was performed. Re-run `npm test` after your change and quote the real total.
 
 ## 4. What actually happens: three real failures
 
@@ -413,11 +416,13 @@ not ok 68 - findOptimalPath honours the sandbox-only expand law
       ]
 ```
 
-`frontend/src/engine/__tests__/solver.test.js:42-63` asserted that `x(x' + y)` needs
-`Distributive (Expand)` then `Absorption Law`. The new dual law reaches `xy` in **one** step, so the
-expansion is no longer on the shortest path — and the test's second half ("without the flag the same
-expression is already terminal") is stale for the same reason: a *graded* expression is now
-simplifiable.
+`frontend/src/engine/__tests__/solver.test.js:44` asserted (at the time of the dry run) that
+`x(x' + y)` needs `Distributive (Expand)` then `Absorption Law`. The new dual law reaches `xy` in
+**one** step, so the expansion is no longer on the shortest path — and the test's second half
+("without the flag the same expression is already terminal") is stale for the same reason: a *graded*
+expression is now simplifiable. The current test expects the Module 4 route,
+`Distributive (Expand) → Complement Law (Product) → Identity Law` (`:44-69`), so expect your
+re-baseline to differ from the transcript above.
 
 **Fix:** re-baseline the expectation — the same maintenance the repository's own history shows in
 `3838343 test(engine): re-baseline the fingerprint and re-author par after the soundness fix`.
@@ -433,7 +438,7 @@ combining | x + xy = x + xy
 
 It is technically *sound* (removing a literal that is not there changes nothing, so the function is
 preserved) and the property test passes it — which is exactly why the engine needs your own negative
-test. Meanwhile the learner sees a law button that does nothing, and `useGameState.js:366-373` answers
+test. Meanwhile the learner sees a law button that does nothing, and `useGameState.js:410-417` answers
 "That law didn't change the expression."
 
 **Fix:** require the complement in the predicate — and mirror the same predicate in `scanHints`, or
@@ -441,38 +446,54 @@ Failure 1 comes back.
 
 ## 5. Measure the impact on the existing 40 puzzles
 
-A new law changes the state graph the solver searches, so it can change existing puzzles' shortest
-paths — and therefore scores. **Run this before and after your change** (script kept to one line for
-copy-paste):
+A new law changes the state graph the solver searches, so it can change existing puzzles' routes — and
+therefore their scores. **Run this before and after your change** (script kept to one line for
+copy-paste). It reports two different quantities: the **scoring** optimum — the shortest route that
+applies every `targetLaw`, which is what the efficiency bar is measured against
+(`findOptimalPathWithLaws`) — and the plain shortest path (`findOptimalPath`), which is only the
+clever shortcut:
 
 ```bash
 cd frontend && node --input-type=module -e "
 import fs from 'node:fs'
 import { parseExpr } from './src/engine/parser.js'
 import { canonText } from './src/engine/render.js'
-import { findOptimalPath } from './src/engine/solver.js'
+import { findOptimalPath, findOptimalPathWithLaws } from './src/engine/solver.js'
 import { LAW_NAME_TO_ID } from './src/engine/laws/definitions.js'
 const levels = JSON.parse(fs.readFileSync('../content/levels.json','utf8'))
+let puzzles = 0, stale = 0, scoredMiss = 0, shortMiss = 0
 for (const lv of Object.values(levels)) lv.puzzles.forEach((p, i) => {
-  const r = findOptimalPath(parseExpr(p.expr), canonText(parseExpr(p.goal)))
-  const ids = r.path.map(s => LAW_NAME_TO_ID[s.law] || s.law)
-  const missing = (p.targetLaws || []).filter(t => !ids.includes(t))
-  console.log('L' + lv.id + 's' + i, 'authored', p.optimalSteps, 'solver', r.optimalSteps,
-              '| missing targets:', JSON.stringify(missing), '|', r.path.map(s => s.law).join(' > '))
+  puzzles++
+  const expr = parseExpr(p.expr), goal = canonText(parseExpr(p.goal))
+  const scored = findOptimalPathWithLaws(expr, goal, p.targetLaws)
+  const scoredIds = scored.path.map(s => LAW_NAME_TO_ID[s.law] || s.law)
+  const missing = (p.targetLaws || []).filter(t => !scoredIds.includes(t))
+  const short = findOptimalPath(expr, goal)
+  const shortIds = short.path.map(s => LAW_NAME_TO_ID[s.law] || s.law)
+  if (scored.optimalSteps !== p.optimalSteps) { stale++; console.log('L' + lv.id + 's' + i, 'authored', p.optimalSteps, '-> scoring optimum', scored.optimalSteps) }
+  if (missing.length) { scoredMiss++; console.log('L' + lv.id + 's' + i, 'scoring route missing', JSON.stringify(missing)) }
+  if ((p.targetLaws || []).some(t => !shortIds.includes(t))) shortMiss++
 })
+console.log('---', 'puzzles=' + puzzles, '| authored != scoring optimum:', stale, '| scoring route misses a target law:', scoredMiss, '| shortest path misses a target law:', shortMiss)
 "
+```
+
+Run against the shipped content today it prints:
+
+```text
+--- puzzles=40 | authored != scoring optimum: 0 | scoring route misses a target law: 0 | shortest path misses a target law: 13
 ```
 
 **Measured effect of adding `combining`:**
 
 | Measurement | Before | After |
 |---|---|---|
-| puzzles whose solver step count differs from authored `optimalSteps` | 0 / 40 | **0 / 40** |
-| puzzles whose shortest path changed | — | **4 / 40** (`L0s3`, `L1s8`, `L1s9`, `L1s11`) |
-| puzzles that *lose* target-law coverage on the shortest path | — | **3 / 40** (`L0s3`, `L1s8`, `L1s9`) |
-| puzzles already unable to cover all `targetLaws` on the shortest path | 29 / 40 | 29 / 40 |
+| puzzles whose `optimalSteps` disagrees with the **scoring** optimum | 0 / 40 | **0 / 40** |
+| puzzles whose **scoring route** misses a declared `targetLaw` | 0 / 40 | **0 / 40** — a scoring route applies every target law or reports `found: false` |
+| puzzles whose *shortest* path changed | — | **4 / 40** (`L0s3`, `L1s8`, `L1s9`, `L1s11`) |
+| puzzles that *lose* target-law coverage on the *shortest* path | — | **3 / 40** (`L0s3`, `L1s8`, `L1s9`) |
 
-The three regressions look like this:
+The three shortcut changes look like this:
 
 ```text
 L0s3  targetLaws ["distributive","complement","identity"]  covered 1 -> 0  | path: combining > absorption
@@ -480,12 +501,27 @@ L1s8  targetLaws ["distributive","complement"]             covered 1 -> 0  | pat
 L1s9  targetLaws ["distributive","complement"]             covered 1 -> 0  | path: combining > absorption
 ```
 
-**Read this honestly.** The new law does not change puzzle *difficulty* (step counts unchanged), but it
-gives the solver a shortcut that skips the authored target laws on three stages — which costs a learner
-the 30-point target-law band if they take it. Two legitimate responses: (a) accept it, because a
-shortcut is a legitimate simplification and the authored `targetLaws` are advisory; or (b) update
-those puzzles' `targetLaws` in `content/levels.json`. Either way, **measure it and say so in the pull
-request**; do not discover it from a learner complaint.
+**Read this honestly.** The new law does not change puzzle *difficulty*: difficulty is the scoring
+optimum, and a shortcut that skips the authored target laws does not enter it. It does change which
+clever shortcut exists, and a learner who takes that shortcut forfeits the target-law credit for the
+laws it skips — on these three stages, the `complement`/`identity` share — while still earning full
+efficiency. Two legitimate responses: (a) accept it, because the taught route still scores 100 and the
+shortcut is a legitimate simplification; or (b) update those puzzles' `targetLaws` in
+`content/levels.json` if you do not want the shortcut advertised. Either way, **measure it and say so
+in the pull request**; do not discover it from a learner complaint.
+
+> **Two things this table has needed correcting for.** (1) Earlier revisions measured "puzzles unable
+> to cover all `targetLaws` on the shortest path" and read `29 / 40`. The correct figure against
+> today's engine is **`13 / 40`**: the Module 4 absorption guard removed the one-step semantic collapse
+> of a complement pair, so many more shortest paths now walk `Complement` then `Identity` and cover
+> the law they used to skip. It is still *not* a scoring defect and still not the efficiency bar: the
+> scoring optimum applies every target law, so that reading stays `0 / 40`. The old `29/40` came from
+> the era when the efficiency bar *was* the shortest path, which is exactly the bug that made a perfect
+> 100 unreachable on 25 of the 40 puzzles; the fix is `findOptimalPathWithLaws`
+> (`frontend/src/engine/solver.js:271`). (2) The `combining` dry-run rows in the table above were
+> measured against the pre-Module-4 engine; the "shortest path changed" and "coverage lost" rows are
+> sensitive to the state graph, so re-run this section's script after you add your law and use your own
+> numbers rather than the ones printed here.
 
 ## 6. Checklist
 
@@ -511,7 +547,7 @@ node --test src/engine/__tests__/combining.test.js                              
 npm test                                                                                       # everything
 ```
 
-Plus the two non-command checks: the id is listed in `useGameState.js:589` and
+Plus the two non-command checks: the id is listed in `useGameState.js:633` and
 `law-soundness.property.test.js:112` (stop 5), and the 40-puzzle script in §5 was run before and
 after.
 
@@ -532,7 +568,7 @@ after.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Error: Unknown law: "…" (sum)` | row missing in `LAW_DEFINITIONS`, or a typo in `name`/`form` | stop 2; the error names the pair |
-| Law appears in the panel but the expression does not change | predicate is shape-only; `apply()` returns an equal tree | add the semantic condition; `useGameState.js:366-373` reports it at runtime |
+| Law appears in the panel but the expression does not change | predicate is shape-only; `apply()` returns an equal tree | add the semantic condition; `useGameState.js:410-417` reports it at runtime |
 | Law works when run by hand, never appears in a graded puzzle | your hint/builder needs a selection shape the UI never makes; or the law is gated | check `mode` (`literal` vs `term`) against the gesture; check `bothTermSel` if you use it |
 | Property test: "a hint pointed at a move the engine does not offer" | hint guard ≠ builder guard, or the Guide's `TERM_LEVEL_HINTS` is missing your id | stops 4 and 5 |
 | Property test: "an offered law changed the function" | `apply()` is not sound for every shape the predicate admits | use `isEquivalent` in a scratch script; narrow the predicate or fix `apply()` |

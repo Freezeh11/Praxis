@@ -329,11 +329,17 @@ Worked through, in order:
 | Tutorial stage | Expression | Goal | Target laws | Optimal steps |
 |---|---|---|---|---|
 | 0 | `x + xy` | `x` | `absorption` | 1 |
-| 1 | `x'y + z + xy` | `y + z` | `distributive`, `complement`, `identity` | 2 |
-| 2 | `(x + y)' + x'y'` | `x'y'` | `demorgan-or`, `idempotent` | 1 |
-| 3 | `x + x'y + xy` | `x + y` | `distributive`, `complement`, `identity` | 2 |
+| 1 | `x'y + z + xy` | `y + z` | `distributive`, `complement`, `identity` | 3 |
+| 2 | `(x + y)' + x'y'` | `x'y'` | `demorgan-or`, `idempotent` | 2 |
+| 3 | `x + x'y + xy` | `x + y` | `distributive`, `complement`, `identity` | 3 |
 
-*(These four puzzles are `content/levels.json`, level `0`. The rest of the 40 puzzles are Levels 1–3.)*
+*(These four puzzles are `content/levels.json`, level `0`. The rest of the 40 puzzles are Levels 1–3.
+"Optimal steps" here is the scoring optimum — the shortest route that also applies every target law.
+On stage 1 that is also the plain shortest path: the old 2-step shortcut there was a semantic
+absorption collapse, which the proposal's Module 4 forbids, so the taught 3-step chain
+(`Distributive → Complement → Identity`) sets the efficiency bar and *is* the fastest route. Stage 2
+still has a 1-step shortcut that skips both of its target laws. See
+[`../../06-reference/scoring-and-rewards.md`](../../06-reference/scoring-and-rewards.md) W9.)*
 
 How to solve any stage — the loop the tutorial teaches:
 
@@ -471,7 +477,7 @@ Then reload the SPA and confirm the points chip still shows your total: that pro
 - **Run it without a backend, or with Docker** — there is no Docker setup in this repo; see
   [run-locally-with-docker.md](../how-to/run-locally-with-docker.md) for the honest options.
 - **Make your first change** — [first-contribution.md](first-contribution.md).
-- **Run the test suites** — `npm test` in `frontend/` runs the 76 engine tests
+- **Run the test suites** — `npm test` in `frontend/` runs the 80 engine tests
   (`frontend/package.json:11`).
 
 Related reading: [installation-manual.md](../../08-devops/installation-manual.md) ·

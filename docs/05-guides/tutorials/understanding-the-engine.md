@@ -76,7 +76,7 @@ because the symbol is not re-exported.
 | No DOM, no network | verified by grep — no `document`, `window`, `fetch(`, `XMLHttpRequest`, `localStorage` under `engine/` |
 | Only non-relative import | `frontend/src/config/gameRules.js` (numbers only), from `solver.js:1`, `sandbox/input.js:36`, `sandbox/generator.js:11`, `scoring.js:14-18` |
 | Framework-free and testable | the 7 test files run with bare `node --test`, no bundler, no jsdom |
-| Size | **23 non-test modules / 3,182 lines**, plus **7 test files / 1,246 lines** = 30 files / 4,428 lines |
+| Size | **23 non-test modules / 3,303 lines**, plus **7 test files / 1,361 lines** = 30 files / 4,664 lines |
 
 Check purity yourself:
 
@@ -121,8 +121,8 @@ flowchart TD
     NOT --> LAWS
     CONST --> LAWS
     LAWS --> APPLY["law.apply() → next AST"]
-    APPLY --> SOLVER["solver.js:37 getLegalTransitions<br/>solver.js:175 findOptimalPath<br/>solver.js:258 findSimplestForm"]
-    APPLY --> UI["useGameState.applyLaw<br/>state/useGameState.js:354"]
+    APPLY --> SOLVER["solver.js:38 getLegalTransitions<br/>solver.js:176 findOptimalPath<br/>solver.js:271 findOptimalPathWithLaws<br/>solver.js:364 findSimplestForm"]
+    APPLY --> UI["useGameState.applyLaw<br/>state/useGameState.js:398"]
     STRING["user-typed text (Sandbox only)"] --> VAL["validateExpr()<br/>validate.js:16"]
     VAL --> TOK
     SANDBOXVAL["sandbox/validate.js:155<br/>validateSandboxInput"] --> VAL
@@ -253,8 +253,8 @@ brackets (`render.js:17`) and a `not` over a group as `(…)'` (`render.js:20-23
 This split is load-bearing in two places:
 
 - the win condition compares `canonText(newExpr)` with the canonicalised goal
-  (`state/useGameState.js:83-84,437`);
-- solver de-duplication keys states by `canonText` (`solver.js:48-50,194,224`).
+  (`state/useGameState.js:84-85,481`);
+- solver de-duplication keys states by `canonText` (`solver.js:50-52,195,225`).
 
 ## 7. Stage 4 — normalising: `normalize` vs `normalizeFlat`
 
@@ -358,12 +358,13 @@ puzzle: they select AST nodes and pick a law, and the law's own `apply()` comput
 Step validity is therefore **structural, not provational**. Concretely:
 
 - the win condition is canonical-text equality:
-  `canonText(newExpr) === goalCanonRef.current` (`frontend/src/state/useGameState.js:437`, goal
-  canonicalised once at `:83-84`);
-- "dead end" is an empty `scanHints` result (`state/useGameState.js:61`, `:504`, `:562`);
+  `canonText(newExpr) === goalCanonRef.current` (`frontend/src/state/useGameState.js:481`, goal
+  canonicalised once at `:84-85`);
+- "dead end" is an empty `scanHints` result (`state/useGameState.js:62`, `:548`, `:606`);
 - `isEquivalent` — the truth-table checker — is **not on the per-step path at all**. Its only
-  consumers are `laws/helpers.js:77` and `:98` (deciding absorption semantics),
-  `sandbox/generator.js:94` and `sandbox/input.js:161` (refusing to ship a drifting puzzle).
+  consumers are `laws/helpers.js:82` and `:112` (the two absorption decisions, each behind the Module 4
+  constant guard), `sandbox/generator.js:94` and `sandbox/input.js:161` (refusing to ship a drifting
+  puzzle).
 
 So where does soundness come from? From the law implementations, and they are guarded by a property
 test that re-parses every produced text and compares it with its source on **every** variable
@@ -397,7 +398,8 @@ The truth table is small because the product caps variables at 4 in the Sandbox 
 level, so `isEquivalent` is at most 16 rows in play and at most 64 rows for the property test's
 generator (`helpers.js:61-63` notes the bound as "at most 2^6"). It is a decision procedure, which is
 exactly why `absorbsInSum`/`absorbsInProduct` use it as the final authority instead of a syntactic
-heuristic (`laws/helpers.js:56-72`).
+heuristic (`laws/helpers.js:56-84`) — and why the Module 4 guard can afford to ask it whether the
+clause to be absorbed is a constant.
 
 ## 10. Stage 7 — discovering the applicable laws
 
@@ -439,7 +441,7 @@ analyzeSelection(ast, [{path:'R.0',isTermSel:false},{path:'R.1.1',isTermSel:fals
 **This is the single most important fact about `A(B + A')`:** in a graded level, the expression has
 **no legal move at all**. It is only playable in the Sandbox, where the gated expansion law makes it
 solvable. That is why the Sandbox exists and why `allowExpand` is set by exactly one module
-(`sandbox/input.js:51,197`; consumed at `useGameState.js:14` and `usePuzzleSession.js:84`).
+(`sandbox/input.js:51,197`; consumed at `useGameState.js:15` and `usePuzzleSession.js:84`).
 
 Two neighbouring selections confirm the shape rules:
 
@@ -478,20 +480,20 @@ EOF
 before: A(B + A') -> after: AB + AA' | source unchanged: true
 ```
 
-Applying a law in the app is not instantaneous. `applyLaw` (`state/useGameState.js:354-459`) first
-checks the step actually changed something (`:366-373`), then plays the law animation and only
+Applying a law in the app is not instantaneous. `applyLaw` (`state/useGameState.js:398-503`) first
+checks the step actually changed something (`:410-417`), then plays the law animation and only
 records the step when the animation finishes:
 
 ```js
-// frontend/src/state/useGameState.js:423-425
+// frontend/src/state/useGameState.js:467-469
 animationTimerRef.current = setTimeout(() => {
   animationTimerRef.current = null
   setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])
 ```
 
-The delay is `TIMING.lawAnimationMs` (`:447`), which is **1350 ms**
+The delay is `TIMING.lawAnimationMs` (`:491`), which is **1350 ms**
 (`frontend/src/config/gameRules.js` `TIMING`). The tutorial adds a `preLawHighlightMs = 1500` pause
-before that (`useGameState.js:450-455`). A step that "does not appear for a second" is behaving
+before that (`useGameState.js:494-499`). A step that "does not appear for a second" is behaving
 correctly.
 
 ## 12. Stage 9 — the derivation to a terminal form
@@ -509,26 +511,17 @@ moves: [distributive-expand :: A(B + A')  ->  AB + AA']
 
 ```text
 moves:
-  absorption    :: AB + AA'  ->  AB                  (AB absorbs AA')
   distributive  :: AB + AA'  ->  A(B + A')           (factor A back out — a legal reversal)
   complement    :: AB + AA'  ->  AB + 0              (A · A' = 0, selecting the two literals inside AA')
 ```
 
-Two continuations exist from here, and both reach the same terminal form:
+**Absorption is deliberately not on that list.** `AB + AA'` *is* equivalent to `AB`, but only because
+`AA'` collapses to the constant `0`, and the proposal's Module 4 requires that constant to be rendered
+as its own clickable intermediate state. The semantic fallback in `absorbsInProduct`
+(`laws/helpers.js:104-112`) therefore refuses to absorb a clause that is equivalent to a constant, so
+the only productive continuation is complement, then identity.
 
-**Route A — two steps (absorption).** Select the two terms `AB` and `AA'`:
-
-```text
-state 2: AB      moves: []
-```
-
-Why is that sound? The absorption decision is semantic (`laws/helpers.js:73-78`): it checks
-`isEquivalent(AB · AA', AA')`, and since `A·A' ≡ 0` both sides are always `0`, so the test passes even
-though the literal-subset fast path fails. This is the semantic absorption behaviour documented in
-[boolean-laws.md §5.3](../../06-reference/boolean-laws.md#53-absorption--absorption-law).
-
-**Route B — three steps (complement then identity).** Select the two literals inside `AA'`
-(paths `R.1.0` and `R.1.1`):
+**The single route — three steps.** Select the two literals inside `AA'` (paths `R.1.0` and `R.1.1`):
 
 ```json
 [{ "id": "complement", "name": "Complement Law (Product)", "desc": "A · A' = 0",
@@ -537,49 +530,53 @@ though the literal-subset fast path fails. This is the semantic absorption behav
 
 ```text
 state 2: "AB + 0"   canon "0+AB"
-  moves: identity :: AB + 0 -> AB | absorption :: AB + 0 -> AB
+  moves: identity :: AB + 0 -> AB
 state 3: "AB"       moves: []
 ```
 
-Both routes converge: `canonText(state3) === canonText(stateA) === "AB"`.
+Before the Module 4 guard this pair was swallowed by a single semantic absorption step; now every
+intermediate state — including the `0` — is rendered, and the derivation is one step longer. That is
+the proposal's requirement, not a regression:
+[boolean-laws.md §5.3](../../06-reference/boolean-laws.md#53-absorption--absorption-law) documents the
+shape rule. The constant is not cosmetic: it is the state the learner has to click through.
 
 ```mermaid
 stateDiagram-v2
     [*] --> S0
     S0: A(B + A')  · 1 move: distributive-expand
     S0 --> S1: Distributive (Expand)
-    S1: AB + AA'  · 3 moves
-    S1 --> S2a: Absorption Law
-    S1 --> S2b: Complement Law (Product)
-    S2a: AB  · terminal
-    S2b: AB + 0  · 2 moves
-    S2b --> S3: Identity Law (or Absorption Law)
+    S1: AB + AA'  · 2 moves, no absorption
+    S1 --> S2: Complement Law (Product)
+    S2: AB + 0  · 1 move
+    S2 --> S3: Identity Law
     S3: AB  · terminal
-    S2a --> [*]
     S3 --> [*]
 ```
 
-The solver agrees, and it prefers Route A. **Verified output:**
+The solver agrees, and there is now one route. **Verified output:**
 
 ```text
 findSimplestForm(ast, { allowExpand: true }) ->
-  { text: "AB", canon: "AB", optimalSteps: 2, found: true,
-    path: [ { law: "Distributive (Expand)", from: "A(B + A')", to: "AB + AA'" },
-            { law: "Absorption Law",       from: "AB + AA'",   to: "AB" } ] }
+  { text: "AB", canon: "AB", optimalSteps: 3, found: true,
+    path: [ { law: "Distributive (Expand)",    from: "A(B + A')", to: "AB + AA'" },
+            { law: "Complement Law (Product)", from: "AB + AA'", to: "AB + 0" },
+            { law: "Identity Law",             from: "AB + 0",   to: "AB" } ] }
 
-findOptimalPath(ast, "AB", { allowExpand: true }) -> optimalSteps: 2, found: true   (same path)
+findOptimalPath(ast, "AB", { allowExpand: true }) -> optimalSteps: 3, found: true   (same path)
 ```
 
 `findSimplestForm` returns the first state BFS reaches that has **zero** legal transitions
-(`solver.js:282-292`), and `findOptimalPath` returns the shortest path to a given canonical target
-(`solver.js:207-233`). Both use `canonText` as the visited-set key, which is what makes differently
+(`solver.js:389-399`), `findOptimalPath` returns the shortest path to a given canonical target
+(`solver.js:208-234`), and `findOptimalPathWithLaws` returns the shortest path that *also* applies
+every law id it is given (`solver.js:271-346`) — that last one is what graded scoring measures a
+learner against. All three use `canonText` as the visited-set key, which is what makes differently
 ordered but canonically equal states collapse into one.
 
 ## 13. Stage 10 — terminal form, dead ends, and the canonical-text limitation
 
-A state is terminal when `getLegalTransitions(state).length === 0` (`solver.js:282-285`) and the UI's
+A state is terminal when `getLegalTransitions(state).length === 0` (`solver.js:389-392`) and the UI's
 dead-end test is the equivalent hint-level check, `scanHints(expr, 'R').length === 0`
-(`state/useGameState.js:61-67`). For `AB`:
+(`state/useGameState.js:62-68`). For `AB`:
 
 ```text
 getLegalTransitions(AB) -> []
@@ -587,7 +584,7 @@ scanHints(AB, 'R')      -> []
 ```
 
 The UI then asks one more question: *is the terminal state the goal?* It compares canonical text, and
-if it is not equal it shows the dead-end message (`state/useGameState.js:53-74`;
+if it is not equal it shows the dead-end message (`state/useGameState.js:54-75`;
 `state/hintText.js:10`):
 
 > "This expression is simplified, but it isn't in its optimal state. A different law path can reach
@@ -607,9 +604,9 @@ start: x + x'y + xy | goal canon: x+y
 state reached by one legal absorption step (x + xy = x):  "x + x'y"
   canonText           : "x+x'y"
   goal canonText      : "x+y"
-  canonically equal?  : false   <-- the app win condition (useGameState.js:437)
+  canonically equal?  : false   <-- the app win condition (useGameState.js:481)
   semantically equal? : true    <-- isEquivalent, NOT on the per-step path
-  scanHints           : []      <-- empty => DEAD END (useGameState.js:62-67)
+  scanHints           : []      <-- empty => DEAD END (useGameState.js:63-68)
   getLegalTransitions : []
 ```
 
@@ -643,7 +640,10 @@ flag, and `earnedXp = STAGE_COMPLETION_XP` (10 points, `config/gameRules.js`). T
 1. `lawsUsedFromSteps(steps)` maps each step's recorded law **name** to a law id
    (`engine/scoring.js:25-33`);
 2. `effectiveOptimalSteps` prefers the client solver's answer, then the puzzle's authored
-   `optimalSteps`, then what was used (`scoring.js:39-42`);
+   `optimalSteps`, then what was used (`scoring.js:39-42`). That solver answer is the
+   **objective-aware** optimum — the shortest route that also applies every `targetLaws` id
+   (`solver.js:271-346`, wired at `useGameState.js:87-113`) — so a shortcut that skips a taught law
+   still earns full efficiency but forfeits that law's target-law credit;
 3. `estimateScore` renders the breakdown instantly (`scoring.js:54-97`);
 4. `submitScore` posts to `POST /api/score` (`services/scoreApi.js:22-36`), and the server's value
    **overwrites** the local one when it arrives (`usePuzzleSession.js:208-213`).
@@ -689,7 +689,10 @@ for (let step = 0; step < 5; step++) {
   const moves = getLegalTransitions(cur, S)
   console.log(`state ${step}: ${nodeText(cur)}  moves=${JSON.stringify(moves.map(m => `${m.lawId}->${m.to}`))}`)
   if (moves.length === 0) break
-  cur = moves[0].nextTree                        // BFS's own preference: absorption first here
+  // Walk the productive route: at state 1 the first listed move factors A straight back
+  // out (a legal reversal), so prefer any other move when one exists.
+  const forward = moves.find(m => m.lawId !== 'distributive' && m.lawId !== 'distributive-expand')
+  cur = (forward || moves[0]).nextTree
 }
 console.log('simplest:', JSON.stringify(findSimplestForm(ast, S).path.map(s => `${s.law}: ${s.from} -> ${s.to}`)))
 console.log('optimal :', JSON.stringify(findOptimalPath(ast, canonText(parseExpr('AB')), S).path.map(s => s.to)))
@@ -699,7 +702,7 @@ EOF
 
 ## 16. The module map and the tests
 
-**23 non-test modules / 3,182 lines** (plus 7 test files / 1,246 lines):
+**23 non-test modules / 3,303 lines** (plus 7 test files / 1,361 lines):
 
 | Module | Lines | Role |
 |---|---|---|
@@ -717,9 +720,9 @@ EOF
 | `laws/productLaws.js` | 224 | five POS laws + gated expand |
 | `laws/notLaws.js` | 105 | double negation, De Morgan |
 | `laws/constLaws.js` | 100 | identity / annulment on one constant |
-| `laws/helpers.js` | 152 | shape predicates, semantic absorption |
+| `laws/helpers.js` | 167 | shape predicates, the absorption decisions + the Module 4 constant guard |
 | `laws/scanHints.js` | 135 | whole-expression hint scan |
-| `solver.js` | 323 | transitions, BFS optimal path, simplest form |
+| `solver.js` | 429 | transitions, BFS optimal path with laws, simplest form |
 | `scoring.js` | 98 | client score mirror |
 | `sandbox/validate.js` | 251 | notation, budget, product validation |
 | `sandbox/input.js` | 206 | text → playable sandbox puzzle |
@@ -736,14 +739,14 @@ EOF
 **Verified run** (`cd frontend && npm test`):
 
 ```text
-# tests 76
+# tests 81
 # suites 0
-# pass 76
+# pass 81
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 11292.959215
+# duration_ms 12575.576694
 ```
 
 A single file can be run directly — useful while iterating:
@@ -757,8 +760,8 @@ cd frontend && node --test src/engine/__tests__/laws.test.js
 
 | # | Stale claim | Reality | Evidence |
 |---|---|---|---|
-| **D11** | "46 unit tests" (`docs/context.md`) | **76 tests, 76 pass** | `npm test`, shown above |
-| **D12** | "triggers a 2.5 s animation" (`docs/context.md`) | `lawAnimationMs = 1350` ms | `config/gameRules.js`; applied at `state/useGameState.js:447` |
+| **D11** | "46 unit tests" (`docs/context.md`) | **81 tests, 81 pass** | `npm test`, shown above |
+| **D12** | "triggers a 2.5 s animation" (`docs/context.md`) | `lawAnimationMs = 1350` ms | `config/gameRules.js`; applied at `state/useGameState.js:491` |
 | **D21** | client score equals server score | JS half-up vs Python half-to-even differ by 1 point at totals ending in 5 | `engine/scoring.js:80` vs `backend/services/scoring_service.py:55` |
 | **D1/D23** | a `POST /sandbox/validate` endpoint | **no such endpoint**; the sandbox validates entirely in the browser | `sandbox/validate.js`, `sandbox/input.js`; no route exists in `backend/api/routes/` |
 | — | "parser → validator → normalizer" | `parseExpr` normalises internally; validation is a separate string gate | `parser.js:75`; `validate.js:16` |

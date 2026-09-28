@@ -39,13 +39,13 @@ shape.
 `frontend/src/engine/laws/index.js` — `analyzeSelection` already routes both sum and product
 selections (`laws/index.js:43-57`). A new **single-node** shape does: add an `analyzeX` to
 `laws/index.js`, export it from the barrel (`frontend/src/engine/index.js:41-54`), call it from the
-UI (`useGameState.js:171-179` for `not`, `:232-246` for constants) **and** from
-`getLegalTransitions` (`solver.js:70-76`, `:83-86`), or the solver will never use it.
+UI (`useGameState.js:189-197` for `not`, `:274-288` for constants) **and** from
+`getLegalTransitions` (`solver.js:71-76`, `:84-87`), or the solver will never use it.
 
 **Gate it if it makes expressions bigger.** A productive rewrite (like expansion) must sit behind
 `options.allowExpand` and a narrow guard; the unguarded general case made the solver ~20× slower
 (`laws/helpers.js:144-150`). Non-simplifying laws also have to survive `findSimplestForm`, which
-defines "simplest" as "no transitions left" (`solver.js:282-285`).
+defines "simplest" as "no transitions left" (`solver.js:388-391`).
 
 ## 2. Step 1 — the six fields of a law identity
 
@@ -115,8 +115,8 @@ laws.push({
 Four non-negotiables:
 
 1. **`apply()` never mutates its input.** `cloneN(expr)` first. Asserted by `laws.test.js:132-138`.
-2. **`apply()` must return a different text.** `useGameState.js:366-373` and `getLegalTransitions`
-   (`solver.js:49-50`) both drop no-op steps, so a law that can return an equal tree shows a button
+2. **`apply()` must return a different text.** `useGameState.js:410-417` and `getLegalTransitions`
+   (`solver.js:50-51`) both drop no-op steps, so a law that can return an equal tree shows a button
    that does nothing.
 3. **Choose `normalize` vs `normalizeFlat` deliberately.** `normalize` also drops `0`/`1` and collapses
    double negation — correct when the law has just made those removable; `normalizeFlat` preserves
@@ -127,10 +127,10 @@ Four non-negotiables:
 
 ## 5. Step 4 — make it reachable by the solver
 
-`getLegalTransitions` (`frontend/src/engine/solver.js:37-162`) is what the Hint/Guide solver and the
+`getLegalTransitions` (`frontend/src/engine/solver.js:38-163`) is what the Hint/Guide solver and the
 optimal-path BFS enumerate. A law that the panel can offer but the solver cannot enumerate will never
 appear in `findOptimalPath` — and `useGameState.loadPuzzle` prefers the solver's answer over the
-authored `optimalSteps` (`useGameState.js:86-99`; `engine/scoring.js:39-42`), so the mismatch is
+authored `optimalSteps` (`useGameState.js:87-117`; `engine/scoring.js:39-42`), so the mismatch is
 visible.
 
 Verified coverage of the current enumeration:
@@ -139,13 +139,13 @@ Verified coverage of the current enumeration:
 |---|---|---|
 | `x + 0` | `identity -> x`, `absorption -> x` | term-level pair in `sumLaws.js:124-159` |
 | `x + 1` | `annulment -> 1`, `absorption -> 1` | term-level pair in `sumLaws.js:162-185` |
-| `x · 1` | `absorption -> x`, `identity -> x` | `analyzeProductConst` (`solver.js:83-86`) **and** the dual pair |
+| `x · 1` | `absorption -> x`, `identity -> x` | `analyzeProductConst` (`solver.js:84-87`) **and** the dual pair |
 | `x · 0` | `absorption -> 0`, `annulment -> 0` | same two paths |
 | `x + x'` | `complement -> 1` | literal-level pair in `sumLaws.js:99-121` |
-| `(x + y)'` | `demorgan-or`, `double-neg` (when applicable) | `analyzeNot` (`solver.js:70-75`) |
+| `(x + y)'` | `demorgan-or`, `double-neg` (when applicable) | `analyzeNot` (`solver.js:71-76`) |
 
 Note the asymmetry: the product branch of `getLegalTransitions` calls `analyzeProductConst`
-explicitly (`solver.js:83-86`), the sum branch has **no** `analyzeSumConst` call — constants in sums
+explicitly (`solver.js:84-87`), the sum branch has **no** `analyzeSumConst` call — constants in sums
 are reached through the pairwise term-level laws instead. If your law is single-node-only, add it to
 `getLegalTransitions` too.
 
@@ -166,7 +166,7 @@ Three surfaces, and they must agree:
 | Surface | File | What to add |
 |---|---|---|
 | hint rule | `laws/scanHints.js` (sum branch ~`:87-130`, product branch ~`:42-85`) | `add('<law id>', [p1, p2])` **inside the same predicate the builder uses** |
-| Guide pre-selection | `state/useGameState.js:589` | add the id to the `isTermSel` list when the hint paths are whole terms |
+| Guide pre-selection | `state/useGameState.js:633` | add the id to the `isTermSel` list when the hint paths are whole terms |
 | property-test mirror | `engine/__tests__/law-soundness.property.test.js:112` | the same id, same list (`TERM_LEVEL_HINTS`) |
 | hint sentence | `state/hintText.js:36-73` | a `case` for your id (the `default` branch is a working fallback) |
 
@@ -199,8 +199,9 @@ node --test src/engine/__tests__/<your-file>.test.js   # fast loop
 npm test                                                # the gate: node --test src/engine/__tests__/*.test.js
 ```
 
-The existing suite is **76 tests / 76 pass**; yours add to that count. A correct five-test file plus
-the six wiring stops produced **81 tests / 81 pass / 0 fail** in a verified dry run.
+The existing suite is **81 tests / 81 pass**; yours add to that count. A correct five-test file plus
+the six wiring stops produced **81 tests / 81 pass / 0 fail** in a dry run measured against the
+earlier 76-test baseline — re-run `npm test` after your change and quote the new total.
 
 ## 8. Step 7 — content, animation, docs
 
@@ -249,8 +250,8 @@ console.log('moves :', getLegalTransitions(t).map(x => [x.lawId, x.to]))
 | # | Gotcha | Why it bites | Guard |
 |---|---|---|---|
 | 1 | hint guard ≠ builder guard | property test fails with thousands of "unreachable hint" violations | copy the predicate, do not retype it |
-| 2 | Guide list updated in one file only | same failure, from the other file | `useGameState.js:589` **and** `law-soundness.property.test.js:112` |
-| 3 | shape-only predicate | the law is sound but useless: `x + xy = x + xy` | negative test; `useGameState.js:366-373` reports it at runtime |
+| 2 | Guide list updated in one file only | same failure, from the other file | `useGameState.js:633` **and** `law-soundness.property.test.js:112` |
+| 3 | shape-only predicate | the law is sound but useless: `x + xy = x + xy` | negative test; `useGameState.js:410-417` reports it at runtime |
 | 4 | missing `TERM_LEVEL_HINTS` entry | Guide pre-selects with the wrong `isTermSel` | the measured failure in §6 |
 | 5 | existing solver test breaks | a newer/shorter path made the old expectation stale | re-baseline it (the repo does this too: commit `3838343`) |
 | 6 | `targetLaws` coverage drops | the solver prefers your shortcut and skips the authored law | run the 40-puzzle script before/after |

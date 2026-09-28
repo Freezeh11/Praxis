@@ -2,8 +2,9 @@
 
 **What this is:** an executable procedure for adding one problem — Praxis calls it a *stage* — to
 an existing level, and then **proving** it is well formed: the start expression parses, the goal is
-equivalent to it, the puzzle is solvable, `optimalSteps` is the real optimum, and every law id the
-puzzle names can actually be earned by the learner.
+equivalent to it, the puzzle is solvable, `optimalSteps` is the real scoring optimum (the shortest
+derivation that applies every law the puzzle names), and every law id the puzzle names can actually
+be earned by the learner.
 **Who it's for:** a new contributor with zero prior context. You need a terminal, Node.js and `jq`.
 No React or Python knowledge is required — every verification step below runs the real engine.
 
@@ -61,11 +62,11 @@ product of sums, and the two are *duals* of each other.
 
 | Key | Type | Who reads it | Evidence |
 |---|---|---|---|
-| `expr` | string | parsed into the start AST with `parseExpr` when the stage opens | `frontend/src/state/useGameState.js:82` |
-| `goal` | string | parsed and canonicalised with `canonText(parseExpr(...))`; the puzzle is solved when the learner's AST canonicalises to the same text | `frontend/src/state/useGameState.js:83`, `frontend/src/engine/solver.js:216` |
+| `expr` | string | parsed into the start AST with `parseExpr` when the stage opens | `frontend/src/state/useGameState.js:83` |
+| `goal` | string | parsed and canonicalised with `canonText(parseExpr(...))`; the puzzle is solved when the learner's AST canonicalises to the same text | `frontend/src/state/useGameState.js:83`, `frontend/src/engine/solver.js:217` |
 | `targetLaws` | array of law ids | the target-law band of the score (30 of 100 points) | `backend/services/scoring_service.py:46`, `:99-107` |
-| `hints` | array of strings | the Hint button's **fallback** copy (see the warning below) | `frontend/src/state/useGameState.js:514-515` |
-| `optimalSteps` | number | the fallback "perfect" step count when the solver cannot confirm one at runtime | `frontend/src/state/useGameState.js:93`, `backend/services/scoring_service.py:85` |
+| `hints` | array of strings | the Hint button's **fallback** copy (see the warning below) | `frontend/src/state/useGameState.js:558-559` |
+| `optimalSteps` | number | the fallback "perfect" step count when the solver cannot confirm one at runtime; when the solver does confirm one it is the **scoring** optimum — the shortest derivation that applies every `targetLaws` id | `frontend/src/state/useGameState.js:107-117`, `frontend/src/engine/solver.js:271`, `backend/services/scoring_service.py:85` |
 | `optimalHint` | string | the "💡 Tip" inside the score modal | `frontend/src/components/puzzle/ScoreModal.jsx:154-156` |
 
 Three of those need a warning, because their behaviour is not what the names suggest:
@@ -84,10 +85,16 @@ That is why the shipped texts read like "Did you take a longer route?". Evidence
 
 **`optimalSteps` is a fallback, not the authority.** The workspace re-derives the optimum with the
 solver every time a stage opens and uses *that* number when the solver succeeds, falling back to
-your figure only when it does not. Evidence: `frontend/src/state/useGameState.js:88-95`. You still
-have to author it correctly: it is what the learner sees on a puzzle the runtime solver cannot
-confirm, and it is what the client sends to the score endpoint
-(`frontend/src/components/puzzle/usePuzzleSession.js:166-170`, `frontend/src/services/scoreApi.js:31-35`).
+your figure only when it does not. The figure the solver derives for a graded stage is not the raw
+shortest path: it is the shortest derivation that reaches the goal **and** applies every law in
+`targetLaws` (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`), with the plain
+shortest path as the fallback when no such route exists
+(`frontend/src/state/useGameState.js:87-117`). You still have to author it correctly: it is what the
+learner sees on a puzzle the runtime solver cannot confirm, it is what the client sends to the score
+endpoint (`frontend/src/components/puzzle/usePuzzleSession.js:166-170`, `frontend/src/services/scoreApi.js:31-35`),
+and `frontend/src/engine/__tests__/solver.test.js:162-201` fails the suite when an authored figure
+disagrees with the computed scoring optimum — including when a declared `targetLaw` has no
+goal-route that can apply it.
 
 **One more rule: do not add extra keys.** Only the six above are part of the contract. There is
 exactly one exception in the whole codebase — `allowExpand` — and it belongs to sandbox puzzles only:
@@ -101,11 +108,11 @@ Never set it in `content/levels.json`.
 
 Everything below runs the **real engine**, imported straight from source. The engine is pure ESM
 with no React, DOM or network dependency (`frontend/src/engine/index.js:1-14`), so Node can run it
-directly. The engine's public surface is the barrel export, and the three search entry points are:
+directly. The engine's public surface is the barrel export, and the four search entry points are:
 
 ```js
 // frontend/src/engine/index.js:57
-export { getLegalTransitions, findOptimalPath, findSimplestForm } from './solver.js'
+export { getLegalTransitions, findOptimalPath, findOptimalPathWithLaws, findSimplestForm } from './solver.js'
 ```
 
 Run snippets from inside `frontend/` using a heredoc — it avoids quoting problems with the `'`
@@ -189,7 +196,7 @@ exist anywhere in the shipped content — `(x + y)(x + y')` simplifies to `x`.
     "Dual Distributive: (A + B)(A + C) = A + BC - factor x out.",
     "yy' is 0 by the Complement Law, and x + 0 is x by the Identity Law."
   ],
-  "optimalSteps": 2,
+  "optimalSteps": 3,
   "optimalHint": "Dual Distributive turns (x + y)(x + y') into x + yy', the Complement Law collapses yy' to 0, and Identity leaves x."
 }
 ```
@@ -203,10 +210,20 @@ How each field was chosen, in authoring order:
    "look simpler" (`frontend/src/engine/equivalence.js:45-58`). §7.2 proves this.
 3. **`targetLaws`** — law ids from `content/laws.json` only. Pick the laws your intended textbook
    derivation uses, which is the house style: e.g. Tutorial *Stage 2* (`x'y + z + xy` → `y + z`)
-   authors `["distributive", "complement", "identity"]` even though the solver's shortest route
-   happens to be `distributive → absorption` (see §9).
+   authors `["distributive", "complement", "identity"]`. That is safe: since the objective-aware
+   optimum landed, the shortest derivation that applies *all* of `targetLaws` sets the efficiency bar
+   (see §9). What is **not** safe is naming a law that no route to the goal can apply — that law's
+   share of the 30-point band becomes unreachable and the puzzle can never score 100. Four shipped
+   stages (`2:2`, `2:3`, `2:6`, `2:7`) fell into exactly that trap: they declared `absorption` and
+   relied on a *semantic* absorption step that swallowed a clause equal to a constant, which the
+   proposal's Module 4 now forbids, so absorption cannot appear on any goal-route there. Their
+   `targetLaws` were re-authored to what their solutions actually use. Check yours with §7.5 and
+   §7.6.
 4. **`hints`** — two or three short sentences in teaching order; shipped stages use 2-4.
-5. **`optimalSteps`** — the number the solver reports, never a guess (§7.3).
+5. **`optimalSteps`** — the number `findOptimalPathWithLaws` reports for your `targetLaws`, never a
+   guess (§7.3). For the example above `targetLaws` is `["distributive", "complement", "identity"]`,
+   so the figure is `3` — and the plain shortest path is `3` too, because the Module 4 guard removed
+   the 2-step semantic-absorption route through `yy'`.
 6. **`optimalHint`** — one sentence naming the *optimal* route, shown only to learners who were
    inefficient (§2).
 
@@ -296,7 +313,14 @@ patching the AST.
 2ⁿ evaluations (`frontend/src/engine/equivalence.js:46-57`), so it is cheap for the 2-4 literal
 puzzles this game ships and gets expensive fast beyond that.
 
-### 7.3 The puzzle is solvable and `optimalSteps` is the real optimum
+### 7.3 The puzzle is solvable and `optimalSteps` is the real scoring optimum
+
+Ask the engine for the **scoring** optimum — the shortest derivation that reaches the goal *and*
+applies every law you declared — not for the raw shortest path. For the worked example the two agree
+at 3 steps: the 2-step route the engine used to find (`Distributive (POS)` then `Absorption Law` over
+`yy'`) is gone, because the proposal's Module 4 forbids absorption from swallowing a clause that is
+equivalent to a constant. On 11 of the 40 shipped stages the two figures still differ, so measure
+both.
 
 ```bash
 cd /home/xris/Documents/GitHub/Praxis/frontend
@@ -305,15 +329,18 @@ import * as engine from './src/engine/index.js'
 
 const expr = engine.parseExpr("(x + y)(x + y')")
 const goal = engine.parseExpr('x')
-const result = engine.findOptimalPath(expr, engine.canonText(goal))
+const targetLaws = ['distributive', 'complement', 'identity']
+const result = engine.findOptimalPathWithLaws(expr, engine.canonText(goal), targetLaws)
 console.log(JSON.stringify(result, null, 2))
 console.log('law ids on that path:', engine.lawsUsedFromSteps(result.path).join(', '))
+const shortest = engine.findOptimalPath(expr, engine.canonText(goal))
+console.log('plain shortest path:', shortest.optimalSteps, 'steps, law ids:', engine.lawsUsedFromSteps(shortest.path).join(', '))
 EOF
 ```
 
 ```text
 {
-  "optimalSteps": 2,
+  "optimalSteps": 3,
   "path": [
     {
       "law": "Distributive (POS)",
@@ -321,43 +348,58 @@ EOF
       "to": "x + yy'"
     },
     {
-      "law": "Absorption Law",
+      "law": "Complement Law (Product)",
       "from": "x + yy'",
+      "to": "x + 0"
+    },
+    {
+      "law": "Identity Law",
+      "from": "x + 0",
       "to": "x"
     }
   ],
   "found": true
 }
-law ids on that path: distributive, absorption
+law ids on that path: distributive, complement, identity
+plain shortest path: 3 steps, law ids: distributive, complement, identity
 ```
 
 Read the result like this:
 
 | Field | Meaning |
 |---|---|
-| `found` | `true` when a derivation inside the search budget reached the goal. **Check this first.** |
+| `found` | `true` when a derivation inside the search budget reached the goal **while applying every required law**. **Check this first.** |
 | `optimalSteps` | the number of steps on that derivation — this is your authored figure |
 | `path[].law` | the law's **display name**, not a law id. Convert with `lawIdOf` / `lawsUsedFromSteps` (`frontend/src/engine/scoring.js:25-33`) |
 | `path[].from` / `.to` | the `nodeText` rendering of each intermediate state |
 
+`findOptimalPathWithLaws(startExpr, targetCanon, requiredLawIds, options)`
+(`frontend/src/engine/solver.js:271-346`) falls through to `findOptimalPath` when `requiredLawIds` is
+empty (`:274`), so a puzzle with no target laws still gets the plain shortest path. It returns
+`found: false` when no derivation applies all the required laws inside the budget; the workspace then
+falls back to the plain optimum (`frontend/src/state/useGameState.js:101-105`), which is why an
+unsatisfiable `targetLaws` list is a content bug rather than a crash — and why the shipped content is
+guarded by `frontend/src/engine/__tests__/solver.test.js:162-201`. A `found: false` result is also the
+signal that a declared law may be **unappliable on every goal-route** (§7.5).
+
 > **`optimalSteps: 0` with `found: false` does not mean "already solved".** An expression already
 > equal to the goal returns `{ optimalSteps: 0, path: [], found: true }`
-> (`frontend/src/engine/solver.js:179-181`); a search that ran out of budget returns
-> `{ optimalSteps: 0, path: [], found: false }` (`frontend/src/engine/solver.js:236-240`).
-> Always branch on `found`.
+> (`frontend/src/engine/solver.js:180-182`); a search that ran out of budget returns
+> `{ optimalSteps: 0, path: [], found: false }` (`frontend/src/engine/solver.js:237-241` for the
+> plain search, `:342-346` for the objective-aware one). Always branch on `found`.
 
-The search budget is not a magic number. `findOptimalPath` defaults to `SOLVER_BUDGET.graded`:
+The search budget is not a magic number. Both searches default to `SOLVER_BUDGET.graded`:
 
 ```js
-// frontend/src/engine/solver.js:183-184
+// frontend/src/engine/solver.js:184-185 (findOptimalPath) and :277-278 (findOptimalPathWithLaws)
 const maxDepth = options.maxDepth ?? SOLVER_BUDGET.graded.maxDepth
 const maxStates = options.maxStates ?? SOLVER_BUDGET.graded.maxStates
 ```
 
 ```js
-// frontend/src/config/gameRules.js:173-181
+// frontend/src/config/gameRules.js:202-210
 export const SOLVER_BUDGET = {
-  graded: { maxDepth: 10, maxStates: 3000 },
+  graded: { maxDepth: 16, maxStates: 3000 },
   generator: {
     simplestForm: { maxDepth: 12, maxStates: 8000 },
     optimalPath: { maxDepth: 12, maxStates: 12000 },
@@ -367,18 +409,21 @@ export const SOLVER_BUDGET = {
 
 Two consequences every author must know:
 
-- The **runtime** uses exactly this default, so a puzzle whose optimum is deeper than 10 steps is
+- The **runtime** uses exactly this default, so a puzzle whose optimum is deeper than 16 steps is
   unverifiable by the workspace: the learner still plays it, but the "optimal" figure they see is
-  *your* `optimalSteps` (`frontend/src/state/useGameState.js:88-95`).
+  *your* `optimalSteps` (`frontend/src/state/useGameState.js:107-117`). The figure was 10 until the
+  Module 4 guard lengthened the longest authored optimum to 14 steps.
 - You may pass `{ maxDepth, maxStates }` yourself to search harder while authoring — that is how you
-  derive a figure for a deep puzzle. The two numbers that matter here are the defaults in
-  `frontend/src/config/gameRules.js:175`, and the sandbox's larger budgets at `:121-132` and
-  `:177-180`. §7 of [`add-a-new-level.md`](add-a-new-level.md) shows a measured case where the
+  derive a figure for a deep puzzle. The number that matters here is the default in
+  `frontend/src/config/gameRules.js:204`, and the sandbox's larger budgets sit at `:121-132` in the
+  same file. §7 of [`add-a-new-level.md`](add-a-new-level.md) shows a measured case where the
   graded budget runs out and a 16/40000 run succeeds.
 
-A three-step derivation of the same puzzle also exists: not every optimal route is the only legal
-route. What matters for scoring is that the learner's *actual* steps map to law ids your
-`targetLaws` names — §9 works through the numbers.
+The example puzzle now has **one** shortest route, the 3-step textbook chain that the scoring optimum
+follows (`Distributive (POS) → Complement Law (Product) → Identity Law`); the 2-step absorption route
+that used to parallel it was the Module 4 bypass. Other stages still have shortcuts, and that is the
+normal shape of an authored stage, not a defect. What matters for scoring is that the route your
+`targetLaws` describes is the shortest route that uses *all* of them — §9 works through the numbers.
 
 ### 7.4 Every `targetLaws` entry is a real law id
 
@@ -394,30 +439,17 @@ complement, idempotent, absorption, identity, annulment, distributive, double-ne
 Those ten ids are the only legal values. Anything else scores **0 of the 30 target-law points** for
 that entry, and there is one specific id that *looks* legal and is not — see §8.
 
-### 7.5 Every `targetLaws` entry can actually be earned
+### 7.5 Every `targetLaws` entry is applied by the scoring route
 
 This is the subtle check, so read the reason before the code.
 
-The solver returns **one** shortest derivation, and each step carries one law's display name. A law
-your puzzle names can therefore be perfectly applicable without appearing anywhere on that path:
-from the intermediate state `y(x' + x) + z` the engine offers both
+There are two different questions hiding here, and only the first one decides whether a perfect 100 is
+reachable.
 
-```text
-absorption           Absorption Law (Product)     => y + z
-complement           Complement Law               => y1 + z
-```
-
-and the shortest route takes `absorption`, so `complement` never shows up in the path even though it
-is available. On top of that, the engine's law set is *coarser* than the textbook in places — the
-`Absorption Law (Product)` step above does the work a textbook attributes to `complement` followed by
-`identity` — so a textbook target law can be absent from the engine's route entirely.
-
-A naive test — "is every `targetLaws` id on the BFS path?" — therefore reports false alarms:
-**29 of the 40 shipped stages are flagged**, including Tutorial *Stage 2*
-(`x'y + z + xy` → `y + z`, whose authored `targetLaws` are `distributive, complement, identity` while
-the shortest route is `distributive, absorption`). Those stages are fine; the test is wrong.
-
-Run it over the shipped content to see the false alarms for yourself:
+**Question 1 — does the route the score is measured against apply every law you named?** Ask it with
+`findOptimalPathWithLaws`: the function only returns routes that apply every required law, so
+`found: true` plus all ids present in `lawsUsedFromSteps(result.path)` is the proof. Run it over the
+shipped content:
 
 ```bash
 cd /home/xris/Documents/GitHub/Praxis/frontend
@@ -429,38 +461,62 @@ const levels = JSON.parse(readFileSync('../content/levels.json', 'utf8'))
 let puzzles = 0, flagged = 0
 for (const lv of levels) lv.puzzles.forEach((p, idx) => {
   puzzles++
-  const res = engine.findOptimalPath(engine.parseExpr(p.expr), engine.canonText(engine.parseExpr(p.goal)))
+  const goal = engine.canonText(engine.parseExpr(p.goal))
+  const res = engine.findOptimalPathWithLaws(engine.parseExpr(p.expr), goal, p.targetLaws)
   const pathIds = engine.lawsUsedFromSteps(res.path)
-  const missing = p.targetLaws.filter(id => !pathIds.includes(id))
+  const missing = res.found ? p.targetLaws.filter(id => !pathIds.includes(id)) : p.targetLaws
   if (missing.length) {
     flagged++
-    if (flagged <= 4) console.log(`L${lv.id}S${idx}  ${p.expr} -> ${p.goal}   not on the shortest path: ${missing.join(', ')}`)
+    console.log(`L${lv.id}S${idx}  ${p.expr} -> ${p.goal}   not on the scoring route: ${missing.join(', ')}`)
   }
 })
-console.log(`--- ${flagged} of ${puzzles} shipped stages flagged by the shortest-path test`)
+console.log(`--- ${flagged} of ${puzzles} shipped stages flagged by the scoring-optimum test`)
 EOF
 ```
 
 ```text
-L0S1  x'y + z + xy -> y + z   not on the shortest path: complement, identity
-L0S2  (x + y)' + x'y' -> x'y'   not on the shortest path: demorgan-or, idempotent
-L0S3  x + x'y + xy -> x + y   not on the shortest path: complement, identity
-L1S2  x'y + xy + xy -> y   not on the shortest path: idempotent, complement
---- 29 of 40 shipped stages flagged by the shortest-path test
+--- 0 of 40 shipped stages flagged by the scoring-optimum test
 ```
 
-The correct question is: *can each target law be applied at some intermediate state from which the
-goal is still reachable?* The verifier in §7.6 answers exactly that, by building the reachable state
-graph, reversing it from the goal, and collecting the law ids offered on every state that can still
-reach the goal. Measured on the shipped content it reports **0 failures out of 40**.
+**Question 2 — is a target law *earnable* at all?** This is the other check, and it is the one that
+catches a law id that no route can ever apply (a typo), **and** a law that the shape rules make
+unreachable on every route to the goal. A law your puzzle names can be perfectly respectable and still
+never appear on the *shortest* route: from the intermediate state `y(x' + x) + z` the engine offers
+exactly one move today —
+
+```text
+complement           Complement Law               => y1 + z
+```
+
+— because the other move it used to offer, `absorption => y + z`, was the Module 4 bypass. The plain
+shortest route from the example puzzle's start state therefore has to render that `1` and remove it,
+so `complement` and `identity` appear on it; a neighbouring route can still reach the goal without
+them. The reverse case is the trap: before the guard, `Absorption Law (Product)` did the work a
+textbook attributes to `complement` followed by `identity`, so a puzzle could declare `absorption` and
+have no goal-route that can apply it. That is exactly what happened to four shipped stages (`2:2`,
+`2:3`, `2:6`, `2:7`), whose `targetLaws` were re-authored to `["distributive","complement","identity"]`.
+
+A naive test — "is every `targetLaws` id on the BFS shortest path?" — therefore reports false alarms:
+**13 of the 40 shipped stages are flagged** against today's engine, including Level 1 *stage 2*
+(`x'y + xy + xy` → `y`, whose authored `targetLaws` are `idempotent, distributive, complement` while
+the shortest path is `distributive, complement, absorption` and never merges the duplicate). Those
+stages are fine. The shortcut is a legitimate route; it is simply not the route the score is measured
+against, and taking it forfeits the skipped laws' share of the target-law band (§9). The gate for a new
+stage is Question 1 — the scoring route must apply every declared law — plus the earnability walk in
+§7.6, which is the test that catches a declared law no goal-route can apply.
+
+The verifier in §7.6 answers Question 2 by building the reachable state graph, reversing it from the
+goal, and collecting the law ids offered on every state that can still reach the goal. Measured on the
+shipped content it reports **0 failures out of 40**.
 
 ### 7.6 The full verifier
 
 Save this as a file of your choice — for example `/tmp/verify-puzzle.mjs` — and run it from
 `frontend/`. It checks the six keys, parse round-tripping, equivalence, `optimalSteps` against the
-solver, `targetLaws` membership, and target-law earnability, for every stage in the file. It always
-exits 0, so read the summary line: `failures=0` is what you want. (The script resolves the engine
-from the working directory, so it does not matter where you keep it.)
+**scoring** optimum (`findOptimalPathWithLaws`), `targetLaws` membership, and target-law earnability,
+for every stage in the file. It always exits 0, so read the summary line: `failures=0` is what you
+want. (The script resolves the engine from the working directory, so it does not matter where you
+keep it.)
 
 ```bash
 cd /home/xris/Documents/GitHub/Praxis/frontend
@@ -531,9 +587,9 @@ for (const level of levels) level.puzzles.forEach((p, idx) => {
   if (tidy(E.nodeText(goal)) !== tidy(goalText)) problems.push(`goal re-renders as "${E.nodeText(goal)}"`)
   if (!E.isEquivalent(expr, goal)) problems.push('goal is NOT equivalent to expr')
   const targetCanon = E.canonText(goal)
-  const res = E.findOptimalPath(expr, targetCanon)
-  if (!res.found) problems.push('solver found no path within the graded budget')
-  else if (res.optimalSteps !== p.optimalSteps) problems.push(`optimalSteps authored=${p.optimalSteps} solver=${res.optimalSteps}`)
+  const res = E.findOptimalPathWithLaws(expr, targetCanon, p.targetLaws)
+  if (!res.found) problems.push('no route reaches the goal while applying every targetLaw within the graded budget')
+  else if (res.optimalSteps !== p.optimalSteps) problems.push(`optimalSteps authored=${p.optimalSteps} scoring-optimum=${res.optimalSteps}`)
   for (const id of p.targetLaws) if (!lawIds.has(id)) problems.push(`targetLaws id "${id}" is not in laws.json`)
   const { nodes, truncated } = closure(expr)
   const earnable = earnableLaws(nodes, targetCanon)
@@ -735,11 +791,16 @@ EOF
 ```text
 lawIdOf -> "distributive-expand"
 graded  : {"optimalSteps":0,"path":[],"found":false}
-allowExpand: {"optimalSteps":2,"path":[{"law":"Distributive (Expand)","from":"x(x' + y)","to":"xx' + xy"},{"law":"Absorption Law","from":"xx' + xy","to":"xy"}],"found":true}
+allowExpand: {"optimalSteps":3,"path":[{"law":"Distributive (Expand)","from":"x(x' + y)","to":"xx' + xy"},{"law":"Complement Law (Product)","from":"xx' + xy","to":"0 + xy"},{"law":"Identity Law","from":"0 + xy","to":"xy"}],"found":true}
 graded moves from start : []
 sandbox moves from start: [ 'distributive-expand' ]
 score with that id as a target -> {"targetLaw":0,"total":70}
 ```
+
+That `allowExpand` route is three steps now, not two: it used to finish with a one-step
+`Absorption Law` that swallowed `xx'`, and the Module 4 guard replaced that with
+`Complement Law (Product)` → `0 + xy`, then `Identity Law` → `xy`. The conclusion is unchanged — the
+expand law is a sandbox convenience, not a graded route.
 
 1. It is not in `content/laws.json` (§7.4 lists all ten ids), so `GET /api/laws` never shows it and
    the target-law band can never match it: `estimateScore` with
@@ -763,8 +824,10 @@ The three scoring bands are 40 (efficiency) / 30 (target laws) / 30 (hint indepe
 `backend/services/scoring_service.py:99-115`), and the target-law band is proportional:
 `30 × |targetLaws ∩ lawsUsed| / |targetLaws|` (`backend/services/scoring_service.py:99-107`).
 
-For the worked example — `targetLaws: ["distributive", "complement", "identity"]`, `optimalSteps: 2` —
-the two legal routes score differently, computed with the real estimator:
+For the worked example — `targetLaws: ["distributive", "complement", "identity"]`, and therefore
+`optimalSteps: 3` (§7.3) — there is now exactly **one** shortest route, and the arithmetic shows what
+the target-law band is worth. The second row is the route the engine *used to* offer, kept only to
+show what it was worth:
 
 ```bash
 cd /home/xris/Documents/GitHub/Praxis/frontend
@@ -773,30 +836,39 @@ import * as engine from './src/engine/index.js'
 
 const targetLaws = ['distributive', 'complement', 'identity']
 const routes = {
-  'solver 2-step route':   [{ law: 'Distributive (POS)' }, { law: 'Absorption Law' }],
   'textbook 3-step route': [{ law: 'Distributive (POS)' }, { law: 'Complement Law' }, { law: 'Identity Law' }],
+  'removed 2-step shortcut': [{ law: 'Distributive (POS)' }, { law: 'Absorption Law' }],
 }
 for (const [label, steps] of Object.entries(routes)) {
   const r = engine.estimateScore({
-    stepsUsed: steps.length, optimalSteps: 2, targetLaws, lawsUsed: engine.lawsUsedFromSteps(steps),
+    stepsUsed: steps.length, optimalSteps: 3, targetLaws, lawsUsed: engine.lawsUsedFromSteps(steps),
   })
-  console.log(label.padEnd(22), 'total=' + r.total, 'earnedPoints=' + r.earnedPoints, 'targetLaw=' + r.targetLaw)
+  console.log(label.padEnd(26), 'total=' + r.total, 'earnedPoints=' + r.earnedPoints, 'targetLaw=' + r.targetLaw, 'efficiency=' + r.efficiency)
 }
+// proof the shortcut is gone: the only move from the intermediate state is Complement
+console.log("moves at x + yy' :", engine.getLegalTransitions(engine.parseExpr("x + yy'")).map(t => t.law).join(', '))
 EOF
 ```
 
 ```text
-solver 2-step route    total=80 earnedPoints=4 targetLaw=10
-textbook 3-step route  total=90 earnedPoints=5 targetLaw=30
+textbook 3-step route      total=100 earnedPoints=5 targetLaw=30 efficiency=40
+removed 2-step shortcut    total=80 earnedPoints=4 targetLaw=10 efficiency=40
+moves at x + yy' : Complement Law (Product)
 ```
 
-Read that honestly: the *fastest* route earns `10/30` of the target-law band (only `distributive`
-matches), while the intended textbook route earns the full 30 and loses 10 efficiency points — so on
-this puzzle the textbook route scores higher. That is a consequence of the model — efficiency is a
-40-point band that saturates at the optimum, while the target-law band is proportional to the laws
-you name — and it is why `targetLaws` should name the laws you *want taught*, not the laws the BFS
-happens to use (§7.5). It is also why §7.5's earnability check — not the shortest-path check — is the
-correct gate for a new stage.
+Read that honestly. The `removed 2-step shortcut` row is arithmetic on a route the engine **no longer
+offers**: `Absorption` cannot swallow `yy'`, because that clause is the constant `0` and the proposal's
+Module 4 requires the constant to be rendered (`x + 0`) before Identity removes it. A learner cannot
+take it; the row exists only to show what the shortcut was worth. The textbook route earns both bands
+in full and reaches `100`. **The general rule still holds wherever a shortcut is legal**: a route that
+reaches the goal in fewer steps while skipping a declared law keeps the full 40 efficiency points and
+forfeits that law's share of the target-law band (10 points per law when three are declared). The live
+case is Tutorial stage 0.2 (`(x + y)' + x'y'` → `x'y'`, `targetLaws: ["demorgan-or","idempotent"]`,
+optimum 2): its 1-step absorption route scores **70** — full efficiency, zero target-law credit — while
+the taught 2-step route scores **100**
+([scoring-and-rewards.md §W9](../../06-reference/scoring-and-rewards.md#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1)
+has the full table). It is also why §7.5's Question 1 — "does the scoring route apply every target
+law?" — is the correct gate for a new stage, with Question 2 as the reachability backstop.
 
 > **Observed frontend/backend rounding difference.** With `total = 90.0`, the backend returns
 > `earnedPoints: 4` (`round(4.5)` in Python rounds half to even —
@@ -818,9 +890,9 @@ Copy this into your pull request description and tick every line.
 | 2 | The object has exactly the six keys | `jq -c '[.[] \| .puzzles[] \| keys] \| unique' content/levels.json` → one array |
 | 3 | `expr` and `goal` round-trip through the parser | §7.2 |
 | 4 | `goal` is equivalent to `expr` | §7.2 (`isEquivalent`) |
-| 5 | `found: true` and `optimalSteps` matches the solver | §7.3 |
+| 5 | `found: true` and `optimalSteps` matches the **scoring** optimum (`findOptimalPathWithLaws`), not the raw shortest path | §7.3 |
 | 6 | Every `targetLaws` id is one of the ten in `content/laws.json` | §7.4 |
-| 7 | Every `targetLaws` id is earnable on some route to the goal | §7.6 verifier |
+| 7 | Every `targetLaws` id is applied by the scoring route (§7.5, Question 1) and earnable on some route to the goal (§7.6 verifier) | §7.5, §7.6 |
 | 8 | The full verifier says `failures=0` | §7.6 |
 | 9 | The backend was restarted before checking the API | §7.7 |
 | 10 | `GET /api/levels` `puzzleCount` went up by one | §7.7 |
@@ -834,10 +906,10 @@ Copy this into your pull request description and tick every line.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `jq` shows two key arrays | a misspelled or extra key | use exactly `expr, goal, targetLaws, hints, optimalSteps, optimalHint` |
-| Solver returns `found: false` and `optimalSteps: 0` | goal is unreachable by simplification inside the graded budget, or the goal is not reachable at all | check equivalence first; if the textbook route needs `distributive-expand`, rewrite the puzzle (§8) |
-| Verifier says `optimalSteps authored=N solver=M` | you counted the intended route instead of the optimum | author the solver's number; the textbook route still exists and still earns target-law credit (§9) |
+| Solver returns `found: false` and `optimalSteps: 0` | the goal is unreachable by simplification inside the graded budget, or **no route applies every `targetLaws` id** — including a law that no goal-route can apply at all | check equivalence first; confirm each target law is earnable (§7.5, §7.6); if the textbook route needs `distributive-expand`, rewrite the puzzle (§8) |
+| Verifier says `optimalSteps authored=N scoring-optimum=M` | you counted the raw shortest path instead of the shortest route that applies every target law | author the scoring optimum (§7.3); a legal shortcut still earns full efficiency, but it forfeits the skipped laws' target-law credit (§9) |
 | Verifier says `targetLaws id "X" is not in laws.json` | typo, or you used `distributive-expand` | §7.4, §8 |
-| Verifier says a target law "can never be applied on a route to goal" | the law is not reachable before the goal, e.g. `idempotent` on a puzzle with no duplicates | either name laws the derivation can actually use, or change the puzzle |
+| Verifier says a target law "can never be applied on a route to goal" | the law is not reachable before the goal — e.g. `idempotent` on a puzzle with no duplicates, or `absorption` on a stage whose only absorption route was the Module 4 constant collapse (the `2:2`/`2:3`/`2:6`/`2:7` trap) | either name laws the derivation can actually use, or change the puzzle (§7.5) |
 | The API still returns the old `puzzleCount` | `lru_cache` (§7.7) | restart the backend |
 | The stage screen still shows 12 cards after a refresh | Vite served the old bundled module | restart the dev server, or hard-refresh |
 | Scoring the new stage returns `not_found` | the backend is serving cached content | restart the backend |
