@@ -35,7 +35,7 @@
           "idx": 1,
           "expr": "x'y + z + xy",
           "goal": "y + z",
-          "optimalSteps": 2,
+          "optimalSteps": 3,
           "states": [
             {
               "canon": "x'y+xy+z",
@@ -52,16 +52,25 @@
             {
               "canon": "y(x+x')+z",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "y(x' + x) + z => y + z",
                 "y(x' + x) + z => y1 + z"
               ],
               "hints": [
-                "absorption|R.0.0,R.0.1",
                 "complement|R.0.1.0,R.0.1.1"
+              ]
+            },
+            {
+              "canon": "y(1)+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "y1 + z => y + z"
+              ],
+              "hints": [
+                "identity|R.0.1"
               ]
             },
             {
@@ -108,7 +117,7 @@
           "idx": 3,
           "expr": "x + x'y + xy",
           "goal": "x + y",
-          "optimalSteps": 2,
+          "optimalSteps": 3,
           "states": [
             {
               "canon": "x+x'y+xy",
@@ -128,16 +137,25 @@
             {
               "canon": "x+y(x+x')",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "x + y(x' + x) => x + y",
                 "x + y(x' + x) => x + y1"
               ],
               "hints": [
-                "absorption|R.1.0,R.1.1",
                 "complement|R.1.1.0,R.1.1.1"
+              ]
+            },
+            {
+              "canon": "x+y(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "x + y1 => x + y"
+              ],
+              "hints": [
+                "identity|R.1.1"
               ]
             },
             {
@@ -242,36 +260,33 @@
               "canon": "xy+y(x+x')",
               "transitionLaws": [
                 "absorption",
-                "absorption",
                 "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "y(x' + x) + xy => y + xy",
                 "y(x' + x) + xy => y(x' + x + x)",
                 "y(x' + x) + xy => y(x' + x)",
                 "y(x' + x) + xy => y1 + xy"
               ],
               "hints": [
                 "absorption|R.0,R.1",
-                "absorption|R.0.0,R.0.1",
                 "complement|R.0.1.0,R.0.1.1",
                 "distributive|R.0.0,R.1.1"
               ]
             },
             {
-              "canon": "y(x+x')",
+              "canon": "xy+y(1)",
               "transitionLaws": [
                 "absorption",
-                "complement"
+                "identity"
               ],
               "transitionTexts": [
-                "y(x' + x) => y",
-                "y(x' + x) => y1"
+                "y1 + xy => y",
+                "y1 + xy => y + xy"
               ],
               "hints": [
                 "absorption|R.0,R.1",
-                "complement|R.1.0,R.1.1"
+                "identity|R.0.1"
               ]
             },
             {
@@ -318,36 +333,34 @@
               "canon": "(x+y)(xx'+y)",
               "transitionLaws": [
                 "absorption",
-                "absorption",
                 "complement",
                 "distributive"
               ],
               "transitionTexts": [
                 "(x + y)(y + x'x) => (x + y)(y + 0)",
-                "(x + y)(y + x'x) => (x + y)y",
                 "(x + y)(y + x'x) => y + x'x",
                 "(x + y)(y + x'x) => y + xx'x"
               ],
               "hints": [
                 "absorption|R.1,R.0",
-                "absorption|R.1.0,R.1.1",
                 "complement|R.1.1.0,R.1.1.1",
                 "distributive|R.0.1,R.1.0"
               ]
             },
             {
-              "canon": "xx'+y",
+              "canon": "(0+y)(x+y)",
               "transitionLaws": [
                 "absorption",
-                "complement"
+                "identity"
               ],
               "transitionTexts": [
-                "y + x'x => y",
-                "y + x'x => y + 0"
+                "(x + y)(y + 0) => (x + y)y",
+                "(x + y)(y + 0) => y"
               ],
               "hints": [
-                "absorption|R.0,R.1",
-                "complement|R.1.0,R.1.1"
+                "absorption|R.1,R.0",
+                "identity|R.1.0,R.1.1",
+                "identity|R.1.1"
               ]
             },
             {
@@ -508,7 +521,7 @@
           "idx": 8,
           "expr": "x + x'y + xy",
           "goal": "x + y",
-          "optimalSteps": 2,
+          "optimalSteps": 3,
           "states": [
             {
               "canon": "x+x'y+xy",
@@ -528,16 +541,25 @@
             {
               "canon": "x+y(x+x')",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "x + y(x' + x) => x + y",
                 "x + y(x' + x) => x + y1"
               ],
               "hints": [
-                "absorption|R.1.0,R.1.1",
                 "complement|R.1.1.0,R.1.1.1"
+              ]
+            },
+            {
+              "canon": "x+y(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "x + y1 => x + y"
+              ],
+              "hints": [
+                "identity|R.1.1"
               ]
             },
             {
@@ -552,7 +574,7 @@
           "idx": 9,
           "expr": "x(x' + y)(x + y)",
           "goal": "xy",
-          "optimalSteps": 2,
+          "optimalSteps": 3,
           "states": [
             {
               "canon": "x(x'+y)(x+y)",
@@ -573,18 +595,37 @@
               ]
             },
             {
-              "canon": "x(xx'+y)",
+              "canon": "(x+y)(xx'+xy)",
               "transitionLaws": [
                 "absorption",
-                "complement"
+                "complement",
+                "distributive"
               ],
               "transitionTexts": [
-                "x(y + x'x) => x(y + 0)",
-                "x(y + x'x) => xy"
+                "(x + y)(xx' + xy) => (x + y)(0 + xy)",
+                "(x + y)(xx' + xy) => (x + y)x(x' + y)",
+                "(x + y)(xx' + xy) => xx' + xy"
               ],
               "hints": [
-                "absorption|R.1.0,R.1.1",
-                "complement|R.1.1.0,R.1.1.1"
+                "absorption|R.1,R.0",
+                "complement|R.1.0.0,R.1.0.1",
+                "distributive|R.1.0.0,R.1.1.0"
+              ]
+            },
+            {
+              "canon": "(0+xy)(x+y)",
+              "transitionLaws": [
+                "absorption",
+                "identity"
+              ],
+              "transitionTexts": [
+                "(x + y)(0 + xy) => (x + y)xy",
+                "(x + y)(0 + xy) => xy"
+              ],
+              "hints": [
+                "absorption|R.1,R.0",
+                "identity|R.1.0",
+                "identity|R.1.0,R.1.1"
               ]
             },
             {
@@ -808,7 +849,7 @@
           "idx": 0,
           "expr": "xy'z + xyz",
           "goal": "xz",
-          "optimalSteps": 3,
+          "optimalSteps": 4,
           "states": [
             {
               "canon": "xy'z+xyz",
@@ -840,17 +881,25 @@
             {
               "canon": "xz(y+y')",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "xz(y' + y) => xz",
                 "xz(y' + y) => xz1"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
                 "complement|R.2.0,R.2.1"
+              ]
+            },
+            {
+              "canon": "xz(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "xz1 => xz"
+              ],
+              "hints": [
+                "identity|R.2"
               ]
             },
             {
@@ -865,7 +914,7 @@
           "idx": 1,
           "expr": "(x + y' + z)(x + y + z)",
           "goal": "x + z",
-          "optimalSteps": 3,
+          "optimalSteps": 4,
           "states": [
             {
               "canon": "(x+y'+z)(x+y+z)",
@@ -897,17 +946,27 @@
             {
               "canon": "x+yy'+z",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "x + z + y'y => x + z",
                 "x + z + y'y => x + z + 0"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
                 "complement|R.2.0,R.2.1"
+              ]
+            },
+            {
+              "canon": "0+x+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "x + z + 0 => x + z"
+              ],
+              "hints": [
+                "identity|R.0,R.2",
+                "identity|R.1,R.2",
+                "identity|R.2"
               ]
             },
             {
@@ -922,7 +981,7 @@
           "idx": 2,
           "expr": "xyz + xz + x'yz",
           "goal": "xz + yz",
-          "optimalSteps": 3,
+          "optimalSteps": 4,
           "states": [
             {
               "canon": "x'yz+xyz+xz",
@@ -966,20 +1025,31 @@
             {
               "canon": "xz+yz(x+x')",
               "transitionLaws": [
-                "absorption",
                 "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "yz(x + x') + xz => yz + xz",
                 "yz(x + x') + xz => yz1 + xz",
                 "yz(x + x') + xz => z(y(x + x') + x)"
               ],
               "hints": [
-                "absorption|R.0.0,R.0.2",
-                "absorption|R.0.1,R.0.2",
                 "complement|R.0.2.0,R.0.2.1",
                 "distributive|R.0.1,R.1.1"
+              ]
+            },
+            {
+              "canon": "xz+yz(1)",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "yz1 + xz => yz + xz",
+                "yz1 + xz => z(y1 + x)"
+              ],
+              "hints": [
+                "distributive|R.0.1,R.1.1",
+                "identity|R.0.2"
               ]
             },
             {
@@ -1000,7 +1070,7 @@
           "idx": 3,
           "expr": "(x + y + z)(x + z)(x' + y + z)",
           "goal": "(x + z)(y + z)",
-          "optimalSteps": 3,
+          "optimalSteps": 4,
           "states": [
             {
               "canon": "(x'+y+z)(x+y+z)(x+z)",
@@ -1044,20 +1114,33 @@
             {
               "canon": "(x+z)(xx'+y+z)",
               "transitionLaws": [
-                "absorption",
                 "complement",
                 "distributive"
               ],
               "transitionTexts": [
                 "(x + z)(y + z + xx') => (x + z)(y + z + 0)",
-                "(x + z)(y + z + xx') => (x + z)(y + z)",
                 "(x + z)(y + z + xx') => z + x(y + xx')"
               ],
               "hints": [
-                "absorption|R.1.0,R.1.2",
-                "absorption|R.1.1,R.1.2",
                 "complement|R.1.2.0,R.1.2.1",
                 "distributive|R.0.1,R.1.1"
+              ]
+            },
+            {
+              "canon": "(0+y+z)(x+z)",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "(x + z)(y + z + 0) => (x + z)(y + z)",
+                "(x + z)(y + z + 0) => z + x(y + 0)"
+              ],
+              "hints": [
+                "distributive|R.0.1,R.1.1",
+                "identity|R.1.0,R.1.2",
+                "identity|R.1.1,R.1.2",
+                "identity|R.1.2"
               ]
             },
             {
@@ -1142,7 +1225,7 @@
           "idx": 6,
           "expr": "x'y' + x'yz + x'yz'",
           "goal": "x'",
-          "optimalSteps": 3,
+          "optimalSteps": 7,
           "states": [
             {
               "canon": "x'y'+x'yz+x'yz'",
@@ -1180,16 +1263,61 @@
             {
               "canon": "x'(y'+yz+yz')",
               "transitionLaws": [
-                "absorption",
                 "distributive"
               ],
               "transitionTexts": [
-                "x'(y' + yz + yz') => x'",
                 "x'(y' + yz + yz') => x'(y' + y(z + z'))"
               ],
               "hints": [
-                "absorption|R.0,R.1",
                 "distributive|R.1.1.0,R.1.2.0"
+              ]
+            },
+            {
+              "canon": "x'(y'+y(z+z'))",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "x'(y' + y(z + z')) => x'(y' + y1)"
+              ],
+              "hints": [
+                "complement|R.1.1.1.0,R.1.1.1.1"
+              ]
+            },
+            {
+              "canon": "x'(y'+y(1))",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "x'(y' + y1) => x'(y' + y)"
+              ],
+              "hints": [
+                "identity|R.1.1.1"
+              ]
+            },
+            {
+              "canon": "x'(y+y')",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "x'(y' + y) => x'1"
+              ],
+              "hints": [
+                "complement|R.1.0,R.1.1"
+              ]
+            },
+            {
+              "canon": "x'(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "x'1 => x'"
+              ],
+              "hints": [
+                "identity|R.1"
               ]
             },
             {
@@ -1204,7 +1332,7 @@
           "idx": 7,
           "expr": "(x' + y')(x' + y + z)(x' + y + z')",
           "goal": "x'",
-          "optimalSteps": 3,
+          "optimalSteps": 7,
           "states": [
             {
               "canon": "(x'+y')(x'+y+z)(x'+y+z')",
@@ -1245,22 +1373,91 @@
             {
               "canon": "x'+y'(y+z)(y+z')",
               "transitionLaws": [
-                "absorption",
                 "distributive",
                 "distributive-expand",
                 "distributive-expand"
               ],
               "transitionTexts": [
-                "x' + (y + z')y'(y + z) => x'",
                 "x' + (y + z')y'(y + z) => x' + (y + z')(y'y + y'z)",
                 "x' + (y + z')y'(y + z) => x' + (y + z)(y'y + y'z')",
                 "x' + (y + z')y'(y + z) => x' + y'(y + z'z)"
               ],
               "hints": [
-                "absorption|R.0,R.1",
                 "distributive-expand|R.1.1,R.1.0",
                 "distributive-expand|R.1.1,R.1.2",
                 "distributive|R.1.0.0,R.1.2.0"
+              ]
+            },
+            {
+              "canon": "x'+y'(y+zz')",
+              "transitionLaws": [
+                "complement",
+                "distributive-expand"
+              ],
+              "transitionTexts": [
+                "x' + y'(y + z'z) => x' + y'(y + 0)",
+                "x' + y'(y + z'z) => x' + y'y + y'z'z"
+              ],
+              "hints": [
+                "complement|R.1.1.1.0,R.1.1.1.1",
+                "distributive-expand|R.1.0,R.1.1"
+              ]
+            },
+            {
+              "canon": "x'+y'zz'+yy'",
+              "transitionLaws": [
+                "complement",
+                "complement",
+                "distributive"
+              ],
+              "transitionTexts": [
+                "x' + y'y + y'z'z => x' + 0 + y'z'z",
+                "x' + y'y + y'z'z => x' + y'(y + z'z)",
+                "x' + y'y + y'z'z => x' + y'y + y'0"
+              ],
+              "hints": [
+                "complement|R.1.0,R.1.1",
+                "complement|R.2.1,R.2.2",
+                "distributive|R.1.0,R.2.0"
+              ]
+            },
+            {
+              "canon": "0+x'+y'zz'",
+              "transitionLaws": [
+                "complement",
+                "identity"
+              ],
+              "transitionTexts": [
+                "x' + 0 + y'z'z => x' + 0 + y'0",
+                "x' + 0 + y'z'z => x' + y'z'z"
+              ],
+              "hints": [
+                "complement|R.2.1,R.2.2",
+                "identity|R.0,R.1",
+                "identity|R.1",
+                "identity|R.1,R.2"
+              ]
+            },
+            {
+              "canon": "0+x'+y'(0)",
+              "transitionLaws": [
+                "absorption",
+                "annulment",
+                "annulment",
+                "identity"
+              ],
+              "transitionTexts": [
+                "x' + 0 + y'0 => x'",
+                "x' + 0 + y'0 => x'",
+                "x' + 0 + y'0 => x'",
+                "x' + 0 + y'0 => x' + 0 + 0"
+              ],
+              "hints": [
+                "absorption|R.2.1,R.2.0",
+                "annulment|R.2.1",
+                "identity|R.0,R.1",
+                "identity|R.1",
+                "identity|R.1,R.2"
               ]
             },
             {
@@ -1357,7 +1554,7 @@
           "idx": 10,
           "expr": "x'y'z + x'yz + xy'z + xyz",
           "goal": "z",
-          "optimalSteps": 4,
+          "optimalSteps": 11,
           "states": [
             {
               "canon": "x'y'z+x'yz+xy'z+xyz",
@@ -1399,69 +1596,150 @@
               ]
             },
             {
-              "canon": "xy'z+xyz+z(x'y+x'y')",
+              "canon": "x'(y'z+yz)+xy'z+xyz",
               "transitionLaws": [
-                "distributive",
-                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "z(x'y' + x'y) + xy'z + xyz => z(x'y' + x'y + xy') + xyz",
-                "z(x'y' + x'y) + xy'z + xyz => z(x'y' + x'y + xy) + xy'z",
-                "z(x'y' + x'y) + xy'z + xyz => z(x'y' + x'y) + x(y'z + yz)",
-                "z(x'y' + x'y) + xy'z + xyz => z(x'y' + x'y) + z(xy' + xy)",
-                "z(x'y' + x'y) + xy'z + xyz => zx'(y' + y) + xy'z + xyz"
+                "x'(y'z + yz) + xy'z + xyz => x'(y'z + yz) + x(y'z + yz)",
+                "x'(y'z + yz) + xy'z + xyz => x'(y'z + yz) + z(xy' + xy)",
+                "x'(y'z + yz) + xy'z + xyz => x'z(y' + y) + xy'z + xyz"
               ],
               "hints": [
-                "distributive|R.0.0,R.1.2",
-                "distributive|R.0.0,R.2.2",
-                "distributive|R.0.1.0.0,R.0.1.1.0",
+                "distributive|R.0.1.0.1,R.0.1.1.1",
                 "distributive|R.1.0,R.2.0",
                 "distributive|R.1.2,R.2.2"
               ]
             },
             {
-              "canon": "xyz+z(x'y+x'y'+xy')",
+              "canon": "x'z(y+y')+xy'z+xyz",
               "transitionLaws": [
+                "complement",
+                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "z(x'y' + x'y + xy') + xyz => z(x'(y' + y) + xy') + xyz",
-                "z(x'y' + x'y + xy') + xyz => z(x'y' + x'y + xy' + xy)",
-                "z(x'y' + x'y + xy') + xyz => z(y'(x' + x) + x'y) + xyz"
+                "x'z(y' + y) + xy'z + xyz => x'z(y' + y) + x(y'z + yz)",
+                "x'z(y' + y) + xy'z + xyz => x'z(y' + y) + z(xy' + xy)",
+                "x'z(y' + y) + xy'z + xyz => x'z1 + xy'z + xyz",
+                "x'z(y' + y) + xy'z + xyz => z(x'(y' + y) + xy') + xyz",
+                "x'z(y' + y) + xy'z + xyz => z(x'(y' + y) + xy) + xy'z"
               ],
               "hints": [
-                "distributive|R.0.0,R.1.2",
-                "distributive|R.0.1.0.0,R.0.1.1.0",
-                "distributive|R.0.1.0.1,R.0.1.2.1"
+                "complement|R.0.2.0,R.0.2.1",
+                "distributive|R.0.1,R.1.2",
+                "distributive|R.0.1,R.2.2",
+                "distributive|R.1.0,R.2.0",
+                "distributive|R.1.2,R.2.2"
               ]
             },
             {
-              "canon": "z(x'y+x'y'+xy+xy')",
+              "canon": "xyz+z(x'(y+y')+xy')",
               "transitionLaws": [
-                "absorption",
-                "distributive",
-                "distributive",
-                "distributive",
+                "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "z(x'y' + x'y + xy' + xy) => z",
-                "z(x'y' + x'y + xy' + xy) => z(x'(y' + y) + xy' + xy)",
-                "z(x'y' + x'y + xy' + xy) => z(x'y' + x'y + x(y' + y))",
-                "z(x'y' + x'y + xy' + xy) => z(x'y' + y(x' + x) + xy')",
-                "z(x'y' + x'y + xy' + xy) => z(y'(x' + x) + x'y + xy)"
+                "z(x'(y' + y) + xy') + xyz => z(x'(y' + y) + xy' + xy)",
+                "z(x'(y' + y) + xy') + xyz => z(x'1 + xy') + xyz"
               ],
               "hints": [
-                "absorption|R.0,R.1",
-                "distributive|R.1.0.0,R.1.1.0",
-                "distributive|R.1.0.1,R.1.2.1",
-                "distributive|R.1.1.1,R.1.3.1",
-                "distributive|R.1.2.0,R.1.3.0"
+                "complement|R.0.1.0.1.0,R.0.1.0.1.1",
+                "distributive|R.0.0,R.1.2"
+              ]
+            },
+            {
+              "canon": "z(x'(y+y')+xy+xy')",
+              "transitionLaws": [
+                "complement",
+                "distributive"
+              ],
+              "transitionTexts": [
+                "z(x'(y' + y) + xy' + xy) => z(x'(y' + y) + x(y' + y))",
+                "z(x'(y' + y) + xy' + xy) => z(x'1 + xy' + xy)"
+              ],
+              "hints": [
+                "complement|R.1.0.1.0,R.1.0.1.1",
+                "distributive|R.1.1.0,R.1.2.0"
+              ]
+            },
+            {
+              "canon": "z(x'(1)+xy+xy')",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "z(x'1 + xy' + xy) => z(x' + xy' + xy)",
+                "z(x'1 + xy' + xy) => z(x'1 + x(y' + y))"
+              ],
+              "hints": [
+                "distributive|R.1.1.0,R.1.2.0",
+                "identity|R.1.0.1"
+              ]
+            },
+            {
+              "canon": "z(x'+xy+xy')",
+              "transitionLaws": [
+                "distributive"
+              ],
+              "transitionTexts": [
+                "z(x' + xy' + xy) => z(x' + x(y' + y))"
+              ],
+              "hints": [
+                "distributive|R.1.1.0,R.1.2.0"
+              ]
+            },
+            {
+              "canon": "z(x'+x(y+y'))",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "z(x' + x(y' + y)) => z(x' + x1)"
+              ],
+              "hints": [
+                "complement|R.1.1.1.0,R.1.1.1.1"
+              ]
+            },
+            {
+              "canon": "z(x'+x(1))",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "z(x' + x1) => z(x' + x)"
+              ],
+              "hints": [
+                "identity|R.1.1.1"
+              ]
+            },
+            {
+              "canon": "z(x+x')",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "z(x' + x) => z1"
+              ],
+              "hints": [
+                "complement|R.1.0,R.1.1"
+              ]
+            },
+            {
+              "canon": "z(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "z1 => z"
+              ],
+              "hints": [
+                "identity|R.1"
               ]
             },
             {
@@ -1476,7 +1754,7 @@
           "idx": 11,
           "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
           "goal": "z",
-          "optimalSteps": 4,
+          "optimalSteps": 10,
           "states": [
             {
               "canon": "(x'+y'+z)(x'+y+z)(x+y'+z)(x+y+z)",
@@ -1518,69 +1796,144 @@
               ]
             },
             {
-              "canon": "((x'+y)(x'+y')+z)(x+y'+z)(x+y+z)",
+              "canon": "((y'+z)(y+z)+x')(x+y'+z)(x+y+z)",
               "transitionLaws": [
-                "distributive",
-                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "(x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => (x + y + z)(z + (x + y')(x' + y')(x' + y))",
-                "(x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => (x + y' + z)(x + y + z)(z + x' + y'y)",
-                "(x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => (x + y' + z)(z + (x + y)(x' + y')(x' + y))",
-                "(x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => (z + (x' + y')(x' + y))(x + (y' + z)(y + z))",
-                "(x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => (z + (x' + y')(x' + y))(z + (x + y')(x + y))"
+                "(x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => (x + y' + z)(x + y + z)(x' + z + y'y)",
+                "(x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => (x' + (y' + z)(y + z))(x + (y' + z)(y + z))",
+                "(x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => (x' + (y' + z)(y + z))(z + (x + y')(x + y))"
               ],
               "hints": [
                 "distributive|R.0.0,R.1.0",
                 "distributive|R.0.2,R.1.2",
-                "distributive|R.0.2,R.2.0",
-                "distributive|R.1.2,R.2.0",
-                "distributive|R.2.1.0.0,R.2.1.1.0"
+                "distributive|R.2.1.0.1,R.2.1.1.1"
               ]
             },
             {
-              "canon": "((x'+y)(x'+y')+z)((x+y)(x+y')+z)",
+              "canon": "((y'+z)(y+z)+x)((y'+z)(y+z)+x')",
               "transitionLaws": [
-                "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "(z + (x' + y')(x' + y))(z + (x + y')(x + y)) => (z + (x' + y')(x' + y))(z + x + y'y)",
-                "(z + (x' + y')(x' + y))(z + (x + y')(x + y)) => (z + x' + y'y)(z + (x + y')(x + y))",
-                "(z + (x' + y')(x' + y))(z + (x + y')(x + y)) => z + (x' + y')(x' + y)(x + y')(x + y)"
+                "(x' + (y' + z)(y + z))(x + (y' + z)(y + z)) => (x' + (y' + z)(y + z))(x + z + y'y)",
+                "(x' + (y' + z)(y + z))(x + (y' + z)(y + z)) => (x' + z + y'y)(x + (y' + z)(y + z))"
               ],
               "hints": [
-                "distributive|R.0.0,R.1.0",
-                "distributive|R.0.1.0.0,R.0.1.1.0",
-                "distributive|R.1.1.0.0,R.1.1.1.0"
+                "distributive|R.0.1.0.1,R.0.1.1.1",
+                "distributive|R.1.1.0.1,R.1.1.1.1"
               ]
             },
             {
-              "canon": "(x'+y)(x'+y')(x+y)(x+y')+z",
+              "canon": "((y'+z)(y+z)+x)(x'+yy'+z)",
               "transitionLaws": [
-                "absorption",
-                "distributive",
-                "distributive",
-                "distributive",
+                "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "z + (x' + y')(x' + y)(x + y')(x + y) => z",
-                "z + (x' + y')(x' + y)(x + y')(x + y) => z + (x + y')(x + y)(x' + y'y)",
-                "z + (x' + y')(x' + y)(x + y')(x + y) => z + (x' + y')(x + y')(y + x'x)",
-                "z + (x' + y')(x' + y)(x + y')(x + y) => z + (x' + y')(x' + y)(x + y'y)",
-                "z + (x' + y')(x' + y)(x + y')(x + y) => z + (x' + y)(x + y)(y' + x'x)"
+                "(x' + z + y'y)(x + (y' + z)(y + z)) => (x' + z + 0)(x + (y' + z)(y + z))",
+                "(x' + z + y'y)(x + (y' + z)(y + z)) => (x' + z + y'y)(x + z + y'y)"
               ],
               "hints": [
-                "absorption|R.0,R.1",
-                "distributive|R.1.0.0,R.1.1.0",
-                "distributive|R.1.0.1,R.1.2.1",
-                "distributive|R.1.1.1,R.1.3.1",
-                "distributive|R.1.2.0,R.1.3.0"
+                "complement|R.0.2.0,R.0.2.1",
+                "distributive|R.1.1.0.1,R.1.1.1.1"
+              ]
+            },
+            {
+              "canon": "((y'+z)(y+z)+x)(0+x'+z)",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "(x' + z + 0)(x + (y' + z)(y + z)) => (x' + z + 0)(x + z + y'y)",
+                "(x' + z + 0)(x + (y' + z)(y + z)) => (x' + z)(x + (y' + z)(y + z))"
+              ],
+              "hints": [
+                "distributive|R.1.1.0.1,R.1.1.1.1",
+                "identity|R.0.0,R.0.2",
+                "identity|R.0.1,R.0.2",
+                "identity|R.0.2"
+              ]
+            },
+            {
+              "canon": "(0+x'+z)(x+yy'+z)",
+              "transitionLaws": [
+                "complement",
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "(x' + z + 0)(x + z + y'y) => (x' + z + 0)(x + z + 0)",
+                "(x' + z + 0)(x + z + y'y) => (x' + z)(x + z + y'y)",
+                "(x' + z + 0)(x + z + y'y) => z + (x' + 0)(x + y'y)"
+              ],
+              "hints": [
+                "complement|R.1.2.0,R.1.2.1",
+                "distributive|R.0.1,R.1.1",
+                "identity|R.0.0,R.0.2",
+                "identity|R.0.1,R.0.2",
+                "identity|R.0.2"
+              ]
+            },
+            {
+              "canon": "(0+x')(x+yy')+z",
+              "transitionLaws": [
+                "complement",
+                "identity"
+              ],
+              "transitionTexts": [
+                "z + (x' + 0)(x + y'y) => z + (x' + 0)(x + 0)",
+                "z + (x' + 0)(x + y'y) => z + x'(x + y'y)"
+              ],
+              "hints": [
+                "complement|R.1.1.1.0,R.1.1.1.1",
+                "identity|R.1.0.0,R.1.0.1",
+                "identity|R.1.0.1"
+              ]
+            },
+            {
+              "canon": "(0+x)(0+x')+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "z + (x' + 0)(x + 0) => z + x'x"
+              ],
+              "hints": [
+                "identity|R.1.0.0,R.1.0.1",
+                "identity|R.1.0.1",
+                "identity|R.1.1.0,R.1.1.1",
+                "identity|R.1.1.1"
+              ]
+            },
+            {
+              "canon": "xx'+z",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "z + x'x => z + 0"
+              ],
+              "hints": [
+                "complement|R.1.0,R.1.1"
+              ]
+            },
+            {
+              "canon": "0+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "z + 0 => z"
+              ],
+              "hints": [
+                "identity|R.0,R.1",
+                "identity|R.1"
               ]
             },
             {
@@ -1595,7 +1948,7 @@
     },
     {
       "id": 3,
-      "name": "Level 3 — Boss",
+      "name": "Level 3 - Boss",
       "puzzles": [
         {
           "idx": 0,
@@ -1771,7 +2124,7 @@
           "idx": 2,
           "expr": "wxy'z + wxyz",
           "goal": "wxz",
-          "optimalSteps": 4,
+          "optimalSteps": 5,
           "states": [
             {
               "canon": "wxy'z+wxyz",
@@ -1821,18 +2174,25 @@
             {
               "canon": "wxz(y+y')",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "wxz(y' + y) => wxz",
                 "wxz(y' + y) => wxz1"
               ],
               "hints": [
-                "absorption|R.0,R.3",
-                "absorption|R.1,R.3",
-                "absorption|R.2,R.3",
                 "complement|R.3.0,R.3.1"
+              ]
+            },
+            {
+              "canon": "wxz(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "wxz1 => wxz"
+              ],
+              "hints": [
+                "identity|R.3"
               ]
             },
             {
@@ -1847,7 +2207,7 @@
           "idx": 3,
           "expr": "(w + x + y' + z)(w + x + y + z)",
           "goal": "w + x + z",
-          "optimalSteps": 4,
+          "optimalSteps": 5,
           "states": [
             {
               "canon": "(w+x+y'+z)(w+x+y+z)",
@@ -1897,18 +2257,28 @@
             {
               "canon": "w+x+yy'+z",
               "transitionLaws": [
-                "absorption",
                 "complement"
               ],
               "transitionTexts": [
-                "w + x + z + y'y => w + x + z",
                 "w + x + z + y'y => w + x + z + 0"
               ],
               "hints": [
-                "absorption|R.0,R.3",
-                "absorption|R.1,R.3",
-                "absorption|R.2,R.3",
                 "complement|R.3.0,R.3.1"
+              ]
+            },
+            {
+              "canon": "0+w+x+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + x + z + 0 => w + x + z"
+              ],
+              "hints": [
+                "identity|R.0,R.3",
+                "identity|R.1,R.3",
+                "identity|R.2,R.3",
+                "identity|R.3"
               ]
             },
             {
@@ -2041,31 +2411,45 @@
               ]
             },
             {
-              "canon": "w(x'y+xy)",
+              "canon": "wx'yz+wy(x+x')",
               "transitionLaws": [
+                "absorption",
+                "complement",
+                "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w(x'y + xy) => wy(x' + x)"
+                "wy(x' + x) + wx'yz => w(y(x' + x) + x'yz)",
+                "wy(x' + x) + wx'yz => wy(x' + x)",
+                "wy(x' + x) + wx'yz => wy1 + wx'yz",
+                "wy(x' + x) + wx'yz => y(w(x' + x) + wx'z)"
               ],
               "hints": [
-                "distributive|R.1.0.1,R.1.1.1"
+                "absorption|R.0,R.1",
+                "complement|R.0.2.0,R.0.2.1",
+                "distributive|R.0.0,R.1.0",
+                "distributive|R.0.1,R.1.2"
               ]
             },
             {
-              "canon": "wy(x+x')",
+              "canon": "wx'yz+wy(1)",
               "transitionLaws": [
                 "absorption",
-                "complement"
+                "distributive",
+                "distributive",
+                "identity"
               ],
               "transitionTexts": [
-                "wy(x' + x) => wy",
-                "wy(x' + x) => wy1"
+                "wy1 + wx'yz => w(y1 + x'yz)",
+                "wy1 + wx'yz => wy",
+                "wy1 + wx'yz => wy + wx'yz",
+                "wy1 + wx'yz => y(w1 + wx'z)"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
-                "complement|R.2.0,R.2.1"
+                "absorption|R.0,R.1",
+                "distributive|R.0.0,R.1.0",
+                "distributive|R.0.1,R.1.2",
+                "identity|R.0.2"
               ]
             },
             {
@@ -2134,31 +2518,47 @@
               ]
             },
             {
-              "canon": "(x'+y)(x+y)+w",
+              "canon": "(w+x'+y+z)(w+xx'+y)",
               "transitionLaws": [
+                "absorption",
+                "complement",
+                "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w + (x' + y)(x + y) => w + y + x'x"
+                "(w + x' + y + z)(w + y + x'x) => (w + x' + y + z)(w + y + 0)",
+                "(w + x' + y + z)(w + y + x'x) => w + (x' + y + z)(y + x'x)",
+                "(w + x' + y + z)(w + y + x'x) => w + y + x'x",
+                "(w + x' + y + z)(w + y + x'x) => y + (w + x' + z)(w + x'x)"
               ],
               "hints": [
-                "distributive|R.1.0.1,R.1.1.1"
+                "absorption|R.1,R.0",
+                "complement|R.1.2.0,R.1.2.1",
+                "distributive|R.0.0,R.1.0",
+                "distributive|R.0.2,R.1.1"
               ]
             },
             {
-              "canon": "w+xx'+y",
+              "canon": "(0+w+y)(w+x'+y+z)",
               "transitionLaws": [
                 "absorption",
-                "complement"
+                "distributive",
+                "distributive",
+                "identity"
               ],
               "transitionTexts": [
-                "w + y + x'x => w + y",
-                "w + y + x'x => w + y + 0"
+                "(w + x' + y + z)(w + y + 0) => (w + x' + y + z)(w + y)",
+                "(w + x' + y + z)(w + y + 0) => w + (x' + y + z)(y + 0)",
+                "(w + x' + y + z)(w + y + 0) => w + y",
+                "(w + x' + y + z)(w + y + 0) => y + (w + x' + z)(w + 0)"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
-                "complement|R.2.0,R.2.1"
+                "absorption|R.1,R.0",
+                "distributive|R.0.0,R.1.0",
+                "distributive|R.0.2,R.1.1",
+                "identity|R.1.0,R.1.2",
+                "identity|R.1.1,R.1.2",
+                "identity|R.1.2"
               ]
             },
             {
@@ -2329,7 +2729,7 @@
           "idx": 10,
           "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
           "goal": "wz",
-          "optimalSteps": 7,
+          "optimalSteps": 14,
           "states": [
             {
               "canon": "wx'y'z+wx'yz+wxy'z+wxyz",
@@ -2485,70 +2885,150 @@
               ]
             },
             {
-              "canon": "w(xy'z+xyz+z(x'y+x'y'))",
+              "canon": "w(x'(y'z+yz)+xy'z+xyz)",
               "transitionLaws": [
-                "distributive",
-                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w(z(x'y' + x'y) + xy'z + xyz) => w(z(x'y' + x'y + xy') + xyz)",
-                "w(z(x'y' + x'y) + xy'z + xyz) => w(z(x'y' + x'y + xy) + xy'z)",
-                "w(z(x'y' + x'y) + xy'z + xyz) => w(z(x'y' + x'y) + x(y'z + yz))",
-                "w(z(x'y' + x'y) + xy'z + xyz) => w(z(x'y' + x'y) + z(xy' + xy))",
-                "w(z(x'y' + x'y) + xy'z + xyz) => w(zx'(y' + y) + xy'z + xyz)"
+                "w(x'(y'z + yz) + xy'z + xyz) => w(x'(y'z + yz) + x(y'z + yz))",
+                "w(x'(y'z + yz) + xy'z + xyz) => w(x'(y'z + yz) + z(xy' + xy))",
+                "w(x'(y'z + yz) + xy'z + xyz) => w(x'z(y' + y) + xy'z + xyz)"
               ],
               "hints": [
-                "distributive|R.1.0.0,R.1.1.2",
-                "distributive|R.1.0.0,R.1.2.2",
-                "distributive|R.1.0.1.0.0,R.1.0.1.1.0",
+                "distributive|R.1.0.1.0.1,R.1.0.1.1.1",
                 "distributive|R.1.1.0,R.1.2.0",
                 "distributive|R.1.1.2,R.1.2.2"
               ]
             },
             {
-              "canon": "w(xyz+z(x'y+x'y'+xy'))",
+              "canon": "w(x'z(y+y')+xy'z+xyz)",
               "transitionLaws": [
+                "complement",
+                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w(z(x'y' + x'y + xy') + xyz) => w(z(x'(y' + y) + xy') + xyz)",
-                "w(z(x'y' + x'y + xy') + xyz) => w(z(y'(x' + x) + x'y) + xyz)",
-                "w(z(x'y' + x'y + xy') + xyz) => wz(x'y' + x'y + xy' + xy)"
+                "w(x'z(y' + y) + xy'z + xyz) => w(x'z(y' + y) + x(y'z + yz))",
+                "w(x'z(y' + y) + xy'z + xyz) => w(x'z(y' + y) + z(xy' + xy))",
+                "w(x'z(y' + y) + xy'z + xyz) => w(x'z1 + xy'z + xyz)",
+                "w(x'z(y' + y) + xy'z + xyz) => w(z(x'(y' + y) + xy') + xyz)",
+                "w(x'z(y' + y) + xy'z + xyz) => w(z(x'(y' + y) + xy) + xy'z)"
               ],
               "hints": [
-                "distributive|R.1.0.0,R.1.1.2",
-                "distributive|R.1.0.1.0.0,R.1.0.1.1.0",
-                "distributive|R.1.0.1.0.1,R.1.0.1.2.1"
+                "complement|R.1.0.2.0,R.1.0.2.1",
+                "distributive|R.1.0.1,R.1.1.2",
+                "distributive|R.1.0.1,R.1.2.2",
+                "distributive|R.1.1.0,R.1.2.0",
+                "distributive|R.1.1.2,R.1.2.2"
               ]
             },
             {
-              "canon": "wz(x'y+x'y'+xy+xy')",
+              "canon": "w(xyz+z(x'(y+y')+xy'))",
               "transitionLaws": [
-                "absorption",
-                "distributive",
-                "distributive",
-                "distributive",
+                "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "wz(x'y' + x'y + xy' + xy) => wz",
-                "wz(x'y' + x'y + xy' + xy) => wz(x'(y' + y) + xy' + xy)",
-                "wz(x'y' + x'y + xy' + xy) => wz(x'y' + x'y + x(y' + y))",
-                "wz(x'y' + x'y + xy' + xy) => wz(x'y' + y(x' + x) + xy')",
-                "wz(x'y' + x'y + xy' + xy) => wz(y'(x' + x) + x'y + xy)"
+                "w(z(x'(y' + y) + xy') + xyz) => w(z(x'1 + xy') + xyz)",
+                "w(z(x'(y' + y) + xy') + xyz) => wz(x'(y' + y) + xy' + xy)"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
-                "distributive|R.2.0.0,R.2.1.0",
-                "distributive|R.2.0.1,R.2.2.1",
-                "distributive|R.2.1.1,R.2.3.1",
-                "distributive|R.2.2.0,R.2.3.0"
+                "complement|R.1.0.1.0.1.0,R.1.0.1.0.1.1",
+                "distributive|R.1.0.0,R.1.1.2"
+              ]
+            },
+            {
+              "canon": "wz(x'(y+y')+xy+xy')",
+              "transitionLaws": [
+                "complement",
+                "distributive"
+              ],
+              "transitionTexts": [
+                "wz(x'(y' + y) + xy' + xy) => wz(x'(y' + y) + x(y' + y))",
+                "wz(x'(y' + y) + xy' + xy) => wz(x'1 + xy' + xy)"
+              ],
+              "hints": [
+                "complement|R.2.0.1.0,R.2.0.1.1",
+                "distributive|R.2.1.0,R.2.2.0"
+              ]
+            },
+            {
+              "canon": "wz(x'(1)+xy+xy')",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "wz(x'1 + xy' + xy) => wz(x' + xy' + xy)",
+                "wz(x'1 + xy' + xy) => wz(x'1 + x(y' + y))"
+              ],
+              "hints": [
+                "distributive|R.2.1.0,R.2.2.0",
+                "identity|R.2.0.1"
+              ]
+            },
+            {
+              "canon": "wz(x'+xy+xy')",
+              "transitionLaws": [
+                "distributive"
+              ],
+              "transitionTexts": [
+                "wz(x' + xy' + xy) => wz(x' + x(y' + y))"
+              ],
+              "hints": [
+                "distributive|R.2.1.0,R.2.2.0"
+              ]
+            },
+            {
+              "canon": "wz(x'+x(y+y'))",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "wz(x' + x(y' + y)) => wz(x' + x1)"
+              ],
+              "hints": [
+                "complement|R.2.1.1.0,R.2.1.1.1"
+              ]
+            },
+            {
+              "canon": "wz(x'+x(1))",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "wz(x' + x1) => wz(x' + x)"
+              ],
+              "hints": [
+                "identity|R.2.1.1"
+              ]
+            },
+            {
+              "canon": "wz(x+x')",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "wz(x' + x) => wz1"
+              ],
+              "hints": [
+                "complement|R.2.0,R.2.1"
+              ]
+            },
+            {
+              "canon": "wz(1)",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "wz1 => wz"
+              ],
+              "hints": [
+                "identity|R.2"
               ]
             },
             {
@@ -2563,7 +3043,7 @@
           "idx": 11,
           "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
           "goal": "w + z",
-          "optimalSteps": 7,
+          "optimalSteps": 13,
           "states": [
             {
               "canon": "(w+x'+y'+z)(w+x'+y+z)(w+x+y'+z)(w+x+y+z)",
@@ -2716,70 +3196,145 @@
               ]
             },
             {
-              "canon": "((x'+y)(x'+y')+z)(x+y'+z)(x+y+z)+w",
+              "canon": "((y'+z)(y+z)+x')(x+y'+z)(x+y+z)+w",
               "transitionLaws": [
-                "distributive",
-                "distributive",
                 "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w + (x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => w + (x + y + z)(z + (x + y')(x' + y')(x' + y))",
-                "w + (x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => w + (x + y' + z)(x + y + z)(z + x' + y'y)",
-                "w + (x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => w + (x + y' + z)(z + (x + y)(x' + y')(x' + y))",
-                "w + (x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => w + (z + (x' + y')(x' + y))(x + (y' + z)(y + z))",
-                "w + (x + y' + z)(x + y + z)(z + (x' + y')(x' + y)) => w + (z + (x' + y')(x' + y))(z + (x + y')(x + y))"
+                "w + (x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => w + (x + y' + z)(x + y + z)(x' + z + y'y)",
+                "w + (x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => w + (x' + (y' + z)(y + z))(x + (y' + z)(y + z))",
+                "w + (x + y' + z)(x + y + z)(x' + (y' + z)(y + z)) => w + (x' + (y' + z)(y + z))(z + (x + y')(x + y))"
               ],
               "hints": [
                 "distributive|R.1.0.0,R.1.1.0",
                 "distributive|R.1.0.2,R.1.1.2",
-                "distributive|R.1.0.2,R.1.2.0",
-                "distributive|R.1.1.2,R.1.2.0",
-                "distributive|R.1.2.1.0.0,R.1.2.1.1.0"
+                "distributive|R.1.2.1.0.1,R.1.2.1.1.1"
               ]
             },
             {
-              "canon": "((x'+y)(x'+y')+z)((x+y)(x+y')+z)+w",
+              "canon": "((y'+z)(y+z)+x)((y'+z)(y+z)+x')+w",
               "transitionLaws": [
-                "distributive",
                 "distributive",
                 "distributive"
               ],
               "transitionTexts": [
-                "w + (z + (x' + y')(x' + y))(z + (x + y')(x + y)) => w + (z + (x' + y')(x' + y))(z + x + y'y)",
-                "w + (z + (x' + y')(x' + y))(z + (x + y')(x + y)) => w + (z + x' + y'y)(z + (x + y')(x + y))",
-                "w + (z + (x' + y')(x' + y))(z + (x + y')(x + y)) => w + z + (x' + y')(x' + y)(x + y')(x + y)"
+                "w + (x' + (y' + z)(y + z))(x + (y' + z)(y + z)) => w + (x' + (y' + z)(y + z))(x + z + y'y)",
+                "w + (x' + (y' + z)(y + z))(x + (y' + z)(y + z)) => w + (x' + z + y'y)(x + (y' + z)(y + z))"
               ],
               "hints": [
-                "distributive|R.1.0.0,R.1.1.0",
-                "distributive|R.1.0.1.0.0,R.1.0.1.1.0",
-                "distributive|R.1.1.1.0.0,R.1.1.1.1.0"
+                "distributive|R.1.0.1.0.1,R.1.0.1.1.1",
+                "distributive|R.1.1.1.0.1,R.1.1.1.1.1"
               ]
             },
             {
-              "canon": "(x'+y)(x'+y')(x+y)(x+y')+w+z",
+              "canon": "((y'+z)(y+z)+x)(x'+yy'+z)+w",
               "transitionLaws": [
-                "absorption",
-                "distributive",
-                "distributive",
-                "distributive",
+                "complement",
                 "distributive"
               ],
               "transitionTexts": [
-                "w + z + (x' + y')(x' + y)(x + y')(x + y) => w + z",
-                "w + z + (x' + y')(x' + y)(x + y')(x + y) => w + z + (x + y')(x + y)(x' + y'y)",
-                "w + z + (x' + y')(x' + y)(x + y')(x + y) => w + z + (x' + y')(x + y')(y + x'x)",
-                "w + z + (x' + y')(x' + y)(x + y')(x + y) => w + z + (x' + y')(x' + y)(x + y'y)",
-                "w + z + (x' + y')(x' + y)(x + y')(x + y) => w + z + (x' + y)(x + y)(y' + x'x)"
+                "w + (x' + z + y'y)(x + (y' + z)(y + z)) => w + (x' + z + 0)(x + (y' + z)(y + z))",
+                "w + (x' + z + y'y)(x + (y' + z)(y + z)) => w + (x' + z + y'y)(x + z + y'y)"
               ],
               "hints": [
-                "absorption|R.0,R.2",
-                "absorption|R.1,R.2",
-                "distributive|R.2.0.0,R.2.1.0",
-                "distributive|R.2.0.1,R.2.2.1",
-                "distributive|R.2.1.1,R.2.3.1",
-                "distributive|R.2.2.0,R.2.3.0"
+                "complement|R.1.0.2.0,R.1.0.2.1",
+                "distributive|R.1.1.1.0.1,R.1.1.1.1.1"
+              ]
+            },
+            {
+              "canon": "((y'+z)(y+z)+x)(0+x'+z)+w",
+              "transitionLaws": [
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + (x' + z + 0)(x + (y' + z)(y + z)) => w + (x' + z + 0)(x + z + y'y)",
+                "w + (x' + z + 0)(x + (y' + z)(y + z)) => w + (x' + z)(x + (y' + z)(y + z))"
+              ],
+              "hints": [
+                "distributive|R.1.1.1.0.1,R.1.1.1.1.1",
+                "identity|R.1.0.0,R.1.0.2",
+                "identity|R.1.0.1,R.1.0.2",
+                "identity|R.1.0.2"
+              ]
+            },
+            {
+              "canon": "(0+x'+z)(x+yy'+z)+w",
+              "transitionLaws": [
+                "complement",
+                "distributive",
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + (x' + z + 0)(x + z + y'y) => w + (x' + z + 0)(x + z + 0)",
+                "w + (x' + z + 0)(x + z + y'y) => w + (x' + z)(x + z + y'y)",
+                "w + (x' + z + 0)(x + z + y'y) => w + z + (x' + 0)(x + y'y)"
+              ],
+              "hints": [
+                "complement|R.1.1.2.0,R.1.1.2.1",
+                "distributive|R.1.0.1,R.1.1.1",
+                "identity|R.1.0.0,R.1.0.2",
+                "identity|R.1.0.1,R.1.0.2",
+                "identity|R.1.0.2"
+              ]
+            },
+            {
+              "canon": "(0+x')(x+yy')+w+z",
+              "transitionLaws": [
+                "complement",
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + z + (x' + 0)(x + y'y) => w + z + (x' + 0)(x + 0)",
+                "w + z + (x' + 0)(x + y'y) => w + z + x'(x + y'y)"
+              ],
+              "hints": [
+                "complement|R.2.1.1.0,R.2.1.1.1",
+                "identity|R.2.0.0,R.2.0.1",
+                "identity|R.2.0.1"
+              ]
+            },
+            {
+              "canon": "(0+x)(0+x')+w+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + z + (x' + 0)(x + 0) => w + z + x'x"
+              ],
+              "hints": [
+                "identity|R.2.0.0,R.2.0.1",
+                "identity|R.2.0.1",
+                "identity|R.2.1.0,R.2.1.1",
+                "identity|R.2.1.1"
+              ]
+            },
+            {
+              "canon": "w+xx'+z",
+              "transitionLaws": [
+                "complement"
+              ],
+              "transitionTexts": [
+                "w + z + x'x => w + z + 0"
+              ],
+              "hints": [
+                "complement|R.2.0,R.2.1"
+              ]
+            },
+            {
+              "canon": "0+w+z",
+              "transitionLaws": [
+                "identity"
+              ],
+              "transitionTexts": [
+                "w + z + 0 => w + z"
+              ],
+              "hints": [
+                "identity|R.0,R.2",
+                "identity|R.1,R.2",
+                "identity|R.2"
               ]
             },
             {
