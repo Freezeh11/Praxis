@@ -213,7 +213,7 @@ const VALID = [
   /* structure / whitespace / case sensitivity */
   '(A+B)', '((A))', 'A B', '!!!!A', "A''", '1 + A', '  A  +  B  ', 'a + A',
   "AB'C + A'BC'", "x'y + xy'", "A'(B + C)", 'A(B(C))', '!(A + B)C', '¬(A + B)', "((A + B)' + C)",
-  'A + B + C + D + E + F',
+  'A + B + C + D',
 ]
 check(VALID.length >= 40, `the must-accept corpus has >= 40 strings`, `${VALID.length}`)
 check(new Set(VALID).size === VALID.length, 'the must-accept corpus has no duplicates')

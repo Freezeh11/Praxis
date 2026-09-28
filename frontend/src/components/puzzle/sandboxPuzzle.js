@@ -14,7 +14,7 @@ import { CUSTOM_SANDBOX_PUZZLE } from '../../config/storageKeys.js'
 import { generatePuzzlePair } from '../../engine/index.js'
 
 /** The sandbox has no level metadata to fetch, so this stub is all it needs. */
-export const SANDBOX_LEVEL = { id: 'sandbox', name: 'Sandbox', desc: 'Free practice', varCount: 3, puzzles: [] }
+export const SANDBOX_LEVEL = { id: 'sandbox', name: 'Sandbox', desc: 'Free practice', varCount: 4, puzzles: [] }
 
 /** The shared engine needs both the start expression and a target to be playable. */
 function isPlayablePuzzle(candidate) {
@@ -59,7 +59,9 @@ export function useStoredCustomPuzzleSlot(isSandbox, customPuzzle) {
 export function buildSandboxState(excludeExpr = null) {
   let puzzle
   try {
-    puzzle = generatePuzzlePair(excludeExpr, SANDBOX_DIFFICULTY)
+    // complex: the sandbox is the place for four-variable practice (the graded
+    // levels stop at four), so the randomizer draws from the 4-variable pool.
+    puzzle = generatePuzzlePair(excludeExpr, SANDBOX_DIFFICULTY, { complex: true })
   } catch (err) {
     console.warn('Sandbox generator failed, keeping the current problem:', err)
     throw err

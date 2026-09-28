@@ -73,6 +73,7 @@ export {
 } from './sandbox/input.js'
 export {
   VAR_POOL,
+  VAR_POOL_COMPLEX,
   DIFFICULTIES,
   normalizeDifficulty,
   makeRng,

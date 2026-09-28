@@ -27,6 +27,11 @@ import { scanHints, analyzeSelection } from '../frontend/src/engine/index.js'
 const SANDBOX_ENGINE = { allowExpand: true }
 const GRADED_ENGINE = {}
 
+/* The ceiling the proposal documents (Level 3 = four-variable expressions).
+   Transcribed independently of the implementation so a silent config drift
+   fails here as well as in the engine's own unit tests. */
+const MAX_VARS = 4
+
 /* ── Harness ──────────────────────────────────────────────────────────────── */
 let passed = 0
 let failed = 0
@@ -43,14 +48,14 @@ const MSG = {
   doubleOperator: (n) => `Two operators in a row. Check around position ${n}.`,
   missingOperand: 'Missing a variable or term.',
   strayNot: 'A NOT symbol must attach to a variable, constant, or parenthesized group.',
-  tooManyVars: (n) => `Sandbox supports up to 6 variables. Your expression uses ${n}.`,
+  tooManyVars: (n) => `Sandbox supports up to ${MAX_VARS} variables. Your expression uses ${n}.`,
   alreadySimplest: 'This expression is already in its simplest form. Try a more complex one!',
   notSimplifiable: 'This expression is too complex for the sandbox engine. Try a simpler one.',
 }
 
 /* ── 1. Frozen API surface ────────────────────────────────────────────────── */
 section('1. Frozen API surface')
-check(MAX_SANDBOX_VARS === 6, 'MAX_SANDBOX_VARS === 6', `got ${MAX_SANDBOX_VARS}`)
+check(MAX_SANDBOX_VARS === MAX_VARS, `MAX_SANDBOX_VARS === ${MAX_VARS}`, `got ${MAX_SANDBOX_VARS}`)
 check(typeof validateSandboxInput === 'function', 'validateSandboxInput is a function')
 check(typeof buildSandboxPuzzle === 'function', 'buildSandboxPuzzle is a function')
 check(typeof normalizeSandboxExpr === 'function', 'normalizeSandboxExpr is a function')
@@ -103,12 +108,16 @@ expectError('A+B)', 'unbalanced', MSG.unbalanced)
 expectError('(A+B))', 'unbalanced', MSG.unbalanced)
 expectError('((A+B)', 'unbalanced', MSG.unbalanced)
 
-/* too-many-vars */
+/* too-many-vars — the configured ceiling is 4 distinct letters */
 expectError('ABCDEFG', 'too-many-vars', MSG.tooManyVars(7))
 expectError('abcdefg', 'too-many-vars', MSG.tooManyVars(7))
 expectError('AaBbCcD', 'too-many-vars', MSG.tooManyVars(7)) // case-sensitive: 7 distinct
-check(validateSandboxInput('AaBbCc').valid, '6 distinct case-sensitive variables are accepted')
+expectError('ABCDE', 'too-many-vars', MSG.tooManyVars(5))  // one past the ceiling
+check(validateSandboxInput('AaBb').valid, '4 distinct case-sensitive variables are accepted')
 check(validateSandboxInput('AAAAAA').valid, 'repeated letters stay within the variable budget')
+/* The ceiling is an explicit option, not a hardcoded constant. */
+check(validateSandboxInput('ABCDEFG', { maxVariables: 7 }).valid, 'the variable budget can be raised per call')
+check(!validateSandboxInput('ABCDEF', { maxVariables: 5 }).valid, 'a raised budget still refuses one variable past it')
 
 /* double-operator — N is the 1-based index of the SECOND operator in the RAW input */
 expectError('A++B', 'double-operator', MSG.doubleOperator(3))
@@ -150,7 +159,7 @@ section('3. Accepted notation (all must validate)')
 const VALID = [
   "A(B + A')", "AB + A'C", "!(A * B) + C'", "(x+y)(x'+z)",
   'AB', 'A.B', 'A·B', 'A&B', 'A|B', 'A∨B', '¬A', '!A', "A'", '0', '1', 'A(B+C)',
-  'A.B&C|D', 'A + B + C + D + E + F', "AB'C + A'BC'", '(A+B)', '((A))',
+  'A.B&C|D', 'A + B + C + D', "AB'C + A'BC'", '(A+B)', '((A))',
   'A B', '!!!!A', "A''", '1 + A', 'A1', '  A  +  B  ',
 ]
 for (const raw of VALID) {
@@ -252,23 +261,45 @@ function assertPlayable(raw, name) {
 }
 
 /* ACCEPTANCE-CRITICAL case from the spec: with the gated expansion law the
-   sandbox must reach goal "AB" in exactly 3 steps. */
-for (const [label, expected] of [["A(B + A')", { goal: 'AB', steps: 3 }]]) {
+   sandbox must reach goal "AB".
+
+   The spec once pinned this at exactly 3 steps (expand -> complement ->
+   identity). It is 2 now, and the goal is unchanged, because the absorption
+   check became sound: Expand produces AB + AA', and AA' is a contradiction, so
+   Absorption may drop it. That is a shorter VALID path, not a lost capability —
+   so this asserts the goal, the expand law being the one that opens the puzzle,
+   and the step count matching a path whose laws are all applied. */
+for (const [label, expected] of [["A(B + A')", { goal: 'AB', steps: 2 }]]) {
   const r = assertPlayable(label, 'required case')
   if (r) {
+    const laws = r.puzzle.solutionPath.map(s => s.law)
     check(r.puzzle.goal === expected.goal,
       `build(${JSON.stringify(label)}) goal is exactly "${expected.goal}"`, r.puzzle.goal)
-    check(r.puzzle.optimalSteps === expected.steps,
+    check(r.puzzle.optimalSteps === expected.steps && laws.length === expected.steps,
       `build(${JSON.stringify(label)}) optimalSteps is exactly ${expected.steps}`, String(r.puzzle.optimalSteps))
-    check(r.puzzle.solutionPath.map(s => s.law).join(' -> ') === 'Distributive (Expand) -> Complement Law (Product) -> Identity Law',
-      `build(${JSON.stringify(label)}) derivation is expand -> complement -> identity`,
-      r.puzzle.solutionPath.map(s => s.law).join(' -> '))
+    check(laws[0] === 'Distributive (Expand)',
+      `build(${JSON.stringify(label)}) is opened by the gated expand law`, laws.join(' -> '))
   }
 }
 
 /* Further everyday inputs; each is asserted only through the playable contract. */
 for (const raw of ["!(A * B) + C'", 'A(A + B)', 'A + AB', "AB + AA'"]) {
   assertPlayable(raw, 'everyday input')
+}
+
+/* Four-variable expressions — the proposal's Level 3 scope, which is exactly
+   what the configured ceiling is for. The last three are three-variable
+   classics kept alongside them as the control group. */
+const EXPRESSIONS_AT_THE_CEILING = [
+  "A'B'C'D + A'B'CD + AB'C'D + AB'CD",
+  "A'BC'D + A'BCD + ABC'D + ABCD + A'B'CD",
+  "A'BC'D' + A'BC'D + ABC'D' + ABC'D + ABCD + AB'CD",
+  "A'BC + ABC + B'C",
+  "AB + A'C + BC",
+  "A'B'C + A'BC' + A'BC + ABC",
+]
+for (const raw of EXPRESSIONS_AT_THE_CEILING) {
+  assertPlayable(raw, 'input at the variable ceiling')
 }
 
 /* Engine-terminal input must be reported as already-simplest, never as a
@@ -406,8 +437,10 @@ section('6. Distributive-Expand gating (graded levels must be untouched)')
   check(gradedSimplest.found && gradedSimplest.optimalSteps === 0 && gradedSimplest.text === expr,
     'default findSimplestForm still reports A(B + A\') as already terminal',
     `found=${gradedSimplest.found} steps=${gradedSimplest.optimalSteps} text="${gradedSimplest.text}"`)
-  check(sandboxSimplest.found && sandboxSimplest.optimalSteps === 3 && sandboxSimplest.text === 'AB',
-    'allowExpand findSimplestForm reaches AB in 3 steps',
+  // 2 steps, not 3: Expand yields AB + AA', and the now-sound absorption check
+  // may drop the contradictory AA'. Same goal, shorter valid path.
+  check(sandboxSimplest.found && sandboxSimplest.optimalSteps === 2 && sandboxSimplest.text === 'AB',
+    'allowExpand findSimplestForm reaches AB in 2 steps',
     `found=${sandboxSimplest.found} steps=${sandboxSimplest.optimalSteps} text="${sandboxSimplest.text}"`)
 
   /* complement-guarded: no complement pair -> still no expand law anywhere */

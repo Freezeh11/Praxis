@@ -36,7 +36,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { validateSandboxInput, buildSandboxPuzzle } from '../engine/index.js'
-import { TIMING } from '../config/gameRules.js'
+import { SANDBOX, TIMING } from '../config/gameRules.js'
 
 /** Keep the verdict off every keystroke — ~300ms after the learner stops. */
 
@@ -65,9 +65,10 @@ const EXAMPLES = [
 
 /**
  * Shown while the field is still untouched and empty: what CAN be typed, never
- * an accusation about what has not been typed yet.
+ * an accusation about what has not been typed yet. The variable ceiling comes
+ * from config, so widening the sandbox never means editing copy here.
  */
-const IDLE_HINT = "Accepted: A, A', AB, A(B + C), !(A · B)"
+const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) — up to ${SANDBOX.maxVariables} variables`
 
 const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a simpler one.'
 
@@ -339,7 +340,9 @@ export default function SandboxPage() {
           </div>
         </form>
 
-        {/* Notation cheat sheet — keeps the validator's rules visible up front. */}
+        {/* Notation cheat sheet — keeps the validator's rules visible up front.
+            The notation is the set the proposal documents; the variable ceiling
+            is read from config so 4 -> 6 stays a one-line edit there. */}
         <div className="w-full bg-bg-card/70 border border-border rounded-2xl px-4 py-3.5 flex flex-col gap-2">
           <span className="text-[11px] font-bold uppercase tracking-wide text-text-3">Notation</span>
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[12.5px] text-text-2 font-medium">
@@ -347,7 +350,7 @@ export default function SandboxPage() {
             <span>OR: <code className="font-mono text-text-1">A+B</code> <code className="font-mono text-text-1">A|B</code></span>
             <span>NOT: <code className="font-mono text-text-1">A&apos;</code> <code className="font-mono text-text-1">!A</code></span>
             <span>Constants: <code className="font-mono text-text-1">0</code> <code className="font-mono text-text-1">1</code></span>
-            <span>Up to 6 variables</span>
+            <span data-testid="sandbox-variable-limit">Up to {SANDBOX.maxVariables} variables</span>
           </div>
         </div>
       </main>

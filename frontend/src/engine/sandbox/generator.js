@@ -1,27 +1,33 @@
-import { lit, prod, sum, cloneN } from '../node.js'
+import { lit, prod } from '../node.js'
 import { nodeText, canonText } from '../render.js'
 import { normalizeFlat } from '../normalize.js'
-import { extractVariables } from '../equivalence.js'
+import { extractVariables, isEquivalent } from '../equivalence.js'
 import { validateExpr } from '../validate.js'
 import { parseExpr } from '../parser.js'
 import { findSimplestForm, findOptimalPath } from '../solver.js'
 import { randomPoolEquation } from './pool.js'
-import { SOLVER_BUDGET } from '../../config/gameRules.js'
+import { coverVariables, expandOnce, isPosRoot, isSopRoot } from './expand.js'
+import { resolveMaxVariables } from './validate.js'
+import { SANDBOX, SOLVER_BUDGET } from '../../config/gameRules.js'
 
 /**
  * Random practice problem generator for Sandbox mode.
  *
  * The generator starts from a tiny seed expression and repeatedly applies
- * EXPANSIONS that are the exact inverse of laws the game engine can apply.
- * The result is therefore always simplifiable back down by construction, and
- * is additionally verified end-to-end with the same BFS the game uses.
+ * EXPANSIONS (./expand.js) that are the exact inverse of laws the game engine
+ * can apply. The result is therefore always simplifiable back down by
+ * construction, and is additionally verified end-to-end with the same BFS the
+ * game uses before it is handed to the workspace.
+ *
+ * `{ complex: true }` switches to the four-variable pool — the widest problem
+ * the configured sandbox budget allows — and covers every pool variable.
  */
 
-/** Variable pool — kept to 2-3 variables to match Level 1's complexity. */
+/** Variable pool — the default 2-3 variable scope (Level 1 complexity). */
 export const VAR_POOL = ['x', 'y', 'z']
 
-/** Maximum node budget for a generated expression (keeps puzzles manageable). */
-const MAX_NODES = 35
+/** Four-variable pool for `{ complex: true }` — the proposal's boss-tier width. */
+export const VAR_POOL_COMPLEX = ['w', 'x', 'y', 'z']
 
 const DIFFICULTY_ORDER = ['easy', 'medium', 'hard']
 
@@ -54,146 +60,6 @@ export function randomSeed() {
   return (Math.random() * 0xffffffff) >>> 0
 }
 
-function countNodes(n) {
-  if (!n) return 0
-  if (n.type === 'lit' || n.type === 'const') return 1
-  if (n.type === 'not') return 1 + countNodes(n.child)
-  if (n.type === 'prod') return 1 + n.factors.reduce((a, f) => a + countNodes(f), 0)
-  if (n.type === 'sum') return 1 + n.terms.reduce((a, t) => a + countNodes(t), 0)
-  return 1
-}
-
-/**
- * Builds a random product of 1..maxLen distinct variables, each possibly
- * negated. Used as the "absorbed" or "split" operand in expansion rules.
- */
-function randomTerm(vars, maxLen, rng) {
-  const pool = [...vars]
-  const len = Math.floor(rng() * Math.min(maxLen, pool.length)) + 1
-  const chosen = []
-  while (chosen.length < len && pool.length > 0) {
-    const idx = Math.floor(rng() * pool.length)
-    chosen.push(pool.splice(idx, 1)[0])
-  }
-  const factors = chosen.map(v => lit(v, rng() < 0.4))
-  return factors.length === 1 ? factors[0] : prod(...factors)
-}
-
-/** Walks the tree and collects every subnode with a path to replace it. */
-function collectSubnodes(node, path = 'R', acc = []) {
-  acc.push({ node, path })
-  if (node.type === 'sum') {
-    node.terms.forEach((c, i) => collectSubnodes(c, `${path}.${i}`, acc))
-  } else if (node.type === 'prod') {
-    node.factors.forEach((c, i) => collectSubnodes(c, `${path}.${i}`, acc))
-  } else if (node.type === 'not') {
-    collectSubnodes(node.child, `${path}.0`, acc)
-  }
-  return acc
-}
-
-function replaceNode(root, targetPath, newNode) {
-  if (targetPath === 'R') return newNode
-  const parts = targetPath.slice(2).split('.').map(Number)
-  let n = root
-  for (let i = 0; i < parts.length - 1; i++) {
-    n = n.type === 'sum' ? n.terms[parts[i]] : n.type === 'prod' ? n.factors[parts[i]] : n.child
-    if (!n) return root
-  }
-  const last = parts[parts.length - 1]
-  if (n.type === 'sum') n.terms[last] = newNode
-  else if (n.type === 'prod') n.factors[last] = newNode
-  else if (n.type === 'not') n.child = newNode
-  return root
-}
-
-/**
- * Expansion rules, grouped by the shape they produce.
- *  - SOP-inverse:  grow the expression into a Sum of Products
- *  - POS-inverse:  grow the expression into a Product of Sums
- */
-const SOP_RULES = ['absorb', 'complement-split']
-const POS_RULES = ['dual-absorb', 'dual-complement']
-const EXPANSION_RULES = [...SOP_RULES, ...POS_RULES]
-
-/** Pick one element of an array using the supplied rng. */
-const pickOne = (arr, rng) => arr[Math.floor(rng() * arr.length)]
-
-/**
- * Root-level shape tests. Only the outermost node decides the algebra form the
- * player sees: a sum with product terms is SOP, a product with sum clauses is
- * POS. Nested interior structure is irrelevant for classification (both shapes
- * can contain sub-expressions of the other form).
- */
-const isSopRoot = (n) => Boolean(n) && n.type === 'sum' && n.terms.some(t => t.type === 'prod')
-const isPosRoot = (n) => Boolean(n) && n.type === 'prod' && n.factors.some(f => f.type === 'sum')
-
-/**
- * Applies one random equivalence-preserving EXPANSION to the tree.
- *
- * Every rule is the exact inverse of a law the game engine can apply:
- *  - absorb:            A  ->  A + A·B
- *  - dual-absorb:       A  ->  A·(A + B)
- *  - complement-split:  A  ->  A·B + A·B'
- *  - dual-complement:   A  ->  (A + B)·(A + B')
- *
- * @param {Object} tree
- * @param {string[]} vars
- * @param {Function} rng
- * @param {Object} [options]
- * @param {string[]} [options.rules] - candidate rules; defaults to all four
- * @param {string[]} [options.onlyPaths] - restrict expansion to these paths
- * @param {string[]} [options.paths] - restrict expansion to a path prefix
- */
-function expandOnce(tree, vars, rng, options = {}) {
-  const { rules = EXPANSION_RULES, onlyPaths = null, paths = null } = options
-
-  let eligible = collectSubnodes(tree).filter(
-    s => s.node.type !== 'const' && countNodes(s.node) <= 6,
-  )
-  if (onlyPaths) eligible = eligible.filter(s => onlyPaths.includes(s.path))
-  if (paths) eligible = eligible.filter(s => paths.some(p => s.path === p || s.path.startsWith(p + '.')))
-  if (eligible.length === 0) return tree
-
-  const start = Math.floor(rng() * rules.length)
-
-  for (let attempt = 0; attempt < rules.length * 2; attempt++) {
-    const rule = rules[(start + attempt) % rules.length]
-    const target = pickOne(eligible, rng)
-    const node = cloneN(target.node)
-    const used = new Set(extractVariables(node))
-    const freeVars = vars.filter(v => !used.has(v))
-
-    // Every operand must use variables NOT already in the target node:
-    // reusing a variable produces degenerate duplicates (x + xx, xy + xxy)
-    // that clutter the UI and blow up the BFS solver's state space.
-    if (freeVars.length === 0) continue
-    const b = pickOne(freeVars, rng)
-    const bLit = lit(b, rng() < 0.4)
-    const bNot = lit(b, !bLit.n)
-
-    let replacement = null
-    if (rule === 'absorb') {
-      replacement = sum(node, prod(node, randomTerm(freeVars, 1, rng)))
-    } else if (rule === 'dual-absorb') {
-      replacement = prod(node, sum(node, randomTerm(freeVars, 1, rng)))
-    } else if (rule === 'complement-split') {
-      replacement = sum(prod(node, bLit), prod(node, bNot))
-    } else if (rule === 'dual-complement') {
-      replacement = prod(sum(node, bLit), sum(node, bNot))
-    }
-
-    if (!replacement) continue
-    // NOTE: replaceNode returns the new root — replacing path 'R' swaps the
-    // entire tree — so its return value must be used, not the mutated clone.
-    const next = replaceNode(cloneN(tree), target.path, replacement)
-    if (countNodes(next) > MAX_NODES) continue
-    return next
-  }
-
-  return tree
-}
-
 /**
  * Turns a raw expression string into a complete puzzle object shaped like the
  * level data the rest of the app consumes, or null when it is unusable.
@@ -201,26 +67,33 @@ function expandOnce(tree, vars, rng, options = {}) {
  * Verification pipeline (mirrors the engine the player actually uses):
  *  1. the string must pass the expression validator
  *  2. it must survive a nodeText -> parseExpr round-trip canonically
- *  3. findSimplestForm must reach a terminal (fully simplified) state
- *  4. findOptimalPath must reach that terminal state forward from the start
- *  5. the goal must differ from the start and meet the difficulty's minSteps
+ *  3. its variable count must be inside the requested scope
+ *  4. findSimplestForm must reach a terminal (fully simplified) state that is
+ *     still EQUIVALENT to the start (the goal is never allowed to drift)
+ *  5. findOptimalPath must reach that terminal state forward from the start
+ *  6. the goal must differ from the start and meet the difficulty's minSteps
  *
  * @param {string} exprString
  * @param {string} difficulty
  * @param {number} minSteps
+ * @param {{ simplestForm: object, optimalPath: object }} budget
+ * @param {{ min: number, max: number }} scope - allowed distinct-variable count
  * @returns {Object|null}
  */
-function buildVerifiedPuzzle(exprString, difficulty, minSteps) {
+function buildVerifiedPuzzle(exprString, difficulty, minSteps, budget, scope) {
   if (!validateExpr(exprString).valid) return null
 
   const parsed = parseExpr(exprString)
   if (canonText(parseExpr(nodeText(parsed))) !== canonText(parsed)) return null
+  const varCount = extractVariables(parsed).length
+  if (varCount > scope.max || varCount < scope.min) return null
 
-  const simplest = findSimplestForm(parsed, SOLVER_BUDGET.generator.simplestForm)
+  const simplest = findSimplestForm(parsed, budget.simplestForm)
   if (!simplest.found || simplest.optimalSteps === 0) return null
   if (simplest.canon === canonText(parsed)) return null
+  if (!isEquivalent(parsed, simplest.tree)) return null
 
-  const solution = findOptimalPath(parsed, simplest.canon, SOLVER_BUDGET.generator.optimalPath)
+  const solution = findOptimalPath(parsed, simplest.canon, budget.optimalPath)
   if (!solution.found || solution.optimalSteps < minSteps) return null
 
   return {
@@ -236,14 +109,15 @@ function buildVerifiedPuzzle(exprString, difficulty, minSteps) {
 }
 
 /** Builds a puzzle from a curated pool entry (no inverse-expansion needed). */
-function buildPoolPuzzle(exclude = null, difficulty = 'medium') {
+function buildPoolPuzzle(exclude = null, difficulty = 'medium', budget = SOLVER_BUDGET.generator, maxVariables = 3) {
+  const scope = { min: 1, max: maxVariables }
   for (let i = 0; i < 8; i++) {
     const exprString = randomPoolEquation(exclude)
-    const puzzle = buildVerifiedPuzzle(exprString, difficulty, 1)
+    const puzzle = buildVerifiedPuzzle(exprString, difficulty, 1, budget, scope)
     if (puzzle) return puzzle
   }
   // Hand-verified final fallback — always solvable, never degenerate.
-  return buildVerifiedPuzzle("xy + xyz + x'", difficulty, 1)
+  return buildVerifiedPuzzle("xy + xyz + x'", difficulty, 1, budget, scope)
 }
 
 /**
@@ -253,12 +127,30 @@ function buildPoolPuzzle(exclude = null, difficulty = 'medium') {
  * @param {Object} [options]
  * @param {number} [options.seed] - deterministic seed for reproducible runs
  * @param {string} [options.excludeExpr] - expression the result must differ from
+ * @param {boolean} [options.complex] - draw from the four-variable pool
+ *   (VAR_POOL_COMPLEX) instead of the two/three-variable one; verified with the
+ *   sandbox budget because a 4-variable search is much wider
+ * @param {number} [options.maxVariables] - variable ceiling for this call
+ *   (default SANDBOX.maxVariables, the same number validateSandboxInput uses)
+ * @param {{ simplestForm: object, optimalPath: object }} [options.budget] -
+ *   BFS budgets for the verification pass
  * @returns {{ expr, goal, targetLaws, hints, optimalSteps, optimalHint, difficulty, solutionPath, seed }}
  */
 export function generateRandomPuzzle(difficulty = 'medium', options = {}) {
   const diff = normalizeDifficulty(difficulty)
   const preset = DIFFICULTIES[diff]
-  const vars = [...VAR_POOL]
+  /* The variable budget is the sandbox's own configured ceiling, so a generated
+     problem can never exceed what validateSandboxInput would accept. A problem
+     needs two variables to have any move at all, hence the floor of 2. */
+  const complex = options.complex === true
+  const pool = complex ? VAR_POOL_COMPLEX : VAR_POOL
+  const vars = pool.slice(0, Math.min(pool.length, Math.max(2, resolveMaxVariables(options))))
+  /* Complex problems must really use the whole pool, so a 4-variable request is
+     never quietly answered with a 3-variable problem. */
+  const scope = complex ? { min: vars.length, max: vars.length } : { min: 1, max: vars.length }
+  /* Complex puzzles get the (larger, measured) sandbox budget; the default
+     2-3 variable path keeps the generator budget it has always used. */
+  const budget = options.budget ?? (complex ? SANDBOX.budget : SOLVER_BUDGET.generator)
   const seed = Number.isFinite(options.seed) ? (options.seed >>> 0) : randomSeed()
   const rng = makeRng(seed || 1)
 
@@ -308,6 +200,8 @@ export function generateRandomPuzzle(difficulty = 'medium', options = {}) {
       if (grown === tree) break
       tree = grown
     }
+    // Complex mode: pull in every pool variable the random growth skipped.
+    if (complex) tree = coverVariables(tree, vars, rng)
     tree = normalizeFlat(tree)
 
     // The root expansion above is what fixes the algebra form; assert it held.
@@ -316,13 +210,17 @@ export function generateRandomPuzzle(difficulty = 'medium', options = {}) {
     const exprString = nodeText(tree)
     if (options.excludeExpr && exprString === options.excludeExpr) continue
 
-    const puzzle = buildVerifiedPuzzle(exprString, diff, preset.minSteps)
+    const puzzle = buildVerifiedPuzzle(exprString, diff, preset.minSteps, budget, scope)
     if (!puzzle) continue
 
     return { ...puzzle, seed }
   }
 
-  const fallback = buildPoolPuzzle(options.excludeExpr || null, diff) || buildPoolPuzzle(null, diff)
+  /* Last resort: the curated pool is two/three-variable, so a complex request
+     that exhausted the attempts above degrades to a smaller problem rather than
+     shipping an unverified one. */
+  const fallback = buildPoolPuzzle(options.excludeExpr || null, diff, budget, vars.length)
+    || buildPoolPuzzle(null, diff, budget, vars.length)
   return { ...fallback, difficulty: diff, seed }
 }
 
@@ -331,7 +229,7 @@ export function generateRandomPuzzle(difficulty = 'medium', options = {}) {
  *
  * @param {string|null} prevExpr - expression currently on screen
  * @param {string} [difficulty='medium']
- * @param {Object} [options] - forwarded to generateRandomPuzzle
+ * @param {Object} [options] - forwarded to generateRandomPuzzle (incl. `complex`)
  */
 export function generatePuzzlePair(prevExpr, difficulty = 'medium', options = {}) {
   for (let i = 0; i < 4; i++) {
@@ -339,6 +237,9 @@ export function generatePuzzlePair(prevExpr, difficulty = 'medium', options = {}
     if (!prevExpr || puzzle.expr !== prevExpr) return puzzle
   }
   // Extremely unlikely: force a pool draw that excludes the current problem.
-  const forced = buildPoolPuzzle(prevExpr, normalizeDifficulty(difficulty))
+  const complex = options.complex === true
+  const poolBudget = options.budget ?? (complex ? SANDBOX.budget : SOLVER_BUDGET.generator)
+  const maxVariables = resolveMaxVariables(options)
+  const forced = buildPoolPuzzle(prevExpr, normalizeDifficulty(difficulty), poolBudget, maxVariables)
   return { ...forced, difficulty: normalizeDifficulty(difficulty), seed: options.seed ?? randomSeed() }
 }

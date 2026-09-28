@@ -94,8 +94,46 @@ export const DRAG = {
   clickSuppressMs: 400,
 }
 
-/** Default difficulty for generated sandbox problems. */
-export const SANDBOX_DIFFICULTY = 'medium'
+/**
+ * Sandbox settings — learner-authored expressions and generated practice.
+ *
+ * ONE number owns the variable ceiling: `maxVariables` is the DEFAULT of the
+ * `maxVariables` option on validateSandboxInput / buildSandboxPuzzle, and the
+ * sandbox screen renders its help text from it, so widening the sandbox from
+ * 4 to 6 variables is this one line (the engine itself has no limit — every
+ * entry point takes the budget per call).
+ *
+ * 4 is the ceiling the proposal documents: Level 1 = 2 variables, Level 2 = 3,
+ * Level 3 (the boss tier) = 4, and its scope section fixes the hardest
+ * expressions at four variables.
+ */
+export const SANDBOX = {
+  /** Distinct variables one learner expression may use. */
+  maxVariables: 4,
+  /** Default difficulty for generated sandbox problems. */
+  difficulty: 'medium',
+  /**
+   * Search budgets for learner-authored expressions. Four-variable input is an
+   * order of magnitude larger than a graded 3-variable puzzle, so these are
+   * bigger than SOLVER_BUDGET.generator; the numbers below are measured, not
+   * guessed.
+   */
+  budget: {
+    // Measured on the six reference four-variable expressions: the worst case
+    // ("A'BC'D' + A'BC'D + ABC'D' + ABC'D + ABCD + AB'CD") explores 26.8k
+    // states over 8 moves before it reaches an equivalent terminal form, so
+    // the old 20k cap sat BELOW the real requirement (24.6k states were needed
+    // while the law engine's absorption predicate was still being fixed).
+    // 40k/16 is ~1.5x headroom on states.
+    simplestForm: { maxDepth: 16, maxStates: 40000 },
+    // Measured worst case for replaying the optimal derivation: 16.7k states
+    // over 8 moves — the previous 24k/14 already covers it with headroom.
+    optimalPath: { maxDepth: 16, maxStates: 24000 },
+  },
+}
+
+/** Default difficulty for generated sandbox problems (alias of SANDBOX.difficulty). */
+export const SANDBOX_DIFFICULTY = SANDBOX.difficulty
 
 /**
  * Sound design — every number services/soundEffects.js turns into audio.
@@ -131,7 +169,7 @@ export const SOUND = {
   },
 }
 
-/** Solver search budgets — the graded path, the generator and the sandbox all differ. */
+/** Solver search budgets — the graded path and the generator differ. */
 export const SOLVER_BUDGET = {
   /** Defaults used when a graded puzzle is loaded. */
   graded: { maxDepth: 10, maxStates: 3000 },
@@ -139,10 +177,5 @@ export const SOLVER_BUDGET = {
   generator: {
     simplestForm: { maxDepth: 12, maxStates: 8000 },
     optimalPath: { maxDepth: 12, maxStates: 12000 },
-  },
-  /** Learner-authored expressions can be longer, so they get a bigger budget. */
-  sandbox: {
-    simplestForm: { maxDepth: 14, maxStates: 20000 },
-    optimalPath: { maxDepth: 14, maxStates: 24000 },
   },
 }

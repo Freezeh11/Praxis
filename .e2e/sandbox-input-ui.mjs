@@ -213,8 +213,8 @@ section('4. live validation (non-empty input unchanged)')
 const cases = [
   ['A++B', 'Two operators in a row', 'two operators in a row', '✗', RED],
   ['A & B @ C', 'Invalid character(s) found: @', 'invalid characters name "@"', '✗', RED],
-  ['ABCDEFG', 'Sandbox supports up to 6 variables. Your expression uses 7',
-    'the 6-variable ceiling is reported with the real count', '✗', RED],
+  ['ABCDEFG', 'Sandbox supports up to 4 variables. Your expression uses 7',
+    'the configured 4-variable ceiling is reported with the real count', '✗', RED],
   ['(A+B', 'Unbalanced parentheses', 'unbalanced parentheses', '✗', RED],
   ['A !', 'A NOT symbol must attach to a variable', 'stray NOT', '✗', RED],
 ]

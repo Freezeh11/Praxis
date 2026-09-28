@@ -241,7 +241,7 @@ if (want(1)) {
     ['A+', 'Missing a variable or term', 'missing operand after operator'],
     ['(+A)', 'Missing a variable or term', 'missing operand inside parens'],
     ['A !', 'A NOT symbol must attach to a variable', 'stray NOT'],
-    ['ABCDEFG', 'Sandbox supports up to 6 variables. Your expression uses 7', 'too many variables'],
+    ['ABCDEFG', 'Sandbox supports up to 4 variables. Your expression uses 7', 'too many variables'],
   ]
 
   for (const [input, expected, name] of cases) {
