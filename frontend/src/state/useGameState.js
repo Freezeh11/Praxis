@@ -3,6 +3,7 @@ import {
   parseExpr, cloneN, canonText, nodeText, getNode,
   analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints,
   findOptimalPath,
+  findOptimalPathWithLaws,
 } from '../engine/index.js'
 import { STAGE_COMPLETION_XP, TIMING } from '../config/gameRules.js'
 import { playSound, primeAudio } from '../services/soundEffects.js'
@@ -83,9 +84,26 @@ export function useGameState(options = {}) {
     const gCanon = canonText(parseExpr(puzzle.goal))
     goalCanonRef.current = gCanon
 
-    // Compute dynamic optimal path via BFS
+    // Compute the optimal derivation by BFS.
+    //
+    // Graded puzzles are scored against the shortest route that APPLIES EVERY
+    // LAW IN `targetLaws`, not the shortest route to the goal. Those differ
+    // whenever a shortcut skips a law the puzzle exists to teach, and scoring
+    // against the shortcut both punished learners for following the taught
+    // route and made a perfect total unreachable on 25 of the 40 puzzles.
+    // Puzzles without target laws keep the plain shortest path.
     try {
-      const solverRes = findOptimalPath(parsedExpr, gCanon, { allowExpand })
+      const requiredLaws = puzzle.targetLaws || []
+      let solverRes = requiredLaws.length
+        ? findOptimalPathWithLaws(parsedExpr, gCanon, requiredLaws, { allowExpand })
+        : findOptimalPath(parsedExpr, gCanon, { allowExpand })
+
+      // No route satisfies the objective (or the budget ran out): fall back to
+      // the plain optimum rather than refusing to score the puzzle.
+      if (!solverRes.found && requiredLaws.length) {
+        solverRes = findOptimalPath(parsedExpr, gCanon, { allowExpand })
+      }
+
       if (solverRes.found && solverRes.optimalSteps > 0) {
         setOptimalSteps(solverRes.optimalSteps)
         setOptimalPath(solverRes.path)
