@@ -246,7 +246,7 @@ panels cue from a guarded state-transition effect.
 
 | Export | Value | Line | Meaning |
 |---|---|---|---|
-| `SOLVER_BUDGET.graded.maxDepth` | `10` | `gameRules.js:204` | depth cap for a graded puzzle |
+| `SOLVER_BUDGET.graded.maxDepth` | `16` | `gameRules.js:204` | depth cap for a graded puzzle — raised from 10 when the longest authored optimum became 14 steps |
 | `SOLVER_BUDGET.graded.maxStates` | `3000` | `gameRules.js:204` | state cap for a graded puzzle |
 | `SOLVER_BUDGET.generator.simplestForm.maxDepth` | `12` | `gameRules.js:207` | generator must reach the simplest form… |
 | `SOLVER_BUDGET.generator.simplestForm.maxStates` | `8000` | `gameRules.js:207` | …within this budget |

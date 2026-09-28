@@ -1000,6 +1000,17 @@ Observed response for the second row:
    the bar to what the learner actually used**. A client cannot be punished for beating the
    stored optimum, but it also cannot claim a lower optimum than it walked.
 
+The figure the browser normally sends is not the raw shortest path. For a graded puzzle the workspace
+computes the **objective-aware** optimum — the fewest steps in which the goal is reached *and* every
+`targetLaws` id is applied (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`, wired at
+`frontend/src/state/useGameState.js:87-113`) — and falls back to the plain shortest path when the
+puzzle declares no target laws or no route satisfies the objective. A learner who finds a shorter route
+that skips a required law still earns the full 40 efficiency points but forfeits that law's share of
+the target-law band. The two optima are the same figure on Tutorial stage 1, where the old shortcut was
+a semantic absorption collapse that the engine now refuses, and still differ on 11 of the 40 puzzles.
+Worked example: [scoring-and-rewards.md](../06-reference/scoring-and-rewards.md)
+[W9](../06-reference/scoring-and-rewards.md#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1).
+
 **Side effects — persistence for signed-in learners**
 
 | Condition | Effect |
@@ -1468,7 +1479,7 @@ Every puzzle has exactly six keys, in this order (verified for all 40 puzzles).
 | `goal` | string | no | the target expression to reach |
 | `targetLaws` | string[] | no | law ids whose use earns `targetLaw` credit; **may be empty**, in which case the API awards the full 30 |
 | `hints` | string[] | no | the hint texts, revealed one at a time by the UI; 37 of the 40 puzzles ship 3 hints — Tutorial stages 0, 2 and 3 ship 2 |
-| `optimalSteps` | integer | no | the reference derivation length used by the scorer |
+| `optimalSteps` | integer | no | the reference derivation length used by the scorer — the shortest route that reaches the goal while applying every `targetLaws` id |
 | `optimalHint` | string | no | the message shown when the learner finishes over the optimum |
 
 ### 4.4 Law card object
@@ -1640,7 +1651,7 @@ Read from the live API: 4 levels, **40 puzzles**, 10 laws.
 |---|---|---|---|---|
 | `0` | Tutorial | 2 | 4 | `x + xy` → `x` (absorption, 1 step) |
 | `1` | Level 1 | 2 | 12 | `x + xy` → `x` (absorption, 1 step) |
-| `2` | Level 2 | 3 | 12 | `xy'z + xyz` → `xz` (distributive, complement, identity; 3 steps) |
+| `2` | Level 2 | 3 | 12 | `xy'z + xyz` → `xz` (distributive, complement, identity; 4 steps) |
 | `3` | Level 3 — Boss | 4 | 12 | `wxyz + wxz + wyz + w` → `wxz + w` (absorption, 2 steps) |
 
 Level 1's twelve stages, in wire order (`GET /api/levels/1`):
@@ -1649,15 +1660,15 @@ Level 1's twelve stages, in wire order (`GET /api/levels/1`):
 |---|---|---|---|---|
 | 0 | `x + xy` | `x` | `absorption` | 1 |
 | 1 | `x(x + y)` | `x` | `absorption` | 1 |
-| 2 | `x'y + xy + xy` | `y` | `idempotent`, `distributive`, `complement` | 3 |
-| 3 | `(x' + y)(x + y)(x + y)` | `y` | `idempotent`, `distributive`, `complement` | 3 |
-| 4 | `(x + y')' + x'y` | `x'y` | `demorgan-or`, `idempotent` | 1 |
-| 5 | `(xy')'(x' + y)` | `x' + y` | `demorgan-and`, `idempotent` | 1 |
+| 2 | `x'y + xy + xy` | `y` | `idempotent`, `distributive`, `complement` | 4 |
+| 3 | `(x' + y)(x + y)(x + y)` | `y` | `idempotent`, `distributive`, `complement` | 4 |
+| 4 | `(x + y')' + x'y` | `x'y` | `demorgan-or`, `idempotent` | 2 |
+| 5 | `(xy')'(x' + y)` | `x' + y` | `demorgan-and`, `idempotent` | 2 |
 | 6 | `(xy)' + x'y` | `x' + y'` | `demorgan-and`, `absorption` | 2 |
 | 7 | `(x + y)'(x' + y)` | `x'y'` | `demorgan-or`, `absorption` | 2 |
-| 8 | `x + x'y + xy` | `x + y` | `distributive`, `complement` | 2 |
-| 9 | `x(x' + y)(x + y)` | `xy` | `distributive`, `complement` | 2 |
-| 10 | `(x'y)' + (xy')' + xy` | `1` | `demorgan-and`, `complement`, `annulment` | 4 |
+| 8 | `x + x'y + xy` | `x + y` | `distributive`, `complement` | 3 |
+| 9 | `x(x' + y)(x + y)` | `xy` | `distributive`, `complement` | 3 |
+| 10 | `(x'y)' + (xy')' + xy` | `1` | `demorgan-and`, `complement`, `annulment` | 5 |
 | 11 | `(x' + y)'(x + y')'(x + y)` | `0` | `demorgan-or`, `complement`, `annulment` | 4 |
 
 Tutorial stages (`GET /api/levels/0`):
@@ -1665,11 +1676,12 @@ Tutorial stages (`GET /api/levels/0`):
 | `stageIdx` | `expr` | `goal` | `targetLaws` | `optimalSteps` |
 |---|---|---|---|---|
 | 0 | `x + xy` | `x` | `absorption` | 1 |
-| 1 | `x'y + z + xy` | `y + z` | `distributive`, `complement`, `identity` | 2 |
-| 2 | `(x + y)' + x'y'` | `x'y'` | `demorgan-or`, `idempotent` | 1 |
-| 3 | `x + x'y + xy` | `x + y` | `distributive`, `complement`, `identity` | 2 |
+| 1 | `x'y + z + xy` | `y + z` | `distributive`, `complement`, `identity` | 3 |
+| 2 | `(x + y)' + x'y'` | `x'y'` | `demorgan-or`, `idempotent` | 2 |
+| 3 | `x + x'y + xy` | `x + y` | `distributive`, `complement`, `identity` | 3 |
 
-Every puzzle in the shipped content has exactly 3 hints.
+37 of the 40 puzzles ship exactly 3 hints; the exceptions are Tutorial stages 0, 2 and 3, which ship 2
+each (counted over `content/levels.json`).
 
 > **Known discrepancy (D10).** The stale proposal describes "3 levels … 6 puzzles each" with
 > Level 3 empty. The shipped content is 4 levels and **40** puzzles (4 + 12 + 12 + 12), and
