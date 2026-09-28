@@ -7,7 +7,7 @@
  */
 import { nodeText } from '../render.js'
 import { sumContainsLit, termContainsLit } from '../tree.js'
-import { cloneN, prod } from '../node.js'
+import { cloneN, con, prod } from '../node.js'
 import { isEquivalent } from '../equivalence.js'
 
 /** Literal children of a product, or the node itself when it is a literal. */
@@ -74,6 +74,12 @@ export function absorbsInSum(survivor, absorbed) {
   if (!survivor || !absorbed) return false
   if (survivor.type === 'lit' && termContainsLit(absorbed, survivor.v, survivor.n)) return true
   if (isLitProduct(survivor) && litsContained(survivor, absorbed)) return true
+  // Structure-preserving normalization (proposal Module 4). `y + x·x'` IS
+  // equivalent to `y`, but only because `x·x'` collapses to the constant 0 —
+  // and the proposal requires that constant to be rendered as its own clickable
+  // state (`y + 0`) via Annulment, then removed by Identity. The semantic
+  // fallback below therefore refuses to swallow a contradiction in one step.
+  if (isEquivalent(cloneN(absorbed), con(0))) return false
   return isEquivalent(prod(cloneN(survivor), cloneN(absorbed)), absorbed)
 }
 
@@ -95,6 +101,15 @@ export function absorbsInProduct(survivor, absorbed) {
   if (!survivor || !absorbed) return false
   if (survivor.type === 'lit' && sumContainsLit(absorbed, survivor.v, survivor.n)) return true
   if (isLitProduct(survivor) && getLits(survivor).some(sl => sumContainsLit(absorbed, sl.v, sl.n))) return true
+  // Structure-preserving normalization (proposal Module 4). `y(x + x')` IS
+  // equivalent to `y`, but only because `x + x'` collapses to the constant 1 —
+  // and the proposal requires that constant to be rendered as its own clickable
+  // state (`y · 1`) via Complement, then removed by Identity. The learner must
+  // take those two explicit steps; the semantic fallback refuses to skip them.
+  //
+  // The syntactic accepts above are unaffected: in `A(A + B) = A` the survivor
+  // literal really is present in the clause, so no constant is involved.
+  if (isEquivalent(cloneN(absorbed), con(1))) return false
   return isEquivalent(prod(cloneN(survivor), cloneN(absorbed)), survivor)
 }
 
