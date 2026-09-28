@@ -10,8 +10,8 @@
  *
  * Pure module: no React/DOM/network.
  */
-import { getSumLits, isSubSum } from '../tree.js'
-import { findExpandablePair, findLitPath, getLits, isSubT, termsEq } from './helpers.js'
+import { getSumLits, removeLitFromNode, removeLitFromSumNode } from '../tree.js'
+import { absorbsInProduct, absorbsInSum, findExpandablePair, findLitPath, getLits, termsEq } from './helpers.js'
 
 /**
  * @param {object} node tree to scan
@@ -50,8 +50,8 @@ export function scanHints(node, path, options = {}) {
           const p2 = p + '.' + j
           const f2 = F[j]
           if (termsEq(f1, f2)) add('idempotent', [p1, p2])
-          if (isSubSum(f1, f2)) add('absorption', [p1, p2])
-          if (isSubSum(f2, f1)) add('absorption', [p2, p1])
+          if (absorbsInProduct(f1, f2)) add('absorption', [p1, p2])
+          if (absorbsInProduct(f2, f1)) add('absorption', [p2, p1])
           if (f1.type === 'lit' && f2.type === 'lit' && f1.v === f2.v && f1.n !== f2.n) {
             add('complement', [p1, p2])
           }
@@ -63,7 +63,13 @@ export function scanHints(node, path, options = {}) {
                   done.add(l1.v + l1.n)
                   const lp1 = findLitPath(f1, p1, l1.v, l1.n)
                   const lp2 = findLitPath(f2, p2, l2.v, l2.n)
-                  if (lp1 && lp2) add('distributive', [lp1, lp2])
+                  // Mirror productLaws' guard: when factoring leaves a clause
+                  // that is the bare constant 0, the dual distributive law is
+                  // deliberately not offered — so it must not be hinted either.
+                  const r1 = removeLitFromSumNode(f1, l1.v, l1.n)
+                  const r2 = removeLitFromSumNode(f2, l2.v, l2.n)
+                  const bare0 = (r) => r.type === 'const' && r.val === 0
+                  if (lp1 && lp2 && !bare0(r1) && !bare0(r2)) add('distributive', [lp1, lp2])
                 }
               }
             }
@@ -89,8 +95,8 @@ export function scanHints(node, path, options = {}) {
           const p2 = p + '.' + j
           const t2 = T[j]
           if (termsEq(t1, t2)) add('idempotent', [p1, p2])
-          if (isSubT(t1, t2)) add('absorption', [p1, p2])
-          if (isSubT(t2, t1)) add('absorption', [p2, p1])
+          if (absorbsInSum(t1, t2)) add('absorption', [p1, p2])
+          if (absorbsInSum(t2, t1)) add('absorption', [p2, p1])
           if (t1.type === 'lit' && t2.type === 'lit' && t1.v === t2.v && t1.n !== t2.n) {
             add('complement', [p1, p2])
           }
@@ -108,7 +114,12 @@ export function scanHints(node, path, options = {}) {
                   done.add(l1.v + l1.n)
                   const lp1 = findLitPath(t1, p1, l1.v, l1.n)
                   const lp2 = findLitPath(t2, p2, l2.v, l2.n)
-                  if (lp1 && lp2) add('distributive', [lp1, lp2])
+                  // Mirror sumLaws' guard: a term that reduces to the bare
+                  // constant 1 has no factoring law to offer, so no hint either.
+                  const r1 = removeLitFromNode(t1, l1.v, l1.n)
+                  const r2 = removeLitFromNode(t2, l2.v, l2.n)
+                  const bare1 = (r) => r.type === 'const' && r.val === 1
+                  if (lp1 && lp2 && !bare1(r1) && !bare1(r2)) add('distributive', [lp1, lp2])
                 }
               }
             }

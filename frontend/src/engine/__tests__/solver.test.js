@@ -25,7 +25,9 @@ test('findOptimalPath reports the number of steps the puzzle really needs', () =
   const cases = [
     ['x + xy', 'x', 1],
     ["x'y + xy + xy", 'y', 3],
-    ["(x + y)' + x'y'", "x'y'", 2],
+    // Absorption is semantic, and (x + y)' IS x'y' — so the sum collapses in
+    // one absorption step instead of De Morgan + Idempotent.
+    ["(x + y)' + x'y'", "x'y'", 1],
   ]
   for (const [expr, goal, expected] of cases) {
     const result = findOptimalPath(parseExpr(expr), canonText(parseExpr(goal)))
@@ -49,8 +51,9 @@ test('findOptimalPath honours the sandbox-only expand law', () => {
   assert.equal(expandOnly.text, 'xy')
   assert.deepEqual(expandOnly.path.map((step) => step.law), [
     'Distributive (Expand)',
-    'Complement Law (Product)',
-    'Identity Law',
+    // xx' is constantly 0, so it implies xy: semantic absorption removes it in
+    // one step (previously Complement + Identity took two).
+    'Absorption Law',
   ])
 
   // Without the flag the same expression is already terminal, because the

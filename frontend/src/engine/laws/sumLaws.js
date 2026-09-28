@@ -16,7 +16,7 @@ import { nodeText } from '../render.js'
 import { normalize, normalizeFlat } from '../normalize.js'
 import { removeLitFromNode, termContainsLit } from '../tree.js'
 import { defineLaw, LAW_FORM } from './definitions.js'
-import { getLits, isSubT, termsEq } from './helpers.js'
+import { absorbsInSum, getLits, termsEq } from './helpers.js'
 
 /**
  * @param {object} ctx
@@ -203,8 +203,8 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
     })
   }
 
-  // 6. ABSORPTION (A + AB = A)
-  if (isSubT(t1, t2)) {
+  // 6. ABSORPTION (A + AB = A) — semantic, never the literal-subset heuristic.
+  if (absorbsInSum(t1, t2)) {
     const sLits = getLits(t1)
     const lLits = getLits(t2)
     const extra = lLits.filter(ll => !sLits.some(sl => sl.v === ll.v && sl.n === ll.n))
@@ -229,7 +229,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
       },
     })
   }
-  if (isSubT(t2, t1)) {
+  if (absorbsInSum(t2, t1)) {
     const sLits = getLits(t2)
     const lLits = getLits(t1)
     const extra = lLits.filter(ll => !sLits.some(sl => sl.v === ll.v && sl.n === ll.n))

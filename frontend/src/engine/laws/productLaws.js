@@ -9,12 +9,12 @@
  * Pure module: no React/DOM/network.
  */
 import { cloneN, con, lit, prod, sum } from '../node.js'
-import { getNode, isSubSum, sumContainsLit } from '../tree.js'
+import { getNode, sumContainsLit } from '../tree.js'
 import { nodeText } from '../render.js'
 import { normalize, normalizeFlat } from '../normalize.js'
 import { removeLitFromSumNode } from '../tree.js'
 import { defineLaw, LAW_FORM } from './definitions.js'
-import { findExpandablePair, termsEq } from './helpers.js'
+import { absorbsInProduct, findExpandablePair, termsEq } from './helpers.js'
 
 /** Builds the productive Distributive-EXPANSION law for a detected pair. */
 function expandLaw(expr, prodPath, pair) {
@@ -146,8 +146,8 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
     })
   }
 
-  // 4. DUAL ABSORPTION: A(A+B) = A or (A+B)(A+B+C) = A+B
-  if (isSubSum(f1, f2)) {
+  // 4. DUAL ABSORPTION: A(A+B) = A or (A+B)(A+B+C) = A+B — semantic decision.
+  if (absorbsInProduct(f1, f2)) {
     const survivorText = nodeText(f1)
     const absorbedText = nodeText(f2)
     laws.push({
@@ -166,7 +166,7 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
       },
     })
   }
-  if (isSubSum(f2, f1)) {
+  if (absorbsInProduct(f2, f1)) {
     const survivorText = nodeText(f2)
     const absorbedText = nodeText(f1)
     laws.push({
