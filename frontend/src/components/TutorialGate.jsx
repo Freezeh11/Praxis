@@ -34,7 +34,7 @@ const TUTORIAL_LEVEL_ID = 0
 export default function TutorialGate({ children }) {
   const { levelId } = useParams()
   const location = useLocation()
-  const { hasSeenTutorial, hasCompletedTutorial, progressHydrated, getStagesCompleted } = useProgress()
+  const { hasCompletedTutorial, progressHydrated, getStagesCompleted } = useProgress()
 
   // The tutorial is always reachable, in either route shape:
   //   /level/0/stage/:stageIdx  (and /level/0/stages)
@@ -47,16 +47,10 @@ export default function TutorialGate({ children }) {
   if (!progressHydrated) return <TutorialGateLoading />
 
   // Level selection screen (/levels):
-  // Fresh users who haven't started the tutorial get sent to it.
-  // Learners who have started can view the carousel, where Level 1 remains locked
-  // until all 4 tutorial stages are complete.
+  // Learners can always browse the level selection screen.
+  // Level 1 and Sandbox remain locked in LevelSelectPage until all 4 tutorial stages are complete.
   const isLevelSelectRoute = location.pathname === '/levels'
-  if (isLevelSelectRoute) {
-    if (!hasSeenTutorial) {
-      return <Navigate to="/level/0/stage/0?tutorial=true&returnTo=%2Flevels" replace />
-    }
-    return children
-  }
+  if (isLevelSelectRoute) return children
 
   // Graded levels (1-3) and Sandbox strictly require full tutorial completion.
   if (!hasCompletedTutorial) {

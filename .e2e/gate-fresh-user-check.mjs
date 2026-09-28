@@ -18,7 +18,18 @@ await page.fill('input[type="email"]', EMAIL); await page.fill('input[type="pass
 await page.click('button[type="submit"]'); await page.waitForTimeout(2500)
 const clearLocal = () => page.evaluate((prefix) => { Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k)) }, PROGRESS_KEY_PREFIX)
 let fails = 0
-for (const path of ['/levels', '/level/1/stage/0', '/level/2/stage/0', '/level/1/stages', '/sandbox']) {
+
+// 1. Fresh user can access /levels without being redirected
+await clearLocal()
+await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
+await page.waitForFunction(() => { const t = document.body.innerText; return t && !t.includes('Loading your progress') }, null, { timeout: 25000 }).catch(() => {})
+await page.waitForTimeout(2200)
+const onLevels = page.url().replace(BASE, '').includes('/levels') && !page.url().includes('tutorial=true')
+if (!onLevels) fails++
+console.log(`${onLevels ? 'PASS' : 'FAIL'} | fresh user can view /levels -> ${page.url().replace(BASE, '')}`)
+
+// 2. Gated routes redirect to tutorial
+for (const path of ['/level/1/stage/0', '/level/2/stage/0', '/level/1/stages', '/sandbox']) {
   await clearLocal()
   await page.goto(BASE + path, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => { const t = document.body.innerText; return t && !t.includes('Loading your progress') }, null, { timeout: 25000 }).catch(() => {})

@@ -13,11 +13,7 @@
  * Requires: vite dev server on 5173, backend .env with SUPABASE_SERVICE_KEY.
  * Run:  node .e2e/tutorial-gate.mjs
  */
-import { launch, readEnv, HIDE_SURVEY, PROGRESS_KEY_PREFIX } from './_harness.mjs'
-
-const BASE = process.env.PRAXIS_BASE_URL || 'http://127.0.0.1:5173'
-const EMAIL = 'e2e-test@praxis.test'
-const PASSWORD = 'E2eTest!2345'
+import { launch, readEnv, HIDE_SURVEY, PROGRESS_KEY_PREFIX, BASE, EMAIL, PASSWORD } from './_harness.mjs'
 
 const results = []
 const log = (name, ok, extra = '') => {
@@ -103,8 +99,27 @@ log('login succeeds', !page.url().includes('/login'), page.url())
 await clearServerProgress(userId)
 const freshUser = await asFreshUser()
 
+/* ── Fresh user can view /levels, but Level 1 and Sandbox remain locked ── */
+await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
+await page.waitForFunction(() => {
+  const t = document.body.innerText
+  if (!t || !t.trim()) return false
+  if (t.includes('Loading your progress') || t.includes('Loading...')) return false
+  return true
+}, null, { timeout: 30000 }).catch(() => {})
+await page.waitForTimeout(1500)
+const onLevels = page.url().includes('/levels') && !page.url().includes('tutorial=true')
+log('new user can view /levels without being redirected into tutorial', onLevels, page.url().replace(BASE, ''))
+
+// Verify Level 1 and Sandbox are locked for fresh user
+const l1CardText = await page.locator('[data-level-card="1"]').innerText().catch(() => '')
+const sandboxCardText = await page.locator('[data-level-card="sandbox"]').innerText().catch(() => '')
+const l1Locked = l1CardText.includes('🔒') || l1CardText.includes('Complete all 4 tutorial stages')
+const sandboxLocked = sandboxCardText.includes('🔒') || sandboxCardText.includes('Complete all 4 tutorial stages')
+log('Level 1 card remains locked for new user on /levels', l1Locked, l1CardText.slice(0, 50))
+log('Sandbox card remains locked for new user on /levels', sandboxLocked, sandboxCardText.slice(0, 50))
+
 const GATED_ROUTES = [
-  ['/levels', 'the level select'],
   ['/level/1/stage/0', 'a Level 1 stage'],
   ['/level/2/stage/0', 'a Level 2 stage'],
   ['/level/3/stage/0', 'a Level 3 stage'],
@@ -195,7 +210,7 @@ log('sandbox opens once the tutorial is done',
 await clearServerProgress(userId)
 await seedTutorialCompleteOnServer(userId)
 const freshAgain = await asFreshUser()
-await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
+await page.goto(BASE + '/sandbox', { waitUntil: 'domcontentloaded' })
 // Wait for the gate to finish hydrating: the decision needs the SERVER snapshot,
 // and networkidle/domcontentloaded alone can assert while the loading shell is
 // still up. Then give the redirect decision a moment to land.
@@ -207,7 +222,7 @@ await page.waitForFunction(() => {
 }, null, { timeout: 30000 }).catch(() => {})
 await page.waitForTimeout(2500)
 log('server-side tutorial completion alone satisfies the gate',
-  page.url().includes('/levels'), page.url().replace(BASE, ''))
+  page.url().includes('/sandbox'), page.url().replace(BASE, ''))
 
 /* ── Returning user with local progress ───────────────────────────────── */
 await freshAgain.dispose()
