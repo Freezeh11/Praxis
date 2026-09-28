@@ -383,7 +383,7 @@ error; it silently yields an empty list, and the puzzle scores wrongly.
 key-tuples across all puzzles has exactly **one** distinct member). Consumers:
 `optimalSteps` and `optimalSteps` in [`backend/services/scoring_service.py:46,85`](../../backend/services/scoring_service.py#L46-L85),
 `targetLaws` at [`backend/services/scoring_service.py:46`](../../backend/services/scoring_service.py#L46),
-`hints` at [`frontend/src/state/useGameState.js:514-515`](../../frontend/src/state/useGameState.js#L514-L515),
+`hints` at [`frontend/src/state/useGameState.js:558-559`](../../frontend/src/state/useGameState.js#L558-L559),
 `optimalHint` at [`frontend/src/components/puzzle/ScoreModal.jsx:154-156`](../../frontend/src/components/puzzle/ScoreModal.jsx#L154-L156).
 The generator deliberately emits the **same** key set for invented puzzles, which is the clearest
 statement of the contract: [`frontend/src/engine/sandbox/generator.js:137`](../../frontend/src/engine/sandbox/generator.js#L137).
@@ -440,14 +440,30 @@ note is at [`frontend/src/config/gameRules.js:115-132`](../../frontend/src/confi
 
 **Enforced by.** review.
 
-### D5. A puzzle must actually be solvable, and `optimalSteps` must be the true optimum
+### D5. A puzzle must actually be solvable, and `optimalSteps` must be the scoring optimum
 
 **Rule.** Before committing a puzzle, confirm the `goal` is reachable from `expr` through the law
-engine and that `optimalSteps` matches the shortest derivation.
+engine and that `optimalSteps` matches the **scoring optimum** — the shortest derivation that reaches
+the goal *and* applies every law id in `targetLaws` (`findOptimalPathWithLaws`,
+[`frontend/src/engine/solver.js:271`](../../frontend/src/engine/solver.js#L271-L346)) — not the raw
+shortest path. In addition, **every declared `targetLaw` must be appliable on at least one derivation
+that reaches the goal.** A law no goal-route can apply makes its share of the 30-point target-law band
+unreachable for every learner: `findOptimalPathWithLaws` returns `found: false`, the workspace falls
+back to the plain optimum, and the puzzle can never score 100.
 
 **Why.** `optimalSteps` sets the efficiency bar, and the scoring service deliberately lets a
 *shorter* solution lower that bar (`min(declared, stepsUsed)`), so an overstated optimum makes the
-puzzle unwinnable at full marks; an understated one makes it trivially perfect.
+puzzle unwinnable at full marks; an understated one makes it trivially perfect. The bar has to be the
+objective-aware optimum because `targetLaws` names the laws the puzzle exists to teach, and applying
+them often costs a step: scoring against the raw shortest path left a perfect 100 unreachable on 25 of
+the 40 shipped puzzles, and punished a learner for following the taught route. The reachability half
+of the rule is the trap four shipped stages actually fell into: `2:2` and `2:3` declared
+`["absorption"]`, and `2:6` and `2:7` declared `["distributive","complement","absorption"]`, but the
+absorption step those puzzles relied on was the **semantic** collapse of a clause that is a constant
+(`y(x + x') → y` in one step; `y + x·x' → y`). Structure-preserving normalization — the proposal's
+Module 4 — forbids exactly that step, so no route to those goals can apply absorption at all. Their
+`targetLaws` were re-authored to `["distributive","complement","identity"]`, which is what their
+solutions use. A declared law earns points only if a goal-route can reach a state that offers it.
 
 **Evidence.** The bar-lowering behaviour at
 [`backend/services/scoring_service.py:80-88`](../../backend/services/scoring_service.py#L80-L88)
@@ -455,12 +471,18 @@ puzzle unwinnable at full marks; an understated one makes it trivially perfect.
 [`frontend/src/engine/scoring.js:39-42`](../../frontend/src/engine/scoring.js#L39-L42). The
 verification tooling already in the repo: the random generator refuses to return a puzzle the
 solver cannot confirm
-([`frontend/src/engine/sandbox/generator.js`](../../frontend/src/engine/sandbox/generator.js)), and
+([`frontend/src/engine/sandbox/generator.js`](../../frontend/src/engine/sandbox/generator.js)),
 the fingerprint baseline records every graded puzzle's optimal path
-([`.e2e/lead-engine-fingerprint.mjs`](../../.e2e/lead-engine-fingerprint.mjs)).
+([`.e2e/lead-engine-fingerprint.mjs`](../../.e2e/lead-engine-fingerprint.mjs)), and
+[`frontend/src/engine/__tests__/solver.test.js:162-201`](../../frontend/src/engine/__tests__/solver.test.js#L162-L201)
+asserts that every authored puzzle has a reachable objective route and that its authored
+`optimalSteps` matches the computed optimum — so a `targetLaw` that no goal-route can apply fails the
+suite as well.
 
-**Enforced by.** tool — partially. For **generated** puzzles the solver check is automatic
-(`.e2e/generator-stress.mjs`); for **authored** puzzles it is a manual step.
+**Enforced by.** tool — partially. Generated puzzles get the solver check automatically
+(`.e2e/generator-stress.mjs`); authored puzzles are covered by the per-puzzle assertion in
+`solver.test.js`, which is automatic but only runs when the suite is run — there is no CI, so a human
+still has to remember.
 
 ### D6. Tutorial content is authored separately from graded content
 
@@ -614,7 +636,7 @@ no server, so there is no excuse for skipping it.
 **Evidence.** The script is `node --test src/engine/__tests__/*.test.js`
 ([`frontend/package.json:11`](../../frontend/package.json#L11)); the suite is 7 files under
 [`frontend/src/engine/__tests__/`](../../frontend/src/engine/__tests__/). **Verified: `npm test`
-reports 76 tests, 76 pass, 0 fail.**
+reports 81 tests, 81 pass, 0 fail.**
 
 **Enforced by.** tool — when you run it. There is **no CI configuration tracked in this repository**,
 so nothing runs the suite for you.
@@ -835,7 +857,7 @@ This table exists so nobody assumes a safety net that is not there.
 | B6 component/hook file split | tool (warning) | `npm run lint` (react-refresh) |
 | C4 engine is the sole authority on legality | tool (partial) | `npm test` — soundness property test |
 | D5 authored puzzles are solvable and optimal | tool (partial, generated puzzles only) | `node .e2e/generator-stress.mjs` |
-| F1 engine tests pass | tool, when run | `npm test` → 76/76 |
+| F1 engine tests pass | tool, when run | `npm test` → 81/81 |
 | F3 browser suites pass | tool, when run | `bash .e2e/run-all-suites.sh`, then read `.e2e/_results/*.log` |
 | G1 links resolve | tool | `node docs/_staging/tools/check-docs.mjs` |
 | G3 no secrets in `docs/` | tool | same checker, secret scan |
