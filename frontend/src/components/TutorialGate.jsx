@@ -34,11 +34,10 @@ const TUTORIAL_LEVEL_ID = 0
 export default function TutorialGate({ children }) {
   const { levelId } = useParams()
   const location = useLocation()
-  const { hasCompletedTutorial, progressHydrated } = useProgress()
+  const { hasSeenTutorial, hasCompletedTutorial, progressHydrated, getStagesCompleted } = useProgress()
 
   // The tutorial is always reachable, in either route shape:
   //   /level/0/stage/:stageIdx  (and /level/0/stages)
-  //   /levels, /sandbox         (no levelId param)
   const isTutorialLevel = levelId !== undefined && Number(levelId) === TUTORIAL_LEVEL_ID
 
   if (isTutorialLevel) return children
@@ -47,13 +46,29 @@ export default function TutorialGate({ children }) {
   // decided on a half-loaded snapshot.
   if (!progressHydrated) return <TutorialGateLoading />
 
+  // Level selection screen (/levels):
+  // Fresh users who haven't started the tutorial get sent to it.
+  // Learners who have started can view the carousel, where Level 1 remains locked
+  // until all 4 tutorial stages are complete.
+  const isLevelSelectRoute = location.pathname === '/levels'
+  if (isLevelSelectRoute) {
+    if (!hasSeenTutorial) {
+      return <Navigate to="/level/0/stage/0?tutorial=true&returnTo=%2Flevels" replace />
+    }
+    return children
+  }
+
+  // Graded levels (1-3) and Sandbox strictly require full tutorial completion.
   if (!hasCompletedTutorial) {
+    const completed = getStagesCompleted(TUTORIAL_LEVEL_ID)
+    const nextIncomplete = [0, 1, 2, 3].find((idx) => !completed.includes(idx)) ?? 0
+    const entry = `/level/0/stage/${nextIncomplete}?tutorial=true`
     // Carry the intended destination along, so finishing the tutorial lands the
     // learner where they were actually trying to go instead of back at /levels.
     const returnTo = `${location.pathname}${location.search}`
-    const to = returnTo && returnTo !== '/' && returnTo !== TUTORIAL_ENTRY
-      ? `${TUTORIAL_ENTRY}&returnTo=${encodeURIComponent(returnTo)}`
-      : TUTORIAL_ENTRY
+    const to = returnTo && returnTo !== '/' && returnTo !== entry && !returnTo.startsWith('/level/0/stage/')
+      ? `${entry}&returnTo=${encodeURIComponent(returnTo)}`
+      : entry
     return <Navigate to={to} replace />
   }
 

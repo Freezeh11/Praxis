@@ -13,12 +13,14 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
 import StarRating from '../components/ui/StarRating'
+import SurveyButton from '../components/layout/SurveyButton'
+import SurveyBillboard from '../components/ui/SurveyBillboard'
 
 export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
   const { fetchLevel, laws } = useGameContent()
-  const { progress, getStagesCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial } = useProgress()
+  const { progress, getStagesCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial, hasCompletedTutorial } = useProgress()
 
   const [level, setLevel] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -30,6 +32,12 @@ export default function StageSelectorPage() {
   } = usePageOverlays({ navigate, hasSeenTutorial, resetLevelProgress })
 
   const numLevelId = Number(levelId)
+
+  useEffect(() => {
+    if (numLevelId === 1 && !hasCompletedTutorial) {
+      navigate('/levels', { replace: true })
+    }
+  }, [numLevelId, hasCompletedTutorial, navigate])
 
   useEffect(() => {
     fetchLevel(numLevelId)
@@ -114,6 +122,7 @@ export default function StageSelectorPage() {
               <span>📖</span>
               <span className="hidden sm:inline">Laws</span>
             </button>
+            <SurveyButton compact />
           </div>
         )}
       />
@@ -360,6 +369,8 @@ export default function StageSelectorPage() {
               )
             })}
           </div>
+
+          <SurveyBillboard className="mt-2" />
         </main>
       )}
 

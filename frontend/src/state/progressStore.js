@@ -118,6 +118,14 @@ function mergeServerProgress(local, server) {
   // Local solutions win: they are the ones this device can replay offline.
   merged.stageSolutions = { ...(server.stageSolutions || {}), ...(local.stageSolutions || {}) }
 
+  const levelsCompleted = [...new Set([...(local.levelsCompleted || []), ...(server.levelsCompleted || [])])]
+  merged.levelsCompleted = levelsCompleted
+  merged.hasCompletedTutorial = Boolean(
+    local.hasCompletedTutorial ||
+    server.hasCompletedTutorial ||
+    levelsCompleted.includes(0)
+  )
+
   return merged
 }
 
@@ -175,13 +183,17 @@ export const completeStage = (levelId, stageIdx) =>
     const key = String(levelId)
     const existing = p.stageProgress[key] || []
     const isTutorialLevel = Number(levelId) === TUTORIAL.levelId
-    if (existing.includes(stageIdx)) {
-      return isTutorialLevel ? { ...p, hasSeenTutorial: true } : p
-    }
+    const newStages = existing.includes(stageIdx) ? existing : [...existing, stageIdx]
+    const allTutorialDone = isTutorialLevel && TUTORIAL.stageIndexes.every((idx) => newStages.includes(idx))
+    const levelsCompleted = allTutorialDone && !p.levelsCompleted.includes(TUTORIAL.levelId)
+      ? [...p.levelsCompleted, TUTORIAL.levelId]
+      : p.levelsCompleted
+
     return {
       ...p,
-      stageProgress: { ...p.stageProgress, [key]: [...existing, stageIdx] },
+      stageProgress: { ...p.stageProgress, [key]: newStages },
       hasSeenTutorial: isTutorialLevel ? true : p.hasSeenTutorial,
+      levelsCompleted,
     }
   })
 
@@ -253,7 +265,12 @@ export function isStageCompleted(state, levelId, stageIdx) {
 }
 
 export function isLevelCompleted(state, levelId) {
-  return state.levelsCompleted.includes(levelId)
+  if (state.levelsCompleted?.includes(levelId)) return true
+  if (Number(levelId) === TUTORIAL.levelId) {
+    const completed = getStagesCompleted(state, TUTORIAL.levelId)
+    return TUTORIAL.stageIndexes.every((idx) => completed.includes(idx))
+  }
+  return false
 }
 
 export function getSavedSolution(state, levelId, stageIdx) {
@@ -311,7 +328,8 @@ export function hasSeenTutorial(state) {
  * the tutorial on another device still passes.
  */
 export function hasCompletedTutorial(state) {
-  if (state.hasSeenTutorial) return true
+  if (state.hasCompletedTutorial) return true
+  if (state.levelsCompleted?.includes(TUTORIAL.levelId)) return true
   const completed = getStagesCompleted(state, TUTORIAL.levelId)
   return TUTORIAL.stageIndexes.every((idx) => completed.includes(idx))
 }
