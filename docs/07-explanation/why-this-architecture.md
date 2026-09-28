@@ -120,7 +120,7 @@ the thing that cannot be allowed to move".
 
 - One place to add a law: `engine/laws/definitions.js` plus its builder. Content declares law
   **ids** in `content/levels.json`; nothing downstream re-derives identity.
-- Testable in plain Node. 76 tests, no browser, no server, ~10 s
+- Testable in plain Node. 81 tests, no browser, no server, ~13 s
   (`frontend/package.json:11`).
 - The content bundle makes levels and laws render with zero network calls, which is also what
   makes the app usable offline (`frontend/src/services/contentApi.js:22-29`).
@@ -134,8 +134,9 @@ oversight.
 to reach for the most powerful thing in it — `isEquivalent`, an exhaustive truth-table
 check — wherever "are these the same?" is asked. The code does **not** do that for the win
 condition: completion is `canonText(newExpr) === goalCanonRef.current`
-(`frontend/src/state/useGameState.js:437`). `isEquivalent` is used where *soundness* is at
-stake — law detection as the deciding fallback (`engine/laws/helpers.js:77`, `:98`) and the
+(`frontend/src/state/useGameState.js:481`). `isEquivalent` is used where *soundness* is at
+stake — law detection as the deciding fallback (`engine/laws/helpers.js:82`, `:112`, each behind the
+Module 4 constant guard) and the
 sandbox's pre-flight checks (`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`).
 The consequence of that split is a real edge case: a terminal form that is logically equivalent
 to the goal but renders to different canonical text does not complete the puzzle.

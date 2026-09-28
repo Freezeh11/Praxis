@@ -64,7 +64,7 @@ expressions as **strings** (`content/levels.json`), and the only parser is
 **Consequences — good.**
 
 - One place to add a law (`engine/laws/definitions.js` + a builder); content declares law **ids**.
-- The engine is testable in plain Node: 76 tests, no browser, no server, ~10 s.
+- The engine is testable in plain Node: 81 tests, no browser, no server, ~13 s.
 - Levels and laws render with zero network calls, so gameplay survives a sleeping backend.
 - The sandbox can validate, generate and self-check puzzles entirely in the browser.
 
@@ -150,13 +150,14 @@ question.
 **Decision.** It is a **textual** question instead:
 
 ```js
-const gCanon = canonText(parseExpr(puzzle.goal))   // useGameState.js:83 — once, at load
-if (canonText(newExpr) === goalCanonRef.current)   // useGameState.js:437 — the win test
+const gCanon = canonText(parseExpr(puzzle.goal))   // useGameState.js:84 — once, at load
+if (canonText(newExpr) === goalCanonRef.current)   // useGameState.js:481 — the win test
 ```
 
 `canonText` is order-independent, so reordering terms does not affect the verdict. It is not a
 truth-table check. `isEquivalent` is used where *soundness* is at stake — as the deciding
-fallback in absorption detection (`engine/laws/helpers.js:77`, `:98`) and in the sandbox
+fallback in absorption detection (`engine/laws/helpers.js:82`, `:112`, each behind the Module 4
+constant guard) and in the sandbox
 builders' pre-flight checks (`engine/sandbox/generator.js:94`,
 `engine/sandbox/input.js:161`) — and never in `useGameState`.
 
@@ -183,7 +184,7 @@ builders' pre-flight checks (`engine/sandbox/generator.js:94`,
   re-proved. Soundness rests on the builders plus the property test
   (`engine/__tests__/law-soundness.property.test.js`).
 - Dead-end detection inherits the same character: it is an empty `scanHints` result
-  (`useGameState.js:61`, `:504`, `:562`), a statement about the implemented law registry rather
+  (`useGameState.js:62`, `:548`, `:606`), a statement about the implemented law registry rather
   than a proof of unsolvability.
 
 **Revisit if.** A learner reports a puzzle that will not complete despite a correct answer. The
@@ -313,23 +314,23 @@ would create a branch — and a branch has no single derivable "current expressi
 **Decision.** The session state *is* the history, and everything else is derived:
 
 ```js
-const [history, setHistory] = useState([])          // useGameState.js:15  [{expr, step}]
+const [history, setHistory] = useState([])          // useGameState.js:16  [{expr, step}]
 const expr  = history[history.length - 1].expr      // :16  the current state
 const steps = history.slice(1).map(h => h.step)     // :17  the derivation
 ```
 
-Steps are appended only at the end of `applyLaw`, after the animation completes (`:425`). The
+Steps are appended only at the end of `applyLaw`, after the animation completes (`:469`). The
 only mutations are:
 
 | Operation | Effect |
 |---|---|
 | apply a law | push one entry |
-| `undoAction` | pop one entry and re-evaluate the dead end for the restored expression (`:461-485`) |
-| `swapTerms` | replace the **last** entry's expression in place — no new entry, no step (`:523-558`) |
+| `undoAction` | pop one entry and re-evaluate the dead end for the restored expression (`:505-529`) |
+| `swapTerms` | replace the **last** entry's expression in place — no new entry, no step (`:567-602`) |
 | `loadPuzzle` / `resetPuzzle` | replace the whole history |
 
 Reordering is explicitly not a derivation step: "Drag-and-drop term or factor reorder - no law
-applied, no step recorded" (`:522`).
+applied, no step recorded" (`:566`).
 
 **Alternatives considered.**
 
@@ -345,7 +346,7 @@ applied, no step recorded" (`:522`).
 - Undo is `slice(0, -1)` — impossible to get wrong.
 - The step count used for scoring is `steps.length`, so reordering can never inflate it.
 - Step inspection indexes straight into the array.
-- The dead-end state can be recomputed from any restored expression (`:482`).
+- The dead-end state can be recomputed from any restored expression (`:526`).
 
 **Consequences — bad.**
 
@@ -684,8 +685,8 @@ backend test suite**: no `tests/`, no `conftest.py`, no `pytest` dependency.
 
 **Decision.** Verify where the risk is and where it is cheapest:
 
-1. **Engine:** `node:test` unit tests plus a property test for law soundness — 76 tests, no
-   browser, no server, ~10 s. This is where the product's actual complexity lives (3,182 lines of
+1. **Engine:** `node:test` unit tests plus a property test for law soundness — 81 tests, no
+   browser, no server, ~13 s. This is where the product's actual complexity lives (3,303 lines of
    pure logic), and where a bug is a *wrong answer*, not a broken screen.
 2. **Browser:** `.e2e/` suites for the things a unit test cannot see — tutorial gating,
    responsive tiers, popup collision, sandbox writing nothing, real solves on Levels 1–3.

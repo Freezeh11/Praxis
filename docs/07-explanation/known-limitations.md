@@ -90,8 +90,8 @@ original task brief, or from the LAWS rubric
 | **D8** | Score formula: efficiency `40 − over×10`; target law proportional; hint `30 − hints×10`; `earnedPoints = (total/100) × 5`. | Matches **except** four details: ① `optimal = min(declared, stepsUsed)`, so a solution shorter than the recorded optimum raises the bar to full marks; ② `guidesUsed` is added to `hintsUsed` into one `assistance` figure; ③ every component is rounded to `SCORE_ROUNDING_DP = 1`; ④ a puzzle that declares no target laws gets the **full 30**. | Medium | `backend/services/scoring_service.py:45-115`. [SRS.md](../01-product/SRS.md) FR-24 states all four; helper by helper in [SDD.md](../02-architecture/SDD.md) §3.6. |
 | **D9** | "Level 2 requires Level 1 average score ≥ **70%**"; "Level 3: permanently 'Coming Soon' (no puzzles yet)". | `UNLOCK_AVERAGE = 80.0` and `UNLOCK_AVERAGE_SCORE = 80`; the client adds a second condition — **every stage done AND average ≥ 80**. **Level 3 is fully playable** with 12 four-variable puzzles. | **High** | `frontend/src/config/gameRules.js:49`; `backend/config/constants.py:26`; `frontend/src/state/progressStore.js:309`. Note `context.md` contradicts even the project's own LAWS rubric, which says "80% accuracy threshold" (`Software Proposal Writing Guide (LAWS) v2.0.docx.md:129`). |
 | **D10** | "3 levels… 6 puzzles each", Level 3 empty; rubric says "Six problems per level" and "three difficulty levels". | **4 levels; the Tutorial (id 0) has 4 stages and Levels 1–3 have 12 each → 40 puzzles total.** | **High** | Counted from `content/levels.json` (per-level counts `[4,12,12,12]`) and live-verified: `GET /api/levels` returns `puzzleCount: [4,12,12,12]`. Used verbatim in [PRD.md](../01-product/PRD.md), [SRS.md](../01-product/SRS.md) and [SDD.md](../02-architecture/SDD.md). **Note:** an earlier revision of `docs/_staging/GROUND-TRUTH.md` summarised this as "4 levels × 12 stages = 48 puzzles"; that was an arithmetic slip — the Tutorial has 4 stages, not 12, so the total is **40**. Corrected by the Lead. |
-| **D11** | "engine/ … + **46** unit tests" (`context.md` §3); the refactor report's §5 table also says 46/46. | **76 tests, 76 pass, 0 fail** across 7 test files (1,246 lines), ~10.7 s. | Low | Ran `cd frontend && npm test` → `# tests 76 / # pass 76 / # fail 0`. The "46" figure is genuine but historical: commit `df6f35d` added "46 unit tests"; the suite grew after the soundness fix. |
-| **D12** | "**Animation pipeline** — When a law is applied, `useGameState.js` triggers a **2.5-second** animation via `AnimationOverlay.jsx` before actually updating the AST. This is important for UX flow." | The law animation is **1350 ms**, and on the tutorial path it is preceded by a separate **1500 ms** pre-law highlight. No 2.5 s wait exists anywhere. | Medium | `frontend/src/config/gameRules.js:60-62` (`lawAnimationMs: 1350`, `preLawHighlightMs: 1500`); consumed at `frontend/src/state/useGameState.js:447` (animation timer) and `:455` (pre-law timer). Also stated in [SDD.md](../02-architecture/SDD.md) §5.2 and [SRS.md](../01-product/SRS.md) FR-39. |
+| **D11** | "engine/ … + **46** unit tests" (`context.md` §3); the refactor report's §5 table also says 46/46. | **81 tests, 81 pass, 0 fail** across 7 test files (1,361 lines), ~13 s. | Low | Ran `cd frontend && npm test` → `# tests 81 / # pass 81 / # fail 0`. The "46" figure is genuine but historical: commit `df6f35d` added "46 unit tests"; the suite grew after the soundness fix, again with the objective-aware-optimum tests, and again with the Module 4 absorption guard. |
+| **D12** | "**Animation pipeline** — When a law is applied, `useGameState.js` triggers a **2.5-second** animation via `AnimationOverlay.jsx` before actually updating the AST. This is important for UX flow." | The law animation is **1350 ms**, and on the tutorial path it is preceded by a separate **1500 ms** pre-law highlight. No 2.5 s wait exists anywhere. | Medium | `frontend/src/config/gameRules.js:60-62` (`lawAnimationMs: 1350`, `preLawHighlightMs: 1500`); consumed at `frontend/src/state/useGameState.js:491` (animation timer) and `:499` (pre-law timer). Also stated in [SDD.md](../02-architecture/SDD.md) §5.2 and [SRS.md](../01-product/SRS.md) FR-39. |
 | **D21** | The refactor report §3 says the client and server formula "both read their numbers from config", implying they agree. | The **numbers** agree; the **rounding function** does not. `backend/services/scoring_service.py:55` uses Python `round()` — **banker's rounding, half-to-even** — while `frontend/src/engine/scoring.js:80` uses JS `Math.round` — **half-up**. | **High** | Verified by enumerating all **19 reachable totals**: exactly three diverge. `total = 10.0` → server 0, client 1; `50.0` → 2 vs 3; `90.0` → 4 vs 5. **And it is not merely a display glitch** — see §3.1. |
 | **D24** | Not claimed anywhere; discovered by execution. | `POST /api/score` **trusts its inputs completely**. `stepsUsed: 0` with a claimed law id returns `total 100.0, earnedPoints 5` with no derivation at all. Passing `optimalSteps: 999` with `stepsUsed: 10` still yields full `efficiency: 40.0`, because `_resolve_optimal` clamps via `min(optimal, steps_used)`. | **High** | Reproduced with `fastapi.testclient` during this documentation pass. It is the sharpest consequence of the engine contract — see §3.1 and [why-this-architecture.md](why-this-architecture.md) §6. |
 | **D27** | Not claimed anywhere; discovered by inspection. | **Nothing tests the scoring arithmetic.** `find backend -name 'test_*.py'` returns nothing — zero backend tests, no `pytest` dependency. The 7 engine test files never mention `estimateScore` or `earnedPoints`. The browser suites only assert that a `+N Points` pill renders (`.e2e/acceptance-features.mjs:900`). | Medium | Nothing would catch a D21 rounding regression. Recorded as verification gap ① in [SRS.md](../01-product/SRS.md) §9 and as [ADR-013](design-decisions.md#adr-013--verification-without-a-backend-test-suite). |
@@ -171,7 +171,7 @@ reconcile), and align the rounding function on one convention.
 ### 3.2 A step is structurally valid, not provationally valid
 
 The engine never re-proves a rewrite. A step is accepted because a law implementation produced
-it (`useGameState.js:363`, `:425`), not because the rewrite was checked against the source
+it (`useGameState.js:407`, `:469`), not because the rewrite was checked against the source
 expression. Soundness therefore rests on the law builders plus one property test
 (`engine/__tests__/law-soundness.property.test.js`) — which is a strong test, but it is the only
 line of defence between the learner and a law that changes meaning. The neighbouring commit
@@ -181,9 +181,10 @@ this class of bug is real and has occurred.
 ### 3.3 Completion is canonical-text equality, not semantic equivalence
 
 The win test is `canonText(newExpr) === goalCanonRef.current`
-(`frontend/src/state/useGameState.js:437`, goal canonicalised at `:83`). The exhaustive
+(`frontend/src/state/useGameState.js:481`, goal canonicalised at `:84`). The exhaustive
 truth-table checker `isEquivalent` (`engine/equivalence.js:45`) exists, is sound, and is **not**
-on the win path: its non-test consumers are law detection (`engine/laws/helpers.js:77`, `:98`)
+on the win path: its non-test consumers are law detection (`engine/laws/helpers.js:82`, `:112` —
+the absorption decisions and their Module 4 constant guards)
 and the sandbox builders (`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`).
 
 **Consequence.** A learner who reaches a terminal form that is logically equivalent to the goal
@@ -194,7 +195,7 @@ got there. Recorded as [ADR-003](design-decisions.md#adr-003--completion-is-cano
 ### 3.4 Dead-end detection is a heuristic
 
 `syncDeadEndStatus` reports a dead end when `scanHints(expr, 'R')` returns an empty list
-(`useGameState.js:61`, used at `:504` and `:562`). That is a statement about the **implemented
+(`useGameState.js:62`, used at `:548` and `:606`). That is a statement about the **implemented
 law registry** — "no law I implement applies here" — not a proof that no derivation exists.
 A rewrite reachable through a law the engine does not model would be reported as unsolvable. In
 practice the registry matches the taught curriculum, so the distinction is theoretical; it
@@ -372,7 +373,7 @@ repository**. `render.yaml` is a 16-line platform manifest for one service. Cons
 
 - Local setup is a manual sequence of two servers and a hand-run SQL script
   (`README.md:36-117`).
-- Nothing verifies a change before it ships: not the 76 engine tests, not the browser suites,
+- Nothing verifies a change before it ships: not the 80 engine tests, not the browser suites,
   not lint.
 - Environments cannot be reproduced from the repository alone.
 
@@ -416,7 +417,7 @@ calls, so a slow query cannot be correlated from a request id.
 | **2 of 19 `.e2e` suites are not wired into the runner** | `gate-fresh-user-check.mjs` and `lead-engine-fingerprint.mjs` are never run by `run-all-suites.sh`, so they only run when someone remembers | `.e2e/run-all-suites.sh` lists 16 |
 | **Lint findings are left visible** | 16 problems across 8 files (11 errors, 5 warnings): `react-hooks/set-state-in-effect` 9, `react-hooks/exhaustive-deps` 5, `no-unused-vars` 2. All pre-existing, in DOM-measurement effects | Ran `npx eslint .` |
 | **One layering exception exists** | `frontend/src/services/contentApi.js:10` imports `../content/gameContent.js`, while the stated rule is "services imports config only" | Recorded in [SRS.md](../01-product/SRS.md) §9 |
-| **17 files exceed the ~250-line target** | Down from one 2,631-line file, but the guidance is aspirational rather than enforced | Largest: `state/useGameState.js` 620, `pages/ProblemPage.jsx` 521, `pages/LevelSelectPage.jsx` 440 |
+| **17 files exceed the ~250-line target** | Down from one 2,631-line file, but the guidance is aspirational rather than enforced | Largest: `state/useGameState.js` 664, `pages/ProblemPage.jsx` 541, `pages/LevelSelectPage.jsx` 475 |
 | **A dangling doc comment survives a deletion** | `engine/laws/definitions.js:67` documents `definitionsForId`, which no longer exists | Cosmetic, but it reads as if a symbol is missing |
 
 ## 9. Limitations inherited from the proposal
@@ -428,13 +429,13 @@ makes claims about the product. Here is each one, with its current status.
 | The proposal says | Status | Current truth |
 |---|---|---|
 | Accuracy gains measured in Praxis "cannot be directly equated to performance on institutional examinations". | **Still true.** | No external-validity study exists. The success metrics in [PRD.md](../01-product/PRD.md) §7 are all in-system, and no analytics SDK is installed, so none of them are currently being collected. |
-| "The effectiveness of the practice cycle depends on genuine student engagement… students who click randomly without reasoning will not develop meaningful simplification skills." | **Still true, and partly mitigated.** | The forced step sequence makes random clicking unproductive rather than rewarding: a law that changes nothing is refused with no step recorded (`useGameState.js:363-373`), and dead ends are detected (`:53-68`). |
+| "The effectiveness of the practice cycle depends on genuine student engagement… students who click randomly without reasoning will not develop meaningful simplification skills." | **Still true, and partly mitigated.** | The forced step sequence makes random clicking unproductive rather than rewarding: a law that changes nothing is refused with no step recorded (`useGameState.js:407-417`), and dead ends are detected (`:54-69`). |
 | "The four-variable constraint in Level 3 limits the cognitive complexity of expressions compared to real-world Boolean problems." | **Still true, with a correction.** | Level 3 is four-variable and **fully playable** with 12 puzzles. The sandbox allows learner-typed expressions up to 4 variables (`gameRules.js:112`), configurable in one line. |
 | "The usability evaluation will be limited by the number of first-year CCS student participants the team can realistically recruit." | **Still true.** | No usability data is stored in the system. |
 | "The platform intentionally excludes Karnaugh maps, truth table construction, combinational circuit design, sequential logic, and hardware description languages." | **Still true, and enforced by the engine contract.** | The engine's move set is the ten taught laws. Note the nuance: `isEquivalent` *can* build a truth table internally, but it is not exposed as a learner feature. |
 | "The curriculum covers ten interactive law cards applied across **three difficulty levels**", "**Six problems per level**". | **Superseded by the code.** | **4 levels; the Tutorial has 4 stages and Levels 1–3 have 12 each → 40 puzzles.** Also note the law cards number 10 but the engine's definition table has **15 entries** (SOP and POS forms of the same law share a reference-card id) plus one internal id (`distributive-expand`) that is not a card. **D10** |
 | "Level 1 uses two-variable expressions, Level 2 uses three-variable, Level 3 uses four-variable"; "80% accuracy threshold for level unlock"; "spend 20 points on the Guide". | **Confirmed by the code.** | `content/levels.json` varCounts `2, 2, 3, 4` (Tutorial is also 2); `UNLOCK_AVERAGE_SCORE = 80` (`gameRules.js:49`); `GUIDE_COST_POINTS = 20` (`:35`). Notably, this rubric says **80 %** while `context.md` §7 says 70 % — the proposal contradicts itself, and the code agrees with the rubric. |
-| "Step-locking requires explicit law application at every intermediate stage before the expression advances." | **Confirmed.** | The history array advances only through `applyLaw` (`useGameState.js:425`); reordering is explicitly not a step (`:522`). |
+| "Step-locking requires explicit law application at every intermediate stage before the expression advances." | **Confirmed.** | The history array advances only through `applyLaw` (`useGameState.js:469`); reordering is explicitly not a step (`:566`). |
 
 ## 10. Things that look wrong but are correct
 
@@ -445,13 +446,58 @@ Recording these saves the next reader from "fixing" a deliberate decision. Each 
 | The same component appears on two routes (`ProblemPage` at `/level/…` and `/sandbox/play`). | Sandbox mode is the **absence of route params**, so the mode cannot desynchronise from the URL, and the sandbox plays the real workspace instead of a copy. | [ADR-007](design-decisions.md#adr-007--one-parameterized-workspace-for-graded-and-sandbox-play) |
 | `POST /api/score` answers `200` for a signed-out caller. | It is a calculator, not a state change; persistence is conditional on `user` being present. The auth boundary follows the data boundary. | [ADR-002](design-decisions.md#adr-002--scoring-is-backend-authoritative-and-client-mirrored) |
 | A solution **shorter** than `optimalSteps` still scores 40/40. | `min(optimal, steps_used)` means a better-than-authored solution cannot be penalised for beating the recorded optimum. | `scoring_service.py:88` |
+| The efficiency bar is a route that **applies the target laws**, not necessarily the shortest route to the goal — on Tutorial stage 2 a 1-step solve scores **70** while the taught 2-step route scores **100**. | The optimum is the *objective-aware* one: the fewest steps in which the goal is reached **and** every `targetLaws` id is applied (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`; wired at `frontend/src/state/useGameState.js:87-113`). A shorter route that skips a required law keeps the full 40 efficiency points and forfeits only that law's share of the target-law band. The two optima coincide on Tutorial stage 1 — the 2-step shortcut there was a semantic absorption collapse, now forbidden — and still differ on **11 of the 40** puzzles. | `frontend/src/engine/solver.js:271-346`; worked examples [W9](../06-reference/scoring-and-rewards.md#w9--the-taught-route-is-now-the-only-route-tutorial-stage-1) |
 | A puzzle with no `targetLaws` gets the full 30 for that band. | Otherwise such a puzzle would be unwinnable at full marks. | `scoring_service.py:102` |
 | `stageScores` never contains a `0`. | `build_progress` guards with `best_score > 0`, so an unsolved stage is simply absent. | `progress_service.py:41` |
 | `saveScore` can decline to write. | `update` returns early when the new score is not better, so the state object is identical and no `localStorage` write or server save happens. | `progressStore.js:61-62`, `:209-215` |
-| The `not` law family is offered from a **single** click. | De Morgan and Double Negation act on one node, so a second selection would be meaningless. | `useGameState.js:172-179` |
+| The `not` law family is offered from a **single** click. | De Morgan and Double Negation act on one node, so a second selection would be meaningless. | `useGameState.js:190-197` |
 | The tutorial's first stage cannot be reached through the gate. | The gate exempts the tutorial level deliberately; without the exemption the redirect target would equal the current URL, which is a React Router no-op that renders a blank page. | `TutorialGate.jsx:21-25`, `:41-43` |
 | The law reference drawer shows `associative`, which the engine never emits. | The drawer is a **reference** for the curriculum, not a list of automated moves. | `REFACTOR_REPORT.md` §5b |
 | `services/soundEffects.js` makes sound with no audio files. | Cues are synthesised from `SOUND.cues` (oscillator, notes, envelope) in `config/gameRules.js:148-170`. | [SDD.md](../02-architecture/SDD.md) §5.3 |
+
+> **A defect this replaced, now fixed.** Until the objective-aware optimum landed, the efficiency bar
+> was the raw shortest path (`findOptimalPath`) while the target-law band demanded the authored laws.
+> Where the two diverged, a learner who followed the puzzle's own teaching lost efficiency points, and
+> a perfect total of `100` was **mathematically unreachable** on **25 of the 40** authored puzzles.
+> Exhaustive search over the graded state graph, scored with the real estimator, gives the detail: the
+> route that followed the puzzle's own teaching scored **90 on 19 puzzles, 80 on 2 and 70 on 4**
+> (one, two and three steps over the pre-fix bar respectively), and the best total reachable by *any*
+> route — including routes that deliberately sacrifice part of the target-law band for a shorter
+> derivation — was **90 on 21 puzzles and 80 on 4**. The root cause is in the git history: commit
+> `3838343` re-baselined 23 authored `optimalSteps` values (and three `optimalHint` step counts) after
+> `1c7f932` made absorption semantic, but changed **no** `targetLaws` — so par fell to the shortcut
+> while the target-law band still described the taught chain. The fix is the objective-aware optimum
+> (`findOptimalPathWithLaws`, `frontend/src/engine/solver.js:271`), 25 re-authored `optimalSteps`
+> values in `content/levels.json`, and a guard test that fails the suite when an authored figure drifts
+> from the computed optimum (`frontend/src/engine/__tests__/solver.test.js:162-201`). Following the
+> taught route now scores exactly 100 on all 40 puzzles (verified by running the scorer over every
+> puzzle). The register's D-numbering is unchanged, because this was never a written claim and never a
+> D-row: it is recorded here because §10 is where deliberate behaviour that looks like a bug is
+> explained.
+
+> **A second defect, fixed the same way — the Module 4 bypass.** The proposal requires
+> *structure-preserving normalization*: every law application that produces a constant factor must be
+> rendered as its own distinct, clickable intermediate state, and "the student must explicitly click
+> and apply each subsequent law to advance through every intermediate state" — its worked example is
+> `y(x + x')` → `y · 1` (Complement) → `y` (Identity)
+> (`Software Proposal Writing Guide (LAWS) v2.0.docx.md`, Module 4, around line 125). The engine
+> violated that in one place: the **semantic fallback** of absorption was allowed to swallow a
+> tautological or contradictory clause, so `y(x + x')` collapsed straight to `y` and skipped the
+> required `y · 1` state, and `y + x·x'` collapsed without ever rendering `y + 0`. **That bypass is
+> now guarded** at `frontend/src/engine/laws/helpers.js:82` (sum) and `:112` (product): the fallback
+> refuses to absorb a clause that is equivalent to a constant (`0` in a sum, `1` in a product). The
+> syntactic fast-accept paths are deliberately untouched, so textbook absorption still works normally
+> (`x + xy → x` and `x(x + y) → x` remain one step each). Verified after the guard: `y(x + x')` offers
+> exactly one move, `Complement Law → y1`, then `Identity Law → y` — **2 steps**; `x + y·y'` offers
+> only `Complement Law (Product) → x + 0`; and `y(y + x') → y` is still **1 step**. It was a real
+> deviation rather than a stylistic choice: the proposal states the rendering contract explicitly, and
+> the bypass was also what created the shortcut that the objective-aware optimum had been papering
+> over. `content/levels.json` was re-baselined for it — seven `optimalSteps` figures (the authored
+> optimum now spans **1–14 steps**) and four `targetLaws` lists that had declared `absorption` on a
+> stage whose every goal-route can no longer apply it. It is guarded by a dedicated test
+> (`frontend/src/engine/__tests__/solver.test.js:116-144`) and by the per-puzzle objective-route test
+> (`:162-201`). The register's D0–D27 numbering is unchanged: like the paragraph above, this is
+> recorded as prose, not as a new D-row.
 
 ## 11. Unverified items
 
