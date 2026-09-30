@@ -2,7 +2,7 @@ import { Navigate, useLocation, useParams } from 'react-router-dom'
 import { useProgress } from '../state/useProgress.js'
 
 /** Where a learner who has not finished the tutorial gets sent. */
-const TUTORIAL_ENTRY = '/level/0/stage/0?tutorial=true'
+const TUTORIAL_ENTRY = '/level/0/stage/1?tutorial=true'
 
 /** Tutorial lives at level 0 (see content/levels.json). */
 const TUTORIAL_LEVEL_ID = 0
@@ -56,7 +56,7 @@ export default function TutorialGate({ children }) {
   if (!hasCompletedTutorial) {
     const completed = getStagesCompleted(TUTORIAL_LEVEL_ID)
     const nextIncomplete = [0, 1, 2, 3].find((idx) => !completed.includes(idx)) ?? 0
-    const entry = `/level/0/stage/${nextIncomplete}?tutorial=true`
+    const entry = `/level/0/stage/${nextIncomplete + 1}?tutorial=true`
     // Carry the intended destination along, so finishing the tutorial lands the
     // learner where they were actually trying to go instead of back at /levels.
     const returnTo = `${location.pathname}${location.search}`

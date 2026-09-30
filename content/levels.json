@@ -459,17 +459,17 @@
     "puzzles": [
       {
         "expr": "wxyz + wxz + wyz + w",
-        "goal": "wxz + w",
+        "goal": "w",
         "targetLaws": [
           "absorption"
         ],
         "hints": [
-          "Scan for shorter terms that appear inside longer 4-variable terms.",
-          "The standalone term w absorbs any product containing w, such as wyz and wxyz.",
-          "After applying Absorption, verify which terms remain."
+          "Scan for a short term that appears inside every other term.",
+          "The standalone term w absorbs any product containing w.",
+          "Apply Absorption three times: w absorbs wxyz, wyz, and wxz."
         ],
-        "optimalSteps": 2,
-        "optimalHint": "The Absorption Law (A + AB = A) eliminates both 4-variable and 3-variable terms in just 2 quick steps!"
+        "optimalSteps": 3,
+        "optimalHint": "The Absorption Law (A + AB = A) eliminates all three longer terms in just 3 steps — w is the simplest form!"
       },
       {
         "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",

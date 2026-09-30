@@ -87,7 +87,7 @@ export default function StageSelectorPage() {
     // Tutorial stages must carry ?tutorial=true or the guided overlay never
     // activates: usePuzzleSession reads the query param, not just the level id.
     const tutParam = numLevelId === 0 ? '?tutorial=true' : ''
-    navigate(`/level/${numLevelId}/stage/${idx}${tutParam}`)
+    navigate(`/level/${numLevelId}/stage/${idx + 1}${tutParam}`)
   }
 
   // Level progress metrics

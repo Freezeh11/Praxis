@@ -279,7 +279,7 @@ export default function ProblemPage() {
     if (level && nextIdx < level.puzzles.length) {
       const isTutLevel = Number(levelId) === TUTORIAL.levelId
       const tutParam = isTutLevel ? '?tutorial=true' : ''
-      navigate(`/level/${levelId}/stage/${nextIdx}${tutParam}`)
+      navigate(`/level/${levelId}/stage/${nextIdx + 1}${tutParam}`)
     } else {
       if (Number(levelId) === TUTORIAL.levelId) {
         setIsTutorialActive(false)
@@ -292,7 +292,7 @@ export default function ProblemPage() {
     if (!levelId) return
     const isTutLevel = Number(levelId) === TUTORIAL.levelId
     const tutParam = isTutLevel ? '?tutorial=true' : ''
-    navigate(`/level/${levelId}/stage/${idx}${tutParam}`)
+    navigate(`/level/${levelId}/stage/${idx + 1}${tutParam}`)
   }
 
   // The Guide is a graded-level aid: 20 points there, free in the unscored
@@ -542,7 +542,7 @@ export default function ProblemPage() {
           onNextStage={() => {
             setShowStepHistory(false)
             if (stageNum + 1 < (level?.puzzles?.length || 4)) {
-              navigate(`/level/0/stage/${stageNum + 1}?tutorial=true`)
+              navigate(`/level/0/stage/${stageNum + 2}?tutorial=true`)
             } else {
               setIsTutorialActive(false)
               navigate('/level/0/stages')

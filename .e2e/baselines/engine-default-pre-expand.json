@@ -1898,7 +1898,7 @@
         {
           "idx": 0,
           "expr": "wxyz + wxz + wyz + w",
-          "goal": "wxz + w",
+          "goal": "w",
           "optimalSteps": 2,
           "states": [
             {
