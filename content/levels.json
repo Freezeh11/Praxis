@@ -473,17 +473,17 @@
       },
       {
         "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
-        "goal": "(w + x + z)w",
+        "goal": "w",
         "targetLaws": [
           "absorption"
         ],
         "hints": [
-          "Scan for standalone literals and shorter clauses multiplied together.",
-          "The standalone literal w absorbs longer sum clauses containing w.",
-          "w absorbs (w + x + y + z) and (w + y + z), leaving (w + x + z)w."
+          "Scan for standalone literals and longer clauses multiplied together.",
+          "The standalone literal w absorbs any sum clause containing w.",
+          "Apply Dual Absorption three times: w absorbs (w + x + y + z), (w + y + z), and (w + x + z)."
         ],
-        "optimalSteps": 2,
-        "optimalHint": "Dual Absorption eliminates longer clauses in 2 direct steps!"
+        "optimalSteps": 3,
+        "optimalHint": "The Dual Absorption Law A(A + B) = A eliminates all three longer clauses in just 3 steps — w is the simplest form!"
       },
       {
         "expr": "wxy'z + wxyz",
