@@ -446,7 +446,7 @@
           "Pair and dual factor the first two clauses (sharing x' + z) and last two (sharing x + z).",
           "Cancel y'y = 0 in both pairs, then dual factor z from the remaining clauses."
         ],
-        "optimalSteps": 10,
+        "optimalSteps": 11,
         "optimalHint": "Dual factor clauses to eliminate y and x, leaving only z."
       }
     ]
