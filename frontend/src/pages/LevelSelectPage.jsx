@@ -29,7 +29,7 @@ const COMING_SOON = []
 const SANDBOX_LEVEL = {
   id: 'sandbox',
   name: 'Sandbox',
-  desc: 'Free practice — type your own expression',
+  desc: 'Free practice: type your own expression',
   varCount: 4,
   puzzleCount: 0,
   isSandbox: true,

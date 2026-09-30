@@ -1,5 +1,5 @@
 /**
- * ProblemPage — the route screen for `/level/:levelId/stage/:stageIdx` and
+ * ProblemPage: the route screen for `/level/:levelId/stage/:stageIdx` and
  * `/sandbox/play`, and the composition root of the puzzle workspace.
  *
  * Everything below it is a single-purpose module: the session (route identity,
@@ -9,7 +9,7 @@
  * the screen. This file owns the device tier, the transient UI state and the
  * wiring between them.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -25,6 +25,7 @@ import SidePanel from '../components/puzzle/SidePanel'
 import StepHistoryPanel from '../components/puzzle/StepHistoryPanel'
 import StepInspectionTip from '../components/puzzle/StepInspectionTip'
 import WorkspaceHeader from '../components/puzzle/WorkspaceHeader'
+import MobileExpressionModal from '../components/puzzle/MobileExpressionModal'
 import usePuzzleSession from '../components/puzzle/usePuzzleSession'
 import InteractiveTutorial from '../components/InteractiveTutorial'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -53,7 +54,7 @@ const TINY_VIEWPORT_MAX_HEIGHT = 360
  * measure time so the tier can re-home the anchor without re-registering
  * anything.
  */
-const INSPECT_ANCHOR = '[data-inspect-anchor="true"], [data-inspect-trigger], [data-tutorial="active-equation"]'
+const DEFAULT_INSPECT_ANCHOR = '[data-inspect-trigger], [data-tutorial="active-equation"]'
 const HINT_ANCHOR = '[data-tutorial="hint-button"]'
 
 export default function ProblemPage() {
@@ -113,6 +114,8 @@ export default function ProblemPage() {
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
   const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
   const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
+  const [showMobileExpressionCreator, setShowMobileExpressionCreator] = useState(false)
+  const expressionInputRef = useRef(null)
   const [isTutorialActive, setIsTutorialActive] = useState(() => new URLSearchParams(window.location.search).get('tutorial') === 'true')
   // The sound preference is owned by its hook (storage + AudioContext unlock);
   // this page only hands it to the header toggle.
@@ -148,13 +151,25 @@ export default function ProblemPage() {
   const {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
     stageNum, completedSet, showSuccess, setShowSuccess, scoreResult, setScoreResult,
-    handleOpenScoreSummary, handleRandomize, clearLoadedAsSaved, progress, deductPoints, laws,
+    handleOpenScoreSummary, handleRandomize, handleLoadCustomExpression, clearLoadedAsSaved, progress, deductPoints, laws,
     expr, sel, steps, applicableLaws, isComplete, earnedXp, status, statusMsg,
     activeGuidePaths, isPreLawHighlight, isAnimating, animationData,
     handleClickLit, handleClickNot, handleClickTerm,
     applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
     hintsUsed, guidesUsed, optimalSteps,
   } = usePuzzleSession({ onPuzzleChange: handlePuzzleChange, onWorkspaceReset: handleWorkspaceReset })
+
+  const handleNewExpression = () => {
+    setShowSuccess(false)
+    if (showRightPanel) {
+      expressionInputRef.current?.focus()
+      expressionInputRef.current?.select()
+    } else {
+      setShowMobileExpressionCreator(true)
+    }
+  }
+
+  const isTutorialLevel = !isSandbox && Number(levelId) === TUTORIAL.levelId
 
   // The compact tiers scroll/crop the derivation inside this box, so a popup
   // that can leave it at all should. A 568x320 phone has no free band left
@@ -164,12 +179,16 @@ export default function ProblemPage() {
   const compactCanvas = shortViewport || isNarrowViewport || isPhoneLandscape || isTabletPortrait
   const canvasIsHardObstacle = compactCanvas && !(height > 0 && height <= TINY_VIEWPORT_MAX_HEIGHT)
 
+  const inspectAnchorSelector = inspectedStepIdx !== null
+    ? `[data-inspect-step="${inspectedStepIdx}"], [data-inspect-anchor="true"]`
+    : DEFAULT_INSPECT_ANCHOR
+
   const {
     nodeRef: inspectPopupNode,
     layerStyle: inspectPopupStyle,
     ready: inspectPopupReady,
   } = useCollisionPlacement({
-    anchorSelector: INSPECT_ANCHOR,
+    anchorSelector: inspectAnchorSelector,
     candidates: INSPECT_POPUP_CANDIDATES,
     fullWidthOnNarrow: 480,
     enabled: inspectedStepIdx !== null || showStepInspectionTip,
@@ -214,16 +233,16 @@ export default function ProblemPage() {
   }, [inspectedStepIdx])
 
   // Sync tutorial active state from URL query or tutorial level; the sandbox
-  // never runs the guided tutorial overlay.
+  // and non-tutorial levels never run the guided tutorial overlay.
   useEffect(() => {
-    if (isSandbox) {
+    if (!isTutorialLevel) {
       setIsTutorialActive(false)
       return
     }
     const isTutQuery = new URLSearchParams(window.location.search).get('tutorial') === 'true'
     const isTutLevel = Number(levelId) === TUTORIAL.levelId
     setIsTutorialActive(isTutQuery || isTutLevel)
-  }, [levelId, stageIdx, isSandbox])
+  }, [levelId, stageIdx, isSandbox, isTutorialLevel])
 
   // Global click-away listener for derivation step inspection
   useEffect(() => {
@@ -342,6 +361,7 @@ export default function ProblemPage() {
   }
 
   const handleTutorialToggle = () => {
+    if (!isTutorialLevel) return
     setIsTutorialActive(prev => {
       const next = !prev
       if (next && puzzle) {
@@ -388,7 +408,7 @@ export default function ProblemPage() {
       touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
       onNextStage={handleNextStage} onBackToStages={() => navigate(`/level/${levelId}/stages`)} onRandomize={handleRandomize}
-      onNewExpression={() => navigate('/sandbox')}
+      onNewExpression={handleNewExpression}
     />
   )
 
@@ -399,7 +419,7 @@ export default function ProblemPage() {
         useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
         onCloseStepHistory={() => setShowStepHistory(false)} isSandbox={isSandbox} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)}
         touchTargets={touchTargets} zoom={zoom} onZoom={setZoom}
-        isTutorialActive={isTutorialActive} onToggleTutorial={handleTutorialToggle} chromeText={chromeText}
+        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} chromeText={chromeText}
         chromeHeight={chromeHeight}
       />
 
@@ -410,10 +430,10 @@ export default function ProblemPage() {
           headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}
           chromeHeight={chromeHeight} steps={steps} optimalSteps={optimalSteps}
           points={progress.points} zoom={zoom} onZoom={setZoom}
-          isTutorialActive={isTutorialActive} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
+          isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
           guideCost={guideCost} onHint={handleHint} onGuide={handleGuide}
           onOpenLaws={openLaws} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
-          onToggleStepHistory={toggleStepHistory} onRandomize={handleRandomize} onNewExpression={() => navigate('/sandbox')}
+          onToggleStepHistory={toggleStepHistory} onRandomize={handleRandomize} onNewExpression={handleNewExpression}
           onUndo={handleUndo} onReset={handleResetClick}
           soundEnabled={soundEnabled} onToggleSound={toggleSound}
         />
@@ -437,9 +457,10 @@ export default function ProblemPage() {
         stageNum={stageNum} completedSet={completedSet} points={progress.points}
         steps={steps} optimalSteps={optimalSteps} isComplete={isComplete}
         showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={() => setDismissReviewReminder(true)}
-        isTutorialActive={isTutorialActive} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
+        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
         assistanceInHeader={assistanceInHeader} guideCost={guideCost} onHint={handleHint}
         onGuide={handleGuide} onOpenLaws={openLaws} onRandomize={handleRandomize}
+        onLoadCustomExpression={handleLoadCustomExpression} expressionInputRef={expressionInputRef}
         chromeText={chromeText} chromeHeight={chromeHeight}
       />
 
@@ -455,9 +476,18 @@ export default function ProblemPage() {
         steps={steps} optimalSteps={optimalSteps} hintsUsed={hintsUsed}
         guidesUsed={guidesUsed} scoreResult={scoreResult} earnedXp={earnedXp}
         puzzle={puzzle} level={level} stageNum={stageNum}
-        onNewExpression={() => navigate('/sandbox')} onRandomize={handleRandomize} onNextStage={handleNextStage}
+        onNewExpression={handleNewExpression} onRandomize={handleRandomize} onNextStage={handleNextStage}
         onBackToStages={() => navigate(`/level/${levelId}/stages`)} onReset={executeReset}
       />
+
+      {isSandbox && (
+        <MobileExpressionModal
+          show={showMobileExpressionCreator}
+          onClose={() => setShowMobileExpressionCreator(false)}
+          onLoadCustomExpression={handleLoadCustomExpression}
+          onRandomize={handleRandomize}
+        />
+      )}
 
       <ResetConfirmModal
         show={showResetConfirm} shortViewport={shortViewport} isSandbox={isSandbox}
@@ -503,7 +533,7 @@ export default function ProblemPage() {
       </div>
 
       {/* ── INTERACTIVE TUTORIAL OVERLAY ── */}
-      {isTutorialActive && (
+      {isTutorialLevel && isTutorialActive && (
         <InteractiveTutorial
           stageIdx={stageNum} sel={sel} steps={steps}
           expr={expr} applicableLaws={applicableLaws} isComplete={isComplete}

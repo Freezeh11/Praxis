@@ -125,7 +125,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
     const activeText = nodeText(t2)
     laws.push({
       ...defineLaw('Identity Law', LAW_FORM.SUM),
-      desc: `0 + ${activeText} = ${activeText} — remove 0`,
+      desc: `0 + ${activeText} = ${activeText}: remove 0`,
       animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
       survivorPath: `${cs.sumPath}.${cs.ti2}`,
       constPath: `${cs.sumPath}.${cs.ti1}`,
@@ -143,7 +143,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
     const activeText = nodeText(t1)
     laws.push({
       ...defineLaw('Identity Law', LAW_FORM.SUM),
-      desc: `${activeText} + 0 = ${activeText} — remove 0`,
+      desc: `${activeText} + 0 = ${activeText}: remove 0`,
       animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
       survivorPath: `${cs.sumPath}.${cs.ti1}`,
       constPath: `${cs.sumPath}.${cs.ti2}`,
@@ -158,7 +158,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
     })
   }
 
-  // 4. ANNULMENT (OR with 1) — pairwise absorption of selected term
+  // 4. ANNULMENT (OR with 1): pairwise absorption of selected term
   if ((t1.type === 'const' && t1.val === 1) || (t2.type === 'const' && t2.val === 1)) {
     const isT1Const = t1.type === 'const' && t1.val === 1
     const varTerm = isT1Const ? t2 : t1
@@ -169,7 +169,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
 
     laws.push({
       ...defineLaw('Annulment Law', LAW_FORM.SUM),
-      desc: `${varText} + 1 = 1 — ${varText} absorbed by 1`,
+      desc: `${varText} + 1 = 1: ${varText} absorbed by 1`,
       animPaths: [`${cs.sumPath}.${cs.ti1}`, `${cs.sumPath}.${cs.ti2}`],
       dominantConst: '1',
       constPath,
@@ -204,7 +204,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
   }
 
   // 6. ABSORPTION (A + AB = A) — semantic, never the literal-subset heuristic.
-  if (absorbsInSum(t1, t2)) {
+  if (!termsEq(t1, t2) && absorbsInSum(t1, t2)) {
     const sLits = getLits(t1)
     const lLits = getLits(t2)
     const extra = lLits.filter(ll => !sLits.some(sl => sl.v === ll.v && sl.n === ll.n))
@@ -229,7 +229,7 @@ export function sumLaws({ expr, cs, n1, n2, p1, p2, bothTermSel }) {
       },
     })
   }
-  if (absorbsInSum(t2, t1)) {
+  if (!termsEq(t1, t2) && absorbsInSum(t2, t1)) {
     const sLits = getLits(t2)
     const lLits = getLits(t1)
     const extra = lLits.filter(ll => !sLits.some(sl => sl.v === ll.v && sl.n === ll.n))

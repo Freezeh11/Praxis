@@ -15,7 +15,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { TIMING, TUTORIAL } from '../../config/gameRules.js'
-import { effectiveOptimalSteps, estimateScore, lawsUsedFromSteps } from '../../engine/index.js'
+import { effectiveOptimalSteps, estimateScore, lawsUsedFromSteps, buildSandboxPuzzle } from '../../engine/index.js'
 import { playSound } from '../../services/soundEffects.js'
 import { useGameContent } from '../../state/useGameContent.js'
 import { useGameState } from '../../state/useGameState.js'
@@ -45,7 +45,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
    * refresh. A bare /sandbox/play with neither signal keeps the pre-existing
    * generated-problem behaviour (RANDOM mode).
    */
-  const [customPuzzle] = useState(() => resolveCustomPuzzle(isSandbox, location.state))
+  const [customPuzzle, setCustomPuzzle] = useState(() => resolveCustomPuzzle(isSandbox, location.state))
   const isCustomSandbox = isSandbox && Boolean(customPuzzle)
 
   // First sandbox problem. The sandbox has no level metadata to fetch, so the
@@ -264,13 +264,37 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
       const next = buildSandboxState(puzzle?.expr || null)
       setLevel(next.level)
       setLevelPuzzle(next.puzzle)
+      setCustomPuzzle(null)
       setSandboxNonce(n => n + 1)
       setShowSuccess(false)
       onWorkspaceReset?.()
       setScoreResult(null)
       loadedAsSavedRef.current = false
     } catch {
-      toast.error('Could not generate a new problem — try again.')
+      toast.error('Could not generate a new problem, try again.')
+    }
+  }
+
+  /**
+   * Sandbox only: load a user-authored custom Boolean expression.
+   */
+  const handleLoadCustomExpression = (exprText) => {
+    try {
+      const result = buildSandboxPuzzle(exprText)
+      if (!result?.ok) {
+        return { ok: false, error: result?.error || 'This expression could not be simplified. Try a simpler one.' }
+      }
+      setLevel(SANDBOX_LEVEL)
+      setLevelPuzzle(result.puzzle)
+      setCustomPuzzle(result.puzzle)
+      setSandboxNonce(n => n + 1)
+      setShowSuccess(false)
+      onWorkspaceReset?.()
+      setScoreResult(null)
+      loadedAsSavedRef.current = false
+      return { ok: true, puzzle: result.puzzle }
+    } catch {
+      return { ok: false, error: 'Failed to build puzzle. Check your expression.' }
     }
   }
 
@@ -283,7 +307,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle,
     level, puzzle, sandboxNonce, stageNum, completedSet,
     showSuccess, setShowSuccess, scoreResult, setScoreResult,
-    handleOpenScoreSummary, handleRandomize, clearLoadedAsSaved,
+    handleOpenScoreSummary, handleRandomize, handleLoadCustomExpression, clearLoadedAsSaved,
     progress, deductPoints, laws,
     expr, sel, steps,
     applicableLaws,

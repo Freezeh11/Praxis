@@ -53,7 +53,6 @@ export default function DistributiveFactoringAnimation({ rects, data }) {
           left: minLeft,
           color: '#1a2035',
           whiteSpace: 'nowrap',
-          lineHeight: 1,
         })}
       >
         {/* Outer prefix if nested inside a parent product */}

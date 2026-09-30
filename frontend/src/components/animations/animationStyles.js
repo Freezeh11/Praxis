@@ -19,6 +19,7 @@ export function ghostTextStyle(rect, overrides = {}) {
     alignItems: 'baseline',
     fontFamily: MONO_STACK,
     fontSize: rect.fontSize || '22px',
+    lineHeight: rect.lineHeight || overrides.lineHeight || 'normal',
     fontWeight: '600',
     zIndex: 9999,
     pointerEvents: 'none',

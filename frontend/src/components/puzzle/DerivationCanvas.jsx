@@ -22,21 +22,30 @@ export default function DerivationCanvas({
     <div className={`flex-1 flex flex-col bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative ${isPhoneLandscape ? 'min-h-0 justify-start items-stretch' : 'min-h-[400px] justify-start items-stretch'} ${touchTargets ? 'overflow-auto [-webkit-overflow-scrolling:touch]' : 'overflow-hidden'} ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
       {isAnimating && <AnimationOverlay data={animationData} />}
 
-      {/* Status banner — placed in flow at top so it NEVER overlays equations */}
-      {status !== 'select' && (
-        <div className="w-full flex justify-center items-center px-4 pt-3 pb-1 z-20 shrink-0 select-none">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200
-                ${status === 'error' ? 'bg-red-100 text-red-700 border-red-300' : ''}
-                ${status === 'laws' ? 'bg-teal-light text-sky-700 border-sky-300' : ''}
-                ${status === 'success' ? 'bg-green-light text-green-800 border-green-300' : ''}
-              `}>
-            {status === 'success' && <span className="text-xs font-bold shrink-0">✓</span>}
-            {status === 'error'   && <span className="text-xs font-bold shrink-0">✕</span>}
-            {status === 'laws'    && <span className="text-xs font-bold shrink-0">→</span>}
-            <span className="leading-snug break-words">{statusMsg}</span>
-          </div>
+      {/* Status banner — placed in flow at top with a stable reserved slot so it NEVER overlays equations or causes vertical layout shift */}
+      <div className={`w-full flex justify-center items-center px-4 z-20 shrink-0 select-none ${isPhoneLandscape ? 'pt-1 pb-0.5 min-h-[30px]' : 'pt-2.5 pb-1 min-h-[42px]'}`}>
+        <div
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200 ${
+            status === 'select'
+              ? 'opacity-0 pointer-events-none'
+              : status === 'error'
+              ? 'bg-red-100 text-red-700 border-red-300 opacity-100'
+              : status === 'laws'
+              ? 'bg-teal-light text-sky-700 border-sky-300 opacity-100'
+              : status === 'applying'
+              ? 'bg-teal-light text-sky-800 border-sky-300 opacity-100'
+              : status === 'success'
+              ? 'bg-green-light text-green-800 border-green-300 opacity-100'
+              : 'opacity-0 pointer-events-none'
+          } ${isPhoneLandscape ? 'py-1 text-[11px]' : ''}`}
+        >
+          {status === 'success'  && <span className="text-xs font-bold shrink-0">✓</span>}
+          {status === 'error'    && <span className="text-xs font-bold shrink-0">✕</span>}
+          {status === 'laws'     && <span className="text-xs font-bold shrink-0">→</span>}
+          {status === 'applying' && <span className="text-xs font-bold shrink-0 animate-spin">⟳</span>}
+          <span className="leading-snug break-words">{statusMsg}</span>
         </div>
-      )}
+      </div>
 
       <div className={isPhoneLandscape
         ? 'relative w-full flex-1 flex flex-col items-start justify-start py-1'
@@ -169,7 +178,7 @@ export default function DerivationCanvas({
 
                     {/* Formula Display with Highlight Box wrapping ONLY the equation */}
                     <div
-                      data-tutorial={line.isActive ? "active-equation" : undefined}
+                      data-tutorial={line.isActive ? "active-equation" : "past-equation"}
                       data-inspect-anchor={isFromInspected ? "true" : undefined}
                       onClick={!line.isActive && line.stepIdx !== null ? (e) => {
                         e.stopPropagation()

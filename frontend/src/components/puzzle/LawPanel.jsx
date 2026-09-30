@@ -120,7 +120,7 @@ export default function LawPanel({
           >
             {applicableLaws.length === 0 && (
               <span className="shrink-0 inline-flex min-h-[44px] items-center px-1 text-[14px] text-text-3 italic">
-                {sel.length === 0 ? '← Select a term to begin' : 'No laws apply — try again'}
+                {sel.length === 0 ? '← Select a term to begin' : 'No laws apply, try again'}
               </span>
             )}
             {applicableLaws.map((law, i) => (
@@ -151,7 +151,7 @@ export default function LawPanel({
             <span className={`font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap ${touchTargets ? 'text-[14px]' : 'text-[11px]'}`}>APPLICABLE LAWS</span>
             {applicableLaws.length === 0 && (
               <span className={`text-text-3 italic ${touchTargets ? 'text-[14px]' : 'text-xs'}`}>
-                {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply — try a different selection'}
+                {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply, try a different selection'}
               </span>
             )}
           </div>

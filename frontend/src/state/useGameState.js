@@ -27,7 +27,7 @@ export function useGameState(options = {}) {
   const [optimalSteps, setOptimalSteps] = useState(0)
   const [optimalPath, setOptimalPath] = useState([])
   const [applicableLaws, setApplicableLaws] = useState([])
-  const [status, setStatus] = useState('select') // 'select' | 'laws' | 'success' | 'error'
+  const [status, setStatus] = useState('select') // 'select' | 'laws' | 'applying' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('Select a term or variable to begin')
   const [isComplete, setIsComplete] = useState(false)
   const [isDeadEnd, setIsDeadEnd] = useState(false)
@@ -461,7 +461,7 @@ export function useGameState(options = {}) {
         exprBefore: activeExpr,
         exprAfter: newExpr
       })
-      setStatus('select')
+      setStatus('applying')
       setStatusMsg(`Applying ${law.name}...`)
 
       animationTimerRef.current = setTimeout(() => {
@@ -520,7 +520,11 @@ export function useGameState(options = {}) {
     setIsComplete(false)
 
     setHistory(h => {
-      if (h.length <= 1) return h
+      if (h.length <= 1) {
+        setStatus('select')
+        setStatusMsg('Select a term or variable to begin')
+        return h
+      }
       const nextH = h.slice(0, -1)
       const prevEntry = nextH[nextH.length - 1]
       syncDeadEndStatus(prevEntry.expr, 'Undone. Select terms to continue.')

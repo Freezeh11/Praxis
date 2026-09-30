@@ -27,9 +27,8 @@ test('findOptimalPath reports the number of steps the puzzle really needs', () =
   const cases = [
     ['x + xy', 'x', 1],
     ["x'y + xy + xy", 'y', 3],
-    // Absorption is semantic, and (x + y)' IS x'y' — so the sum collapses in
-    // one absorption step instead of De Morgan + Idempotent.
-    ["(x + y)' + x'y'", "x'y'", 1],
+    // De Morgan + Idempotent: (x + y)' + x'y' -> x'y' + x'y' -> x'y' (2 steps)
+    ["(x + y)' + x'y'", "x'y'", 2],
   ]
   for (const [expr, goal, expected] of cases) {
     const result = findOptimalPath(parseExpr(expr), canonText(parseExpr(goal)))

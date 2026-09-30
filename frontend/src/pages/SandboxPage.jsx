@@ -68,7 +68,7 @@ const EXAMPLES = [
  * an accusation about what has not been typed yet. The variable ceiling comes
  * from config, so widening the sandbox never means editing copy here.
  */
-const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) — up to ${SANDBOX.maxVariables} variables`
+const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) (up to ${SANDBOX.maxVariables} variables)`
 
 const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a simpler one.'
 
@@ -241,7 +241,7 @@ export default function SandboxPage() {
             Solve Your Own Expression
           </h2>
           <p className="praxis-hide-short text-[14px] sm:text-[15px] text-text-2 font-medium max-w-lg leading-relaxed">
-            Type any Boolean expression — we check it as you write, simplify it, and hand you the
+            Type any Boolean expression: we check it as you write, simplify it, and hand you the
             same workspace the levels use.
           </p>
         </div>

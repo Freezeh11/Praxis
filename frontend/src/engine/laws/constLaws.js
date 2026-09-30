@@ -25,7 +25,7 @@ export function sumConstLaws(expr, constPath, constVal, sumPath) {
     const activeText = activeTerms.map(t => nodeText(t)).join(' + ')
     laws.push({
       ...defineLaw('Identity Law', LAW_FORM.SUM),
-      desc: `${activeText || 'A'} + 0 = ${activeText || 'A'} — remove 0`,
+      desc: `${activeText || 'A'} + 0 = ${activeText || 'A'}: remove 0`,
       animPaths: [constPath],
       activeText,
       constText: '0',
@@ -43,7 +43,7 @@ export function sumConstLaws(expr, constPath, constVal, sumPath) {
   if (constVal === 1) {
     laws.push({
       ...defineLaw('Annulment Law', LAW_FORM.SUM),
-      desc: 'A + 1 = 1 — anything OR 1 is 1',
+      desc: 'A + 1 = 1: anything OR 1 is 1',
       animPaths: [sumPath],
       dominantConst: '1',
       apply: () => {
@@ -67,7 +67,7 @@ export function productConstLaws(expr, constPath, constVal, prodPath) {
     const activeText = activeFactors.map(f => (f.type === 'sum' ? '(' + nodeText(f) + ')' : nodeText(f))).join('')
     laws.push({
       ...defineLaw('Identity Law', LAW_FORM.PRODUCT),
-      desc: `${activeText || 'A'} · 1 = ${activeText || 'A'} — remove 1`,
+      desc: `${activeText || 'A'} · 1 = ${activeText || 'A'}: remove 1`,
       animPaths: [constPath],
       activeText,
       constText: '1',
@@ -85,7 +85,7 @@ export function productConstLaws(expr, constPath, constVal, prodPath) {
   if (constVal === 0) {
     laws.push({
       ...defineLaw('Annulment Law (Product)', LAW_FORM.PRODUCT),
-      desc: 'A · 0 = 0 — anything times 0 is 0',
+      desc: 'A · 0 = 0: anything times 0 is 0',
       animPaths: [prodPath],
       dominantConst: '0',
       apply: () => {

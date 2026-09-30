@@ -130,13 +130,14 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
   // 3. DUAL IDEMPOTENT: (A+B)(A+B) = A+B or A · A = A
   if (termsEq(f1, f2)) {
     const factorText = nodeText(f1)
+    const formattedText = f1.type === 'sum' ? `(${factorText})` : factorText
     laws.push({
       ...defineLaw('Idempotent Law (Product)', LAW_FORM.PRODUCT),
       desc: `(${factorText})(${factorText}) = ${factorText}`,
       animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
       survivorPath: `${cp.prodPath}.${cp.fi1}`,
       duplicatePath: `${cp.prodPath}.${cp.fi2}`,
-      termText: factorText,
+      termText: formattedText,
       apply: () => {
         const tree = cloneN(expr)
         const pn = getNode(tree, cp.prodPath)
@@ -146,18 +147,21 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
     })
   }
 
-  // 4. DUAL ABSORPTION: A(A+B) = A or (A+B)(A+B+C) = A+B — semantic decision.
-  if (absorbsInProduct(f1, f2)) {
-    const survivorText = nodeText(f1)
-    const absorbedText = nodeText(f2)
+  // 4. DUAL ABSORPTION: A(A+B) = A or (A+B)(A+B+C) = A+B: semantic decision.
+  if (!termsEq(f1, f2) && absorbsInProduct(f1, f2)) {
+    const sText = nodeText(f1)
+    const aText = nodeText(f2)
+    const survivorFormatted = f1.type === 'sum' ? `(${sText})` : sText
+    const absorbedFormatted = f2.type === 'sum' ? `(${aText})` : aText
     laws.push({
       ...defineLaw('Absorption Law (Product)', LAW_FORM.PRODUCT),
-      desc: `${survivorText} absorbs (${absorbedText}) → ${survivorText}`,
+      desc: `${survivorFormatted} absorbs ${absorbedFormatted} → ${survivorFormatted}`,
       animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
       survivorPath: `${cp.prodPath}.${cp.fi1}`,
       absorbedPath: `${cp.prodPath}.${cp.fi2}`,
-      survivorText,
-      absorbedText,
+      survivorText: survivorFormatted,
+      absorbedText: absorbedFormatted,
+      isProduct: true,
       apply: () => {
         const tree = cloneN(expr)
         const pn = getNode(tree, cp.prodPath)
@@ -166,17 +170,20 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
       },
     })
   }
-  if (absorbsInProduct(f2, f1)) {
-    const survivorText = nodeText(f2)
-    const absorbedText = nodeText(f1)
+  if (!termsEq(f1, f2) && absorbsInProduct(f2, f1)) {
+    const sText = nodeText(f2)
+    const aText = nodeText(f1)
+    const survivorFormatted = f2.type === 'sum' ? `(${sText})` : sText
+    const absorbedFormatted = f1.type === 'sum' ? `(${aText})` : aText
     laws.push({
       ...defineLaw('Absorption Law (Product)', LAW_FORM.PRODUCT),
-      desc: `${survivorText} absorbs (${absorbedText}) → ${survivorText}`,
+      desc: `${survivorFormatted} absorbs ${absorbedFormatted} → ${survivorFormatted}`,
       animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
       survivorPath: `${cp.prodPath}.${cp.fi2}`,
       absorbedPath: `${cp.prodPath}.${cp.fi1}`,
-      survivorText,
-      absorbedText,
+      survivorText: survivorFormatted,
+      absorbedText: absorbedFormatted,
+      isProduct: true,
       apply: () => {
         const tree = cloneN(expr)
         const pn = getNode(tree, cp.prodPath)
@@ -197,7 +204,7 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
 
     laws.push({
       ...defineLaw('Annulment Law (Product)', LAW_FORM.PRODUCT),
-      desc: `${varText} · 0 = 0 — ${varText} eliminated by 0`,
+      desc: `${varText} · 0 = 0: ${varText} eliminated by 0`,
       animPaths: [`${cp.prodPath}.${cp.fi1}`, `${cp.prodPath}.${cp.fi2}`],
       dominantConst: '0',
       constPath,

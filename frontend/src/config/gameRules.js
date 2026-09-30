@@ -60,8 +60,8 @@ export const TIMING = {
   lawAnimationMs: 1350,
   /** Tutorial pause that highlights what is about to happen. */
   preLawHighlightMs: 1500,
-  /** Delay before the success modal auto-opens. */
-  successModalDelayMs: 200,
+  /** Delay before the success modal auto-opens, letting canvas transition settle. */
+  successModalDelayMs: 320,
   /** How long a hint bubble stays on screen. */
   hintAutoDismissMs: 6000,
   /** Debounce before progress is pushed to the server. */

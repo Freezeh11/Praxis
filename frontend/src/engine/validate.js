@@ -36,12 +36,12 @@ export function validateExpr(str) {
     else if (ch === ')') {
       depth--
       if (depth < 0) {
-        return { valid: false, error: 'Unbalanced parentheses — found a ")" with no matching "(".', }
+        return { valid: false, error: 'Unbalanced parentheses: found a ")" with no matching "(".', }
       }
     }
   }
   if (depth !== 0) {
-    return { valid: false, error: 'Unbalanced parentheses — missing ")".' }
+    return { valid: false, error: 'Unbalanced parentheses: missing ")".' }
   }
 
   // Must contain at least one variable or constant
@@ -54,7 +54,7 @@ export function validateExpr(str) {
     return { valid: false, error: 'Expression cannot start or end with an operator.' }
   }
   if (/[+*·&|]\s*[+*·&|]/.test(s)) {
-    return { valid: false, error: 'Two operators in a row — check for typos like "++" or "+·".' }
+    return { valid: false, error: 'Two operators in a row: check for typos like "++" or "+·".' }
   }
 
   // Content checks around parentheses (no lookbehind, for wider browser support)
@@ -63,13 +63,13 @@ export function validateExpr(str) {
     if (ch === '(') {
       const next = s[i + 1]
       if (next === undefined || /[+*·&|)]/.test(next)) {
-        return { valid: false, error: 'Invalid content right after "(" — expected a variable, constant, "!" or "(".', }
+        return { valid: false, error: 'Invalid content right after "(": expected a variable, constant, "!" or "(".', }
       }
     }
     if (ch === ')') {
       const prev = s[i - 1]
       if (prev === undefined || /[+*·&|(]/.test(prev)) {
-        return { valid: false, error: 'Invalid content right before ")" — expected a variable, constant or "\'".', }
+        return { valid: false, error: 'Invalid content right before ")": expected a variable, constant or "\'".', }
       }
     }
   }

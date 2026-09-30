@@ -23,6 +23,17 @@ export default function AbsorptionAnimation({ rects, data }) {
   const survivorText = data?.survivorText || (survivor.astText || survivor.text)
   const absorbedText = data?.absorbedText || (absorbed.astText || absorbed.text)
 
+  const isProduct = Boolean(
+    data?.isProduct ||
+    data?.lawName?.includes('Product') ||
+    (absorbedText.includes('+') && (absorbedText.includes('(') || survivorText.includes('(')))
+  )
+
+  const cleanAbsorbed = absorbedText.replace(/^\((.*)\)$/, '$1').trim()
+  const cleanSurvivor = survivorText.replace(/^\((.*)\)$/, '$1').trim()
+  const absorbedTerms = cleanAbsorbed.split('+').map(t => t.trim()).filter(Boolean)
+  const survivorTerms = cleanSurvivor.split('+').map(t => t.trim()).filter(Boolean)
+
   const survivorLits = survivorText.match(/[a-zA-Z]'?/g) || [survivorText]
   const absorbedLits = absorbedText.match(/[a-zA-Z]'?/g) || [absorbedText]
 
@@ -52,34 +63,76 @@ export default function AbsorptionAnimation({ rects, data }) {
         <ExprText text={survivorText} />
       </div>
 
-      {/* Absorbed Term (Victim) — split into evaporating extras and gliding core payload */}
+      {/* Absorbed Term or Clause (Victim) */}
       <div
         style={ghostTextStyle(absorbed, {
           padding: '2px 6px',
           zIndex: 10000,
+          whiteSpace: 'nowrap',
           '--abs-dx': `${dx}px`,
           '--abs-dy': `${dy}px`,
         })}
       >
-        {absorbedLits.map((lit, idx) => {
-          const isShared = survivorLits.includes(lit)
-          return (
-            <span
-              key={idx}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'baseline',
-                color: isShared ? '#10b981' : '#f59e0b',
-                fontWeight: 'bold',
-                animation: isShared
-                  ? 'absorbCoreGlide 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-                  : 'absorbExtraEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-              }}
-            >
-              <ExprText text={lit} />
-            </span>
-          )
-        })}
+        {isProduct && absorbedTerms.length > 1 ? (
+          <>
+            <span style={{ color: '#94a3b8', animation: 'parenFadeOut 0.6s 0.2s forwards' }}>(</span>
+            {absorbedTerms.map((term, idx) => {
+              const isShared = survivorTerms.some(st => st === term || st.replace(/\s+/g, '') === term.replace(/\s+/g, ''))
+              return (
+                <span key={idx} className="inline-flex items-baseline">
+                  {idx > 0 && (
+                    <span
+                      style={{
+                        color: isShared ? '#10b981' : '#f59e0b',
+                        margin: '0 3px',
+                        fontWeight: 'bold',
+                        animation: isShared
+                          ? 'absorbCoreGlide 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                          : 'absorbExtraEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                      }}
+                    >
+                      +
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'baseline',
+                      color: isShared ? '#10b981' : '#f59e0b',
+                      fontWeight: 'bold',
+                      animation: isShared
+                        ? 'absorbCoreGlide 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                        : 'absorbExtraEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                    }}
+                  >
+                    <ExprText text={term} />
+                  </span>
+                </span>
+              )
+            })}
+            <span style={{ color: '#94a3b8', animation: 'parenFadeOut 0.6s 0.2s forwards' }}>)</span>
+          </>
+        ) : (
+          absorbedLits.map((lit, idx) => {
+            const isShared = survivorLits.includes(lit)
+            return (
+              <span
+                key={idx}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'baseline',
+                  color: isShared ? '#10b981' : '#f59e0b',
+                  fontWeight: 'bold',
+                  animation: isShared
+                    ? 'absorbCoreGlide 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                    : 'absorbExtraEvaporate 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                }}
+              >
+                <ExprText text={lit} />
+              </span>
+            )
+          })
+        )}
       </div>
     </>
   )

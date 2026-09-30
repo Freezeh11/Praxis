@@ -1,31 +1,133 @@
 /**
- * SidePanel — the right column of the wide tiers: level (or sandbox) progress,
- * the points card with the Hint/Guide/Laws actions, and the quick stage picker
- * with its review reminder. The tiers that cannot afford a column fold these
- * blocks into the header and the bottom dock instead.
- *
- * Presentational: the panel data arrives as props, `lawsPanel` is the dock the
- * landscape tablet moves into this column.
+ * SidePanel: the right column of the wide tiers: level (or sandbox) progress,
+ * the points card with the Hint/Guide/Laws actions, the quick stage picker
+ * with its review reminder, and in Sandbox mode, the interactive Expression Creator.
  */
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
 import AssistanceControls from './AssistanceControls'
 import { LawsReferenceButton } from './LawsReferenceSheet'
+import ExpressionGuideModal from './ExpressionGuideModal'
+import { validateSandboxInput } from '../../engine/index.js'
+import { SANDBOX, TIMING } from '../../config/gameRules.js'
+
+const EXAMPLES = [
+  "A(B + A')",
+  'A + AB',
+  "!(A * B) + C'",
+  "(A + B)(A + B')",
+]
+
+const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) (up to ${SANDBOX.maxVariables} variables)`
+const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a simpler one.'
 
 export default function SidePanel({
   showRightPanel, lawsInRightColumn, lawsPanel, isSandbox, isCustomSandbox, level,
   stageNum, completedSet, points, steps, optimalSteps, isComplete, showSuccess,
-  dismissReviewReminder, onDismissReviewReminder, isTutorialActive, onSelectStage,
+  dismissReviewReminder, onDismissReviewReminder, isTutorialActive, isTutorialLevel, onSelectStage,
   onNavigateStages, assistanceInHeader, guideCost, onHint, onGuide, onOpenLaws,
-  onRandomize, chromeText, chromeHeight,
+  onRandomize, onLoadCustomExpression, expressionInputRef, chromeText, chromeHeight,
 }) {
+  const localInputRef = useRef(null)
+  const inputRef = expressionInputRef || localInputRef
+
+  const [rawExpr, setRawExpr] = useState('')
+  const [debouncedRaw, setDebouncedRaw] = useState('')
+  const [buildError, setBuildError] = useState('')
+  const [touched, setTouched] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
+
+  // Live debounced validation
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedRaw(rawExpr), TIMING.sandboxValidationDebounceMs)
+    return () => window.clearTimeout(timer)
+  }, [rawExpr])
+
+  const live = useMemo(() => validateSandboxInput(debouncedRaw), [debouncedRaw])
+  const current = useMemo(() => validateSandboxInput(rawExpr), [rawExpr])
+  const canPlay = current.valid && !busy
+
+  const tone = buildError
+    ? 'error'
+    : live.valid
+      ? 'ok'
+      : touched
+        ? 'error'
+        : 'idle'
+
+  const feedback = {
+    tone,
+    invalid: tone === 'error',
+    role: tone === 'error' ? 'alert' : 'status',
+    glyph: tone === 'ok' ? '✓' : tone === 'error' ? '✕' : 'ⓘ',
+    box: tone === 'ok'
+      ? 'text-emerald-800 bg-emerald-50 border-emerald-300'
+      : tone === 'error'
+      ? 'text-red-700 bg-red-50 border-red-300'
+      : 'text-text-3 bg-bg border-border',
+    field: tone === 'ok'
+      ? 'border-emerald-400 focus:border-emerald-500'
+      : tone === 'error'
+      ? 'border-red-400 focus:border-red-500'
+      : 'border-border focus:border-accent',
+    text: tone === 'error'
+      ? (buildError || live.error || 'Please enter a Boolean expression.')
+      : tone === 'ok'
+        ? 'Valid expression'
+        : IDLE_HINT,
+  }
+
+  const handleChange = (e) => {
+    setTouched(true)
+    setRawExpr(e.target.value)
+    setBuildError('')
+  }
+
+  const handleExample = (expr) => {
+    setTouched(true)
+    setRawExpr(expr)
+    setBuildError('')
+    inputRef.current?.focus()
+  }
+
+  const handleValidate = () => {
+    if (!canPlay) return
+    setBuildError('')
+    setBusy(true)
+
+    window.setTimeout(() => {
+      let result
+      try {
+        result = onLoadCustomExpression ? onLoadCustomExpression(rawExpr) : null
+      } catch {
+        result = { ok: false, error: BUILD_FALLBACK_ERROR }
+      }
+
+      setBusy(false)
+      if (result && !result.ok) {
+        setBuildError(result.error || BUILD_FALLBACK_ERROR)
+      }
+    }, TIMING.sandboxBusyPaintMs)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setTouched(true)
+      handleValidate()
+    }
+  }
+
   return (
     <>
-      {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages ──
+      {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages / Expression Creator ──
            Hidden on the tiers that fold it into the header / bottom dock. */}
       {showRightPanel && (
       <aside className={lawsInRightColumn
         ? 'w-[300px] min-w-[260px] bg-white border-l border-border flex flex-col overflow-hidden'
+        : isSandbox
+        ? 'w-[305px] min-w-[280px] bg-white border-l border-border flex flex-col overflow-hidden'
         : 'w-[280px] min-w-[240px] bg-white border-l border-border flex flex-col overflow-hidden'}>
         {/* Top: Stage / Level Progress (sandbox shows problem stats instead) */}
         {isSandbox ? (
@@ -66,49 +168,36 @@ export default function SidePanel({
         </div>
         )}
 
-        {/* Middle: User Points & Assistance Controls (Replaced Target Box) */}
+        {/* Middle: User Points & Assistance Controls */}
         <div data-tutorial="points-and-assistance" className="p-3.5 border-b border-border flex flex-col gap-2.5 bg-white">
-          {/* User Points Card — sandbox play is unscored, so it shows a notice instead */}
+          {/* User Points Card: sandbox play is unscored, so it shows a notice instead */}
           {isSandbox ? (
-            <div data-tutorial="sandbox-notice" className="flex items-start gap-2.5 px-3.5 py-2.5 bg-sky-50/70 border border-sky-200 rounded-xl">
-              <span className="text-lg leading-none">🧪</span>
+            <div data-tutorial="sandbox-notice" className="flex items-start gap-2.5 px-3 py-2 bg-sky-50/70 border border-sky-200 rounded-xl">
+              <span className="text-base leading-none">🧪</span>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-sky-900/80">SANDBOX MODE</div>
                 <div className="text-[11px] text-sky-900/90 leading-snug mt-0.5">
-                  Free practice — no points, stars, or progress are recorded.
+                  Free practice: no points, stars, or progress are recorded.
                 </div>
               </div>
             </div>
           ) : (
-          <div data-tutorial="points-card" className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">⭐</span>
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900/80">TOTAL POINTS</div>
+          <div data-tutorial="points-card" className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-lg shrink-0">⭐</span>
+              <div className="min-w-0">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900/80 truncate">TOTAL POINTS</div>
                 <div className="text-base font-extrabold text-amber-600 leading-none mt-0.5">
                   {points ?? 0} <span className="text-[11px] font-semibold text-amber-700">pts</span>
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-teal bg-teal/10 border border-teal/30 px-2 py-0.5 rounded-full">
+            <div className="text-right shrink-0">
+              <span className="inline-flex items-center whitespace-nowrap text-[10px] font-bold text-teal bg-teal/10 border border-teal/30 px-2 py-0.5 rounded-full">
                 +10 to +15 on clear
               </span>
             </div>
           </div>
-          )}
-
-          {/* Sandbox random mode: ONE clear randomizer. The easy/medium/hard
-              picker was removed at the user's request — the generator keeps its
-              documented default preset, it is simply no longer a user setting. */}
-          {isSandbox && !isCustomSandbox && (
-            <button
-              type="button"
-              className="w-full py-2 rounded-lg border-[1.5px] border-teal bg-teal-light text-xs font-bold text-sky-700 hover:bg-teal hover:text-white hover:border-teal transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              onClick={onRandomize}
-            >
-              <span>🎲</span> New Random Problem
-            </button>
           )}
 
           {/* Hint & Guide. Folded into the header when there is no side panel. */}
@@ -120,40 +209,101 @@ export default function SidePanel({
           )}
         </div>
 
-        {/* Level Puzzles List (Quick Stage Select) — replaced by the laws column
-            on a landscape tablet, hidden entirely in sandbox mode. */}
+        {/* Level Puzzles List OR Sandbox Expression Creator */}
         {lawsInRightColumn ? lawsPanel : (
-        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
           {isSandbox ? (
-            <div className="text-[10.5px] text-text-3 leading-relaxed px-1 pt-1">
-              <div className="font-bold tracking-[1px] uppercase text-text-3 mb-2">HOW IT WORKS</div>
-              {isCustomSandbox ? (
-                <>
-                  <p className="mb-2">
-                    This is the expression you typed. The engine always has a legal path back to its simplest
-                    form, so every step you find is checked against the laws.
-                  </p>
-                  <p>
-                    Press <span className="font-bold text-sky-700">✎ New expression</span> any time to go back and
-                    type a different one — your current derivation is discarded.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="mb-2">
-                    Every problem is generated from an inverse Boolean law, so the engine can always simplify it back down.
-                  </p>
-                  <p>
-                    Press <span className="font-bold text-sky-700">🎲 New Random Problem</span> any time to swap in a
-                    fresh expression — your current derivation is discarded.
-                  </p>
-                </>
-              )}
+            /* Expression Creator Section */
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold tracking-[1px] uppercase text-text-3">CREATE EXPRESSION</span>
+                <button
+                  type="button"
+                  data-testid="expression-guide-btn"
+                  onClick={() => setShowGuide(true)}
+                  className="text-xs font-bold text-teal hover:text-teal-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="How to write Boolean expressions"
+                >
+                  <span aria-hidden="true">📖</span> Guide
+                </button>
+              </div>
+
+              {/* Expression input */}
+              <div className="flex flex-col gap-1.5">
+                <input
+                  ref={inputRef}
+                  data-testid="sandbox-expression-input"
+                  type="text"
+                  value={rawExpr}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="go"
+                  placeholder="e.g. A(B + A')"
+                  aria-invalid={feedback.invalid}
+                  aria-describedby="sandbox-panel-feedback"
+                  className={`w-full px-3 py-2 rounded-xl border bg-bg text-text-1 font-mono text-sm outline-none transition-all ${feedback.field}`}
+                />
+
+                {/* Live validation feedback */}
+                <div
+                  id="sandbox-panel-feedback"
+                  data-testid="sandbox-panel-feedback"
+                  data-tone={feedback.tone}
+                  role={feedback.role}
+                  className={`flex items-start gap-1.5 text-xs font-semibold rounded-lg border px-2.5 py-1.5 leading-snug ${feedback.box}`}
+                >
+                  <span aria-hidden="true" className="shrink-0">{feedback.glyph}</span>
+                  <span className="min-w-0 break-words">{feedback.text}</span>
+                </div>
+              </div>
+
+              {/* Quick Examples */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-3">Try Quick Examples</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {EXAMPLES.map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      onClick={() => handleExample(ex)}
+                      className="px-2 py-1 rounded-md border border-border bg-bg hover:border-teal hover:text-text-1 font-mono text-[11px] font-semibold text-text-2 transition-all cursor-pointer shadow-2xs"
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  type="button"
+                  data-testid="sandbox-play-btn"
+                  disabled={!canPlay}
+                  onClick={handleValidate}
+                  className="w-full py-2.5 px-4 rounded-xl bg-accent hover:opacity-95 text-white font-bold text-xs shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {busy ? 'Simplifying...' : 'Validate & Play'}
+                </button>
+                <button
+                  type="button"
+                  data-testid="sandbox-random-btn"
+                  onClick={onRandomize}
+                  disabled={busy}
+                  className="w-full py-2 px-3 rounded-xl border border-border bg-bg hover:bg-border/50 text-text-1 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>🎲</span> New Random Problem
+                </button>
+              </div>
             </div>
           ) : (
           <>
-          {/* Review Mode Reminder Card */}
-          {isComplete && !showSuccess && !dismissReviewReminder && level && stageNum + 1 < level.puzzles.length && (
+          {/* Review Mode Reminder Card: ONLY shown in tutorial stages */}
+          {isTutorialLevel && isComplete && !showSuccess && !dismissReviewReminder && level && stageNum + 1 < level.puzzles.length && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -239,6 +389,15 @@ export default function SidePanel({
         </div>
         )}
       </aside>
+      )}
+
+      {/* Expression Guide Modal */}
+      {isSandbox && (
+        <ExpressionGuideModal
+          show={showGuide}
+          onClose={() => setShowGuide(false)}
+          onSelectExample={handleExample}
+        />
       )}
     </>
   )

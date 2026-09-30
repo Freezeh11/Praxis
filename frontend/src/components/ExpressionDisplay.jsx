@@ -95,8 +95,8 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         <button
           type="button"
           data-tutorial="not-bar"
-          aria-label="Negation overline bar — click to apply De Morgan's Law"
-          title="Negation overline bar — click to apply De Morgan's Law"
+          aria-label="Negation overline bar: click to apply De Morgan's Law"
+          title="Negation overline bar: click to apply De Morgan's Law"
           className={`absolute left-0 right-0 z-20 flex items-center justify-center cursor-pointer touch-none group/notbar select-none ${
             touchTargets ? '-top-3.5 h-7 pt-1' : '-top-2 h-4'
           }`}
@@ -228,7 +228,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 isGuide={isFactorGuide}
                 isAnimatingHide={factorAnimatingHide}
                 wrapperTitle="Click clause grip to select whole clause, or click variable inside"
-                gripTitle="Clause grip — select the whole clause (Dual Absorption / Idempotent)"
+                gripTitle="Clause grip: select the whole clause (Dual Absorption / Idempotent)"
               >
                 {isSumClause ? (
                   <>
@@ -263,12 +263,18 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 )}
               </DragCapsule>
             ) : (
-              <motion.span layout transition={transitionConfig} className={isFactorGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}>
+              <motion.span
+                layout
+                transition={transitionConfig}
+                data-path={fPath}
+                className={`inline-flex items-baseline ${isFactorGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${factorAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}
+                onClick={isSumClause ? (e) => { e.stopPropagation(); onClickTerm(fPath) } : undefined}
+              >
                 {isSumClause ? (
                   <>
-                    <span className="text-text-3 font-normal">(</span>
+                    <span className="text-text-3 font-normal self-center">(</span>
                     <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
-                    <span className="text-text-3 font-normal">)</span>
+                    <span className="text-text-3 font-normal self-center">)</span>
                   </>
                 ) : (
                   <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
@@ -316,7 +322,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 isGuide={isGuide}
                 isAnimatingHide={termAnimatingHide}
                 wrapperTitle="Click term grip to select whole term, or click variable inside"
-                gripTitle="Term grip — select the whole term (Absorption / Idempotent)"
+                gripTitle="Term grip: select the whole term (Absorption / Idempotent)"
               >
                 <ExprNode
                   node={t}
@@ -332,7 +338,13 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 />
               </DragCapsule>
             ) : (
-              <motion.span layout transition={transitionConfig} className={isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}>
+              <motion.span
+                layout
+                transition={transitionConfig}
+                data-path={tPath}
+                className={`inline-flex items-baseline ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${termAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onClickTerm(tPath) }}
+              >
                 <ExprNode node={t} path={tPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
               </motion.span>
             )}

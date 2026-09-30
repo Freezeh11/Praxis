@@ -17,8 +17,8 @@ export default function SurveyButton({ compact = false, chromeHeight = '' }) {
       href={SURVEY_URL}
       target="_blank"
       rel="noreferrer noopener"
-      aria-label={`${FULL_LABEL} — opens the survey in a new tab`}
-      title={`${FULL_LABEL} — opens the survey in a new tab`}
+      aria-label={`${FULL_LABEL} (opens survey in new tab)`}
+      title={`${FULL_LABEL} (opens survey in new tab)`}
       className={`shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-400/90 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-xs hover:shadow-md hover:from-amber-600 hover:via-orange-600 hover:to-amber-600 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer ring-1 ring-amber-300/40 select-none ${chromeHeight} ${compact
         ? 'px-2.5 h-9 [@media(max-height:480px)]:h-11'
         : 'px-3 h-9 [@media(max-height:480px)]:h-11'}`}

@@ -20,7 +20,7 @@ export default function SoundToggle({ enabled, onToggle, compact = false, chrome
       onClick={onToggle}
       aria-pressed={enabled}
       aria-label={label}
-      title={`${label} — click to turn sound ${enabled ? 'off' : 'on'}`}
+      title={`${label}: click to turn sound ${enabled ? 'off' : 'on'}`}
     >
       <span aria-hidden="true" className="text-[15px] leading-none">{enabled ? '🔊' : '🔇'}</span>
     </button>

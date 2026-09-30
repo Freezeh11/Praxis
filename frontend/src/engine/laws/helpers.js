@@ -46,11 +46,11 @@ function isLitProduct(node) {
   return node.type === 'prod' && node.factors.length > 0 && node.factors.every(f => f.type === 'lit')
 }
 
-/** True when every literal of `shorter` is a literal factor of `longer`. */
+/** True when every literal of `shorter` is a literal factor of `longer`, and `shorter` is strictly shorter. */
 function litsContained(shorter, longer) {
   const sLits = getLits(shorter)
   const lLits = getLits(longer)
-  return sLits.length > 0 && sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
+  return sLits.length > 0 && sLits.length < lLits.length && sLits.every(sl => lLits.some(ll => ll.v === sl.v && ll.n === sl.n))
 }
 
 /**
@@ -72,6 +72,8 @@ function litsContained(shorter, longer) {
  */
 export function absorbsInSum(survivor, absorbed) {
   if (!survivor || !absorbed) return false
+  // Identical or logically equivalent terms are Idempotent (A + A = A), NOT Absorption (A + AB = A).
+  if (termsEq(survivor, absorbed) || isEquivalent(cloneN(survivor), cloneN(absorbed))) return false
   if (survivor.type === 'lit' && termContainsLit(absorbed, survivor.v, survivor.n)) return true
   if (isLitProduct(survivor) && litsContained(survivor, absorbed)) return true
   // Structure-preserving normalization (proposal Module 4). `y + x·x'` IS
@@ -99,6 +101,8 @@ export function absorbsInSum(survivor, absorbed) {
  */
 export function absorbsInProduct(survivor, absorbed) {
   if (!survivor || !absorbed) return false
+  // Identical or logically equivalent clauses are Idempotent (A · A = A), NOT Absorption (A(A + B) = A).
+  if (termsEq(survivor, absorbed) || isEquivalent(cloneN(survivor), cloneN(absorbed))) return false
   if (survivor.type === 'lit' && sumContainsLit(absorbed, survivor.v, survivor.n)) return true
   if (isLitProduct(survivor) && getLits(survivor).some(sl => sumContainsLit(absorbed, sl.v, sl.n))) return true
   // Structure-preserving normalization (proposal Module 4). `y(x + x')` IS

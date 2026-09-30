@@ -16,7 +16,7 @@ import SoundToggle from '../ui/SoundToggle'
 export default function WorkspaceHeader({
   isSandbox, isCustomSandbox, compactHeader, headerControlRail, showStepHistoryToggle,
   chromeText, chromeHeight,
-  steps, optimalSteps, points, zoom, onZoom, isTutorialActive, onToggleTutorial,
+  steps, optimalSteps, points, zoom, onZoom, isTutorialActive, isTutorialLevel, onToggleTutorial,
   isComplete, guideCost, onHint, onGuide, onOpenLaws, onBack, stepHistoryOpen,
   onToggleStepHistory, onRandomize, onNewExpression, onUndo, onReset,
   soundEnabled, onToggleSound,
@@ -111,7 +111,7 @@ export default function WorkspaceHeader({
             {compactHeader && (isSandbox ? (
               <div
                 data-tutorial="sandbox-notice"
-                title="Sandbox practice — no points, stars or progress are recorded"
+                title="Sandbox practice: no points, stars or progress are recorded"
                 className={`shrink-0 inline-flex items-center gap-1 px-2.5 rounded-lg border border-sky-200 bg-sky-50/70 font-semibold text-sky-900 ${chromeText} ${chromeHeight}`}
               >
                 <span aria-hidden="true">🧪</span>
@@ -127,8 +127,8 @@ export default function WorkspaceHeader({
               </div>
             ))}
 
-            {/* Sandbox (random mode) only: randomize the problem */}
-            {isSandbox && !isCustomSandbox && (
+            {/* Sandbox controls: Randomize and New Expression */}
+            {isSandbox && (
               <>
                 <button
                   id="randomize-btn"
@@ -138,18 +138,11 @@ export default function WorkspaceHeader({
                 >
                   <span className="text-sm leading-none">🎲</span> Randomize
                 </button>
-                {!headerControlRail && <div className="w-[1px] h-4 bg-border mx-1" />}
-              </>
-            )}
-
-            {/* Custom sandbox: the typed expression is the only problem — go back and type another */}
-            {isSandbox && isCustomSandbox && (
-              <>
                 <button
                   data-tutorial="new-expression-btn"
                   className={`shrink-0 flex items-center gap-1.5 rounded-md border-[1.5px] border-teal bg-teal-light font-bold text-sky-700 transition-all hover:bg-teal hover:text-white hover:border-teal cursor-pointer ${compactHeader ? 'px-2.5 py-1.5' : 'px-3.5 py-1.5 text-xs'} ${chromeText} ${chromeHeight}`}
                   onClick={onNewExpression}
-                  title="Type a different expression"
+                  title="Type or edit an expression"
                 >
                   <span className="text-sm leading-none" aria-hidden="true">✎</span> New expression
                 </button>
@@ -167,10 +160,13 @@ export default function WorkspaceHeader({
 
                 {undoResetGroup}
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
-
-                {/* Interactive Tutorial Button */}
-                <TutorialToggle compact={false} isTutorialActive={isTutorialActive} onToggle={onToggleTutorial} chromeText={chromeText} chromeHeight={chromeHeight} />
+                {isTutorialLevel && (
+                  <>
+                    <div className="w-[1px] h-4 bg-border mx-1" />
+                    {/* Interactive Tutorial Button */}
+                    <TutorialToggle compact={false} isTutorialActive={isTutorialActive} onToggle={onToggleTutorial} chromeText={chromeText} chromeHeight={chromeHeight} />
+                  </>
+                )}
 
                 <div className="w-[1px] h-4 bg-border mx-1" />
 

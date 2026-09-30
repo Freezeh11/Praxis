@@ -13,7 +13,7 @@ import ZoomControls from './ZoomControls'
 export default function StepHistoryPanel({
   steps, inspectedStepIdx, onToggleInspectStep, useOverlayHistory, isPhoneLandscape,
   stepHistoryOpen, onCloseStepHistory, isSandbox, onBack, touchTargets,
-  zoom, onZoom, isTutorialActive, onToggleTutorial, chromeText, chromeHeight,
+  zoom, onZoom, isTutorialActive, isTutorialLevel, onToggleTutorial, chromeText, chromeHeight,
 }) {
   // Only the overlay-drawer variant opens and closes — on the wide tiers this
   // panel is a permanent column, so the flag stays false and the cue is unused.
@@ -93,8 +93,12 @@ export default function StepHistoryPanel({
           <div className="text-[12px] font-bold tracking-[1px] uppercase text-text-3">Workspace controls</div>
           <div className="flex items-center gap-1.5">
             <ZoomControls compact zoom={zoom} onZoom={onZoom} chromeHeight={chromeHeight} />
-            <div className="w-[1px] h-5 bg-border mx-0.5" />
-            <TutorialToggle compact isTutorialActive={isTutorialActive} onToggle={onToggleTutorial} chromeText={chromeText} chromeHeight={chromeHeight} />
+            {isTutorialLevel && (
+              <>
+                <div className="w-[1px] h-5 bg-border mx-0.5" />
+                <TutorialToggle compact isTutorialActive={isTutorialActive} onToggle={onToggleTutorial} chromeText={chromeText} chromeHeight={chromeHeight} />
+              </>
+            )}
           </div>
         </div>
       )}

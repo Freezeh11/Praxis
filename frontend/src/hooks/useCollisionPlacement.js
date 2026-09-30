@@ -33,6 +33,8 @@ const POPUP_PROTECTED_SELECTORS = [
   '[data-tutorial="randomize-next-btn"]',
   '[data-testid="bottom-dock"]',
   '[data-tutorial="canvas"] [data-path]',
+  '[data-tutorial="canvas"] [data-tutorial*="equation"]',
+  '[data-tutorial="canvas"] [data-inspect-anchor]',
 ]
 /** Extra breathing room kept around the popup and the viewport edges. */
 export const POPUP_MARGIN = 8
@@ -137,6 +139,7 @@ const DEFAULT_POPUP_CANDIDATES = [{ side: 'below' }, { side: 'above' }, { side: 
  * header between the title and the right-hand controls.
  */
 export const INSPECT_POPUP_CANDIDATES = [
+  { side: 'left', gap: 12 },
   { side: 'right', gap: 10 },
   { side: 'below', gap: 8 },
   { side: 'above', gap: 8 },
@@ -244,9 +247,11 @@ export default function useCollisionPlacement({
           } else if (cand.side === 'above') {
             out.push({ top: anchor.top - gap - natH, dir: 'above' })
           } else if (cand.side === 'right') {
-            if (avail.right - gap >= natW + POPUP_MARGIN) out.push({ left: anchor.right + gap, top: anchor.top, dir: 'right' })
+            const anchorMidY = anchor.top + (anchor.height || 0) / 2
+            if (avail.right - gap >= natW + POPUP_MARGIN) out.push({ left: anchor.right + gap, top: anchorMidY - natH / 2, dir: 'right' })
           } else if (cand.side === 'left') {
-            if (avail.left - gap >= natW + POPUP_MARGIN) out.push({ left: anchor.left - gap - natW, top: anchor.top, dir: 'left' })
+            const anchorMidY = anchor.top + (anchor.height || 0) / 2
+            if (avail.left - gap >= natW + POPUP_MARGIN) out.push({ left: anchor.left - gap - natW, top: anchorMidY - natH / 2, dir: 'left' })
           } else if (cand.side === 'top-center') {
             out.push({ top: vp.top + POPUP_MARGIN, left: vp.left + (vp.right - vp.left - boxW) / 2, align: 'viewport' })
           } else if (cand.side === 'bottom-center') {
@@ -342,10 +347,12 @@ export default function useCollisionPlacement({
       const tries = buildCandidates().map(c => resolve(c, natH))
       let chosen = tries[0] || resolve({ top: vp.top + POPUP_MARGIN }, natH)
       let bestPenalty = tries.length > 0 ? cost(chosen) : 0
-      for (const t of tries.slice(1)) {
-        const penalty = cost(t)
-        if (penalty === 0) { chosen = t; break }
-        if (penalty < bestPenalty) { bestPenalty = penalty; chosen = t }
+      if (bestPenalty > 0) {
+        for (const t of tries.slice(1)) {
+          const penalty = cost(t)
+          if (penalty === 0) { chosen = t; break }
+          if (penalty < bestPenalty) { bestPenalty = penalty; chosen = t }
+        }
       }
       // Nothing clean anywhere: shrink into the free band the few available
       // pixels allow (the card scrolls) rather than covering a control.
@@ -392,10 +399,9 @@ export default function useCollisionPlacement({
       window.visualViewport?.removeEventListener('resize', schedule)
       observer?.disconnect()
     }
-    // `enabled` is the only reactive dependency: the anchors are read live at
-    // measure time, which is exactly why this recomputes on resize/scroll.
+    // `enabled` and `anchorSelector` are reactive dependencies: recompute placement immediately when anchor changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, candidates, fullWidthOnNarrow, hardAvoidSelector])
+  }, [enabled, anchorSelector, candidates, fullWidthOnNarrow, hardAvoidSelector])
 
   // NOTE: the node handle is returned as `nodeRef` (not `ref`) so reading it in
   // render is not mistaken for a render-time ref read by react-hooks/refs.

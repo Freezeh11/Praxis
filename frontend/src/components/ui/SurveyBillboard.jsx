@@ -23,14 +23,7 @@ export default function SurveyBillboard({ className = '' }) {
 
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-200/80 px-2 py-0.5 font-mono text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-600 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-700" />
-                </span>
-                Feedback Billboard
-              </span>
-              <span className="text-[11px] font-semibold text-amber-800/80">2 min</span>
+              <span className="text-[11px] font-semibold text-amber-800/80">5-10 minutes</span>
             </div>
 
             <h3 className="mt-1 text-sm sm:text-base font-bold text-text-1">

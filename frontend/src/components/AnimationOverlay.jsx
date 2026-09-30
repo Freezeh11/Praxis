@@ -32,13 +32,12 @@ export default function AnimationOverlay({ data }) {
       const measured = pathsToMeasure.map(path => {
         const el = document.querySelector(`[data-path="${path}"]`)
         if (!el) return null
-        // If el is a term container with a ⠿ handle as its first child, measure the inner expression
-        const targetEl = (el.children && el.children.length >= 2 && el.children[0].innerText?.includes('⠿'))
-          ? el.children[1]
-          : el
-        const r = targetEl.getBoundingClientRect()
+        const hasGrip = Boolean(el.children && el.children.length >= 2 && el.children[0].innerText?.includes('⠿'))
+        const textEl = hasGrip ? el.children[1] : el
+        // Measure el directly for bounding box so term capsule borders and paddings align accurately
+        const r = el.getBoundingClientRect()
         // Strip out handle icons and extra whitespace to get clean token text
-        const cleanText = targetEl.innerText.replace(/[⠿\s]+/g, ' ').trim()
+        const cleanText = (textEl.innerText || el.innerText || '').replace(/[⠿\s]+/g, ' ').trim()
 
         // Extract true mathematical text from AST if available so overbars/primes are preserved
         let astText = cleanText
@@ -49,6 +48,8 @@ export default function AnimationOverlay({ data }) {
           }
         }
 
+        const computed = window.getComputedStyle(textEl)
+
         return {
           left: r.left,
           top: r.top,
@@ -58,9 +59,10 @@ export default function AnimationOverlay({ data }) {
           cy: r.top + r.height / 2,
           text: cleanText,
           astText: astText,
-          fontSize: window.getComputedStyle(targetEl).fontSize,
-          fontWeight: window.getComputedStyle(targetEl).fontWeight,
-          fontFamily: window.getComputedStyle(targetEl).fontFamily,
+          fontSize: computed.fontSize,
+          fontWeight: computed.fontWeight,
+          fontFamily: computed.fontFamily,
+          lineHeight: computed.lineHeight,
         }
       })
       setRects(measured)
