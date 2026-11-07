@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
@@ -15,6 +15,7 @@ import SurveyBillboard from '../components/ui/SurveyBillboard'
 import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
 import SoundToggle from '../components/ui/SoundToggle'
+import SignOutConfirmModal from '../components/ui/SignOutConfirmModal'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
 
 // Level 4+ are permanently "coming soon" (no puzzles yet)
@@ -41,6 +42,7 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress, getStagesCompleted, resetLevelProgress, hasSeenTutorial, hasCompletedTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into the carousel entries
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
 
   // Tutorial-replay prompt, laws drawer, and the placement both are measured against.
   const {
@@ -227,7 +229,13 @@ export default function LevelSelectPage() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-x-hidden overflow-y-auto bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-      {/* Header — shrinks to 52px on a landscape phone so the card + CTA fit. */}
+      {/* Sign-out confirmation modal */}
+      <SignOutConfirmModal
+        show={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleLogout}
+      />
+
       <AppHeader
         left={<BackNav variant="home" to="/" label="Home" title="Back to Home" />}
         right={(
@@ -246,7 +254,7 @@ export default function LevelSelectPage() {
             <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
             <SurveyButton compact />
             <button 
-              onClick={handleLogout}
+              onClick={() => setShowSignOutModal(true)}
               className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all sm:ml-1" 
               title="Sign Out"
             >
