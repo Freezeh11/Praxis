@@ -33,13 +33,16 @@ function findLitPath(node, base, v, n) {
  * Enumerates all valid one-step transitions from an AST state.
  *
  * @param {Object} tree - Starting AST tree
- * @param {Object} [options] - forwarded to analyzeSelection (e.g. { allowExpand: true } for the sandbox)
+ * @param {Object} [options] - law availability and sandbox expansion options
+ * @param {string[]|null} [options.allowedLawIds] - visible palette ids; null is unrestricted, [] allows no moves
  */
 export function getLegalTransitions(tree, options = {}) {
   const transitions = []
   const seenNextCanons = new Set()
 
   function addTransition(law, sourceTree, selection) {
+    // A visible palette is also the search boundary, including intermediate steps.
+    if (options.allowedLawIds && !options.allowedLawIds.includes(law.id)) return
     try {
       const nextTree = law.apply()
       if (!nextTree) return
@@ -180,6 +183,7 @@ export function getLegalTransitions(tree, options = {}) {
  * @param {number} [options.maxDepth=10] - Maximum search depth
  * @param {number} [options.maxStates=3000] - Maximum state budget
  * @param {boolean} [options.allowExpand=false] - also offer the gated Distributive-Expand law (sandbox)
+ * @param {string[]|null} [options.allowedLawIds] - restrict every searched step to the visible palette
  * @returns {{ optimalSteps: number, path: Array<{ law: string, from: string, to: string }>, found: boolean }}
  */
 export function findOptimalPath(startExpr, targetCanon, options = {}) {

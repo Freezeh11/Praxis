@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import {
   parseExpr, cloneN, canonText, nodeText, getNode,
-  analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints,
+  analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, getLegalTransitions,
   findOptimalPath,
   findOptimalPathWithLaws,
   evaluateLawChoice, selectionLaws, planGuidance, lawsUsedFromSteps,
@@ -14,7 +14,8 @@ export function useGameState(options = {}) {
   // Sandbox-only engine opt-in: enables the gated Distributive-Expand law.
   // Graded levels never enable expansion; independent selection only changes
   // how the learner chooses an existing supported transformation.
-  const { allowExpand = false, independent = true } = options || {}
+  const { allowExpand = false, independent = true, allowedLawIds = null } = options || {}
+  const engineOptions = useMemo(() => ({ allowExpand, allowedLawIds }), [allowExpand, allowedLawIds])
   const [history, setHistory] = useState([]) // Array of { expr, step }
   const expr = history.length > 0 ? history[history.length - 1].expr : null
   const steps = useMemo(() => history.slice(1).map(h => h.step), [history])
@@ -73,7 +74,7 @@ export function useGameState(options = {}) {
       return false
     }
 
-    const hints = scanHints(exprSnapshot, 'R', { allowExpand })
+    const hints = getLegalTransitions(exprSnapshot, engineOptions)
     if (hints.length === 0) {
       markDeadEnd(true, { silent })
       setApplicableLaws([])
@@ -86,7 +87,7 @@ export function useGameState(options = {}) {
     setStatus('select')
     setStatusMsg(fallbackMsg)
     return false
-  }, [allowExpand, markDeadEnd])
+  }, [engineOptions, markDeadEnd])
 
   const loadPuzzle = useCallback((puzzle, savedSteps = null) => {
     clearTimeout(preLawTimerRef.current)
@@ -118,13 +119,13 @@ export function useGameState(options = {}) {
     try {
       const requiredLaws = puzzle.targetLaws || []
       let solverRes = requiredLaws.length
-        ? findOptimalPathWithLaws(parsedExpr, gCanon, requiredLaws, { allowExpand })
-        : findOptimalPath(parsedExpr, gCanon, { allowExpand })
+        ? findOptimalPathWithLaws(parsedExpr, gCanon, requiredLaws, engineOptions)
+        : findOptimalPath(parsedExpr, gCanon, engineOptions)
 
       // No route satisfies the objective (or the budget ran out): fall back to
       // the plain optimum rather than refusing to score the puzzle.
       if (!solverRes.found && requiredLaws.length) {
-        solverRes = findOptimalPath(parsedExpr, gCanon, { allowExpand })
+        solverRes = findOptimalPath(parsedExpr, gCanon, engineOptions)
       }
 
       if (solverRes.found && solverRes.optimalSteps > 0) {
@@ -184,7 +185,7 @@ export function useGameState(options = {}) {
     setIsAnimating(false)
     setAnimationData(null)
     setEarnedXp(0)
-  }, [syncDeadEndStatus, allowExpand, markDeadEnd])
+  }, [syncDeadEndStatus, engineOptions, markDeadEnd])
 
   const updateLaws = useCallback((nextSel, exprSnapshot) => {
     if (isDeadEnd) {
@@ -202,7 +203,7 @@ export function useGameState(options = {}) {
     }
 
     if (nextSel.length === 2) {
-      const laws = analyzeSelection(exprSnapshot, nextSel, { allowExpand })
+      const laws = analyzeSelection(exprSnapshot, nextSel, engineOptions)
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
       if (laws.length) {
@@ -242,7 +243,7 @@ export function useGameState(options = {}) {
       setStatus('select')
       setStatusMsg('Choose a law from the palette to begin')
     }
-  }, [isDeadEnd, allowExpand, independent])
+  }, [isDeadEnd, engineOptions, independent])
 
   /* ---- selection handlers ---- */
 
@@ -454,7 +455,7 @@ export function useGameState(options = {}) {
     if (!activeExpr) return
 
     if (independent) {
-      const verdict = evaluateLawChoice(activeExpr, sel, law.id, { allowExpand })
+      const verdict = evaluateLawChoice(activeExpr, sel, law.id, engineOptions)
       const attempt = {
         lawId: law.id, outcome: verdict.code, assisted: assistanceRef.current,
         expression: nodeText(activeExpr), selection: sel.map(s => ({ ...s })),
@@ -577,7 +578,7 @@ export function useGameState(options = {}) {
     } else {
       startAnimation()
     }
-  }, [expr, steps, isComplete, independent, allowExpand, sel, selectedLaw, syncDeadEndStatus, markDeadEnd])
+  }, [expr, steps, isComplete, independent, engineOptions, sel, selectedLaw, syncDeadEndStatus, markDeadEnd])
 
   const undoAction = useCallback(() => {
     setSelectedLaw(null)
@@ -629,14 +630,14 @@ export function useGameState(options = {}) {
   const getGuidance = useCallback(() => {
     if (!expr || interactionLockedRef.current || isComplete) return { status: 'busy' }
     const used = lawsUsedFromSteps(steps)
-    const key = nodeText(expr) + '|' + used.join(',')
+    const key = nodeText(expr) + '|' + used.join(',') + '|' + (allowedLawIds?.join(',') ?? '*') + '|' + allowExpand
     if (guidanceCacheRef.current?.key === key) return guidanceCacheRef.current.result
     const puzzle = puzzleRef.current
     const budget = puzzle?.solutionPath ? SANDBOX.budget.optimalPath : {}
-    const result = planGuidance(expr, goalCanonRef.current, puzzle?.targetLaws || [], used, { ...budget, allowExpand })
+    const result = planGuidance(expr, goalCanonRef.current, puzzle?.targetLaws || [], used, { ...budget, ...engineOptions })
     guidanceCacheRef.current = { key, result }
     return result
-  }, [expr, steps, isComplete, allowExpand])
+  }, [expr, steps, isComplete, engineOptions, allowedLawIds, allowExpand])
 
   const requestHint = useCallback(() => {
     const result = getGuidance()
@@ -715,19 +716,24 @@ export function useGameState(options = {}) {
 
     setActiveGuidePaths(paths)
     setSel(nextSel)
-    const guidedLaw = selectionLaws(expr, nextSel, { allowExpand }).find(l => l.id === result.transition.lawId)
+    const guidedLaw = selectionLaws(expr, nextSel, engineOptions).find(l => l.id === result.transition.lawId)
     setSelectedLaw(guidedLaw)
 
     // Guide supplies both the law and targets; applying remains an explicit action.
-    const laws = selectionLaws(expr, nextSel, { allowExpand })
+    const laws = selectionLaws(expr, nextSel, engineOptions)
     setApplicableLaws(independent ? [] : laws)
     setStatus(laws.length ? 'laws' : 'select')
     setStatusMsg(`Guide: press Apply to use ${result.transition.law} on the highlighted selection. ${independent ? 'This decision is assisted. ' : ''}${result.objective ? '' : 'This route reaches the target but skips a remaining target law.'}`)
     return true
-  }, [expr, allowExpand, independent, getGuidance, markDeadEnd])
+  }, [expr, engineOptions, independent, getGuidance, markDeadEnd])
 
   const chooseLaw = useCallback((law) => {
     if (interactionLockedRef.current || isComplete) return
+    if (allowedLawIds && !allowedLawIds.includes(law.id)) {
+      setStatus('error')
+      setStatusMsg("Choose a law available in this stage's palette.")
+      return
+    }
     primeAudio()
     setSelectedLaw(law)
     setSel([])
@@ -735,7 +741,7 @@ export function useGameState(options = {}) {
     setActiveGuidePaths([])
     setStatus('select')
     setStatusMsg(`${law.name} selected. Select the target term(s), then press Apply.`)
-  }, [isComplete])
+  }, [isComplete, allowedLawIds])
 
   return {
     expr, sel, steps, exprHistory,

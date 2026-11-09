@@ -21,7 +21,7 @@ export function selectionLaws(expr, selection, options = {}) {
   return []
 }
 
-/** Stable reference order. Reference-only and sandbox-only actions are excluded. */
+/** Supported actions in palette order; sandbox expansion is an explicit opt-in. */
 export function independentChoices(referenceLaws, { lawIds = null, allowExpand = false } = {}) {
   const supported = new Set(LAW_DEFINITIONS.filter(l => allowExpand || l.id !== 'distributive-expand').map(l => l.id))
   const references = allowExpand ? [...referenceLaws, { ...LAW_DEFINITIONS.find(l => l.id === 'distributive-expand'), formulas: ['A(B + C) = AB + AC'] }] : referenceLaws
@@ -44,6 +44,9 @@ const CONDITIONS = {
 }
 
 export function evaluateLawChoice(expr, selection, lawId, options = {}) {
+  if (options.allowedLawIds && !options.allowedLawIds.includes(lawId)) {
+    return { ok: false, code: 'unavailable', message: "Choose a law available in this stage's palette." }
+  }
   if (!selection.length || selection.some(s => !getNode(expr, s.path))) {
     return { ok: false, code: 'selection', message: 'Select the expression parts you want to transform, then press Apply.' }
   }

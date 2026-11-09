@@ -11,7 +11,7 @@ const references = JSON.parse(readFileSync(new URL('../../../../content/laws.jso
 const pair = (a, b, isTermSel = true) => [{ path: a, isTermSel }, { path: b, isTermSel }]
 
 test('Level 1 progressively adds palette choices; other workspaces show the full set', () => {
-  const expected = [1, 1, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8]
+  const expected = [1, 1, 5, 5, 7, 7, 8, 8, 8, 8, 8, 8]
   expected.forEach((count, stage) => {
     const ids = paletteLawIds(1, stage)
     assert.equal(independentChoices(references, { lawIds: ids }).length, count)

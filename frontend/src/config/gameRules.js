@@ -84,13 +84,15 @@ export const TUTORIAL = {
   stageIndexes: [0, 1, 2, 3],
 }
 
-/** Zero-based Level 1 stage groups; later levels expose every supported law. */
+/** Zero-based Level 1 stage groups; later levels expose every supported law.
+ * Identity joins factoring/complement: their intermediate 1 and 0 constants
+ * must be removable in both the SOP and POS puzzles from stage index 2. */
 export function paletteLawIds(levelId, stageIdx) {
   if (Number(levelId) !== 1) return null
   const ids = ['absorption']
-  if (stageIdx >= 2) ids.push('idempotent', 'distributive', 'complement')
+  if (stageIdx >= 2) ids.push('idempotent', 'distributive', 'complement', 'identity')
   if (stageIdx >= 4) ids.push('demorgan-and', 'demorgan-or')
-  if (stageIdx >= 6) ids.push('annulment', 'identity')
+  if (stageIdx >= 6) ids.push('annulment')
   return ids
 }
 

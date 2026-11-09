@@ -10,7 +10,7 @@
  * Scoring goes through engine/scoring.js — the ONE client-side implementation
  * of the weights; this hook only decides WHEN a solution is scored.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -85,7 +85,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   // carry the flag, so their law engine stays exactly as it was.
   const allowExpand = Boolean(puzzle && puzzle.allowExpand)
   const independent = true
-  const lawIds = isSandbox ? null : paletteLawIds(levelId, stageNum)
+  const lawIds = useMemo(() => isSandbox ? null : paletteLawIds(levelId, stageNum), [isSandbox, levelId, stageNum])
 
   const {
     expr, sel, steps,
@@ -103,7 +103,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     hintsUsed,
     guidesUsed,
     optimalSteps,
-  } = useGameState({ allowExpand, independent })
+  } = useGameState({ allowExpand, independent, allowedLawIds: lawIds })
 
   // 1. Fetch level and set current puzzle (skipped entirely in sandbox mode)
   useEffect(() => {
