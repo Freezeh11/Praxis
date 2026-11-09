@@ -39,7 +39,7 @@ export function getLegalTransitions(tree, options = {}) {
   const transitions = []
   const seenNextCanons = new Set()
 
-  function addTransition(law, sourceTree) {
+  function addTransition(law, sourceTree, selection) {
     try {
       const nextTree = law.apply()
       if (!nextTree) return
@@ -53,6 +53,7 @@ export function getLegalTransitions(tree, options = {}) {
         transitions.push({
           law: law.name,
           lawId: law.id,
+          selection,
           from: fromText,
           to: toText,
           nextTree,
@@ -70,7 +71,7 @@ export function getLegalTransitions(tree, options = {}) {
     // 1. Single-node NOT laws (Double Negation, De Morgan)
     if (node.type === 'not') {
       const laws = analyzeNot(tree, path)
-      laws.forEach(l => addTransition(l, tree))
+      laws.forEach(l => addTransition(l, tree, [{ path, isTermSel: false }]))
       walk(node.child, path + '.0')
       return
     }
@@ -83,7 +84,7 @@ export function getLegalTransitions(tree, options = {}) {
         const f1 = factors[i]
         if (f1.type === 'const') {
           const laws = analyzeProductConst(tree, p1, f1.val, path)
-          laws.forEach(l => addTransition(l, tree))
+          laws.forEach(l => addTransition(l, tree, [{ path: p1, isTermSel: false }]))
         }
 
         for (let j = i + 1; j < factors.length; j++) {
@@ -95,7 +96,9 @@ export function getLegalTransitions(tree, options = {}) {
             { path: p1, isTermSel: true },
             { path: p2, isTermSel: true },
           ], options)
-          clauseLaws.forEach(l => addTransition(l, tree))
+          clauseLaws.forEach(l => addTransition(l, tree, [
+            { path: p1, isTermSel: true }, { path: p2, isTermSel: true },
+          ]))
 
           // B. Literal-level selections (Dual Distributive, Dual Complement)
           const lits1 = getSumLits(f1)
@@ -109,7 +112,9 @@ export function getLegalTransitions(tree, options = {}) {
                   { path: lp1, isTermSel: false },
                   { path: lp2, isTermSel: false },
                 ], options)
-                litLaws.forEach(l => addTransition(l, tree))
+                litLaws.forEach(l => addTransition(l, tree, [
+                  { path: lp1, isTermSel: false }, { path: lp2, isTermSel: false },
+                ]))
               }
             }
           }
@@ -134,7 +139,9 @@ export function getLegalTransitions(tree, options = {}) {
             { path: p1, isTermSel: true },
             { path: p2, isTermSel: true },
           ], options)
-          termLaws.forEach(l => addTransition(l, tree))
+          termLaws.forEach(l => addTransition(l, tree, [
+            { path: p1, isTermSel: true }, { path: p2, isTermSel: true },
+          ]))
 
           // B. Literal-level selections (Complement, Distributive Factoring)
           const lits1 = getLits(t1)
@@ -148,7 +155,9 @@ export function getLegalTransitions(tree, options = {}) {
                   { path: lp1, isTermSel: false },
                   { path: lp2, isTermSel: false },
                 ], options)
-                litLaws.forEach(l => addTransition(l, tree))
+                litLaws.forEach(l => addTransition(l, tree, [
+                  { path: lp1, isTermSel: false }, { path: lp2, isTermSel: false },
+                ]))
               }
             }
           }

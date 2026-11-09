@@ -36,6 +36,7 @@ export { validateExpr } from './validate.js'
 
 /* Semantics */
 export { extractVariables, evalAST, isEquivalent } from './equivalence.js'
+export { selectionLaws, evaluateLawChoice, independentChoices, planGuidance } from './practice.js'
 
 /* Law detection */
 export {

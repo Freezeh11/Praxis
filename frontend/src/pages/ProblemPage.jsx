@@ -103,6 +103,9 @@ export default function ProblemPage() {
   // ── Transient UI state (the page owns every popup and overlay) ─────────
   const [showHint, setShowHint] = useState(false)
   const [currentHint, setCurrentHint] = useState('')
+  const [hintExpression, setHintExpression] = useState(null)
+  const hintDismissTimerRef = useRef(null)
+  useEffect(() => () => clearTimeout(hintDismissTimerRef.current), [])
   const [zoom, setZoom] = useState(1.0)
   const [inspectedStepIdx, setInspectedStepIdx] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
@@ -121,9 +124,13 @@ export default function ProblemPage() {
   // this page only hands it to the header toggle.
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
-  const handlePuzzleChange = () => setShowHint(false)
+  const handlePuzzleChange = () => {
+    clearTimeout(hintDismissTimerRef.current)
+    setShowHint(false)
+  }
   /** A randomize swaps the problem: every transient overlay goes with it. */
   const handleWorkspaceReset = () => {
+    clearTimeout(hintDismissTimerRef.current)
     setShowHint(false)
     setInspectedStepIdx(null)
     setShowResetConfirm(false)
@@ -152,7 +159,7 @@ export default function ProblemPage() {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
     stageNum, completedSet, showSuccess, setShowSuccess, scoreResult, setScoreResult,
     handleOpenScoreSummary, handleRandomize, handleLoadCustomExpression, clearLoadedAsSaved, progress, deductPoints, laws,
-    expr, sel, steps, applicableLaws, isComplete, earnedXp, status, statusMsg,
+    expr, sel, steps, applicableLaws, independent, choiceAttempts, isComplete, earnedXp, status, statusMsg,
     activeGuidePaths, isPreLawHighlight, isAnimating, animationData,
     handleClickLit, handleClickNot, handleClickTerm,
     applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
@@ -268,9 +275,11 @@ export default function ProblemPage() {
     if (!puzzle || isComplete) return
     const hint = requestHint(puzzle)
     if (hint) {
+      clearTimeout(hintDismissTimerRef.current)
+      setHintExpression(expr)
       setCurrentHint(hint)
       setShowHint(true)
-      setTimeout(() => setShowHint(false), TIMING.hintAutoDismissMs)
+      hintDismissTimerRef.current = setTimeout(() => setShowHint(false), TIMING.hintAutoDismissMs)
     }
   }
 
@@ -404,6 +413,7 @@ export default function ProblemPage() {
     <LawPanel
       isComplete={isComplete} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
       steps={steps} optimalSteps={optimalSteps} applicableLaws={applicableLaws}
+      independent={independent} referenceLaws={laws} busy={isAnimating || isPreLawHighlight}
       sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
       touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
@@ -474,6 +484,7 @@ export default function ProblemPage() {
         showSuccess={showSuccess} onClose={() => setShowSuccess(false)} isTutorialActive={isTutorialActive}
         shortViewport={shortViewport} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
         steps={steps} optimalSteps={optimalSteps} hintsUsed={hintsUsed}
+        independent={independent} choiceAttempts={choiceAttempts}
         guidesUsed={guidesUsed} scoreResult={scoreResult} earnedXp={earnedXp}
         puzzle={puzzle} level={level} stageNum={stageNum}
         onNewExpression={handleNewExpression} onRandomize={handleRandomize} onNextStage={handleNextStage}
@@ -500,7 +511,7 @@ export default function ProblemPage() {
            layer, collision-aware, clamped into the viewport, never over the
            controls the learner still needs (see useCollisionPlacement). */}
       <HintBubble
-        show={showHint} hint={currentHint} isPhoneLandscape={isPhoneLandscape}
+        show={showHint && hintExpression === expr && !isComplete && !isAnimating && !isPreLawHighlight} hint={currentHint} isPhoneLandscape={isPhoneLandscape}
         isNarrowViewport={isNarrowViewport} ready={hintPopupReady} nodeRef={hintPopupNode}
         layerStyle={hintPopupStyle} onClose={() => setShowHint(false)}
       />
@@ -517,6 +528,7 @@ export default function ProblemPage() {
             {inspectedStepIdx !== null && (
               <LawExplanationCard
                 lawName={steps[inspectedStepIdx]?.law}
+                explanation={steps[inspectedStepIdx]?.explanation}
                 ready={inspectPopupReady} onClose={() => setInspectedStepIdx(null)}
               />
             )}

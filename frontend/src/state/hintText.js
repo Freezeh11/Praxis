@@ -7,7 +7,7 @@
  */
 import { getNode, findCommonProd } from '../engine/index.js'
 
-export const DEAD_END_MSG = "This expression is simplified, but it isn't in its optimal state. A different law path can reach the target answer."
+export const DEAD_END_MSG = 'No supported move is available here, and the target has not been reached. This does not mean your previous steps were invalid. Undo to explore another route.'
 
 /**
  * Converts a scanHints result into a human-readable hint string.

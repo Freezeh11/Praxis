@@ -27,5 +27,7 @@ run popup-overlap env SKIP_TIP=1 node .e2e/popup-overlap-verify.mjs
 run tutorial-gate node .e2e/tutorial-gate.mjs
 run gameplay node .e2e/gameplay.mjs
 run law-comments node .e2e/law-comments.mjs
+run requirements-pilot node .e2e/requirements-pilot.mjs
+run application-regression node .e2e/application-regression.mjs
 run acceptance node .e2e/acceptance-features.mjs
 echo "ALL DONE"

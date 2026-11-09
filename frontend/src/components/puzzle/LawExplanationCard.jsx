@@ -32,13 +32,13 @@ function getLawExplanation(lawName) {
     if (lower.includes('double neg')) {
       return 'Double NOT cancels out: (A\')\' = A.'
     }
-    if (lower.includes('demorgan')) {
+    if (lower.includes('demorgan') || lower.includes('de morgan')) {
       return 'Negated group expanded: (AB)\' = A\' + B\' or (A+B)\' = A\'B\'.'
     }
     return `Applied ${lawName}.`
 }
 
-export default function LawExplanationCard({ lawName, ready, onClose }) {
+export default function LawExplanationCard({ lawName, explanation, ready, onClose }) {
   return (
     <div
       data-inspect-card="true"
@@ -65,7 +65,7 @@ export default function LawExplanationCard({ lawName, ready, onClose }) {
         </button>
       </div>
       <div className="text-slate-700 text-[12.5px] leading-relaxed font-sans font-normal">
-        {getLawExplanation(lawName)}
+        {explanation || getLawExplanation(lawName)}
       </div>
     </div>
   )

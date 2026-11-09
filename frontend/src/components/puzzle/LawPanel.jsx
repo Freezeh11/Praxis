@@ -7,15 +7,17 @@
  * Presentational: the law list, the layout flags and the callbacks come in.
  */
 import { useEffect, useRef } from 'react'
+import { independentChoices } from '../../engine/index.js'
 
 export default function LawPanel({
   isComplete, isSandbox, isCustomSandbox, steps, optimalSteps,
   applicableLaws, sel, lawsAsStrip, lawsAsGrid, touchTargets, onApplyLaw,
   onOpenLaws, level, stageNum, onOpenScoreSummary, onNextStage, onBackToStages,
-  onRandomize, onNewExpression,
+  onRandomize, onNewExpression, independent = false, referenceLaws = [], busy = false,
 }) {
+  const choices = independent ? independentChoices(referenceLaws) : applicableLaws
   /** Identity of the applicable-law set, used to re-anchor the law strip. */
-  const applicableLawKey = applicableLaws.map(l => l.id).join('|')
+  const applicableLawKey = choices.map(l => l.id).join('|')
   const lawsStripRef = useRef(null)
 
   // Applicable laws are inserted at the HEAD of the phone-landscape strip. If the
@@ -34,7 +36,7 @@ export default function LawPanel({
         ? 'border-t-[1.5px] border-border bg-white shrink-0 px-2 py-1.5'
         : lawsAsGrid
           ? 'border-t-[1.5px] border-border p-3 bg-white shrink-0 max-h-[46vh] overflow-y-auto'
-          : 'border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0'}
+          : 'border-t-[1.5px] border-border p-3 px-5 pb-4 bg-white shrink-0 max-h-[35vh] overflow-y-auto'}
     >
       {isComplete ? (
         <div className={`flex items-center justify-between gap-4 flex-wrap ${lawsAsStrip ? 'gap-2 py-0' : 'py-1'}`}>
@@ -111,23 +113,24 @@ export default function LawPanel({
            full reference lives behind the Laws button so the strip cannot turn
            into a wall of chips. */
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-[14px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">Laws</span>
+          <span data-testid={independent ? 'independent-practice' : undefined} className="shrink-0 text-[14px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">{independent ? 'Choose law' : 'Laws'}</span>
           <div
             data-testid="laws-list"
             data-layout="strip"
             ref={lawsStripRef}
             className="praxis-rail items-stretch flex-1 min-w-0 min-h-[44px] py-0.5"
           >
-            {applicableLaws.length === 0 && (
+            {choices.length === 0 && (
               <span className="shrink-0 inline-flex min-h-[44px] items-center px-1 text-[14px] text-text-3 italic">
                 {sel.length === 0 ? '← Select a term to begin' : 'No laws apply, try again'}
               </span>
             )}
-            {applicableLaws.map((law, i) => (
+            {choices.map((law, i) => (
               <button
                 key={i}
                 data-tutorial={`law-card-${i}`}
                 data-law-id={law.id}
+                disabled={busy}
                 className="snap-start shrink-0 min-h-[44px] min-w-[180px] max-w-[260px] bg-white border-[1.5px] border-border rounded-md px-3 py-1.5 text-left cursor-pointer transition-all hover:border-text-1 hover:bg-bg flex flex-col justify-center"
                 onClick={() => onApplyLaw(law)}
               >
@@ -148,24 +151,26 @@ export default function LawPanel({
       ) : (
         <>
           <div className={`flex items-center gap-3 ${lawsAsGrid ? 'mb-2' : 'mb-2.5'}`}>
-            <span className={`font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap ${touchTargets ? 'text-[14px]' : 'text-[11px]'}`}>APPLICABLE LAWS</span>
-            {applicableLaws.length === 0 && (
+            <span className={`font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap ${touchTargets ? 'text-[14px]' : 'text-[11px]'}`}>{independent ? 'CHOOSE A LAW' : 'APPLICABLE LAWS'}</span>
+            {choices.length === 0 && (
               <span className={`text-text-3 italic ${touchTargets ? 'text-[14px]' : 'text-xs'}`}>
                 {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply, try a different selection'}
               </span>
             )}
           </div>
-          {applicableLaws.length > 0 && (
+          {independent && <p data-testid="independent-practice" className="text-xs text-text-2 mb-2">Independent practice: select expression parts, then choose a law. All supported choices remain available; Hint and Guide provide assistance.</p>}
+          {choices.length > 0 && (
             <div
               data-testid="laws-list"
               data-layout={lawsAsGrid ? 'grid' : 'wrap'}
               className={lawsAsGrid ? 'grid grid-cols-2 lg:grid-cols-3 gap-2' : 'flex flex-wrap gap-2'}
             >
-              {applicableLaws.map((law, i) => (
+              {choices.map((law, i) => (
                 <button
                   key={i}
                   data-tutorial={`law-card-${i}`}
                   data-law-id={law.id}
+                  disabled={busy}
                   className={`bg-white border-[1.5px] border-border rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px] ${lawsAsGrid ? 'min-h-[44px] w-full' : 'min-w-[160px] max-w-[240px]'}`}
                   onClick={() => onApplyLaw(law)}
                 >

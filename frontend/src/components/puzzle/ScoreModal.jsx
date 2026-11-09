@@ -10,6 +10,7 @@ export default function ScoreModal({
   showSuccess, onClose, isTutorialActive, shortViewport, isSandbox, isCustomSandbox,
   steps, optimalSteps, hintsUsed, guidesUsed, scoreResult, earnedXp, puzzle, level,
   stageNum, onNewExpression, onRandomize, onNextStage, onBackToStages, onReset,
+  independent = false, choiceAttempts = [],
 }) {
   const uniqueLaws = useMemo(() => {
     return [...new Set(steps.map(s => s?.law).filter(Boolean))]
@@ -149,6 +150,13 @@ export default function ScoreModal({
                     <span className="text-sm text-text-3 font-medium">/ 100</span>
                   </div>
 
+                  <p className="text-xs text-text-3 text-left mb-2">Practice score combines efficiency, target-law coverage, and assistance use.</p>
+                  {independent && choiceAttempts.length > 0 && (
+                    <div data-testid="law-choice-summary" className="text-xs text-text-2 text-left border border-border rounded-lg p-2 mb-2">
+                      Law choices this run: {choiceAttempts.filter(a => a.outcome === 'valid').length} matched, {choiceAttempts.filter(a => a.outcome === 'pattern').length} not matched, {choiceAttempts.filter(a => a.outcome === 'selection').length} selection prompts.
+                      {' '}{choiceAttempts.filter(a => a.assisted).length} choices followed assistance. Unmatched choices do not add derivation steps.
+                    </div>
+                  )}
                   {/* Metric rows */}
                   {[
                     { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
@@ -159,7 +167,7 @@ export default function ScoreModal({
                         ? 'No required laws'
                         : `Used ${(scoreResult.breakdown?.targetLawsUsed || []).length} / ${(scoreResult.breakdown?.targetLawsRequired || []).length} required`,
                       color: 'bg-violet-500' },
-                    { label: '💡 Independence', score: scoreResult.hintIndependence, max: 30,
+                    { label: '💡 Assistance use', score: scoreResult.hintIndependence, max: 30,
                       sub: (() => {
                         const h = scoreResult.breakdown?.hintsUsed ?? 0
                         const g = scoreResult.breakdown?.guidesUsed ?? 0

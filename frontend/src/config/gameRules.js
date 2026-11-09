@@ -84,6 +84,11 @@ export const TUTORIAL = {
   stageIndexes: [0, 1, 2, 3],
 }
 
+/** R7 pilot: later Level 1 practice only; no change to unlock criteria. */
+export function usesIndependentSelection(levelId, stageIdx) {
+  return Number(levelId) === 1 && stageIdx >= 6 && stageIdx < 12
+}
+
 /** Drag-and-drop interaction tunables for term/factor reordering. */
 export const DRAG = {
   /** Movement (CSS px) that turns a press into a drag. */

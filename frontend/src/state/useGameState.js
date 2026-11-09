@@ -1,21 +1,23 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import {
   parseExpr, cloneN, canonText, nodeText, getNode,
   analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, scanHints,
   findOptimalPath,
   findOptimalPathWithLaws,
+  evaluateLawChoice, selectionLaws, planGuidance, lawsUsedFromSteps,
 } from '../engine/index.js'
-import { STAGE_COMPLETION_XP, TIMING } from '../config/gameRules.js'
+import { STAGE_COMPLETION_XP, TIMING, SANDBOX } from '../config/gameRules.js'
 import { playSound, primeAudio } from '../services/soundEffects.js'
 import { DEAD_END_MSG, buildHintText } from './hintText.js'
 
 export function useGameState(options = {}) {
   // Sandbox-only engine opt-in: enables the gated Distributive-Expand law.
-  // Graded levels call useGameState() with no options, so nothing changes there.
-  const { allowExpand = false } = options || {}
+  // Graded levels never enable expansion; independent selection only changes
+  // how the learner chooses an existing supported transformation.
+  const { allowExpand = false, independent = false } = options || {}
   const [history, setHistory] = useState([]) // Array of { expr, step }
   const expr = history.length > 0 ? history[history.length - 1].expr : null
-  const steps = history.length > 1 ? history.slice(1).map(h => h.step) : []
+  const steps = useMemo(() => history.slice(1).map(h => h.step), [history])
   const exprHistory = history.length > 1 ? history.slice(0, -1).map(h => h.expr) : []
 
   const [sel, setSel] = useState([])
@@ -36,11 +38,22 @@ export function useGameState(options = {}) {
   const [isPreLawHighlight, setIsPreLawHighlight] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationData, setAnimationData] = useState(null)
+  const [choiceAttempts, setChoiceAttempts] = useState([])
 
   const preLawTimerRef = useRef(null)
   const animationTimerRef = useRef(null)
   const goalCanonRef = useRef('')
   const currentPuzzleExprRef = useRef('')
+  const puzzleRef = useRef(null)
+  const interactionLockedRef = useRef(false)
+  const assistanceRef = useRef(false)
+  const guidanceCacheRef = useRef(null)
+  const hintLevelRef = useRef({ key: '', level: 0 })
+
+  useEffect(() => () => {
+    clearTimeout(preLawTimerRef.current)
+    clearTimeout(animationTimerRef.current)
+  }, [])
   /** Tracks the dead-end transition so its cue fires once, not on every resync. */
   const isDeadEndRef = useRef(false)
 
@@ -75,6 +88,14 @@ export function useGameState(options = {}) {
   }, [allowExpand, markDeadEnd])
 
   const loadPuzzle = useCallback((puzzle, savedSteps = null) => {
+    clearTimeout(preLawTimerRef.current)
+    preLawTimerRef.current = null
+    interactionLockedRef.current = false
+    setIsPreLawHighlight(false)
+    puzzleRef.current = puzzle
+    guidanceCacheRef.current = null
+    hintLevelRef.current = { key: '', level: 0 }
+    setChoiceAttempts([])
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current)
       animationTimerRef.current = null
@@ -149,6 +170,7 @@ export function useGameState(options = {}) {
     setSel([])
     const isNewPuzzle = currentPuzzleExprRef.current !== puzzle.expr
     if (isNewPuzzle) {
+      assistanceRef.current = false
       currentPuzzleExprRef.current = puzzle.expr
       setHintIdx(0)
       setHintsUsed(0)
@@ -167,6 +189,13 @@ export function useGameState(options = {}) {
       setApplicableLaws([])
       setStatus('error')
       setStatusMsg(DEAD_END_MSG)
+      return
+    }
+
+    if (independent) {
+      setApplicableLaws([])
+      setStatus(nextSel.length ? 'laws' : 'select')
+      setStatusMsg('Independent practice: choose the law that matches your selection. Hints and guides remain available.')
       return
     }
 
@@ -211,7 +240,7 @@ export function useGameState(options = {}) {
       setStatus('select')
       setStatusMsg('Select a term or variable to begin')
     }
-  }, [isDeadEnd, allowExpand])
+  }, [isDeadEnd, allowExpand, independent])
 
   /* ---- selection handlers ---- */
 
@@ -238,7 +267,7 @@ export function useGameState(options = {}) {
   }, [sel])
 
   const handleClickLit = useCallback((path, exprSnapshot) => {
-    if (isAnimating) return
+    if (interactionLockedRef.current || isComplete) return
     // Selection clicks are the app's first user gesture on most sessions: unlock
     // audio here so the cue fired by the verdict is actually audible.
     primeAudio()
@@ -260,6 +289,10 @@ export function useGameState(options = {}) {
     /** Shared verdict for the const-in-product/sum shortcut: a dead selection buzzes. */
     const applyConstLaws = (laws) => {
       setSel([{ path, isTermSel: false }])
+      if (independent) {
+        updateLaws([{ path, isTermSel: false }], exprSnapshot)
+        return
+      }
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
       if (!laws.length) playSound('wrong')
@@ -309,10 +342,10 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isAnimating, isDeadEnd, updateLaws, cueSelectionClick])
+  }, [isComplete, independent, isDeadEnd, updateLaws, cueSelectionClick])
 
   const handleClickNot = useCallback((path, exprSnapshot) => {
-    if (isAnimating) return
+    if (interactionLockedRef.current || isComplete) return
     primeAudio()
     cueSelectionClick(path)
     if (isDeadEnd) {
@@ -335,6 +368,10 @@ export function useGameState(options = {}) {
 
       // Clicking a NOT container focuses solely on this NOT node for De Morgan / Double Negation
       const next = [{ path, isTermSel: false }]
+      if (independent) {
+        updateLaws(next, exprSnapshot)
+        return next
+      }
       const laws = analyzeNot(exprSnapshot, path)
       setApplicableLaws(laws)
       setStatus(laws.length ? 'laws' : 'error')
@@ -346,10 +383,10 @@ export function useGameState(options = {}) {
       )
       return next
     })
-  }, [isAnimating, isDeadEnd, cueSelectionClick])
+  }, [isComplete, independent, updateLaws, isDeadEnd, cueSelectionClick])
 
   const handleClickTerm = useCallback((path, exprSnapshot) => {
-    if (isAnimating) return
+    if (interactionLockedRef.current || isComplete) return
     primeAudio()
     cueSelectionClick(path)
     if (isDeadEnd) {
@@ -389,19 +426,35 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isAnimating, isDeadEnd, updateLaws, cueSelectionClick])
+  }, [isComplete, isDeadEnd, updateLaws, cueSelectionClick])
 
   // currentSteps / hintsCount are part of the positional call signature
   // (ProblemPage calls applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)),
   // so they must stay in place even though this body no longer reads them.
   // eslint-disable-next-line no-unused-vars
   const applyLaw = useCallback((law, currentExpr = expr, currentSteps = steps, hintsCount = 0, isTutorial = false) => {
-    if (isAnimating) return
+    if (interactionLockedRef.current || isComplete) return
     // The law click is a gesture: prime now, because the step cue fires after
     // the law animation, when no gesture of its own exists.
     primeAudio()
     const activeExpr = currentExpr || expr
     if (!activeExpr) return
+
+    if (independent) {
+      const verdict = evaluateLawChoice(activeExpr, sel, law.id, { allowExpand })
+      const attempt = {
+        lawId: law.id, outcome: verdict.code, assisted: assistanceRef.current,
+        expression: nodeText(activeExpr), selection: sel.map(s => ({ ...s })),
+      }
+      setChoiceAttempts(previous => [...previous, attempt])
+      if (!verdict.ok) {
+        setStatus('error')
+        setStatusMsg(verdict.message)
+        playSound('wrong')
+        return
+      }
+      law = verdict.law
+    }
 
     const before = nodeText(activeExpr)
     const newExpr = law.apply()
@@ -415,6 +468,10 @@ export function useGameState(options = {}) {
       setStatusMsg('That law didn\'t change the expression. Try a different one.')
       return
     }
+
+    // Synchronous lock also covers rapid clicks before React re-renders and
+    // the tutorial's pre-animation delay.
+    interactionLockedRef.current = true
 
     if (preLawTimerRef.current) {
       clearTimeout(preLawTimerRef.current)
@@ -466,7 +523,12 @@ export function useGameState(options = {}) {
 
       animationTimerRef.current = setTimeout(() => {
         animationTimerRef.current = null
-        setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])
+        interactionLockedRef.current = false
+        guidanceCacheRef.current = null
+        setHistory(h => [...h, { expr: newExpr, step: {
+          law: law.name, lawId: law.id, from: before, to: after,
+          selection: sel.map(s => ({ ...s })), explanation: law.desc,
+        } }])
         setSel([])
         setApplicableLaws([])
         setActiveGuidePaths([])
@@ -479,6 +541,7 @@ export function useGameState(options = {}) {
 
         // Check completion
         if (canonText(newExpr) === goalCanonRef.current) {
+          interactionLockedRef.current = true
           markDeadEnd(false)
           setEarnedXp(STAGE_COMPLETION_XP)
           setIsComplete(true)
@@ -500,9 +563,11 @@ export function useGameState(options = {}) {
     } else {
       startAnimation()
     }
-  }, [expr, steps, isAnimating, sel, syncDeadEndStatus, markDeadEnd])
+  }, [expr, steps, isComplete, independent, allowExpand, sel, syncDeadEndStatus, markDeadEnd])
 
   const undoAction = useCallback(() => {
+    interactionLockedRef.current = false
+    guidanceCacheRef.current = null
     if (preLawTimerRef.current) {
       clearTimeout(preLawTimerRef.current)
       preLawTimerRef.current = null
@@ -546,29 +611,41 @@ export function useGameState(options = {}) {
     }
   }, [loadPuzzle])
 
-  const requestHint = useCallback((puzzle) => {
-    // Always try to generate a contextual hint from the current expression first
-    if (expr) {
-      const scanResults = scanHints(expr, 'R', { allowExpand })
-      if (scanResults.length > 0) {
-        const { law, paths } = scanResults[0]
-        const contextMsg = buildHintText(law, paths, expr)
-        playSound('hint')
-        setHintsUsed(h => h + 1)
-        return contextMsg
-      }
-    }
-    // Fallback: static puzzle hints (e.g. expression is already at goal)
-    if (!puzzle?.hints?.length) return null
-    const hint = puzzle.hints[Math.min(hintIdx, puzzle.hints.length - 1)]
+  const getGuidance = useCallback(() => {
+    if (!expr || interactionLockedRef.current || isComplete) return { status: 'busy' }
+    const used = lawsUsedFromSteps(steps)
+    const key = nodeText(expr) + '|' + used.join(',')
+    if (guidanceCacheRef.current?.key === key) return guidanceCacheRef.current.result
+    const puzzle = puzzleRef.current
+    const budget = puzzle?.solutionPath ? SANDBOX.budget.optimalPath : {}
+    const result = planGuidance(expr, goalCanonRef.current, puzzle?.targetLaws || [], used, { ...budget, allowExpand })
+    guidanceCacheRef.current = { key, result }
+    return result
+  }, [expr, steps, isComplete, allowExpand])
+
+  const requestHint = useCallback(() => {
+    const result = getGuidance()
+    if (result.status === 'busy' || result.status === 'complete') return null
+    if (result.status !== 'verified') return 'A route to the target could not be verified within the search limit. Undo to explore another route; no assistance penalty was added.'
+    const { transition } = result
+    const paths = transition.selection.map(s => s.path)
+    const key = nodeText(expr)
+    const level = hintLevelRef.current.key === key ? hintLevelRef.current.level + 1 : 0
+    hintLevelRef.current = { key, level }
+    const location = paths.map(p => nodeText(getNode(expr, p))).join(' and ')
+    const hint = level === 0 ? buildHintText(transition.lawId, paths, expr)
+      : level === 1 ? `Consider ${transition.law} for ${location}.`
+        : `Select ${location}, then apply ${transition.law}. Next expression: ${transition.to}.`
+    assistanceRef.current = true
     playSound('hint')
     setHintIdx(i => i + 1)
     setHintsUsed(h => h + 1)
-    return hint
-  }, [expr, hintIdx, allowExpand])
+    return result.objective ? hint : `${hint} This route reaches the target, but does not demonstrate every remaining target law.`
+  }, [getGuidance, expr])
 
   /** Drag-and-drop term or factor reorder - no law applied, no step recorded */
   const swapTerms = useCallback((parentPath, fromIdx, toIdx) => {
+    if (interactionLockedRef.current || isComplete) return
     if (fromIdx === toIdx) return
     let nextExpr = null
 
@@ -603,52 +680,34 @@ export function useGameState(options = {}) {
     if (nextExpr) {
       syncDeadEndStatus(nextExpr, 'Elements reordered. Select terms to continue.')
     }
-  }, [syncDeadEndStatus])
+  }, [syncDeadEndStatus, isComplete])
 
   const activateGuide = useCallback(() => {
-    if (!expr) return false
-    const hints = scanHints(expr, 'R', { allowExpand })
-    if (hints.length === 0) {
-      markDeadEnd(true)
+    const result = getGuidance()
+    if (result.status === 'busy' || result.status === 'complete') return false
+    if (result.status !== 'verified') {
       setStatus('error')
-      setStatusMsg(DEAD_END_MSG)
+      setStatusMsg('A route to the target could not be verified within the search limit. No guide points were spent. Try Undo to explore another route.')
       return false
     }
 
     markDeadEnd(false)
     playSound('guide')
     setGuidesUsed(g => g + 1)
-    const hint = hints[0]
-    const paths = hint.paths
-
-    // For single-path hints (not nodes: double-neg, demorgan)
-    // highlight it and let user click it (analyzeNot handles single clicks)
-    if (paths.length === 1) {
-      setActiveGuidePaths(paths)
-      setSel([])
-      setApplicableLaws([])
-      setStatus('select')
-      setStatusMsg('Guide: click the highlighted element to see applicable laws.')
-      return true
-    }
-
-    // For two-path hints: pre-select both items and compute laws immediately
-    // Determine if these are term-level selections (whole terms) or literal-level
-    const isTermSel = ['idempotent', 'absorption', 'complement', 'annulment', 'identity'].includes(hint.law)
-    const nextSel = paths.map(p => ({ path: p, isTermSel }))
+    assistanceRef.current = true
+    const nextSel = result.transition.selection
+    const paths = nextSel.map(s => s.path)
 
     setActiveGuidePaths(paths)
     setSel(nextSel)
 
     // Compute applicable laws right away so user just has to pick one
-    const laws = analyzeSelection(expr, nextSel, { allowExpand })
-    setApplicableLaws(laws)
+    const laws = selectionLaws(expr, nextSel, { allowExpand })
+    setApplicableLaws(independent ? [] : laws)
     setStatus(laws.length ? 'laws' : 'select')
-    setStatusMsg(laws.length
-      ? 'Guide: the terms are pre-selected - pick a law to apply!'
-      : 'Guide: click the highlighted terms, then choose a law.')
+    setStatusMsg(`Guide: apply ${result.transition.law} to the highlighted selection. ${independent ? 'This decision is assisted. ' : ''}${result.objective ? '' : 'This route reaches the target but skips a remaining target law.'}`)
     return true
-  }, [expr, allowExpand, markDeadEnd])
+  }, [expr, allowExpand, independent, getGuidance, markDeadEnd])
 
   return {
     expr, sel, steps, exprHistory,
@@ -656,6 +715,7 @@ export function useGameState(options = {}) {
     hintIdx, hintsUsed, guidesUsed,
     optimalSteps, optimalPath,
     applicableLaws,
+    choiceAttempts,
     isComplete, earnedXp,
     status, statusMsg,
     activeGuidePaths,

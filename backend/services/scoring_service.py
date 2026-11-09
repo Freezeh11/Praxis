@@ -6,6 +6,7 @@ Every number comes from ``config/constants.py``; imported by ``api/routes/score.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import floor
 from typing import Any, Sequence
 
 from config import constants
@@ -52,7 +53,8 @@ def compute_score(
     hint_independence = _hint_independence(assistance_used)
 
     total = round(efficiency + target_law + hint_independence, constants.SCORE_ROUNDING_DP)
-    earned_points = round((total / constants.MAX_SCORE) * constants.MAX_BONUS_POINTS)
+    # Match the browser's Math.round convention at half-point boundaries.
+    earned_points = floor((total / constants.MAX_SCORE) * constants.MAX_BONUS_POINTS + 0.5)
 
     return ScoreOutcome(
         level_id=level_id,

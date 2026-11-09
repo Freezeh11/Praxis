@@ -19,7 +19,7 @@ export default function DerivationCanvas({
   isCustomSandbox, customPuzzle, zoom,
 }) {
   return (
-    <div className={`flex-1 flex flex-col bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative ${isPhoneLandscape ? 'min-h-0 justify-start items-stretch' : 'min-h-[400px] justify-start items-stretch'} ${touchTargets ? 'overflow-auto [-webkit-overflow-scrolling:touch]' : 'overflow-hidden'} ${isAnimating ? 'pointer-events-none opacity-90' : ''}`}>
+    <div data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`flex-1 min-h-0 flex flex-col overflow-auto bg-white bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
       {isAnimating && <AnimationOverlay data={animationData} />}
 
       {/* Status banner — placed in flow at top with a stable reserved slot so it NEVER overlays equations or causes vertical layout shift */}
@@ -43,18 +43,17 @@ export default function DerivationCanvas({
           {status === 'error'    && <span className="text-xs font-bold shrink-0">✕</span>}
           {status === 'laws'     && <span className="text-xs font-bold shrink-0">→</span>}
           {status === 'applying' && <span className="text-xs font-bold shrink-0 animate-spin">⟳</span>}
-          <span className="leading-snug break-words">{statusMsg}</span>
+          <span role="status" aria-live="polite" className="leading-snug break-words">{statusMsg}</span>
         </div>
       </div>
 
-      <div className={isPhoneLandscape
-        ? 'relative w-full flex-1 flex flex-col items-start justify-start py-1'
-        : 'relative w-full flex-1 flex flex-col justify-center items-center py-2'}>
+      <div className="relative w-max min-w-full shrink-0 flex flex-col items-start py-2 px-3">
+        <span className="text-[11px] text-text-3 mb-2">Scroll to view long expressions and all steps.</span>
 
         {/* Zoom wrapper — scales the entire expression block.
             In sandbox mode the nonce forces a clean remount on randomize so
             no stale selection/animation state can leak into a new problem. */}
-        <div data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform 0.18s ease' }}>
+        <div data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.18s ease' }}>
           {/* Custom sandbox: keep the typed expression in view so the
               derivation can always be compared with what was asked for. */}
           {isCustomSandbox && (
