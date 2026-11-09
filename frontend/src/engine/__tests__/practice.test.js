@@ -3,21 +3,27 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseExpr, canonText, nodeText, isEquivalent } from '../index.js'
 import { evaluateLawChoice, independentChoices, planGuidance, selectionLaws } from '../practice.js'
-import { usesIndependentSelection } from '../../config/gameRules.js'
+import { paletteLawIds } from '../../config/gameRules.js'
+import { TUTORIAL_STAGES } from '../../content/tutorialContent.js'
 
 const levels = JSON.parse(readFileSync(new URL('../../../../content/levels.json', import.meta.url), 'utf8'))
 const references = JSON.parse(readFileSync(new URL('../../../../content/laws.json', import.meta.url), 'utf8'))
 const pair = (a, b, isTermSel = true) => [{ path: a, isTermSel }, { path: b, isTermSel }]
 
-test('R7 pilot leaves tutorial, earlier stages, other levels and sandbox guided', () => {
-  for (const level of [0, 1, 2, 3, 'sandbox']) {
-    for (let i = 0; i < 12; i++) assert.equal(usesIndependentSelection(level, i), level === 1 && i >= 6)
-  }
-  assert.equal(usesIndependentSelection(1, 12), false)
+test('Level 1 progressively adds palette choices; other workspaces show the full set', () => {
+  const expected = [1, 1, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8]
+  expected.forEach((count, stage) => {
+    const ids = paletteLawIds(1, stage)
+    assert.equal(independentChoices(references, { lawIds: ids }).length, count)
+    if (stage) for (const id of paletteLawIds(1, stage - 1)) assert.ok(ids.includes(id))
+    for (const id of levels.find(l => l.id === 1).puzzles[stage].targetLaws) assert.ok(ids.includes(id), `stage ${stage} requires ${id}`)
+  })
+  for (const level of [0, 2, 3]) assert.equal(paletteLawIds(level, 0), null)
   const choices = independentChoices(references)
   assert.equal(choices.length, 9)
   assert.equal(new Set(choices.map(l => l.id)).size, choices.length)
   assert.ok(!choices.some(l => ['associative', 'distributive-expand'].includes(l.id)))
+  assert.ok(independentChoices(references, { allowExpand: true }).some(l => l.id === 'distributive-expand'))
 })
 
 test('R4 wrong choices preserve the expression and explain law-specific conditions', () => {
@@ -99,4 +105,26 @@ test('R5 guidance adapts to legal reordering and sandbox expansion', () => {
   const custom = planGuidance(parseExpr("A(B+A')"), 'AB', [], [], { allowExpand: true })
   assert.equal(custom.status, 'verified')
   assert.equal(custom.transition.lawId, 'distributive-expand')
+})
+
+test('tutorial chooses each taught law before selecting targets and uses the Apply control', () => {
+  let transformations = 0
+  for (const stage of [0, 1, 2]) {
+    let chosen = null
+    let selected = false
+    for (const step of TUTORIAL_STAGES[stage]) {
+      if (step.actionType === 'choose_law') { chosen = step.lawId; selected = false }
+      if (['select_var', 'select_both', 'click_not'].includes(step.actionType)) {
+        assert.ok(chosen, `${step.id}: choose a law before its targets`)
+        selected = true
+      }
+      if (step.actionType === 'apply_law') {
+        assert.ok(chosen && selected, step.id)
+        assert.equal(step.target, '[data-tutorial="apply-law"]')
+        chosen = null
+        transformations++
+      }
+    }
+  }
+  assert.equal(transformations, 6)
 })

@@ -1,5 +1,5 @@
 /**
- * LawPanel — the applicable-laws dock under the canvas. It is a horizontally
+ * LawPanel — the law-first palette under the canvas. It is a horizontally
  * scrollable strip on phone landscape / narrow windows, a grid on tablet
  * portrait and the wrapped default otherwise; once the stage is solved the same
  * dock becomes the completion bar.
@@ -11,18 +11,17 @@ import { independentChoices } from '../../engine/index.js'
 
 export default function LawPanel({
   isComplete, isSandbox, isCustomSandbox, steps, optimalSteps,
-  applicableLaws, sel, lawsAsStrip, lawsAsGrid, touchTargets, onApplyLaw,
+  sel, lawsAsStrip, lawsAsGrid, touchTargets, onApplyLaw,
   onOpenLaws, level, stageNum, onOpenScoreSummary, onNextStage, onBackToStages,
-  onRandomize, onNewExpression, independent = false, referenceLaws = [], busy = false,
+  onRandomize, onNewExpression, referenceLaws = [], busy = false,
+  selectedLaw, onChooseLaw, lawIds = null, allowExpand = false,
 }) {
-  const choices = independent ? independentChoices(referenceLaws) : applicableLaws
-  /** Identity of the applicable-law set, used to re-anchor the law strip. */
+  const choices = independentChoices(referenceLaws, { lawIds, allowExpand })
+  /** Re-anchor the strip only when the available palette changes. */
   const applicableLawKey = choices.map(l => l.id).join('|')
   const lawsStripRef = useRef(null)
 
-  // Applicable laws are inserted at the HEAD of the phone-landscape strip. If the
-  // strip is already scrolled (e.g. the learner was browsing the reference
-  // chips), the newly actionable law would land off-screen, so re-anchor it.
+  // Newly unlocked choices start at the visible edge of the strip.
   useEffect(() => {
     const strip = lawsStripRef.current
     if (strip) strip.scrollLeft = 0
@@ -107,80 +106,39 @@ export default function LawPanel({
             )}
           </div>
         </div>
-      ) : lawsAsStrip ? (
-        /* Phone landscape / narrow window: one thumb-reachable, horizontally
-           scrollable rail. It carries ONLY the laws that apply right now — the
-           full reference lives behind the Laws button so the strip cannot turn
-           into a wall of chips. */
-        <div className="flex items-center gap-2">
-          <span data-testid={independent ? 'independent-practice' : undefined} className="shrink-0 text-[14px] font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap">{independent ? 'Choose law' : 'Laws'}</span>
-          <div
-            data-testid="laws-list"
-            data-layout="strip"
-            ref={lawsStripRef}
-            className="praxis-rail items-stretch flex-1 min-w-0 min-h-[44px] py-0.5"
-          >
-            {choices.length === 0 && (
-              <span className="shrink-0 inline-flex min-h-[44px] items-center px-1 text-[14px] text-text-3 italic">
-                {sel.length === 0 ? '← Select a term to begin' : 'No laws apply, try again'}
-              </span>
-            )}
-            {choices.map((law, i) => (
-              <button
-                key={i}
-                data-tutorial={`law-card-${i}`}
-                data-law-id={law.id}
-                disabled={busy}
-                className="snap-start shrink-0 min-h-[44px] min-w-[180px] max-w-[260px] bg-white border-[1.5px] border-border rounded-md px-3 py-1.5 text-left cursor-pointer transition-all hover:border-text-1 hover:bg-bg flex flex-col justify-center"
-                onClick={() => onApplyLaw(law)}
-              >
-                <div className="text-[14px] font-semibold text-text-1 leading-tight">{law.name}</div>
-                <div className="font-mono text-[14px] text-teal leading-tight">{law.formula}</div>
-              </button>
-            ))}
-            <button
-              type="button"
-              data-testid="laws-rail-reference"
-              className="snap-start shrink-0 min-h-[44px] inline-flex items-center gap-1.5 rounded-md border border-dashed border-border bg-bg px-3 text-[14px] font-semibold text-text-2 cursor-pointer transition-all hover:bg-border/60 hover:text-text-1"
-              onClick={() => onOpenLaws()}
-            >
-              <span aria-hidden="true">📖</span> All laws
-            </button>
-          </div>
-        </div>
       ) : (
         <>
-          <div className={`flex items-center gap-3 ${lawsAsGrid ? 'mb-2' : 'mb-2.5'}`}>
-            <span className={`font-bold tracking-[1px] uppercase text-text-3 whitespace-nowrap ${touchTargets ? 'text-[14px]' : 'text-[11px]'}`}>{independent ? 'CHOOSE A LAW' : 'APPLICABLE LAWS'}</span>
-            {choices.length === 0 && (
-              <span className={`text-text-3 italic ${touchTargets ? 'text-[14px]' : 'text-xs'}`}>
-                {sel.length === 0 ? '← Select a term or variable to begin' : 'No laws apply, try a different selection'}
-              </span>
-            )}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="font-bold text-xs tracking-wide uppercase text-text-3">Law palette</span>
+            <span className="text-xs text-text-2 flex-1" aria-live="polite">
+              {selectedLaw ? `${selectedLaw.name} selected / ${sel.length} item${sel.length === 1 ? '' : 's'} selected` : '1. Choose a law / 2. Select term(s) / 3. Apply'}
+            </span>
+            <button type="button" onClick={onOpenLaws} className="text-xs text-teal underline min-h-[44px] px-2">Law reference</button>
+            <button
+              type="button" data-tutorial="apply-law" data-testid="apply-selected-law"
+              disabled={busy || !selectedLaw || sel.length === 0}
+              onClick={() => onApplyLaw(selectedLaw)}
+              className="min-h-[44px] px-4 py-2 bg-accent text-white font-semibold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            >Apply{selectedLaw ? ` ${selectedLaw.name}` : ''}</button>
           </div>
-          {independent && <p data-testid="independent-practice" className="text-xs text-text-2 mb-2">Independent practice: select expression parts, then choose a law. All supported choices remain available; Hint and Guide provide assistance.</p>}
-          {choices.length > 0 && (
-            <div
-              data-testid="laws-list"
-              data-layout={lawsAsGrid ? 'grid' : 'wrap'}
-              className={lawsAsGrid ? 'grid grid-cols-2 lg:grid-cols-3 gap-2' : 'flex flex-wrap gap-2'}
-            >
-              {choices.map((law, i) => (
-                <button
-                  key={i}
-                  data-tutorial={`law-card-${i}`}
-                  data-law-id={law.id}
-                  disabled={busy}
-                  className={`bg-white border-[1.5px] border-border rounded-md px-3.5 py-2.5 text-left cursor-pointer transition-all hover:border-text-1 hover:bg-bg hover:shadow-sm hover:-translate-y-[1px] ${lawsAsGrid ? 'min-h-[44px] w-full' : 'min-w-[160px] max-w-[240px]'}`}
-                  onClick={() => onApplyLaw(law)}
-                >
-                  <div className={`font-semibold text-text-1 mb-0.5 ${touchTargets ? 'text-[14px]' : 'text-[13px]'}`}>{law.name}</div>
-                  <div className={`font-mono text-teal mb-1 ${touchTargets ? 'text-[13px]' : 'text-[11px]'}`}>{law.formula}</div>
-                  <div className="text-[12px] text-text-3 leading-tight">{law.desc}</div>
-                </button>
-              ))}
-            </div>
-          )}
+          {lawIds && <p className="text-xs text-text-3 mb-2">Level 1: more laws join your palette as you advance through the stages.</p>}
+          <div
+            data-testid="laws-list" data-layout={lawsAsStrip ? 'strip' : lawsAsGrid ? 'grid' : 'wrap'}
+            ref={lawsStripRef}
+            className={lawsAsStrip ? 'praxis-rail items-stretch min-h-[44px] py-0.5' : lawsAsGrid ? 'grid grid-cols-2 lg:grid-cols-3 gap-2' : 'flex flex-wrap gap-2'}
+          >
+            {choices.map((law, i) => (
+              <button
+                type="button" key={law.id} data-tutorial={`law-card-${i}`} data-law-id={law.id}
+                aria-pressed={selectedLaw?.id === law.id} disabled={busy}
+                className={`shrink-0 min-h-[44px] border-[1.5px] rounded-md px-3 py-2 text-left transition-all disabled:opacity-50 ${lawsAsGrid ? 'w-full' : 'min-w-[160px] max-w-[260px]'} ${selectedLaw?.id === law.id ? 'border-accent bg-accent/10 ring-1 ring-accent' : 'bg-white border-border hover:border-text-1 hover:bg-bg'}`}
+                onClick={() => onChooseLaw(law)}
+              >
+                <div className={`font-semibold text-text-1 ${touchTargets ? 'text-[14px]' : 'text-[13px]'}`}>{law.name}</div>
+                <div className="font-mono text-xs text-teal">{law.formula}</div>
+              </button>
+            ))}
+          </div>
         </>
       )}
     </div>

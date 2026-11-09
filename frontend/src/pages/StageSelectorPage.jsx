@@ -15,6 +15,7 @@ import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
 import StarRating from '../components/ui/StarRating'
 import SurveyButton from '../components/layout/SurveyButton'
+import ProfileLink from '../components/layout/ProfileLink.jsx'
 import SurveyBillboard from '../components/ui/SurveyBillboard'
 
 export default function StageSelectorPage() {
@@ -131,6 +132,7 @@ export default function StageSelectorPage() {
               <span className="hidden sm:inline">Laws</span>
             </button>
             <SurveyButton compact />
+            <ProfileLink />
           </div>
         )}
       />

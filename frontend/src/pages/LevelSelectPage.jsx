@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
 import { usePageOverlays } from '../hooks/usePageOverlays'
-import { TIMING, TUTORIAL } from '../config/gameRules.js'
-import { signOut } from '../services/authActions.js'
+import { TUTORIAL } from '../config/gameRules.js'
 import { playSound, playThrottledSound, primeAudio } from '../services/soundEffects.js'
-import { toast } from 'sonner'
 import AppHeader from '../components/layout/AppHeader'
 import BackNav from '../components/layout/BackNav'
 import PageOverlays from '../components/layout/PageOverlays'
@@ -15,8 +13,8 @@ import SurveyBillboard from '../components/ui/SurveyBillboard'
 import PointsChip from '../components/ui/PointsChip'
 import ScoreGateBar from '../components/ui/ScoreGateBar'
 import SoundToggle from '../components/ui/SoundToggle'
-import SignOutConfirmModal from '../components/ui/SignOutConfirmModal'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
+import ProfileLink from '../components/layout/ProfileLink.jsx'
 
 // Level 4+ are permanently "coming soon" (no puzzles yet)
 const COMING_SOON = []
@@ -42,7 +40,6 @@ export default function LevelSelectPage() {
   const { progress, isLevelCompleted, getLevelProgress, getStagesCompleted, resetLevelProgress, hasSeenTutorial, hasCompletedTutorial } = useProgress()
   const [selected, setSelected] = useState(0) // index into the carousel entries
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
-  const [showSignOutModal, setShowSignOutModal] = useState(false)
 
   // Tutorial-replay prompt, laws drawer, and the placement both are measured against.
   const {
@@ -142,17 +139,6 @@ export default function LevelSelectPage() {
     navigate(`/level/${lv.id}/stages`)
   }
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      toast.info('You have been securely logged out.')
-      // Wait a moment for Better Auth's global state to clear before routing
-      setTimeout(() => navigate('/'), TIMING.signOutRedirectMs)
-    } catch {
-      toast.error('Failed to log out.')
-    }
-  }
-
   const prev = () => {
     primeAudio()
     setSelected(s => Math.max(0, s - 1))
@@ -229,13 +215,6 @@ export default function LevelSelectPage() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-x-hidden overflow-y-auto bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-      {/* Sign-out confirmation modal */}
-      <SignOutConfirmModal
-        show={showSignOutModal}
-        onClose={() => setShowSignOutModal(false)}
-        onConfirm={handleLogout}
-      />
-
       <AppHeader
         left={<BackNav variant="home" to="/" label="Home" title="Back to Home" />}
         right={(
@@ -253,13 +232,7 @@ export default function LevelSelectPage() {
                 a landscape phone, where the compact variant is used. */}
             <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
             <SurveyButton compact />
-            <button 
-              onClick={() => setShowSignOutModal(true)}
-              className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all sm:ml-1" 
-              title="Sign Out"
-            >
-              Sign Out
-            </button>
+            <ProfileLink />
           </div>
         )}
       />

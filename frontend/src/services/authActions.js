@@ -31,3 +31,7 @@ export const signUp = {
 }
 
 export const signOut = async () => supabase.auth.signOut()
+
+export const updateProfile = async (name) => supabase.auth.updateUser({ data: { name } })
+
+export const updatePassword = async (password) => supabase.auth.updateUser({ password })

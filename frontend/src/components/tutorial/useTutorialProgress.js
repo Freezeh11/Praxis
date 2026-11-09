@@ -12,7 +12,7 @@ export function useTutorialProgress({
   sel,
   steps,
   expr,
-  applicableLaws,
+  selectedLaw,
   isComplete,
   showSuccess,
   onResetStage,
@@ -67,56 +67,20 @@ export function useTutorialProgress({
       }
     }
 
-    // ── Stage 0 (T1): Fully reactive selection state machine for "x + xy" ──
-    if (stageIdx === 0 && currentStepIdx <= 3) {
-      const hasLoneX = sel.some(s => s.path === 'R.0')
-      // Whole term xy is selected ONLY when path is 'R.1' (whole term, not 'R.1.0' or 'R.1.1')
-      const hasWholeXY = sel.some(s => s.path === 'R.1')
-      const hasSubVarXY = sel.some(s => s.path === 'R.1.0' || s.path === 'R.1.1')
-
-      if (steps.length > prevStepsLenRef.current) {
-        prevStepsLenRef.current = steps.length
-        advanceStep()
-        return
-      }
-
-      if (!hasLoneX && !hasWholeXY && !hasSubVarXY) {
-        if (currentStepIdx !== 0) setCurrentStepIdx(0)
-        return
-      }
-
-      if (!hasLoneX && (hasWholeXY || hasSubVarXY)) {
-        // xy (or a variable inside it) is selected but lone x is not -> prompt to select lone x (Step 0)
-        if (currentStepIdx !== 0) setCurrentStepIdx(0)
-        return
-      }
-
-      if (hasLoneX && !hasWholeXY) {
-        // lone x is selected, but whole term xy is not yet selected (even if user clicked variable y inside xy)
-        // -> stay on Step 1 (prompt to select the whole term xy)
-        if (currentStepIdx !== 1) setCurrentStepIdx(1)
-        return
-      }
-
-      if (hasLoneX && hasWholeXY) {
-        // Both lone x AND whole term xy are selected -> step 2 (Ready to Simplify)
-        if (currentStepIdx === 0 || currentStepIdx === 1) {
-          setCurrentStepIdx(2)
-        }
-        return
-      }
-    }
-
     switch (currentStep.actionType) {
+      case 'choose_law': {
+        if (selectedLaw?.id === currentStep.lawId) advanceStep()
+        break
+      }
       case 'select':
       case 'select_var': {
-        if (sel.length >= 1) {
+        if (currentStep.id === 'select-variable' ? sel.some(s => s.path === 'R.0') : sel.length >= 1) {
           advanceStep()
         }
         break
       }
       case 'select_both': {
-        if (sel.length >= 2) {
+        if (sel.length >= 2 && (currentStep.id !== 'select-term' || sel.some(s => s.path === 'R.1'))) {
           advanceStep()
         } else if (sel.length === 0 && currentStepIdx > 0 && stepsForStage[currentStepIdx - 1]?.actionType === 'select_var') {
           // If user unselected everything, step back to pick the first variable
@@ -139,20 +103,8 @@ export function useTutorialProgress({
           }
         } else if (stageIdx === 3 && currentStep.id === 'challenge-solve' && (isComplete || showSuccess)) {
           advanceStep()
-        } else if (currentStep.id === 'apply-distributive-factor' && (sel.length < 2 || !applicableLaws.some(l => l.name?.includes('Distributive')))) {
-          setCurrentStepIdx(2)
-        } else if (currentStep.id === 'apply-complement' && (sel.length < 2 || !applicableLaws.some(l => l.name?.includes('Complement')))) {
-          setCurrentStepIdx(4)
-        } else if (currentStep.id === 'apply-identity' && (sel.length === 0 || !applicableLaws.some(l => l.name?.includes('Identity')))) {
-          setCurrentStepIdx(6)
-        } else if (currentStep.id === 'apply-demorgan') {
-          const isNotSelected = sel.length === 1 && (sel[0].path === 'R.0' || sel[0].type === 'not') && applicableLaws.some(l => l.name?.includes("De Morgan"))
-          if (!isNotSelected) {
-            setCurrentStepIdx(1)
-          }
-        } else if (currentStep.id === 'apply-idempotent' && (sel.length < 2 || !applicableLaws.some(l => l.name?.includes('Idempotent')))) {
-          setCurrentStepIdx(3)
         }
+
         break
       }
       case 'swap': {
@@ -166,7 +118,7 @@ export function useTutorialProgress({
       }
       case 'click_not': {
         // Only advance when the NOT capsule itself is selected (path R.0 or type 'not' with De Morgan available), NOT an inner sub-variable
-        const isNotSelected = sel.length === 1 && (sel[0].path === 'R.0' || sel[0].type === 'not') && applicableLaws.some(l => l.name?.includes("De Morgan"))
+        const isNotSelected = sel.length === 1 && sel[0].path === 'R.0'
         if (isNotSelected) {
           const timer = setTimeout(() => {
             advanceStep()
@@ -184,7 +136,7 @@ export function useTutorialProgress({
       default:
         break
     }
-  }, [sel, steps, expr, applicableLaws, currentStep, currentStepIdx, stageIdx, stepsForStage, showWelcomeModal, showSuccess, advanceStep])
+  }, [sel, steps, expr, selectedLaw, currentStep, currentStepIdx, stageIdx, stepsForStage, showWelcomeModal, showSuccess, isComplete, advanceStep])
 
   const handleActionButton = () => {
     if (!currentStep) return

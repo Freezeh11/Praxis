@@ -14,13 +14,14 @@ export function useGameState(options = {}) {
   // Sandbox-only engine opt-in: enables the gated Distributive-Expand law.
   // Graded levels never enable expansion; independent selection only changes
   // how the learner chooses an existing supported transformation.
-  const { allowExpand = false, independent = false } = options || {}
+  const { allowExpand = false, independent = true } = options || {}
   const [history, setHistory] = useState([]) // Array of { expr, step }
   const expr = history.length > 0 ? history[history.length - 1].expr : null
   const steps = useMemo(() => history.slice(1).map(h => h.step), [history])
   const exprHistory = history.length > 1 ? history.slice(0, -1).map(h => h.expr) : []
 
   const [sel, setSel] = useState([])
+  const [selectedLaw, setSelectedLaw] = useState(null)
   const [goalText, setGoalText] = useState('')
   const [goalCanon, setGoalCanon] = useState('')
   const [hintIdx, setHintIdx] = useState(0)
@@ -30,7 +31,7 @@ export function useGameState(options = {}) {
   const [optimalPath, setOptimalPath] = useState([])
   const [applicableLaws, setApplicableLaws] = useState([])
   const [status, setStatus] = useState('select') // 'select' | 'laws' | 'applying' | 'success' | 'error'
-  const [statusMsg, setStatusMsg] = useState('Select a term or variable to begin')
+  const [statusMsg, setStatusMsg] = useState('Choose a law from the palette to begin')
   const [isComplete, setIsComplete] = useState(false)
   const [isDeadEnd, setIsDeadEnd] = useState(false)
   const [earnedXp, setEarnedXp] = useState(0)
@@ -64,7 +65,7 @@ export function useGameState(options = {}) {
     setIsDeadEnd(next)
   }, [])
 
-  const syncDeadEndStatus = useCallback((exprSnapshot, fallbackMsg = 'Select a term or variable to begin', { silent = false } = {}) => {
+  const syncDeadEndStatus = useCallback((exprSnapshot, fallbackMsg = 'Choose a law from the palette to begin', { silent = false } = {}) => {
     if (!exprSnapshot) return false
 
     if (canonText(exprSnapshot) === goalCanonRef.current) {
@@ -96,6 +97,7 @@ export function useGameState(options = {}) {
     guidanceCacheRef.current = null
     hintLevelRef.current = { key: '', level: 0 }
     setChoiceAttempts([])
+    setSelectedLaw(null)
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current)
       animationTimerRef.current = null
@@ -152,14 +154,14 @@ export function useGameState(options = {}) {
         setHistory([{ expr: parsedExpr, step: null }])
         setIsComplete(false)
         setStatus('select')
-        setStatusMsg('Select a term or variable to begin')
+        setStatusMsg('Choose a law from the palette to begin')
         syncDeadEndStatus(parsedExpr, undefined, { silent: true })
       }
     } else {
       setHistory([{ expr: parsedExpr, step: null }])
       setIsComplete(false)
       setStatus('select')
-      setStatusMsg('Select a term or variable to begin')
+      setStatusMsg('Choose a law from the palette to begin')
       // Loading a puzzle never buzzes: a puzzle that starts at a dead end is a
       // property of the problem, not a mistake the learner just made.
       syncDeadEndStatus(parsedExpr, undefined, { silent: true })
@@ -195,7 +197,7 @@ export function useGameState(options = {}) {
     if (independent) {
       setApplicableLaws([])
       setStatus(nextSel.length ? 'laws' : 'select')
-      setStatusMsg('Independent practice: choose the law that matches your selection. Hints and guides remain available.')
+      setStatusMsg(nextSel.length ? 'Select the target term(s), then press Apply. You can change your selection before applying.' : 'Select the term(s) to transform with your chosen law.')
       return
     }
 
@@ -238,7 +240,7 @@ export function useGameState(options = {}) {
     } else {
       setApplicableLaws([])
       setStatus('select')
-      setStatusMsg('Select a term or variable to begin')
+      setStatusMsg('Choose a law from the palette to begin')
     }
   }, [isDeadEnd, allowExpand, independent])
 
@@ -268,6 +270,10 @@ export function useGameState(options = {}) {
 
   const handleClickLit = useCallback((path, exprSnapshot) => {
     if (interactionLockedRef.current || isComplete) return
+    if (independent && !selectedLaw) {
+      setStatusMsg('Choose a law from the palette before selecting terms.')
+      return
+    }
     // Selection clicks are the app's first user gesture on most sessions: unlock
     // audio here so the cue fired by the verdict is actually audible.
     primeAudio()
@@ -304,7 +310,7 @@ export function useGameState(options = {}) {
     }
 
     // Special case: const (0 or 1) directly inside a product or sum
-    if (node && node.type === 'const') {
+    if (!independent && node && node.type === 'const') {
       const parts = path.split('.')
       if (parts.length > 1) {
         const parentPath = parts.slice(0, -1).join('.')
@@ -342,10 +348,14 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isComplete, independent, isDeadEnd, updateLaws, cueSelectionClick])
+  }, [isComplete, independent, isDeadEnd, updateLaws, cueSelectionClick, selectedLaw])
 
   const handleClickNot = useCallback((path, exprSnapshot) => {
     if (interactionLockedRef.current || isComplete) return
+    if (independent && !selectedLaw) {
+      setStatusMsg('Choose a law from the palette before selecting terms.')
+      return
+    }
     primeAudio()
     cueSelectionClick(path)
     if (isDeadEnd) {
@@ -360,9 +370,7 @@ export function useGameState(options = {}) {
     setSel(prev => {
       const existing = prev.findIndex(s => s.path === path)
       if (existing >= 0) {
-        setApplicableLaws([])
-        setStatus('select')
-        setStatusMsg('Select a term or variable to begin')
+        updateLaws([], exprSnapshot)
         return []
       }
 
@@ -383,10 +391,14 @@ export function useGameState(options = {}) {
       )
       return next
     })
-  }, [isComplete, independent, updateLaws, isDeadEnd, cueSelectionClick])
+  }, [isComplete, independent, updateLaws, isDeadEnd, cueSelectionClick, selectedLaw])
 
   const handleClickTerm = useCallback((path, exprSnapshot) => {
     if (interactionLockedRef.current || isComplete) return
+    if (independent && !selectedLaw) {
+      setStatusMsg('Choose a law from the palette before selecting terms.')
+      return
+    }
     primeAudio()
     cueSelectionClick(path)
     if (isDeadEnd) {
@@ -409,7 +421,7 @@ export function useGameState(options = {}) {
         next = prev.filter((_, i) => i !== existing)
         setApplicableLaws([])
         setStatus('select')
-        setStatusMsg('Select a term or variable to begin')
+        updateLaws(next, exprSnapshot)
         return next
       }
       // If prev contains sub-literals of this term (e.g. 'R.1.0' or 'R.1.1'), replace them with the whole term
@@ -426,7 +438,7 @@ export function useGameState(options = {}) {
       updateLaws(next, exprSnapshot)
       return next
     })
-  }, [isComplete, isDeadEnd, updateLaws, cueSelectionClick])
+  }, [isComplete, isDeadEnd, updateLaws, cueSelectionClick, selectedLaw, independent])
 
   // currentSteps / hintsCount are part of the positional call signature
   // (ProblemPage calls applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)),
@@ -437,6 +449,7 @@ export function useGameState(options = {}) {
     // The law click is a gesture: prime now, because the step cue fires after
     // the law animation, when no gesture of its own exists.
     primeAudio()
+    if (independent && (!selectedLaw || law?.id !== selectedLaw.id)) return
     const activeExpr = currentExpr || expr
     if (!activeExpr) return
 
@@ -530,6 +543,7 @@ export function useGameState(options = {}) {
           selection: sel.map(s => ({ ...s })), explanation: law.desc,
         } }])
         setSel([])
+        setSelectedLaw(null)
         setApplicableLaws([])
         setActiveGuidePaths([])
         setIsAnimating(false)
@@ -549,7 +563,7 @@ export function useGameState(options = {}) {
           setStatusMsg('Expression simplified! 🎉')
           playSound('correct')
         } else {
-          syncDeadEndStatus(newExpr, 'Step applied. Select next terms to continue.')
+          syncDeadEndStatus(newExpr, 'Step applied. Choose a law for your next move.')
         }
       }, TIMING.lawAnimationMs)
     }
@@ -563,9 +577,10 @@ export function useGameState(options = {}) {
     } else {
       startAnimation()
     }
-  }, [expr, steps, isComplete, independent, allowExpand, sel, syncDeadEndStatus, markDeadEnd])
+  }, [expr, steps, isComplete, independent, allowExpand, sel, selectedLaw, syncDeadEndStatus, markDeadEnd])
 
   const undoAction = useCallback(() => {
+    setSelectedLaw(null)
     interactionLockedRef.current = false
     guidanceCacheRef.current = null
     if (preLawTimerRef.current) {
@@ -587,12 +602,12 @@ export function useGameState(options = {}) {
     setHistory(h => {
       if (h.length <= 1) {
         setStatus('select')
-        setStatusMsg('Select a term or variable to begin')
+        setStatusMsg('Choose a law from the palette to begin')
         return h
       }
       const nextH = h.slice(0, -1)
       const prevEntry = nextH[nextH.length - 1]
-      syncDeadEndStatus(prevEntry.expr, 'Undone. Select terms to continue.')
+      syncDeadEndStatus(prevEntry.expr, 'Undone. Choose a law to continue.')
       return nextH
     })
   }, [syncDeadEndStatus])
@@ -635,7 +650,7 @@ export function useGameState(options = {}) {
     const location = paths.map(p => nodeText(getNode(expr, p))).join(' and ')
     const hint = level === 0 ? buildHintText(transition.lawId, paths, expr)
       : level === 1 ? `Consider ${transition.law} for ${location}.`
-        : `Select ${location}, then apply ${transition.law}. Next expression: ${transition.to}.`
+        : `Choose ${transition.law}, select ${location}, then press Apply. Next expression: ${transition.to}.`
     assistanceRef.current = true
     playSound('hint')
     setHintIdx(i => i + 1)
@@ -678,7 +693,7 @@ export function useGameState(options = {}) {
     setApplicableLaws([])
     setActiveGuidePaths([])
     if (nextExpr) {
-      syncDeadEndStatus(nextExpr, 'Elements reordered. Select terms to continue.')
+      syncDeadEndStatus(nextExpr, 'Elements reordered. Choose a law, then select its target terms.')
     }
   }, [syncDeadEndStatus, isComplete])
 
@@ -700,17 +715,31 @@ export function useGameState(options = {}) {
 
     setActiveGuidePaths(paths)
     setSel(nextSel)
+    const guidedLaw = selectionLaws(expr, nextSel, { allowExpand }).find(l => l.id === result.transition.lawId)
+    setSelectedLaw(guidedLaw)
 
-    // Compute applicable laws right away so user just has to pick one
+    // Guide supplies both the law and targets; applying remains an explicit action.
     const laws = selectionLaws(expr, nextSel, { allowExpand })
     setApplicableLaws(independent ? [] : laws)
     setStatus(laws.length ? 'laws' : 'select')
-    setStatusMsg(`Guide: apply ${result.transition.law} to the highlighted selection. ${independent ? 'This decision is assisted. ' : ''}${result.objective ? '' : 'This route reaches the target but skips a remaining target law.'}`)
+    setStatusMsg(`Guide: press Apply to use ${result.transition.law} on the highlighted selection. ${independent ? 'This decision is assisted. ' : ''}${result.objective ? '' : 'This route reaches the target but skips a remaining target law.'}`)
     return true
   }, [expr, allowExpand, independent, getGuidance, markDeadEnd])
 
+  const chooseLaw = useCallback((law) => {
+    if (interactionLockedRef.current || isComplete) return
+    primeAudio()
+    setSelectedLaw(law)
+    setSel([])
+    setApplicableLaws([])
+    setActiveGuidePaths([])
+    setStatus('select')
+    setStatusMsg(`${law.name} selected. Select the target term(s), then press Apply.`)
+  }, [isComplete])
+
   return {
     expr, sel, steps, exprHistory,
+    selectedLaw, chooseLaw,
     goalText, goalCanon,
     hintIdx, hintsUsed, guidesUsed,
     optimalSteps, optimalPath,

@@ -12,7 +12,7 @@
           "absorption"
         ],
         "hints": [
-          "Select x and xy to reveal applicable laws.",
+          "Choose Absorption Law, select x and xy, then press Apply.",
           "Absorption Law eliminates the redundant term."
         ],
         "optimalSteps": 1,

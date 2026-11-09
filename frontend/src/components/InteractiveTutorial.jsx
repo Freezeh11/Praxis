@@ -36,7 +36,7 @@ export default function InteractiveTutorial({
   sel = [],
   steps = [],
   expr = null,
-  applicableLaws = [],
+  selectedLaw = null,
   isComplete = false,
   isPreLawHighlight = false,
   isAnimating = false,
@@ -61,7 +61,7 @@ export default function InteractiveTutorial({
     sel,
     steps,
     expr,
-    applicableLaws,
+    selectedLaw,
     isComplete,
     showSuccess,
     onResetStage,
@@ -80,6 +80,12 @@ export default function InteractiveTutorial({
     isPreLawHighlight,
     isAnimating,
   })
+
+  useEffect(() => {
+    if (currentStep?.actionType === 'choose_law') {
+      document.querySelector(currentStep.target)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+  }, [currentStep])
 
   const cardRef = useCoachCardPlacement({ currentStep, highlightRect, secondaryHighlightRect })
 

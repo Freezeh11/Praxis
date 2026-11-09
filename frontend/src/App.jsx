@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import LevelSelectPage from './pages/LevelSelectPage'
 import StageSelectorPage from './pages/StageSelectorPage'
 import ProblemPage from './pages/ProblemPage'
+import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import TutorialGate from './components/TutorialGate'
 import OrientationGate from './components/OrientationGate'
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
             {/* Protected AND tutorial-gated: a new learner must finish the
                 interactive tutorial before Levels 1-3 or the Sandbox.

@@ -1,33 +1,16 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import SurveyButton from '../components/layout/SurveyButton'
 import SoundToggle from '../components/ui/SoundToggle'
-import SignOutConfirmModal from '../components/ui/SignOutConfirmModal'
 import { useSession } from '../state/useSession.js'
-import { signOut } from '../services/authActions.js'
-import { TIMING } from '../config/gameRules.js'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
-import { toast } from 'sonner'
 import SurveyBanner from '../components/SurveyBanner'
+import ProfileLink from '../components/layout/ProfileLink.jsx'
 
 export default function LandingPage() {
-  const navigate = useNavigate()
   const { data: session } = useSession()
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
-  const [showSignOutModal, setShowSignOutModal] = useState(false)
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      toast.info('You have been securely logged out.')
-      // Wait a moment for Better Auth's global state to clear before routing
-      setTimeout(() => navigate('/'), TIMING.signOutRedirectMs)
-    } catch {
-      toast.error('Failed to log out.')
-    }
-  }
 
   // Fade-in animation variants
   const containerVariants = {
@@ -45,13 +28,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-      {/* Sign-out confirmation modal */}
-      <SignOutConfirmModal
-        show={showSignOutModal}
-        onClose={() => setShowSignOutModal(false)}
-        onConfirm={handleLogout}
-      />
-
       {/* Header */}
       <header className="relative w-full h-[72px] [@media(max-height:480px)]:h-[52px] px-4 sm:px-8 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center">
@@ -61,12 +37,7 @@ export default function LandingPage() {
           <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
           <SurveyButton compact />
           {session ? (
-            <button
-              onClick={() => setShowSignOutModal(true)}
-              className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all"
-            >
-              Sign Out
-            </button>
+            <ProfileLink />
           ) : (
             <Link to="/login" className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
               Log In

@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { TIMING, TUTORIAL, usesIndependentSelection } from '../../config/gameRules.js'
+import { TIMING, TUTORIAL, paletteLawIds } from '../../config/gameRules.js'
 import { effectiveOptimalSteps, estimateScore, lawsUsedFromSteps, buildSandboxPuzzle } from '../../engine/index.js'
 import { playSound } from '../../services/soundEffects.js'
 import { useGameContent } from '../../state/useGameContent.js'
@@ -84,10 +84,12 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   // (Expand) law to be solvable (A(B + A') has to reach AB). Graded levels never
   // carry the flag, so their law engine stays exactly as it was.
   const allowExpand = Boolean(puzzle && puzzle.allowExpand)
-  const independent = !isSandbox && usesIndependentSelection(levelId, stageNum)
+  const independent = true
+  const lawIds = isSandbox ? null : paletteLawIds(levelId, stageNum)
 
   const {
     expr, sel, steps,
+    selectedLaw, chooseLaw,
     applicableLaws,
     choiceAttempts,
     isComplete, earnedXp,
@@ -314,8 +316,9 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     handleOpenScoreSummary, handleRandomize, handleLoadCustomExpression, clearLoadedAsSaved,
     progress, deductPoints, laws,
     expr, sel, steps,
+    selectedLaw, chooseLaw,
     applicableLaws,
-    independent, choiceAttempts,
+    independent, choiceAttempts, lawIds, allowExpand,
     isComplete, earnedXp,
     status, statusMsg,
     activeGuidePaths,

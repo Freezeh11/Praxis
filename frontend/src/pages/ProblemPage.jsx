@@ -159,7 +159,7 @@ export default function ProblemPage() {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
     stageNum, completedSet, showSuccess, setShowSuccess, scoreResult, setScoreResult,
     handleOpenScoreSummary, handleRandomize, handleLoadCustomExpression, clearLoadedAsSaved, progress, deductPoints, laws,
-    expr, sel, steps, applicableLaws, independent, choiceAttempts, isComplete, earnedXp, status, statusMsg,
+    expr, sel, steps, applicableLaws, selectedLaw, chooseLaw, lawIds, allowExpand, independent, choiceAttempts, isComplete, earnedXp, status, statusMsg,
     activeGuidePaths, isPreLawHighlight, isAnimating, animationData,
     handleClickLit, handleClickNot, handleClickTerm,
     applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
@@ -248,7 +248,7 @@ export default function ProblemPage() {
     }
     const isTutQuery = new URLSearchParams(window.location.search).get('tutorial') === 'true'
     const isTutLevel = Number(levelId) === TUTORIAL.levelId
-    setIsTutorialActive(isTutQuery || isTutLevel)
+    setIsTutorialActive(isTutQuery || (isTutLevel && new URLSearchParams(window.location.search).get('tutorial') !== 'false'))
   }, [levelId, stageIdx, isSandbox, isTutorialLevel])
 
   // Global click-away listener for derivation step inspection
@@ -412,8 +412,8 @@ export default function ProblemPage() {
   const lawsPanel = (
     <LawPanel
       isComplete={isComplete} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
-      steps={steps} optimalSteps={optimalSteps} applicableLaws={applicableLaws}
-      independent={independent} referenceLaws={laws} busy={isAnimating || isPreLawHighlight}
+      steps={steps} optimalSteps={optimalSteps}
+      selectedLaw={selectedLaw} onChooseLaw={chooseLaw} lawIds={lawIds} allowExpand={allowExpand} referenceLaws={laws} busy={isAnimating || isPreLawHighlight}
       sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
       touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
@@ -548,7 +548,7 @@ export default function ProblemPage() {
       {isTutorialLevel && isTutorialActive && (
         <InteractiveTutorial
           stageIdx={stageNum} sel={sel} steps={steps}
-          expr={expr} applicableLaws={applicableLaws} isComplete={isComplete}
+          expr={expr} applicableLaws={applicableLaws} selectedLaw={selectedLaw} isComplete={isComplete}
           isPreLawHighlight={isPreLawHighlight} isAnimating={isAnimating} showSuccess={showSuccess}
           onResetStage={executeReset}
           onNextStage={() => {

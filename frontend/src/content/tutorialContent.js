@@ -47,13 +47,13 @@ export const WELCOME_SLIDES = [
  * Stage-by-stage interactive tutorial steps
  * @type {Record<number, TutorialStep[]>}
  */
-export const TUTORIAL_STAGES = {
+const ORIGINAL_TUTORIAL_STAGES = {
   // ── Stage 0 (T1): Selection Mechanics, Laws Dock & Points Economy ──────────
   0: [
     {
       id: 'select-variable',
       title: 'Let’s Pick a Variable',
-      desc: 'In Praxis, simplifying starts with selection. Click on the lone variable "x" to highlight it.',
+      desc: 'After choosing Absorption from the palette, select its targets. Click on the lone variable "x" to highlight it.',
       target: '[data-tutorial="term-0"]',
       actionType: 'select_var',
       tooltipPosition: 'bottom',
@@ -250,7 +250,7 @@ export const TUTORIAL_STAGES = {
     {
       id: 'click-not-capsule',
       title: 'Select the Negation Bar',
-      desc: 'Click the overline bar above "(x + y)\'" to focus expansion rules.',
+      desc: 'Click the overline bar above "(x + y)\'" to select the negated group.',
       target: '[data-tutorial="not-capsule"]',
       actionType: 'click_not',
       tooltipPosition: 'bottom',
@@ -331,7 +331,7 @@ export const TUTORIAL_STAGES = {
     {
       id: 'challenge-solve',
       title: 'Simplify the Expression',
-      desc: 'Select terms or variables and apply your chosen laws. The tutorial will adapt to whichever path you choose!',
+      desc: 'Choose a law from the palette, select its target terms or variables, then press Apply. The tutorial will adapt to whichever path you choose!',
       target: '[data-tutorial="canvas"]',
       actionType: 'apply_law',
       noOverlay: true,
@@ -365,3 +365,38 @@ export const TUTORIAL_STAGES = {
   ],
 }
 
+
+// Teach each transformation in the same order as the workspace controls.
+const TUTORIAL_LAWS = {
+  'apply-absorption': 'absorption',
+  'apply-distributive-factor': 'distributive',
+  'apply-complement': 'complement',
+  'apply-identity': 'identity',
+  'apply-demorgan': 'demorgan-or',
+  'apply-idempotent': 'idempotent',
+}
+export const TUTORIAL_STAGES = Object.fromEntries(Object.entries(ORIGINAL_TUTORIAL_STAGES).map(([stage, steps]) => {
+  const result = []
+  let needsLaw = true
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i]
+    if (needsLaw && ['select_var', 'select_both', 'click_not'].includes(step.actionType)) {
+      const applyStep = steps.slice(i).find(s => TUTORIAL_LAWS[s.id])
+      if (applyStep) {
+        const lawId = TUTORIAL_LAWS[applyStep.id]
+        result.push({ id: `choose-${lawId}`, title: 'Choose a Law First',
+          desc: `Choose ${applyStep.expectedLaw} from the palette before selecting the expression parts it will transform.`,
+          target: `[data-law-id="${lawId}"]`, actionType: 'choose_law', lawId, tooltipPosition: 'top' })
+        needsLaw = false
+      }
+    }
+    if (TUTORIAL_LAWS[step.id]) {
+      result.push({ ...step, target: '[data-tutorial="apply-law"]',
+        noOverlay: true, desc: `With ${step.expectedLaw} chosen and its target parts selected, press Apply to transform the expression. You can adjust your selection if needed.` })
+      needsLaw = true
+    } else {
+      result.push(step.id === 'highlight-equation' ? { ...step, buttonText: 'Continue to Apply →' } : step)
+    }
+  }
+  return [stage, result]
+}))

@@ -22,10 +22,12 @@ export function selectionLaws(expr, selection, options = {}) {
 }
 
 /** Stable reference order. Reference-only and sandbox-only actions are excluded. */
-export function independentChoices(referenceLaws) {
-  const supported = new Set(LAW_DEFINITIONS.filter(l => l.id !== 'distributive-expand').map(l => l.id))
-  return referenceLaws.filter(l => supported.has(l.id)).map(l => ({
-    id: l.id, name: l.name, formula: l.formulas.join(' / '),
+export function independentChoices(referenceLaws, { lawIds = null, allowExpand = false } = {}) {
+  const supported = new Set(LAW_DEFINITIONS.filter(l => allowExpand || l.id !== 'distributive-expand').map(l => l.id))
+  const references = allowExpand ? [...referenceLaws, { ...LAW_DEFINITIONS.find(l => l.id === 'distributive-expand'), formulas: ['A(B + C) = AB + AC'] }] : referenceLaws
+  const ordered = lawIds ? lawIds.map(id => references.find(l => l.id === id)).filter(Boolean) : references
+  return ordered.filter(l => supported.has(l.id)).map(l => ({
+    id: l.id, name: l.name, formula: l.formulas.join(' / '), desc: l.desc,
   }))
 }
 
@@ -43,7 +45,7 @@ const CONDITIONS = {
 
 export function evaluateLawChoice(expr, selection, lawId, options = {}) {
   if (!selection.length || selection.some(s => !getNode(expr, s.path))) {
-    return { ok: false, code: 'selection', message: 'Select the expression parts you want to transform, then choose a law.' }
+    return { ok: false, code: 'selection', message: 'Select the expression parts you want to transform, then press Apply.' }
   }
   const laws = selectionLaws(expr, selection, options)
   const law = laws.find(l => l.id === lawId)

@@ -84,9 +84,14 @@ export const TUTORIAL = {
   stageIndexes: [0, 1, 2, 3],
 }
 
-/** R7 pilot: later Level 1 practice only; no change to unlock criteria. */
-export function usesIndependentSelection(levelId, stageIdx) {
-  return Number(levelId) === 1 && stageIdx >= 6 && stageIdx < 12
+/** Zero-based Level 1 stage groups; later levels expose every supported law. */
+export function paletteLawIds(levelId, stageIdx) {
+  if (Number(levelId) !== 1) return null
+  const ids = ['absorption']
+  if (stageIdx >= 2) ids.push('idempotent', 'distributive', 'complement')
+  if (stageIdx >= 4) ids.push('demorgan-and', 'demorgan-or')
+  if (stageIdx >= 6) ids.push('annulment', 'identity')
+  return ids
 }
 
 /** Drag-and-drop interaction tunables for term/factor reordering. */
