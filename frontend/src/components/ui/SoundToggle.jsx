@@ -1,3 +1,4 @@
+import Icon from './Icon'
 /**
  * SoundToggle — the speaker on/off control for the header rails.
  *
@@ -22,7 +23,7 @@ export default function SoundToggle({ enabled, onToggle, compact = false, chrome
       aria-label={label}
       title={`${label}: click to turn sound ${enabled ? 'off' : 'on'}`}
     >
-      <span aria-hidden="true" className="text-[15px] leading-none">{enabled ? '🔊' : '🔇'}</span>
+      <span aria-hidden="true" className="text-[15px] leading-none">{enabled ? <Icon name="volume" /> : <Icon name="muted" />}</span>
     </button>
   )
 }

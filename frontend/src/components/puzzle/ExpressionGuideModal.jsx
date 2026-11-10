@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * ExpressionGuideModal: Guide modal explaining how to write, format,
  * and test Boolean expressions in Praxis.
@@ -57,7 +58,7 @@ export default function ExpressionGuideModal({ show, onClose, onSelectExample })
           {/* Header */}
           <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-bg/50 shrink-0">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl leading-none">📖</span>
+              <span className="text-xl leading-none"><Icon name="book" /></span>
               <div>
                 <h3 className="text-base font-bold text-text-1">How to Write Expressions</h3>
                 <p className="text-xs text-text-3 font-medium">Syntax rules and interactive examples</p>
@@ -69,7 +70,7 @@ export default function ExpressionGuideModal({ show, onClose, onSelectExample })
               className="w-8 h-8 rounded-lg flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-border/60 transition-all font-bold text-sm cursor-pointer"
               title="Close guide"
             >
-              ✕
+              <Icon name="close" />
             </button>
           </div>
 
@@ -132,7 +133,7 @@ export default function ExpressionGuideModal({ show, onClose, onSelectExample })
             {/* Key Rules */}
             <div className="flex flex-col gap-1.5 bg-amber-50/60 border border-amber-200/80 rounded-xl p-3">
               <span className="font-bold text-[12px] text-amber-900 flex items-center gap-1.5">
-                <span>💡</span> Helpful Tips
+                <span><Icon name="bulb" /></span> Helpful Tips
               </span>
               <ul className="list-disc list-inside text-amber-950/90 text-[11.5px] leading-relaxed flex flex-col gap-1">
                 <li>

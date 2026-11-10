@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * @file WelcomeModal.jsx
  * @description The two-slide cinematic welcome modal: slide content, slide dots
@@ -44,7 +45,7 @@ export default function WelcomeModal({
               }}
               className="absolute top-6 right-6 [@media(max-height:480px)]:top-2 [@media(max-height:480px)]:right-2 min-h-11 px-2.5 py-1 inline-flex items-center rounded-lg text-xs font-semibold text-text-3 hover:text-text-1 hover:bg-slate-100 transition-colors"
             >
-              Skip ✕
+              Skip <Icon name="close" />
             </button>
 
             {/* Dynamic Slide Content */}

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * Tutorial-replay confirmation dialog shared by the level screens. Presentational:
  * `shift` is the vertical nudge published by usePopupPlacement, everything else is props.
@@ -22,7 +23,7 @@ export default function TutorialReplayModal({ show, onClose, dontAskAgain, onDon
           className="absolute top-2 right-2 w-11 h-11 rounded-full flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-slate-100 transition-all cursor-pointer"
           onClick={onClose}
         >
-          ✕
+          <Icon name="close" />
         </button>
 
         <div className="flex flex-col items-center gap-2">

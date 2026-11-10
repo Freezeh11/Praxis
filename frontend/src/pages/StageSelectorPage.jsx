@@ -1,3 +1,4 @@
+import Icon from '../components/ui/Icon'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -128,7 +129,7 @@ export default function StageSelectorPage() {
               title="Open Law Reference"
               onClick={() => { primeAudio(); setShowLawsDrawer(true) }}
             >
-              <span>📖</span>
+              <span><Icon name="book" /></span>
               <span className="hidden sm:inline">Laws</span>
             </button>
             <SurveyButton compact />
@@ -199,7 +200,7 @@ export default function StageSelectorPage() {
                 <div className="bg-bg rounded-2xl px-3 sm:px-4 py-2 [@media(max-height:480px)]:py-1 border border-border flex flex-col items-center justify-center text-center min-w-[76px]">
                   <span className="text-[10px] font-semibold text-text-3 uppercase tracking-wider">Stars</span>
                   <span className="text-base sm:text-lg font-extrabold text-amber-500 mt-0.5 flex items-center gap-0.5">
-                    <span>★</span> {lp.totalStars} <span className="text-[11px] font-semibold text-text-3">/ {lp.maxStars}</span>
+                    <span><Icon name="star" /></span> {lp.totalStars} <span className="text-[11px] font-semibold text-text-3">/ {lp.maxStars}</span>
                   </span>
                 </div>
 
@@ -233,7 +234,7 @@ export default function StageSelectorPage() {
                   {isTutorialLevel ? (
                     completedSet.size >= puzzles.length ? (
                       <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
-                        ✓ Tutorial Completed!
+                        <Icon name="check" /> Tutorial Completed!
                       </span>
                     ) : (
                       <span className="text-xs font-semibold text-text-3">
@@ -243,11 +244,11 @@ export default function StageSelectorPage() {
                   ) : isMaxLevel ? (
                     isMastered ? (
                       <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
-                        🏆 Level Mastered!
+                        <Icon name="trophy" /> Level Mastered!
                       </span>
                     ) : lp.allDone ? (
                       <span className="text-xs font-bold text-amber bg-amber-light px-2.5 py-0.5 rounded-full border border-amber/30">
-                        ✓ All Done • Need 80% for Mastery
+                        <Icon name="check" /> All Done • Need 80% for Mastery
                       </span>
                     ) : (
                       <span className="text-xs font-semibold text-text-3">
@@ -256,11 +257,11 @@ export default function StageSelectorPage() {
                     )
                   ) : lp.unlocked ? (
                     <span className="text-xs font-bold text-green bg-green-light px-2.5 py-0.5 rounded-full border border-green/30">
-                      🔓 Level {nextLevelId} Unlocked!
+                      <Icon name="unlock" /> Level {nextLevelId} Unlocked!
                     </span>
                   ) : (
                     <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30">
-                      🔒 Need 80% avg to unlock Level {nextLevelId}
+                      <Icon name="lock" /> Need 80% avg to unlock Level {nextLevelId}
                     </span>
                   )}
                 </div>
@@ -322,7 +323,7 @@ export default function StageSelectorPage() {
                               : 'bg-bg text-text-3 border-border'
                         }`}
                       >
-                        {isCompleted ? '✓' : idx + 1}
+                        {isCompleted ? <Icon name="check" /> : idx + 1}
                       </span>
                       <span className="text-xs font-bold text-text-1">
                         Stage {idx + 1}
@@ -364,7 +365,7 @@ export default function StageSelectorPage() {
                     )}
 
                     {isLocked ? (
-                      <span className="text-xs font-semibold text-text-3">🔒</span>
+                      <span className="text-xs font-semibold text-text-3"><Icon name="lock" /></span>
                     ) : isCompleted ? (
                       <span className="px-2.5 py-1 rounded-lg text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 group-hover:bg-teal group-hover:text-white transition-all shadow-2xs flex items-center gap-1">
                         Review →

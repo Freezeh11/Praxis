@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * StepInspectionTip — the first-run hint that a past step can be inspected.
  * It shares the collision-aware popup layer with the law explanation.
@@ -12,7 +13,7 @@ export default function StepInspectionTip({ ready, onDismiss }) {
       style={{ transition: 'opacity 0.15s ease' }}
     >
       <div className="flex items-center gap-1.5 text-xs font-bold text-teal">
-        <span>💡</span> Try Inspecting Steps
+        <span><Icon name="bulb" /></span> Try Inspecting Steps
       </div>
 
       <p className="text-[12px] text-text-2 leading-relaxed font-sans font-normal">

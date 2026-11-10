@@ -1,3 +1,4 @@
+import Icon from '../components/ui/Icon'
 /**
  * Sandbox entry screen — Feature 1, part 2.
  *
@@ -82,19 +83,19 @@ const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a sim
 const TONES = {
   idle: {
     role: 'status',
-    glyph: 'ⓘ',
+    glyph: <Icon name="info" />,
     box: 'text-text-2 bg-bg border-border',
     field: 'border-border focus:border-accent',
   },
   ok: {
     role: 'status',
-    glyph: '✓',
+    glyph: <Icon name="check" />,
     box: 'text-green bg-green-light/60 border-green/30',
     field: 'border-green/60 focus:border-green',
   },
   error: {
     role: 'alert',
-    glyph: '✗',
+    glyph: <Icon name="close" />,
     box: 'text-red bg-red/5 border-red/25',
     field: 'border-red/60 focus:border-red',
   },
@@ -335,7 +336,7 @@ export default function SandboxPage() {
               disabled={busy}
               className="w-full min-[481px]:w-auto min-h-[48px] bg-bg-card border-[1.5px] border-border text-text-1 text-[15px] font-bold px-6 rounded-xl shadow-sm transition-all hover:border-accent hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              🎲 Random problem
+              <Icon name="dice" /> Random problem
             </button>
           </div>
         </form>

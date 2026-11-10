@@ -1,3 +1,4 @@
+import Icon from './ui/Icon'
 import React from 'react'
 
 export default class ErrorBoundary extends React.Component {
@@ -25,7 +26,7 @@ export default class ErrorBoundary extends React.Component {
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6 text-center font-sans">
           <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-8 max-w-md w-full flex flex-col items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">
-              ⚠️
+              <Icon name="warning" />
             </div>
             <h2 className="text-xl font-bold text-slate-800">Something went wrong</h2>
             <p className="text-sm text-slate-600 leading-relaxed">

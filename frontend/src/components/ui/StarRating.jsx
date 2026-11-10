@@ -1,3 +1,4 @@
+import Icon from './Icon'
 /** Read-only 3-star rating display (one star per earned point). Presentational only. */
 export default function StarRating({ stars = 0 }) {
   return (
@@ -11,7 +12,7 @@ export default function StarRating({ stars = 0 }) {
               : 'text-slate-200'
           }`}
         >
-          ★
+          <Icon name="star" />
         </span>
       ))}
     </div>

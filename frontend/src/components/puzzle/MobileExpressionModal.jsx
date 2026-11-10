@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * MobileExpressionModal: Modal dialog for entering and validating custom
  * expressions on narrow / mobile viewports where the side panel is collapsed.
@@ -53,7 +54,7 @@ export default function MobileExpressionModal({
     tone,
     invalid: tone === 'error',
     role: tone === 'error' ? 'alert' : 'status',
-    glyph: tone === 'ok' ? '✓' : tone === 'error' ? '✕' : 'ⓘ',
+    glyph: tone === 'ok' ? <Icon name="check" /> : tone === 'error' ? <Icon name="close" /> : <Icon name="info" />,
     box: tone === 'ok'
       ? 'text-emerald-800 bg-emerald-50 border-emerald-300'
       : tone === 'error'
@@ -133,7 +134,7 @@ export default function MobileExpressionModal({
             {/* Header */}
             <div className="px-4 py-3.5 border-b border-border flex items-center justify-between bg-bg/50 shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-lg leading-none">✎</span>
+                <span className="text-lg leading-none"><Icon name="edit" /></span>
                 <h3 className="text-sm font-bold text-text-1">Create Expression</h3>
               </div>
               <div className="flex items-center gap-2">
@@ -142,7 +143,7 @@ export default function MobileExpressionModal({
                   onClick={() => setShowGuide(true)}
                   className="text-xs font-bold text-teal hover:text-teal-700 flex items-center gap-0.5 cursor-pointer"
                 >
-                  <span aria-hidden="true">📖</span> Guide
+                  <span aria-hidden="true"><Icon name="book" /></span> Guide
                 </button>
                 <button
                   type="button"
@@ -150,7 +151,7 @@ export default function MobileExpressionModal({
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-border/60 font-bold text-xs cursor-pointer"
                   title="Close"
                 >
-                  ✕
+                  <Icon name="close" />
                 </button>
               </div>
             </div>
@@ -223,7 +224,7 @@ export default function MobileExpressionModal({
                   }}
                   className="w-full py-2 px-3 rounded-xl border border-border bg-bg hover:bg-border/50 text-text-1 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>🎲</span> New Random Problem
+                  <span><Icon name="dice" /></span> New Random Problem
                 </button>
               </div>
             </div>

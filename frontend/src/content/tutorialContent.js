@@ -95,14 +95,14 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 't1-close-summary-prompt',
       title: 'Review Derivation & Workspace',
-      desc: 'Click "🔍 Review Completed Derivation" below to dismiss the score modal so we can explore the points system and workspace tools.',
+      desc: 'Click "Review Completed Derivation" below to dismiss the score modal so we can explore the points system and workspace tools.',
       target: '[data-tutorial="review-derivation-btn"]',
       actionType: 'click_review',
     },
     {
       id: 't1-points-intro',
       title: 'Points, Hints & Guides',
-      desc: 'Each stage you clear awards 10 base points plus up to 5 bonus points for high efficiency (up to +15 Points total). You can spend 20 points on "🎯 Guide" to highlight exact candidate terms on canvas when stuck. "💡 Hint" gives a free conceptual clue, but using hints reduces your Hint Independence score metric!',
+      desc: 'Each stage you clear awards 10 base points plus up to 5 bonus points for high efficiency (up to +15 Points total). You can spend 20 points on "Guide" to highlight exact candidate terms on canvas when stuck. "Hint" gives a free conceptual clue, but using hints reduces your Hint Independence score metric!',
       target: '[data-tutorial="points-and-assistance"]',
       actionType: 'button',
       buttonText: 'Next →',
@@ -120,7 +120,7 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 't1-reopen-score-reminder',
       title: 'Reopening Score Summary',
-      desc: 'Need to review your efficiency, target laws, or score breakdown again? You can reopen the score summary modal at any time by clicking "📊 Score Summary" in the bottom dock.',
+      desc: 'Need to review your efficiency, target laws, or score breakdown again? You can reopen the score summary modal at any time by clicking "Score Summary" in the bottom dock.',
       target: '[data-tutorial="reopen-score-btn"]',
       actionType: 'button',
       buttonText: 'Next →',
@@ -221,7 +221,7 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 't2-close-summary-prompt',
       title: 'Review Derivation & Workspace',
-      desc: 'Click "🔍 Review Completed Derivation" below to dismiss the score modal so we can inspect the step history and connection reasoning.',
+      desc: 'Click "Review Completed Derivation" below to dismiss the score modal so we can inspect the step history and connection reasoning.',
       target: '[data-tutorial="review-derivation-btn"]',
       actionType: 'click_review',
     },
@@ -293,7 +293,7 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 't3-close-summary-prompt',
       title: 'Review Derivation & Workspace',
-      desc: 'Click "🔍 Review Completed Derivation" to return to the workspace and review your steps.',
+      desc: 'Click "Review Completed Derivation" to return to the workspace and review your steps.',
       target: '[data-tutorial="review-derivation-btn"]',
       actionType: 'click_review',
     },
@@ -322,7 +322,7 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 'assistance-intro',
       title: 'Need Help? Hints & Guides',
-      desc: 'If you ever feel stuck, click "💡 Hint" for a contextual clue. When you need direct direction, spend 20 points on "🎯 Guide" to highlight exact candidate items on the canvas!',
+      desc: 'If you ever feel stuck, click "Hint" for a contextual clue. When you need direct direction, spend 20 points on "Guide" to highlight exact candidate items on the canvas!',
       target: '[data-tutorial="assistance-group"]',
       actionType: 'button',
       buttonText: 'Start Solving →',
@@ -349,13 +349,13 @@ const ORIGINAL_TUTORIAL_STAGES = {
     {
       id: 't4-close-summary-prompt',
       title: 'Review Your Challenge Solution',
-      desc: 'Click "🔍 Review Completed Derivation" to review your derivation before concluding the tutorial.',
+      desc: 'Click "Review Completed Derivation" to review your derivation before concluding the tutorial.',
       target: '[data-tutorial="review-derivation-btn"]',
       actionType: 'click_review',
     },
     {
       id: 'challenge-complete',
-      title: 'Tutorial Complete! 🎉',
+      title: 'Tutorial Complete!',
       desc: 'You’ve learned all core mechanics: selecting variables and whole terms, factoring, negation capsules, step history inspection, and strategic law choices. You’re ready for Level 1!',
       target: '[data-tutorial="canvas"]',
       actionType: 'finish',

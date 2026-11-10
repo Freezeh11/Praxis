@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * DerivationCanvas — the expression workspace: the animation overlay, the
  * status banner, the zoom wrapper with the custom-sandbox label, the derivation
@@ -39,8 +40,8 @@ export default function DerivationCanvas({
               : 'opacity-0 pointer-events-none'
           } ${isPhoneLandscape ? 'py-1 text-[11px]' : ''}`}
         >
-          {status === 'success'  && <span className="text-xs font-bold shrink-0">✓</span>}
-          {status === 'error'    && <span className="text-xs font-bold shrink-0">✕</span>}
+          {status === 'success'  && <span className="text-xs font-bold shrink-0"><Icon name="check" /></span>}
+          {status === 'error'    && <span className="text-xs font-bold shrink-0"><Icon name="close" /></span>}
           {status === 'laws'     && <span className="text-xs font-bold shrink-0">→</span>}
           {status === 'applying' && <span className="text-xs font-bold shrink-0 animate-spin">⟳</span>}
           <span role="status" aria-live="polite" className="leading-snug break-words">{statusMsg}</span>

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * ScoreModal: the completion overlay. Graded stages get the three-metric score
  * breakdown; the sandbox gets the compact attempt summary with law pills,
@@ -57,8 +58,8 @@ export default function ScoreModal({
               data-testid="score-modal-body"
               className="w-full flex flex-col items-center text-center"
             >
-              {/* Header emoji and titles */}
-              <div className="text-[40px] leading-none mb-2 select-none">🎉</div>
+              {/* Header icon and titles */}
+              <div className="text-[40px] leading-none mb-2 select-none"><Icon name="celebration" /></div>
               <h2 className="text-[22px] sm:text-[24px] font-black text-[#111827] tracking-tight mb-1">
                 {isSandbox ? 'Problem Simplified!' : 'Stage Complete!'}
               </h2>
@@ -132,7 +133,7 @@ export default function ScoreModal({
 
                   {/* Free practice notice */}
                   <div className="w-full border border-[#BAE6FD] bg-[#F0F9FF] text-[#0369A1] rounded-xl py-2 px-3 text-xs font-medium flex items-center justify-center gap-1.5 mb-4 select-none">
-                    <span className="text-sm">🧪</span>
+                    <span className="text-sm"><Icon name="flask" /></span>
                     <span>Free practice: no points or progress recorded.</span>
                   </div>
                 </div>
@@ -159,15 +160,15 @@ export default function ScoreModal({
                   )}
                   {/* Metric rows */}
                   {[
-                    { label: '⚡ Efficiency', score: scoreResult.efficiency, max: 40,
+                    { icon: 'bolt', label: 'Efficiency', score: scoreResult.efficiency, max: 40,
                       sub: `${scoreResult.breakdown?.stepsUsed ?? 0} steps (optimal: ${scoreResult.breakdown?.optimalSteps ?? 1})`,
                       color: 'bg-sky-500' },
-                    { label: '🎯 Target Laws', score: scoreResult.targetLaw, max: 30,
+                    { icon: 'target', label: 'Target Laws', score: scoreResult.targetLaw, max: 30,
                       sub: (scoreResult.breakdown?.targetLawsRequired || []).length === 0
                         ? 'No required laws'
                         : `Used ${(scoreResult.breakdown?.targetLawsUsed || []).length} / ${(scoreResult.breakdown?.targetLawsRequired || []).length} required`,
                       color: 'bg-violet-500' },
-                    { label: '💡 Assistance use', score: scoreResult.hintIndependence, max: 30,
+                    { icon: 'bulb', label: 'Assistance use', score: scoreResult.hintIndependence, max: 30,
                       sub: (() => {
                         const h = scoreResult.breakdown?.hintsUsed ?? 0
                         const g = scoreResult.breakdown?.guidesUsed ?? 0
@@ -177,10 +178,10 @@ export default function ScoreModal({
                         return `${h} hint${h !== 1 ? 's' : ''}, ${g} guide${g !== 1 ? 's' : ''} used`
                       })(),
                       color: 'bg-teal' },
-                  ].map(({ label, score, max, sub, color }) => (
+                  ].map(({ icon, label, score, max, sub, color }) => (
                     <div key={label} className={`bg-bg rounded-xl ${shortViewport ? 'px-3 py-1.5' : 'px-4 py-3'} text-left`}>
                       <div className={`flex justify-between items-baseline ${shortViewport ? 'mb-1' : 'mb-1.5'}`}>
-                        <span className="text-[13px] font-semibold text-text-1">{label}</span>
+                        <span className="text-[13px] font-semibold text-text-1"><Icon name={icon} /> {label}</span>
                         <span className="text-[13px] font-bold text-text-1">{score}<span className="text-text-3 font-normal text-xs"> / {max}</span></span>
                       </div>
                       <div className={`w-full bg-border rounded-full overflow-hidden ${shortViewport ? 'h-1.5' : 'h-2'}`}>
@@ -196,7 +197,7 @@ export default function ScoreModal({
                   {/* Optimal hint shown if efficiency < max */}
                   {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
                     <div className={`text-[12px] text-amber-800 bg-amber-50 border border-amber/30 rounded-lg w-full leading-relaxed ${shortViewport ? 'praxis-hide-short p-2' : 'p-3'} text-left`}>
-                      <strong>💡 Tip:</strong> {puzzle.optimalHint}
+                      <strong><Icon name="bulb" /> Tip:</strong> {puzzle.optimalHint}
                     </div>
                   )}
 
@@ -225,7 +226,7 @@ export default function ScoreModal({
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                       </svg>
                     ) : (
-                      <span>🎲</span>
+                      <span><Icon name="dice" /></span>
                     )}
                     <span>{isCustomSandbox ? 'New Expression' : 'New Problem'}</span>
                   </button>
@@ -277,7 +278,7 @@ export default function ScoreModal({
                 className="w-full bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] hover:text-[#1E293B] font-semibold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 onClick={() => onClose()}
               >
-                <span>🔍</span>
+                <span><Icon name="search" /></span>
                 <span>Review Completed Derivation</span>
               </button>
             </div>

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * WorkspaceHeader — the centre panel's header: back navigation, the
  * step-history toggle, title/subtitle, the sandbox/points chip, the randomize /
@@ -95,7 +96,7 @@ export default function WorkspaceHeader({
                 onClick={onToggleStepHistory}
                 title={stepHistoryOpen ? 'Hide step history' : 'Show step history'}
                 aria-expanded={stepHistoryOpen}
-              >☰</button>
+              ><Icon name="menu" /></button>
             )}
             <div className="min-w-0">
               <div className="text-[15px] font-bold text-text-1 truncate">
@@ -114,7 +115,7 @@ export default function WorkspaceHeader({
                 title="Sandbox practice: no points, stars or progress are recorded"
                 className={`shrink-0 inline-flex items-center gap-1 px-2.5 rounded-lg border border-sky-200 bg-sky-50/70 font-semibold text-sky-900 ${chromeText} ${chromeHeight}`}
               >
-                <span aria-hidden="true">🧪</span>
+                <span aria-hidden="true"><Icon name="flask" /></span>
                 <span data-tutorial="sandbox-stats">{steps.length}{optimalSteps > 0 ? `/${optimalSteps}` : ''}</span>
               </div>
             ) : (
@@ -136,7 +137,7 @@ export default function WorkspaceHeader({
                   onClick={onRandomize}
                   title="Swap in a new random, solver-verified problem"
                 >
-                  <span className="text-sm leading-none">🎲</span> Randomize
+                  <span className="text-sm leading-none"><Icon name="dice" /></span> Randomize
                 </button>
                 <button
                   data-tutorial="new-expression-btn"
@@ -144,7 +145,7 @@ export default function WorkspaceHeader({
                   onClick={onNewExpression}
                   title="Type or edit an expression"
                 >
-                  <span className="text-sm leading-none" aria-hidden="true">✎</span> New expression
+                  <span className="text-sm leading-none" aria-hidden="true"><Icon name="edit" /></span> New expression
                 </button>
                 {!headerControlRail && <div className="w-[1px] h-4 bg-border mx-1" />}
               </>

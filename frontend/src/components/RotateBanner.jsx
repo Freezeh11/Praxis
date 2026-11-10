@@ -1,3 +1,4 @@
+import Icon from './ui/Icon'
 /**
  * RotateBanner — sticky, dismissible hint for small tablets held in portrait.
  *
@@ -50,7 +51,7 @@ export default function RotateBanner({ onDismiss, tier }) {
         className="praxis-touch-target ml-1 rounded-full text-base leading-none font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber"
         style={{ color: 'var(--color-text-2, #4b5468)' }}
       >
-        <span aria-hidden="true">✕</span>
+        <span aria-hidden="true"><Icon name="close" /></span>
       </button>
     </div>
   )

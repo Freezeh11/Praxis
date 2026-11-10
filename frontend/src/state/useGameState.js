@@ -561,7 +561,7 @@ export function useGameState(options = {}) {
           setEarnedXp(STAGE_COMPLETION_XP)
           setIsComplete(true)
           setStatus('success')
-          setStatusMsg('Expression simplified! 🎉')
+          setStatusMsg('Expression simplified!')
           playSound('correct')
         } else {
           syncDeadEndStatus(newExpr, 'Step applied. Choose a law for your next move.')

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * LawsReferenceSheet — the Boolean-laws quick reference of the puzzle
  * workspace. Narrow or short viewports get a full-width bottom sheet, wide +
@@ -26,8 +27,8 @@ export function LawsReferenceButton({ compact, chromeText, chromeHeight, onOpen 
       onClick={() => onOpen()}
     >
       {compact
-        ? <><span aria-hidden="true">📖</span> Laws</>
-        : <><span>📖 Laws Quick Reference</span><span className="text-text-3">→</span></>}
+        ? <><span aria-hidden="true"><Icon name="book" /></span> Laws</>
+        : <><span><Icon name="book" /> Laws Quick Reference</span><span className="text-text-3">→</span></>}
     </button>
   )
 }
@@ -75,7 +76,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
           >
             <div className={`flex items-center justify-between bg-bg shrink-0 ${lawsSheet ? 'px-4 py-2' : 'p-4'}`}>
               <div className="font-bold text-sm text-text-1 flex items-center gap-2">
-                <span>📖</span> Boolean Laws Reference
+                <span><Icon name="book" /></span> Boolean Laws Reference
               </div>
               <button
                 type="button"
@@ -84,7 +85,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
                 onClick={() => onClose()}
                 title="Close the laws reference"
               >
-                ✕
+                <Icon name="close" />
               </button>
             </div>
             <div className={`flex-1 overflow-y-auto overscroll-contain p-4 flex flex-col gap-3 ${lawsSheet ? 'praxis-safe-b' : ''}`}>

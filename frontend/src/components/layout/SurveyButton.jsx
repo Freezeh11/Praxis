@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * SurveyButton — the outbound link to the learner survey.
  *
@@ -27,7 +28,7 @@ export default function SurveyButton({ compact = false, chromeHeight = '' }) {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
       </span>
-      <span aria-hidden="true" className="text-[14px] leading-none shrink-0">📝</span>
+      <span aria-hidden="true" className="text-[14px] leading-none shrink-0"><Icon name="clipboard" /></span>
       <span className="whitespace-nowrap tracking-wide">
         {compact ? LABEL : FULL_LABEL}
       </span>

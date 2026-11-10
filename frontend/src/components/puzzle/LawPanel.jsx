@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * LawPanel — the law-first palette under the canvas. It is a horizontally
  * scrollable strip on phone landscape / narrow windows, a grid on tablet
@@ -41,11 +42,11 @@ export default function LawPanel({
         <div className={`flex items-center justify-between gap-4 flex-wrap ${lawsAsStrip ? 'gap-2 py-0' : 'py-1'}`}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">
-              ✓
+              <Icon name="check" />
             </div>
             <div>
               <div className={`font-bold text-text-1 ${lawsAsStrip ? 'text-[14px]' : 'text-[13px]'}`}>
-                {isSandbox ? 'Problem Simplified! 🎉' : 'Stage Completed! 🎉'}
+                {isSandbox ? 'Problem Simplified!' : 'Stage Completed!'} <Icon name="celebration" />
               </div>
               <div className={`text-text-3 ${lawsAsStrip ? 'text-[14px] max-w-[46vw] truncate' : 'text-[11px]'}`}>
                 {isSandbox
@@ -65,7 +66,7 @@ export default function LawPanel({
                   className={`px-5 py-2 bg-accent text-white rounded-lg font-semibold transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px cursor-pointer ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                   onClick={() => onNewExpression()}
                 >
-                  ✎ New expression
+                  <Icon name="edit" /> New expression
                 </button>
               ) : (
                 <button
@@ -73,7 +74,7 @@ export default function LawPanel({
                   className={`px-5 py-2 bg-accent text-white rounded-lg font-semibold transition-all shadow-sm hover:bg-text-1 hover:shadow-md hover:-translate-y-px cursor-pointer ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                   onClick={() => onRandomize()}
                 >
-                  🎲 Randomize
+                  <Icon name="dice" /> Randomize
                 </button>
               )
             ) : (
@@ -83,7 +84,7 @@ export default function LawPanel({
               className={`px-3.5 py-2 border border-slate-200 text-text-2 font-semibold rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all cursor-pointer ${lawsAsStrip ? 'text-[14px]' : 'text-xs'}`}
               onClick={onOpenScoreSummary}
             >
-              📊 Score Summary
+              <Icon name="chart" /> Score Summary
             </button>
             {level && stageNum + 1 < level.puzzles.length ? (
               <button

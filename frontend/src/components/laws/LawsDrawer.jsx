@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { useEffect, useRef } from 'react'
 import usePanelSound from '../../hooks/usePanelSound'
 import LawCard from './LawCard'
@@ -52,7 +53,7 @@ export default function LawsDrawer({ show, onClose, laws, placement }) {
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 backdrop-blur-sm flex items-center justify-between shrink-0">
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
-              <span className="text-lg" aria-hidden="true">📖</span>
+              <span className="text-lg" aria-hidden="true"><Icon name="book" /></span>
               <h2 className="text-base font-extrabold text-slate-800 tracking-tight">Law Reference</h2>
             </div>
             <p className="text-[11.5px] text-slate-500 font-medium">Boolean identities & equivalence rules</p>
@@ -64,7 +65,7 @@ export default function LawsDrawer({ show, onClose, laws, placement }) {
             onClick={onClose}
             aria-label="Close Law Reference"
           >
-            ✕
+            <Icon name="close" />
           </button>
         </div>
 

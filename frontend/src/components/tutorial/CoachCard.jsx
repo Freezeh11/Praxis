@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * @file CoachCard.jsx
  * @description The floating coach tooltip card: step counter, dead-end aware
@@ -61,7 +62,7 @@ export default function CoachCard({
               if (stageIdx === 3 && currentStep.id === 'challenge-solve') {
                 const lastLaw = steps.length > 0 ? steps[steps.length - 1]?.law : null
                 if (lastLaw?.includes('Absorption') && !isComplete) {
-                  return 'Dead End Reached ⚠️'
+                  return <>Dead End Reached <Icon name="warning" /></>
                 }
                 return currentStep.title
               }

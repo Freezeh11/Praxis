@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * SidePanel: the right column of the wide tiers: level (or sandbox) progress,
  * the points card with the Hint/Guide/Laws actions, the quick stage picker
@@ -61,7 +62,7 @@ export default function SidePanel({
     tone,
     invalid: tone === 'error',
     role: tone === 'error' ? 'alert' : 'status',
-    glyph: tone === 'ok' ? '✓' : tone === 'error' ? '✕' : 'ⓘ',
+    glyph: tone === 'ok' ? <Icon name="check" /> : tone === 'error' ? <Icon name="close" /> : <Icon name="info" />,
     box: tone === 'ok'
       ? 'text-emerald-800 bg-emerald-50 border-emerald-300'
       : tone === 'error'
@@ -173,7 +174,7 @@ export default function SidePanel({
           {/* User Points Card: sandbox play is unscored, so it shows a notice instead */}
           {isSandbox ? (
             <div data-tutorial="sandbox-notice" className="flex items-start gap-2.5 px-3 py-2 bg-sky-50/70 border border-sky-200 rounded-xl">
-              <span className="text-base leading-none">🧪</span>
+              <span className="text-base leading-none"><Icon name="flask" /></span>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-sky-900/80">SANDBOX MODE</div>
                 <div className="text-[11px] text-sky-900/90 leading-snug mt-0.5">
@@ -224,7 +225,7 @@ export default function SidePanel({
                   className="text-xs font-bold text-teal hover:text-teal-700 flex items-center gap-1 cursor-pointer transition-colors"
                   title="How to write Boolean expressions"
                 >
-                  <span aria-hidden="true">📖</span> Guide
+                  <span aria-hidden="true"><Icon name="book" /></span> Guide
                 </button>
               </div>
 
@@ -296,7 +297,7 @@ export default function SidePanel({
                   disabled={busy}
                   className="w-full py-2 px-3 rounded-xl border border-border bg-bg hover:bg-border/50 text-text-1 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>🎲</span> New Random Problem
+                  <span><Icon name="dice" /></span> New Random Problem
                 </button>
               </div>
             </div>
@@ -379,8 +380,8 @@ export default function SidePanel({
                 {isNextAvailable && (
                   <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Next →</span>
                 )}
-                {!isNextAvailable && isCompleted && <span className="text-teal text-xs font-bold">✓</span>}
-                {!isNextAvailable && isLocked && <span className="text-xs text-text-3 opacity-60">🔒</span>}
+                {!isNextAvailable && isCompleted && <span className="text-teal text-xs font-bold"><Icon name="check" /></span>}
+                {!isNextAvailable && isLocked && <span className="text-xs text-text-3 opacity-60"><Icon name="lock" /></span>}
               </button>
             )
           })}

@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import Icon from '../components/ui/Icon'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
@@ -227,7 +228,7 @@ export default function LevelSelectPage() {
             >
               <span>Tutorial</span>
             </button>
-            <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}>📖</button>
+            <button data-popup-anchor="laws" className="w-9 h-9 [@media(max-height:480px)]:w-11 [@media(max-height:480px)]:h-11 rounded-full flex items-center justify-center text-lg text-text-2 bg-transparent hover:bg-border transition-all" title="Law Reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}><Icon name="book" /></button>
             {/* Both keep the 36px desktop height of the rail and grow to 44px on
                 a landscape phone, where the compact variant is used. */}
             <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
@@ -266,7 +267,7 @@ export default function LevelSelectPage() {
             style={{ transform: `translateX(${rowShift}px)` }}
           >
             {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
-            {error && <div className="text-red font-bold">⚠ Could not connect to server</div>}
+            {error && <div className="text-red font-bold"><Icon name="warning" /> Could not connect to server</div>}
             {!loading && !error && entries.map((lv, i) => {
               const offset = i - selected
               const lockState = getLockState(lv)
@@ -306,7 +307,7 @@ export default function LevelSelectPage() {
                     ${done && !isActive ? 'bg-green-light text-green' : ''}
                     ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
                   `}>
-                    {locked ? '🔒' : isSandbox ? '🧪' : isComingSoon ? '🔒' : done ? '✓' : lv.id}
+                    {locked ? <Icon name="lock" /> : isSandbox ? <Icon name="flask" /> : isComingSoon ? <Icon name="lock" /> : done ? <Icon name="check" /> : lv.id}
                   </div>
 
                   <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'} [@media(max-height:480px)]:text-[16px]`}>{lv.name}</div>
@@ -353,7 +354,7 @@ export default function LevelSelectPage() {
                   if (isSandbox) {
                     return (
                       <div className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 flex items-center gap-1">
-                        <span>🎲</span> Random Practice
+                        <span><Icon name="dice" /></span> Random Practice
                       </div>
                     )
                   }
@@ -362,7 +363,7 @@ export default function LevelSelectPage() {
                     if (done) {
                       return (
                         <div className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full border border-teal/30 flex items-center gap-1">
-                          <span>✓</span> Completed
+                          <span><Icon name="check" /></span> Completed
                         </div>
                       )
                     }
@@ -378,7 +379,7 @@ export default function LevelSelectPage() {
                   if (lp.totalStars > 0) {
                     return (
                       <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber/30 flex items-center gap-1">
-                        <span>★</span> {lp.totalStars} / {lp.maxStars} Stars
+                        <span><Icon name="star" /></span> {lp.totalStars} / {lp.maxStars} Stars
                       </div>
                     )
                   }
@@ -390,10 +391,10 @@ export default function LevelSelectPage() {
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">Coming Soon</div>
                 )}
                 {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">🔒 80% avg required</div>
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> 80% avg required</div>
                 )}
                 {isTutorialGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">🔒 Tutorial required</div>
+                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> Tutorial required</div>
                 )}
 
                 </div>
@@ -420,7 +421,7 @@ export default function LevelSelectPage() {
                     disabled
                     className="w-full mt-2 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
                   >
-                    <span>🔒 {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
+                    <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
                   </button>
                 )}
               </div>

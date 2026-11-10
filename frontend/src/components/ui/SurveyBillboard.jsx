@@ -1,3 +1,4 @@
+import Icon from './Icon'
 /**
  * SurveyBillboard — High-visibility "ad billboard" banner inviting learners
  * to share feedback through the external survey.
@@ -18,7 +19,7 @@ export default function SurveyBillboard({ className = '' }) {
       <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xl shadow-xs">
-            📝
+            <Icon name="clipboard" />
           </div>
 
           <div className="flex flex-col">

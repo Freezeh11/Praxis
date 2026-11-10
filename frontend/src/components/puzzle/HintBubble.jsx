@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * HintBubble — the hint popup of the workspace. It is one fixed, collision-
  * placed layer: `nodeRef` / `layerStyle` / `ready` come from
@@ -21,7 +22,7 @@ export default function HintBubble({
             } ${ready ? 'opacity-100' : 'opacity-0'}`}
             style={{ width: '100%', transition: 'opacity 0.12s ease' }}
           >
-            <span className="text-base leading-none shrink-0">💡</span>
+            <span className="text-base leading-none shrink-0"><Icon name="bulb" /></span>
             <span className="leading-snug">{hint}</span>
             <button
               type="button"
@@ -29,7 +30,7 @@ export default function HintBubble({
               className="ml-auto shrink-0 -mr-1 -mt-0.5 w-6 h-6 rounded-md text-amber-800/70 hover:text-amber-900 hover:bg-amber-100 flex items-center justify-center text-xs font-bold transition-colors"
               onClick={() => onClose()}
               title="Dismiss hint"
-            >✕</button>
+            ><Icon name="close" /></button>
           </div>
         )}
       </div>

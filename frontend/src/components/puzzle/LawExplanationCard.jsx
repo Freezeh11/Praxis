@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * LawExplanationCard — the card that explains the law behind an inspected
  * derivation step. It hangs off the inspected line inside the shared
@@ -49,7 +50,7 @@ export default function LawExplanationCard({ lawName, explanation, ready, onClos
     >
       <div className="flex items-center justify-between gap-1.5 border-b border-slate-100 pb-1.5 mb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-xs shrink-0 select-none">⚖️</span>
+          <span className="text-xs shrink-0 select-none"><Icon name="scale" /></span>
           <span className="text-[12px] font-bold text-teal uppercase tracking-wide truncate">
             {lawName}
           </span>
@@ -61,7 +62,7 @@ export default function LawExplanationCard({ lawName, explanation, ready, onClos
           className="w-7 h-7 -mr-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg flex items-center justify-center font-bold text-xs transition-colors shrink-0 cursor-pointer"
           title="Close explanation"
         >
-          ✕
+          <Icon name="close" />
         </button>
       </div>
       <div className="text-slate-700 text-[12.5px] leading-relaxed font-sans font-normal">

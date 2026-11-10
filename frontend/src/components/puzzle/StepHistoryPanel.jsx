@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * StepHistoryPanel — the derivation history. It is the first column on the wide
  * tiers; on the tiers that cannot afford it, the SAME element (same
@@ -45,7 +46,7 @@ export default function StepHistoryPanel({
             className="shrink-0 w-11 h-11 rounded-lg border border-border bg-bg text-[16px] font-bold text-text-2 hover:bg-border transition-all flex items-center justify-center"
             onClick={() => onCloseStepHistory()}
             title="Close step history"
-          >✕</button>
+          ><Icon name="close" /></button>
         )}
       </div>
       <div className="flex-1 overflow-y-auto px-3.5 py-3 flex flex-col gap-2.5">

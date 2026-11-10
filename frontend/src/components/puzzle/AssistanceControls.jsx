@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 /**
  * AssistanceControls — the Hint + Guide pair. `compact` places them in the
  * header (no side column); otherwise they fill the side panel's action row.
@@ -16,7 +17,7 @@ export default function AssistanceControls({
         disabled={isComplete}
         title={isComplete ? 'Expression is already simplified' : 'Get a hint for the next step'}
       >
-        <span>💡</span> Hint
+        <span><Icon name="bulb" /></span> Hint
       </button>
       <button
         data-tutorial="guide-button"
@@ -29,7 +30,7 @@ export default function AssistanceControls({
             ? 'Expression is already simplified'
             : `Highlight terms for the next move (Costs ${guideCost} pts)`}
       >
-        <span>🎯</span> Guide <span className="text-[10px] text-amber-700 font-normal">{isSandbox ? '(Free)' : `(${guideCost}p)`}</span>
+        <span><Icon name="target" /></span> Guide <span className="text-[10px] text-amber-700 font-normal">{isSandbox ? '(Free)' : `(${guideCost}p)`}</span>
       </button>
     </div>
   )
