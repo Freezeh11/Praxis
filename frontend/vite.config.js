@@ -9,8 +9,10 @@ const apiTarget = process.env.VITE_API_TARGET || 'http://127.0.0.1:8000'
 
 /** Vendored runtime split into cacheable, independently invalidated chunks. */
 const VENDOR_GROUPS = [
-  { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ },
-  { name: 'motion', test: /node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/ },
+  // jsx-runtime is matched by id as well: Rolldown can inline it as a virtual
+  // module (`react/jsx-runtime`), and without this rule it lands in whichever
+  // chunk first imports it — pulling that chunk into the entry preload set.
+  { name: 'react', test: /(node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]|react[\\/]jsx(-dev)?-runtime|jsx(-dev)?-runtime)/ },
   { name: 'supabase', test: /node_modules[\\/]@supabase[\\/]/ },
 ]
 
@@ -19,8 +21,16 @@ function manualChunks(id) {
     for (const group of VENDOR_GROUPS) {
       if (group.test.test(id)) return group.name
     }
+    // framer-motion is only used by lazy routes and the session dialog. Left in
+    // the eager vendor chunk it would be preloaded on the landing page; left
+    // unassigned, Rolldown parks it in the async chunks that import it.
+    if (/node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) return undefined
     return 'vendor'
   }
+  // Config is imported by pages that never touch the solver. It must be its own
+  // chunk *before* engine: otherwise Rollup folds both together and importing
+  // one rule table drags the whole solver into the landing path.
+  if (/[\\/]src[\\/]config[\\/]/.test(id)) return 'config'
   // The law/solver engine is only needed by the workspace pages; its own chunk
   // keeps it out of the landing/login path.
   if (/[\\/]src[\\/]engine[\\/]/.test(id)) return 'engine'

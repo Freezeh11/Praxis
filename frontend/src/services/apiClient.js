@@ -10,7 +10,7 @@
  * shape is still tolerated so the frontend and backend can be deployed
  * independently during the transition.
  */
-import { supabase } from './supabaseClient.js'
+import { getSupabase } from './supabaseClient.js'
 
 /** A failed API call. `message` is safe to show; `detail` is for developers. */
 export class ApiError extends Error {
@@ -25,6 +25,7 @@ export class ApiError extends Error {
 
 /** Attaches the Supabase access token when the learner is signed in. */
 async function authHeaders(baseHeaders = {}) {
+  const supabase = await getSupabase()
   const { data } = await supabase.auth.getSession()
   const token = data?.session?.access_token
   return token ? { ...baseHeaders, Authorization: `Bearer ${token}` } : baseHeaders

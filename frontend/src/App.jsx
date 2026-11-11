@@ -19,14 +19,41 @@ import LoadingSpinner from './components/ui/LoadingSpinner'
  * solver/law engine — lives in its own chunk and is fetched on first
  * navigation. The route tree, paths and guards below are unchanged.
  */
-const LoginPage = lazy(() => import('./pages/LoginPage'))
-const RegisterPage = lazy(() => import('./pages/RegisterPage'))
-const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
-const LevelSelectPage = lazy(() => import('./pages/LevelSelectPage'))
-const StageSelectorPage = lazy(() => import('./pages/StageSelectorPage'))
-const ProblemPage = lazy(() => import('./pages/ProblemPage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+/**
+ * Route chunk + motion boundary in one loader.
+ *
+ * The framer-motion feature bundle is the single biggest async dependency a
+ * page can have, so it must never be part of the entry graph: importing
+ * `MotionProvider` at the top of this module pulled LazyMotion (and through it
+ * the whole motion core) into the landing page's preload list. Importing it
+ * here instead makes it a dependency of the page chunk, so a visitor who never
+ * leaves the landing page never downloads it. Each page still gets exactly one
+ * LazyMotion boundary above its own dialogs and portals.
+ */
+const withMotion = (loadPage) =>
+  lazy(async () => {
+    const [{ default: MotionProvider }, { default: Page }] = await Promise.all([
+      import('./components/motion/MotionProvider.jsx'),
+      loadPage(),
+    ])
+    function MotionRoute(props) {
+      return (
+        <MotionProvider>
+          <Page {...props} />
+        </MotionProvider>
+      )
+    }
+    return { default: MotionRoute }
+  })
+
+const LoginPage = withMotion(() => import('./pages/LoginPage'))
+const RegisterPage = withMotion(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = withMotion(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = withMotion(() => import('./pages/ResetPasswordPage'))
+const LevelSelectPage = withMotion(() => import('./pages/LevelSelectPage'))
+const StageSelectorPage = withMotion(() => import('./pages/StageSelectorPage'))
+const ProblemPage = withMotion(() => import('./pages/ProblemPage'))
+const ProfilePage = withMotion(() => import('./pages/ProfilePage'))
 
 /**
  * One backdrop instance for the whole app, keyed off the route so the expression
@@ -64,49 +91,49 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <RouteBackdrop />
+          <BrowserRouter>
+            <RouteBackdrop />
 
-          {/* Device/orientation enforcement: phones in portrait get the
-              "rotate your device" overlay, small tablets in portrait get the
-              dismissible banner. Rendered globally so it also covers the
-              public routes. */}
-          <OrientationGate />
+            {/* Device/orientation enforcement: phones in portrait get the
+                "rotate your device" overlay, small tablets in portrait get the
+                dismissible banner. Rendered globally so it also covers the
+                public routes. */}
+            <OrientationGate />
 
-          {/* Global Toast Notifications */}
-          <Toaster position="top-center" richColors />
+            {/* Global Toast Notifications */}
+            <Toaster position="top-center" richColors />
 
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              {/* Password recovery: the email step, and the link landing page that
-                  carries Supabase's short-lived recovery session. */}
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                {/* Password recovery: the email step, and the link landing page that
+                    carries Supabase's short-lived recovery session. */}
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
-              {/* Protected AND tutorial-gated: a new learner must finish the
-                  interactive tutorial before Levels 1-3 or the Sandbox.
-                  The tutorial route below is intentionally outside the gate so
-                  the redirect target is always reachable. */}
-              <Route path="/levels" element={<ProtectedRoute><TutorialGate><LevelSelectPage /></TutorialGate></ProtectedRoute>} />
-              <Route path="/level/:levelId/stages" element={<ProtectedRoute><TutorialGate><StageSelectorPage /></TutorialGate></ProtectedRoute>} />
-              <Route path="/level/:levelId/stage/:stageIdx" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
+                {/* Protected AND tutorial-gated: a new learner must finish the
+                    interactive tutorial before Levels 1-3 or the Sandbox.
+                    The tutorial route below is intentionally outside the gate so
+                    the redirect target is always reachable. */}
+                <Route path="/levels" element={<ProtectedRoute><TutorialGate><LevelSelectPage /></TutorialGate></ProtectedRoute>} />
+                <Route path="/level/:levelId/stages" element={<ProtectedRoute><TutorialGate><StageSelectorPage /></TutorialGate></ProtectedRoute>} />
+                <Route path="/level/:levelId/stage/:stageIdx" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
 
-              {/* Sandbox unified play area: the learner enters expressions directly
-                  in the play area's right panel, or solves random problems. */}
-              <Route path="/sandbox" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
-              {/* Direct sandbox play route kept for backward compatibility */}
-              <Route path="/sandbox/play" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
+                {/* Sandbox unified play area: the learner enters expressions directly
+                    in the play area's right panel, or solves random problems. */}
+                <Route path="/sandbox" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
+                {/* Direct sandbox play route kept for backward compatibility */}
+                <Route path="/sandbox/play" element={<ProtectedRoute><TutorialGate><ProblemPage /></TutorialGate></ProtectedRoute>} />
 
-              {/* Catch-all */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+                {/* Catch-all */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>
   )

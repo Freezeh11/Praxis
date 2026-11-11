@@ -1,29 +1,17 @@
 import AppHeader from '../components/layout/AppHeader.jsx'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import SurveyButton from '../components/layout/SurveyButton'
 import SoundToggle from '../components/ui/SoundToggle'
 import { useSession } from '../state/useSession.js'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
 import ProfileLink from '../components/layout/ProfileLink.jsx'
 
+/** Entrance stagger, in milliseconds. CSS owns the animation — see .praxis-rise. */
+const RISE = { badge: '80ms', headline: '200ms', sub: '340ms', cta: '480ms' }
+
 export default function LandingPage() {
   const { data: session } = useSession()
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
-
-  // Fade-in animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.1 }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-  }
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-transparent flex flex-col relative overflow-hidden">
@@ -46,39 +34,34 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center praxis-page-x py-6 z-10 -mt-10 [@media(max-height:480px)]:mt-0">
-        <motion.div
-          className="max-w-3xl w-full flex flex-col items-center text-center"
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-        >
+        <div className="max-w-3xl w-full flex flex-col items-center text-center">
 
           {/* Badge */}
-          <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
+          <div className="praxis-rise mb-4 sm:mb-6" style={{ animationDelay: RISE.badge }}>
             <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700 shadow-chip ring-1 ring-indigo-500/5 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:shadow-none dark:ring-0">
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-[0_0_0_3px_rgba(79,70,229,0.12)]" />
               Interactive Learning
             </span>
-          </motion.div>
+          </div>
 
           {/* Headline. The accent phrase keeps a solid indigo-600 foreground —
               contrast is measured against a real colour, never against a
               clipped gradient — and the gradient lives in the rule beneath it. */}
-          <motion.h1 variants={itemVariants} className="text-[32px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-4 sm:mb-6">
+          <h1 className="praxis-rise text-[32px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-4 sm:mb-6" style={{ animationDelay: RISE.headline }}>
             Master Boolean Algebra<br className="hidden md:block" />{' '}
             <span className="relative inline-block text-indigo-600 dark:text-cyan-300">
               Without the Headache.
               <span aria-hidden="true" className="absolute inset-x-1 -bottom-1 h-[5px] rounded-full bg-gradient-to-r from-indigo-500/70 via-indigo-400/50 to-cyan-400/60 sm:h-[7px]" />
             </span>
-          </motion.h1>
+          </h1>
 
           {/* Subheadline */}
-          <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-text-2 font-medium max-w-xl mb-6 sm:mb-8 leading-relaxed">
+          <p className="praxis-rise text-base sm:text-lg md:text-xl text-text-2 font-medium max-w-xl mb-6 sm:mb-8 leading-relaxed" style={{ animationDelay: RISE.sub }}>
             Practice Boolean algebra, apply laws, and prove equivalences with a clear interactive approach.
-          </motion.p>
+          </p>
 
           {/* CTAs */}
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center">
+          <div className="praxis-rise flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center" style={{ animationDelay: RISE.cta }}>
             {session ? (
               <Link
                 to="/levels"
@@ -102,8 +85,8 @@ export default function LandingPage() {
                 </Link>
               </>
             )}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </main>
 
       {/* Decorative Blur Orbs */}
