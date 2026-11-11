@@ -197,7 +197,7 @@ export default function RegisterPage() {
                   hintLive
                 />
 
-                <SubmitButton loading={loading} disabled={!passwordsMatch || !passwordLongEnough} busyLabel="Creating account...">
+                <SubmitButton loading={loading} disabled={!email.trim() || !password || !passwordsMatch || !passwordLongEnough} busyLabel="Creating account...">
                   Create Account
                 </SubmitButton>
               </form>

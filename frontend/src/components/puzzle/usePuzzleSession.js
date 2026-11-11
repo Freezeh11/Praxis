@@ -32,7 +32,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { fetchLevel, laws, submitScore } = useGameContent()
-  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, getLevelProgress, saveSolution, getSavedSolution } = useProgress()
+  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, getLevelProgress, saveSolution, getSavedSolution, hasCompletedTutorial, progressHydrated } = useProgress()
 
   // Sandbox mode: reached via /sandbox, which supplies no route params. It
   // reuses this exact workspace but drives it from a locally generated puzzle
@@ -118,6 +118,26 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   // 1. Fetch level and set current puzzle (skipped entirely in sandbox mode)
   useEffect(() => {
     if (isSandbox) return
+    // Gates read persisted progress; judging before it hydrates would bounce a
+    // returning learner off a level they have actually unlocked.
+    if (!progressHydrated) return
+
+    // The carousel hides gated levels and stages, but the route is public
+    // inside the app. Mirror those gates here so a typed URL cannot skip a
+    // tutorial or a score requirement.
+    const numericLevelId = Number(levelId)
+    if (!Number.isInteger(numericLevelId) || numericLevelId < 0 || numericLevelId > 3) {
+      navigate('/levels', { replace: true })
+      return
+    }
+    if (numericLevelId > 0 && !hasCompletedTutorial) {
+      navigate('/levels', { replace: true })
+      return
+    }
+    if (numericLevelId > 1 && !getLevelProgress(numericLevelId - 1, 12).unlocked) {
+      navigate('/levels', { replace: true })
+      return
+    }
 
     let isCancelled = false
     setShowSuccess(false)
@@ -128,7 +148,8 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
       if (isCancelled || !data) return
       setLevel(data)
       const puz = data.puzzles?.[stageNum]
-      if (puz) {
+      const completed = new Set(getStagesCompleted(Number(levelId)))
+      if (puz && (stageNum === 0 || completed.has(stageNum - 1))) {
         setLevelPuzzle(puz)
       } else {
         navigate(`/level/${levelId}/stages`, { replace: true })
@@ -143,7 +164,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     return () => {
       isCancelled = true
     }
-  }, [levelId, stageNum, navigate, isSandbox])
+  }, [levelId, stageNum, navigate, isSandbox, hasCompletedTutorial, progressHydrated])
 
   // 2. Synchronize puzzle derivation with saved solution (reactive to auth hydration).
   //    Sandbox problems are never saved, so they always start from scratch.
@@ -240,11 +261,13 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
       else if (previousBest === null || immediateScore.total > previousBest) playSound('star')
     }, sparkleMs + 40 + fanfareMs + 80)
 
-    // Submit score in background to sync with server/database
+    // Submit score in background to sync with server/database. The API rejects
+    // a zero-step claim (it could only come from a corrupted replay), so the
+    // transport floor is one step.
     submitScore({
       levelId: Number(levelId),
       stageIdx: stageNum,
-      stepsUsed: steps.length,
+      stepsUsed: Math.max(1, steps.length),
       lawsUsed,
       hintsUsed,
       guidesUsed,
@@ -285,7 +308,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
       submitScore({
         levelId: Number(levelId),
         stageIdx: stageNum,
-        stepsUsed: steps.length,
+        stepsUsed: Math.max(1, steps.length),
         lawsUsed,
         hintsUsed,
         guidesUsed,

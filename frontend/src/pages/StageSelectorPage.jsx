@@ -23,7 +23,7 @@ export default function StageSelectorPage() {
   const { levelId } = useParams()
   const navigate = useNavigate()
   const { fetchLevel, laws } = useGameContent()
-  const { progress, getStagesCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial, hasCompletedTutorial } = useProgress()
+  const { progress, getStagesCompleted, getLevelProgress, resetLevelProgress, hasSeenTutorial, hasCompletedTutorial, progressHydrated } = useProgress()
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
   const [level, setLevel] = useState(null)
@@ -44,13 +44,28 @@ export default function StageSelectorPage() {
   }, [numLevelId, hasCompletedTutorial, navigate])
 
   useEffect(() => {
+    // Reject unknown ids before they reach the API, and mirror the carousel's
+    // gates so a typed URL cannot open a locked level.
+    if (!progressHydrated) return
+    if (!Number.isInteger(numLevelId) || numLevelId < 0 || numLevelId > 3) {
+      navigate('/levels', { replace: true })
+      return
+    }
+    if (numLevelId > 1 && !getLevelProgress(numLevelId - 1, 12).unlocked) {
+      navigate('/levels', { replace: true })
+      return
+    }
     fetchLevel(numLevelId)
       .then((data) => {
+        if (!data || !Array.isArray(data.puzzles) || data.puzzles.length === 0) {
+          navigate('/levels', { replace: true })
+          return
+        }
         setLevel(data)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
-  }, [numLevelId, fetchLevel])
+      .catch(() => navigate('/levels', { replace: true }))
+  }, [numLevelId, fetchLevel, navigate, getLevelProgress, progressHydrated])
 
   const puzzles = useMemo(() => level?.puzzles || [], [level])
   const completedStages = getStagesCompleted(numLevelId)

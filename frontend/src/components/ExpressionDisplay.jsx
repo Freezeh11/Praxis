@@ -181,6 +181,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
             ? 'opacity-85 bg-slate-700/85 text-white hover:opacity-100 active:bg-indigo-600 active:scale-105'
             : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'}`}
         title={gripTitle}
+        aria-label={gripTitle}
         onClick={e => {
           e.stopPropagation()
           onSelect()

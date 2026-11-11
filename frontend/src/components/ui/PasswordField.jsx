@@ -26,6 +26,7 @@ export default function PasswordField({
   describedBy,
   hintLive = false,
   children,
+  maxLength = 128,
 }) {
   const [showPassword, setShowPassword] = useState(false)
   const message = typeof error === 'string' && error ? error : hint
@@ -49,6 +50,7 @@ export default function PasswordField({
           placeholder={placeholder}
           required={required}
           autoComplete={autoComplete}
+          maxLength={maxLength}
           aria-invalid={isInvalid || undefined}
           aria-describedby={describedById}
           className={`${authInputClassName({ border: borderClassName, padLeft: Boolean(icon), padRight: true, invalid: isInvalid })} ${className}`}
@@ -56,8 +58,8 @@ export default function PasswordField({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          aria-label={showPassword ? 'Hide password' : 'Show password'}
-          title={showPassword ? 'Hide password' : 'Show password'}
+          aria-label={`${showPassword ? 'Hide' : 'Show'} ${(label || 'password').toLowerCase()}`}
+          title={`${showPassword ? 'Hide' : 'Show'} ${(label || 'password').toLowerCase()}`}
           className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:text-slate-400 dark:hover:text-slate-200 dark:focus-visible:ring-cyan-400/40"
         >
           {showPassword ? (

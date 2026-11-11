@@ -23,6 +23,26 @@ export default function Spotlight({
         
         if (showWelcomeModal || !currentStep || !highlightRect || shouldHideOverlay) return null
 
+        // Measurement settles a frame or two after the overlay mounts. Until
+        // then the rect fields can be undefined, which React writes straight
+        // into SVG attributes and the browser rejects with
+        // 'Expected length, "undefined"'. Coerce once here.
+        const num = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback)
+        const primaryGeometry = {
+          x: num(highlightRect.cutoutLeft ?? highlightRect.left),
+          y: num(highlightRect.cutoutTop ?? highlightRect.top),
+          width: num(highlightRect.cutoutWidth ?? highlightRect.width),
+          height: num(highlightRect.cutoutHeight ?? highlightRect.height),
+          rx: num(highlightRect.cutoutRx, 22),
+        }
+        const secondaryGeometry = secondaryHighlightRect ? {
+          x: num(secondaryHighlightRect.cutoutLeft ?? secondaryHighlightRect.left),
+          y: num(secondaryHighlightRect.cutoutTop ?? secondaryHighlightRect.top),
+          width: num(secondaryHighlightRect.cutoutWidth ?? secondaryHighlightRect.width),
+          height: num(secondaryHighlightRect.cutoutHeight ?? secondaryHighlightRect.height),
+          rx: num(secondaryHighlightRect.cutoutRx, 22),
+        } : null
+
         return (
           <motion.div
             key="spotlight-backdrop"
@@ -43,12 +63,12 @@ export default function Spotlight({
                   initial={{ opacity: 0 }}
                   animate={{
                     opacity: 1,
-                    x: highlightRect.cutoutLeft ?? highlightRect.left,
-                    y: highlightRect.cutoutTop ?? highlightRect.top,
-                    width: highlightRect.cutoutWidth ?? highlightRect.width,
-                    height: highlightRect.cutoutHeight ?? highlightRect.height,
-                    rx: highlightRect.cutoutRx ?? 22,
-                    ry: highlightRect.cutoutRx ?? 22,
+                    x: primaryGeometry.x,
+                    y: primaryGeometry.y,
+                    width: primaryGeometry.width,
+                    height: primaryGeometry.height,
+                    rx: primaryGeometry.rx,
+                    ry: primaryGeometry.rx,
                   }}
                   transition={{
                     duration: 0.3,
@@ -62,12 +82,12 @@ export default function Spotlight({
                     initial={{ opacity: 0 }}
                     animate={{
                       opacity: 1,
-                      x: secondaryHighlightRect.cutoutLeft ?? secondaryHighlightRect.left,
-                      y: secondaryHighlightRect.cutoutTop ?? secondaryHighlightRect.top,
-                      width: secondaryHighlightRect.cutoutWidth ?? secondaryHighlightRect.width,
-                      height: secondaryHighlightRect.cutoutHeight ?? secondaryHighlightRect.height,
-                      rx: secondaryHighlightRect.cutoutRx ?? 22,
-                      ry: secondaryHighlightRect.cutoutRx ?? 22,
+                      x: secondaryGeometry.x,
+                      y: secondaryGeometry.y,
+                      width: secondaryGeometry.width,
+                      height: secondaryGeometry.height,
+                      rx: secondaryGeometry.rx,
+                      ry: secondaryGeometry.rx,
                     }}
                     transition={{
                       duration: 0.3,

@@ -27,8 +27,9 @@ export default function LawsDrawer({ show, onClose, laws }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    // Capture so a focused control that swallows Escape cannot trap the drawer.
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [show, onClose])
 
   return (
@@ -45,6 +46,9 @@ export default function LawsDrawer({ show, onClose, laws }) {
       {/* Drawer panel */}
       <div
         data-testid="laws-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Law Reference"
         className={`praxis-drawer-panel fixed top-0 bottom-0 right-0 h-full max-h-screen w-[420px] max-w-[92vw] bg-bg-card border-l border-slate-200/90 shadow-2xl z-[110] flex flex-col transition-transform duration-300 ease-out ${
           show ? 'translate-x-0' : 'translate-x-full'
         }`}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { signIn } from '../services/authActions.js'
 import { useSession } from '../state/useSession.js'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -24,7 +24,11 @@ const secondaryActionClassName =
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: session } = useSession()
+  // Only same-origin paths are honoured; anything else falls back to the home page.
+  const requested = location.state?.from
+  const redirectTo = typeof requested === 'string' && requested.startsWith('/') && !requested.startsWith('//') ? requested : '/'
   const reduceMotion = useReducedMotion()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,9 +38,9 @@ export default function LoginPage() {
   // Wait for session state to update before navigating
   useEffect(() => {
     if (session) {
-      navigate('/', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [session, navigate])
+  }, [session, navigate, redirectTo])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

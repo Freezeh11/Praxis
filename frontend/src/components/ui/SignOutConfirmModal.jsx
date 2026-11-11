@@ -1,8 +1,12 @@
+import useDialogA11y from '../../hooks/useDialogA11y.js'
+
 /**
- * SignOutConfirmModal — confirmation dialog shown before signing a user out.
+ * SignOutConfirmModal — confirmation dialog shown before a user is signed out.
+ * Escape/Cancel/backdrop dismiss it; focus stays inside while it is open.
  * Matches the visual style of ResetConfirmModal so the two feel consistent.
  */
 export default function SignOutConfirmModal({ show, onClose, onConfirm }) {
+  const panelRef = useDialogA11y(show, onClose)
   if (!show) return null
 
   return (
@@ -11,6 +15,11 @@ export default function SignOutConfirmModal({ show, onClose, onConfirm }) {
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sign-out-title"
+        aria-describedby="sign-out-description"
         className="bg-bg-card rounded-2xl flex flex-col shadow-2xl max-w-[380px] w-full border border-border cursor-default praxis-modal-panel p-6"
         onClick={e => e.stopPropagation()}
       >
@@ -20,8 +29,8 @@ export default function SignOutConfirmModal({ show, onClose, onConfirm }) {
             ↩
           </div>
           <div>
-            <h3 className="text-[16px] font-bold text-text-1">Sign out?</h3>
-            <p className="text-xs text-text-3 mt-0.5">
+            <h3 id="sign-out-title" className="text-[16px] font-bold text-text-1">Sign out?</h3>
+            <p id="sign-out-description" className="text-xs text-text-3 mt-0.5">
               Your progress is saved. You can sign back in at any time.
             </p>
           </div>

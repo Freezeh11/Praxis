@@ -26,7 +26,7 @@ const sectionTitle = 'text-base font-bold text-slate-900 dark:text-white'
 const mutedText = 'text-sm text-slate-600 dark:text-slate-300'
 const captionText = 'text-xs text-slate-500 dark:text-slate-400'
 const focusRing = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-cyan-400'
-const primaryCta = 'group inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-5 text-sm font-bold text-white shadow-md shadow-indigo-500/20 transition-colors duration-200 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-[#0B0F19]'
+const primaryCta = 'group inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-5 text-sm font-bold text-white shadow-md shadow-indigo-500/20 transition-colors duration-200 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-[#0B0F19]'
 const microButton = 'inline-flex min-h-9 items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 text-xs font-bold text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 ' + focusRing + ' dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20'
 const disclosureButton = 'inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-bold text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 ' + focusRing + ' dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
 const pillClass = 'inline-flex h-7 min-w-7 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-1.5 text-xs font-bold text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 ' + focusRing + ' dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20'
@@ -161,7 +161,21 @@ export default function ProfilePage() {
   const [openLevelId, setOpenLevelId] = useState(undefined)
   const navigate = useNavigate()
   const user = session?.user
-  if (!user) return null
+  // The session resolves a beat after the route mounts. Render the same hold
+  // shell ProtectedRoute uses instead of painting an empty page.
+  if (!user) {
+    return (
+      <div className="flex min-h-screen min-h-[100dvh] items-center justify-center bg-transparent" data-testid="profile-loading-root">
+        <div className="flex flex-col items-center gap-3 text-center" role="status" aria-live="polite">
+          <svg className="h-6 w-6 animate-spin text-accent" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm font-medium text-text-3">Loading your profile</span>
+        </div>
+      </div>
+    )
+  }
 
   const name = user.user_metadata?.name || user.user_metadata?.full_name || 'Learner'
   const avatarSeed = String(user.id || user.email || name)
@@ -192,9 +206,12 @@ export default function ProfilePage() {
     if (signingOut) return
     setSigningOut(true)
     try {
+      // Leave the protected route first: clearing the session while /profile is
+      // mounted lets the guard redirect to /login before this handler resumes.
+      navigate('/', { replace: true })
       const { error } = await signOut()
       if (error) throw error
-      navigate('/', { replace: true })
+      toast.success('Signed out.')
     } catch (error) {
       toast.error(error.message || 'Could not sign out. Please try again.')
     } finally {

@@ -96,9 +96,9 @@ export default function ForgotPasswordPage() {
                 </button>
                 <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
                   Nothing arrived? Check spam, or{' '}
-                  <Link to="/forgot-password" className={inlineLinkClassName}>
+                  <button type="button" onClick={handleSubmit} disabled={loading} className={inlineLinkClassName}>
                     send it again
-                  </Link>
+                  </button>
                   .
                 </p>
               </div>
