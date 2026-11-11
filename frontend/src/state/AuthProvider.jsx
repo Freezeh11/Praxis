@@ -7,6 +7,8 @@
  */
 import { useEffect, useState } from 'react'
 
+import SessionExpiryDialog from '../components/auth/SessionExpiryDialog.jsx'
+import useSessionLimit from '../hooks/useSessionLimit.js'
 import { supabase } from '../services/supabaseClient.js'
 import { AuthContext } from './authContext.js'
 
@@ -14,6 +16,13 @@ export function AuthProvider({ children }) {
   const [data, setData] = useState(null)
   const [isPending, setIsPending] = useState(true)
   const [error, setError] = useState(null)
+
+  // The idle + absolute session clocks live beside the auth state they end: one
+  // owner mounted above the router, so every route obeys them and the warning can
+  // be rendered from here without any page having to know about session limits.
+  const { warningOpen, secondsLeft, canExtend, staySignedIn, signOutNow } = useSessionLimit({
+    userId: data?.user?.id ?? null,
+  })
 
   useEffect(() => {
     let mounted = true
@@ -50,6 +59,13 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ data, isPending, error }}>
       {children}
+      <SessionExpiryDialog
+        open={warningOpen}
+        secondsLeft={secondsLeft}
+        canExtend={canExtend}
+        onStay={staySignedIn}
+        onSignOut={signOutNow}
+      />
     </AuthContext.Provider>
   )
 }
