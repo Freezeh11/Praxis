@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import PasswordField from '../ui/PasswordField.jsx'
 import { passwordError, PASSWORD_REQUIREMENTS } from '../../services/passwordPolicy.js'
 
-const inputClass = 'w-full rounded-xl border border-slate-300 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60 dark:border-white/10 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/25'
+const inputClass = 'w-full rounded-xl border border-slate-300 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-500 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60 dark:border-white/10 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/25'
 const buttonClass = 'inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 py-2 text-sm font-bold text-white shadow-md shadow-indigo-500/20 transition-colors duration-200 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-[#0B0F19]'
 
 export function NameForm({ user }) {

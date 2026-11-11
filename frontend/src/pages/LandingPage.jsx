@@ -19,7 +19,7 @@ export default function LandingPage() {
           opens on tinted air instead of flat white. Decorative only, and the
           root stays transparent — text always computes its contrast against the
           solid body canvas, never against this gradient. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[68vh] bg-gradient-to-b from-indigo-100/60 via-sky-50/40 to-transparent dark:from-indigo-500/10 dark:via-cyan-500/5" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[68vh] bg-gradient-to-b from-indigo-100/60 via-sky-50/40 to-transparent dark:from-indigo-600/10 dark:via-cyan-500/5" />
 
       {/* Header */}
       <AppHeader
@@ -38,7 +38,7 @@ export default function LandingPage() {
 
           {/* Badge */}
           <div className="praxis-rise mb-4 sm:mb-6" style={{ animationDelay: RISE.badge }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700 shadow-chip ring-1 ring-indigo-500/5 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:shadow-none dark:ring-0">
+            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700 shadow-chip ring-1 ring-indigo-500/5 dark:border-indigo-400/25 dark:bg-indigo-600/10 dark:text-indigo-300 dark:shadow-none dark:ring-0">
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-[0_0_0_3px_rgba(79,70,229,0.12)]" />
               Interactive Learning
             </span>
@@ -65,7 +65,7 @@ export default function LandingPage() {
             {session ? (
               <Link
                 to="/levels"
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
               >
                 Go to Level Selection <span aria-hidden="true">→</span>
               </Link>
@@ -73,7 +73,7 @@ export default function LandingPage() {
               <>
                 <Link
                   to="/register"
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
                 >
                   Start Learning Free <span aria-hidden="true">→</span>
                 </Link>

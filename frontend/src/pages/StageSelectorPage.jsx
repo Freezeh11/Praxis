@@ -191,7 +191,7 @@ export default function StageSelectorPage() {
                     <button
                       data-popup-anchor="tutorial"
                       onClick={handleTutorialClick}
-                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-4 text-[13px] font-bold text-white shadow-md shadow-indigo-500/20 transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11"
+                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 text-[13px] font-bold text-white shadow-md shadow-indigo-500/20 transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11"
                       title="Start or Restart Guided Interactive Tutorial"
                     >
                       <span className="text-xs">▶</span>
@@ -386,7 +386,7 @@ export default function StageSelectorPage() {
                         Review →
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-3 py-1 text-xs font-extrabold text-white shadow-md shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] group-hover:brightness-105 group-hover:shadow-lg group-hover:shadow-indigo-600/30 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:text-white">
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-3 py-1 text-xs font-extrabold text-white shadow-md shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] group-hover:brightness-105 group-hover:shadow-lg group-hover:shadow-indigo-600/30 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:text-white">
                         Play →
                       </span>
                     )}

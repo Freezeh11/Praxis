@@ -94,6 +94,16 @@ export default function App() {
           <BrowserRouter>
             <RouteBackdrop />
 
+            {/* Keyboard users land here first: the header rail has many controls
+                on every route, so offer a way past it. The target wrapper below
+                is focusable programmatically and wraps only the routed page. */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-lg focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg dark:focus:bg-cyan-400 dark:focus:text-slate-950"
+            >
+              Skip to content
+            </a>
+
             {/* Device/orientation enforcement: phones in portrait get the
                 "rotate your device" overlay, small tablets in portrait get the
                 dismissible banner. Rendered globally so it also covers the
@@ -104,6 +114,7 @@ export default function App() {
             <Toaster position="top-center" richColors />
 
             <Suspense fallback={<RouteFallback />}>
+              <div id="main-content" tabIndex={-1} className="flex min-h-screen min-h-[100dvh] flex-col outline-none">
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<LandingPage />} />
@@ -132,6 +143,7 @@ export default function App() {
                 {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </div>
             </Suspense>
           </BrowserRouter>
       </AuthProvider>

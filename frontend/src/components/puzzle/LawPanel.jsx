@@ -94,7 +94,7 @@ function LawPanel({
             {level && stageNum + 1 < level.puzzles.length ? (
               <button
                 data-tutorial="next-stage-btn"
-                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
+                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                 onClick={onNextStage}
               >
                 Next Stage →
@@ -102,7 +102,7 @@ function LawPanel({
             ) : (
               <button
                 data-tutorial="next-stage-btn"
-                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
+                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                 onClick={() => onBackToStages()}
               >
                 Back to Stages
@@ -124,7 +124,7 @@ function LawPanel({
               type="button" data-tutorial="apply-law" data-testid="apply-selected-law"
               disabled={busy || !selectedLaw || sel.length === 0}
               onClick={() => onApplyLaw(selectedLaw)}
-              className="min-h-[44px] rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-4 py-2 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:focus-visible:ring-cyan-400/60"
+              className="min-h-[44px] rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 py-2 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:focus-visible:ring-cyan-400/60"
             >Apply{selectedLaw ? ` ${selectedLaw.name}` : ''}</button>
           </div>
           {lawIds && <p className="text-xs text-text-3 mb-2">Level 1: more laws join your palette as you advance through the stages.</p>}

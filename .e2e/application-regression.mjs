@@ -92,7 +92,12 @@ try{
   await page.locator('input[type="email"]').fill(user.email)
   await page.locator('input[type="password"]').fill('incorrect')
   await page.locator('button[type="submit"]').click()
-  await page.getByText('Invalid login credentials',{exact:false}).waitFor()
+  // The server verdict is bound to the password field (aria-invalid + hint) and
+  // also toasted; assert the field binding, which is the accessible contract.
+  const hint=page.locator('#login-password-hint')
+  await hint.waitFor()
+  assert.match(await hint.innerText(),/Invalid login credentials/)
+  assert.equal(await page.locator('input[type="password"]').getAttribute('aria-invalid'),'true')
  })
  await check('sign-in restores a protected session',async()=>{await login(page);await puzzleReady(page)})
  await check('independent stage exposes the unlocked law palette',async()=>{

@@ -10,7 +10,7 @@
  * the indigo/cyan focus accents. 16px type keeps iOS from zooming the page.
  */
 const base =
-  'w-full min-h-12 rounded-xl border bg-slate-100/80 px-4 py-3 text-[16px] leading-6 text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:ring-2 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500'
+  'w-full min-h-12 rounded-xl border bg-slate-100/80 px-4 py-3 text-[16px] leading-6 text-slate-900 placeholder:text-slate-500 outline-none focus:bg-white focus:ring-2 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500'
 
 const defaultBorder =
   'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/15 dark:border-white/10 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20'

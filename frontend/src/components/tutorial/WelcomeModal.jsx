@@ -5,6 +5,7 @@ import Icon from '../ui/Icon'
  * and the Skip/Back/Continue action row. Copy comes from WELCOME_SLIDES.
  */
 import { m, AnimatePresence } from 'framer-motion'
+import useDialogA11y from '../../hooks/useDialogA11y'
 import { WELCOME_SLIDES } from '../../content/tutorialContent.js'
 import logoFull from '../../assets/logo-full.png'
 
@@ -16,6 +17,15 @@ export default function WelcomeModal({
   onResetStage,
 }) {
   const activeSlide = WELCOME_SLIDES[currentSlideIdx] || WELCOME_SLIDES[0]
+
+  // The welcome overlay is a modal dialog: focus enters the primary action, Tab
+  // is trapped, Escape skips the tour (same path as the Skip button), and focus
+  // returns to the trigger when it closes.
+  const closeWelcome = () => {
+    setShowWelcomeModal(false)
+    onResetStage?.()
+  }
+  const panelRef = useDialogA11y(showWelcomeModal, closeWelcome)
 
   return (
     <AnimatePresence>
@@ -29,20 +39,28 @@ export default function WelcomeModal({
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 pointer-events-auto will-change-[opacity]"
         >
           <m.div
+            ref={panelRef}
             layout
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="welcome-title"
+            tabIndex={-1}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             initial={{ opacity: 0, scale: 0.97, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: -6 }}
             className="praxis-modal-panel bg-bg-card rounded-3xl pt-10 pb-9 [@media(max-height:480px)]:pt-14 [@media(max-height:480px)]:pb-3 px-5 sm:px-12 max-w-[500px] w-full shadow-2xl border border-border/80 flex flex-col relative overflow-hidden will-change-transform"
           >
+            {/* The dialog needs a name even on the logo slide, so the accessible
+                title is rendered here and the visible slide headings stay visual. */}
+            <h2 id="welcome-title" className="sr-only">
+              {currentSlideIdx === 0 ? 'Welcome to Praxis' : activeSlide.title}
+            </h2>
+
             {/* Top Header: Floating Minimalist Skip Button */}
             <button
               type="button"
-              onClick={() => {
-                setShowWelcomeModal(false)
-                onResetStage?.()
-              }}
+              onClick={closeWelcome}
               className="absolute top-6 right-6 [@media(max-height:480px)]:top-2 [@media(max-height:480px)]:right-2 min-h-11 px-2.5 py-1 inline-flex items-center rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
             >
               Skip <Icon name="close" />
@@ -84,7 +102,7 @@ export default function WelcomeModal({
                         <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-text-3 mb-3">
                           Core Mechanics
                         </span>
-                        <h2 className="text-[22px] font-extrabold text-text-1 tracking-tight">
+                        <h2 aria-hidden="true" className="text-[22px] font-extrabold text-text-1 tracking-tight">
                           {activeSlide.title}
                         </h2>
                       </div>
@@ -136,6 +154,7 @@ export default function WelcomeModal({
                 {currentSlideIdx < WELCOME_SLIDES.length - 1 ? (
                   <button
                     type="button"
+                    data-autofocus
                     onClick={() => setCurrentSlideIdx(prev => prev + 1)}
                     className="h-11 px-4 rounded-xl text-xs font-bold bg-accent text-on-accent hover:bg-accent-hover transition-colors shrink-0 whitespace-nowrap shadow-xs flex items-center justify-center"
                   >
@@ -144,10 +163,8 @@ export default function WelcomeModal({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowWelcomeModal(false)
-                      onResetStage?.()
-                    }}
+                    data-autofocus
+                    onClick={closeWelcome}
                     className="h-11 px-4 rounded-xl text-xs font-extrabold bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition-colors flex items-center justify-center shrink-0 whitespace-nowrap shadow-sm"
                   >
                     {activeSlide.buttonText}

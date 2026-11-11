@@ -119,7 +119,7 @@ function SessionExpiryDialogView({ open, secondsLeft, canExtend, onStay, onSignO
                 type="button"
                 disabled={!canExtend}
                 aria-describedby={canExtend ? undefined : 'session-expiry-cap'}
-                className="flex-1 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 dark:from-indigo-500 dark:to-cyan-500"
+                className="flex-1 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 dark:from-indigo-600 dark:to-cyan-700"
                 onClick={onStay}
               >
                 Stay signed in

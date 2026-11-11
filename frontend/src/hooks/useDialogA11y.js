@@ -21,7 +21,10 @@ export default function useDialogA11y(show, onClose) {
     const panel = panelRef.current
     const focusables = () => Array.from(panel ? panel.querySelectorAll(FOCUSABLE) : [])
 
-    const first = focusables()[0] || panel
+    // Prefer an explicit [data-autofocus] target (the primary action), then the
+    // first control, and finally the panel itself when it holds only text.
+    const preferred = panel?.querySelector('[data-autofocus]')
+    const first = preferred || focusables()[0] || panel
     first?.focus?.({ preventScroll: true })
 
     const onKeyDown = (event) => {

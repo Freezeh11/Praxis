@@ -451,6 +451,13 @@ export default function ProblemPage() {
 
       {/* ── CENTER PANEL: Expression Workspace ── */}
       <main className={`flex-1 flex flex-col bg-bg-card border border-border rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.05),0_24px_48px_-32px_rgba(15,23,42,0.42)] overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
+        {/* The workspace has no visual page title, but every page needs one for
+            the document outline and for screen-reader orientation. */}
+        <h1 className="sr-only">
+          {isSandbox
+            ? 'Sandbox workspace'
+            : `${level?.name || `Level ${levelId}`}, stage ${stageNum}${isTutorialLevel ? ' (tutorial)' : ''}`}
+        </h1>
         <WorkspaceHeader
           isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} compactHeader={compactHeader}
           headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}

@@ -213,7 +213,7 @@ export default function LevelSelectPage() {
   }, [recenterRow])
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-transparent flex flex-col relative overflow-x-hidden overflow-y-auto">
+    <main className="min-h-screen min-h-[100dvh] bg-transparent flex flex-col relative overflow-x-hidden overflow-y-auto">
       <AppHeader
         crumbs={[{ label: 'Levels' }]}
         right={(
@@ -288,12 +288,26 @@ export default function LevelSelectPage() {
                     ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}
                     ${!locked && !isActive ? 'hover:scale-95 hover:translate-y-0.5 hover:border-indigo-200 hover:shadow-card-hover' : ''}
                   `}
+                  role={isActive ? undefined : 'button'}
+                  tabIndex={isActive ? undefined : 0}
+                  aria-label={isActive ? undefined : `${lv.name}. ${lv.desc}${locked ? '. Locked.' : ''} Select to view.`}
+                  aria-current={isActive ? 'true' : undefined}
                   onClick={() => {
                     if (isActive) {
                       if (!locked) handleStart()
                     } else {
                       // This tap IS the gesture that unlocks audio; the tick
                       // itself fires from the selected-index effect above.
+                      primeAudio()
+                      setSelected(i)
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    // The active card already holds real buttons; only the
+                    // off-centre cards need a keyboard path to be selected.
+                    if (isActive) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
                       primeAudio()
                       setSelected(i)
                     }
@@ -451,6 +465,6 @@ export default function LevelSelectPage() {
         placement={popupPlacement} showLawsDrawer={showLawsDrawer}
         onCloseLawsDrawer={() => setShowLawsDrawer(false)} laws={laws}
       />
-    </div>
+    </main>
   )
 }

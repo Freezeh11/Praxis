@@ -24,7 +24,15 @@ export default function CoachCard({
   onActionButton,
 }) {
   return (
-    <AnimatePresence mode="wait">
+    <>
+      {/* A polite live region outside the keyed card: the card itself remounts on
+          every step, so a screen reader needs a stable node to announce into. */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {currentStep
+          ? `Step ${currentStepIdx + 1} of ${stepsForStage.length}: ${currentStep.title}`
+          : ''}
+      </div>
+      <AnimatePresence mode="wait">
       {!showWelcomeModal && !isPreLawHighlight && !isAnimating && currentStep && (
         <m.div
           ref={cardRef}
@@ -97,6 +105,7 @@ export default function CoachCard({
         )}
       </m.div>
     )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   )
 }

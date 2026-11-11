@@ -57,7 +57,18 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
         ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={node.type === 'lit' ? `Literal ${node.v}${node.n ? ' negated' : ''}` : `Constant ${node.val}`}
       onClick={e => { e.stopPropagation(); onClickLit(path) }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          e.stopPropagation()
+          onClickLit(path)
+        }
+      }}
     >
       {node.type === 'lit' ? (
         node.n
@@ -179,9 +190,10 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
           ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
           : touchTargets
             ? 'opacity-85 bg-slate-700/85 text-white hover:opacity-100 active:bg-indigo-600 active:scale-105'
-            : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'}`}
+            : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto'}`}
         title={gripTitle}
         aria-label={gripTitle}
+        aria-pressed={selected}
         onClick={e => {
           e.stopPropagation()
           onSelect()

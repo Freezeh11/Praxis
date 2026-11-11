@@ -4,8 +4,9 @@ import Icon from '../ui/Icon'
  * breakdown; the sandbox gets the compact attempt summary with law pills,
  * because nothing is awarded or persisted there.
  */
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
+import useDialogA11y from '../../hooks/useDialogA11y'
 
 export default function ScoreModal({
   showSuccess, onClose, isTutorialActive, shortViewport, isSandbox, isCustomSandbox,
@@ -16,16 +17,9 @@ export default function ScoreModal({
     return [...new Set(steps.map(s => s?.law).filter(Boolean))]
   }, [steps])
 
-  // Completion is a dialog: Escape dismisses it, matching the laws sheet and
-  // the reset confirmation.
-  useEffect(() => {
-    if (!showSuccess) return undefined
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [showSuccess, onClose])
+  // Completion is a dialog: focus moves into the panel, Tab stays inside it,
+  // Escape dismisses, and focus returns to whatever opened it on close.
+  const panelRef = useDialogA11y(showSuccess, onClose)
 
   const problemExprText = puzzle?.expr || (isCustomSandbox ? 'Your expression' : 'Random practice')
 
@@ -53,7 +47,13 @@ export default function ScoreModal({
           onClick={() => onClose()}
         >
           <m.div
+            ref={panelRef}
             data-tutorial="score-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="score-modal-title"
+            aria-describedby="score-modal-desc"
+            tabIndex={-1}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -70,10 +70,10 @@ export default function ScoreModal({
             >
               {/* Header icon and titles */}
               <div className="text-[40px] leading-none mb-2 select-none"><Icon name="celebration" /></div>
-              <h2 className="text-[22px] sm:text-[24px] font-black text-text-1 tracking-tight mb-1">
+              <h2 id="score-modal-title" className="text-[22px] sm:text-[24px] font-black text-text-1 tracking-tight mb-1">
                 {isSandbox ? 'Problem Simplified!' : 'Stage Complete!'}
               </h2>
-              <p className="text-xs text-text-3 font-normal mb-4">
+              <p id="score-modal-desc" className="text-xs text-text-3 font-normal mb-4">
                 {isSandbox
                   ? 'Sandbox practice is unscored: here is how this attempt went'
                   : "Here's how you did across the three metrics"}
@@ -217,8 +217,9 @@ export default function ScoreModal({
                 {isSandbox ? (
                   <button
                     type="button"
+                    data-autofocus
                     data-tutorial="new-expression-modal-btn"
-                    className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 active:scale-[0.99] dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25"
+                    className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 py-3 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 active:scale-[0.99] dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25"
                     onClick={() => {
                       if (isCustomSandbox) onNewExpression()
                       else onRandomize()
@@ -237,9 +238,10 @@ export default function ScoreModal({
                   <button
                     type="button"
                     disabled={isTutorialActive}
-                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 ${
+                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 ${
                       isTutorialActive ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'
                     }`}
+                    data-autofocus
                     onClick={onNextStage}
                   >
                     Next Stage →
@@ -248,9 +250,10 @@ export default function ScoreModal({
                   <button
                     type="button"
                     disabled={isTutorialActive}
-                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 ${
+                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 ${
                       isTutorialActive ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'
                     }`}
+                    data-autofocus
                     onClick={onBackToStages}
                   >
                     Back to Stages

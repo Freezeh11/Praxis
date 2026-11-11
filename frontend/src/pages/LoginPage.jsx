@@ -66,13 +66,21 @@ export default function LoginPage() {
       })
 
       if (result.error) {
-        toast.error(result.error.message || 'Invalid email or password')
+        // Bind the server verdict to the password field so a screen reader hears
+        // it as the field's error, not only as a transient toast.
+        const message = result.error.message || 'Invalid email or password'
+        setErrors({ password: message })
+        toast.error(message)
+        document.getElementById('login-password')?.focus()
       } else {
         toast.success('Welcome back!')
         // useEffect will handle the navigation once the session state updates globally
       }
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      const message = 'Something went wrong. Please try again.'
+      setErrors({ password: message })
+      toast.error(message)
+      document.getElementById('login-password')?.focus()
     } finally {
       setLoading(false)
     }
@@ -118,7 +126,7 @@ export default function LoginPage() {
             <AuthCard
               eyebrow="Welcome back"
               title="Sign in to Praxis"
-              subtitle="Sign in to keep your progress, levels and streaks."
+              subtitle="Sign in to keep your progress, levels and scores."
               footer={
                 <div className="mt-6 border-t border-slate-200/90 pt-5 dark:border-white/10">
                   <Link to="/register" className={secondaryActionClassName}>

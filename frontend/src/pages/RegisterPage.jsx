@@ -88,7 +88,6 @@ export default function RegisterPage() {
   }
 
   const passwordsMatch = confirmPassword.length === 0 || password === confirmPassword
-  const passwordLongEnough = password.length === 0 || !passwordError(password)
   const passwordInvalid = passwordTouched && password.length > 0 && Boolean(passwordError(password))
 
   // Transform/opacity only, and no movement at all under prefers-reduced-motion.
@@ -178,6 +177,12 @@ export default function RegisterPage() {
                     setEmail(e.target.value)
                     if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
                   }}
+                  onBlur={() => {
+                    const value = email.trim()
+                    if (value && !/^\S+@\S+\.\S+$/.test(value)) {
+                      setErrors((prev) => ({ ...prev, email: 'Enter a valid email address.' }))
+                    }
+                  }}
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
@@ -219,7 +224,10 @@ export default function RegisterPage() {
                   hintLive
                 />
 
-                <SubmitButton loading={loading} disabled={!email.trim() || !password || !passwordsMatch || !passwordLongEnough} busyLabel="Creating account...">
+                {/* Only a pending request disables the button: a disabled button
+                    with no explanation is a dead end for keyboard and screen-reader
+                    users, so validation reports through the fields instead. */}
+                <SubmitButton loading={loading} disabled={loading} busyLabel="Creating account...">
                   Create Account
                 </SubmitButton>
               </form>
