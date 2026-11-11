@@ -1,5 +1,3 @@
-import React from 'react'
-
 const SURVEY_URL = 'https://docs.google.com/forms/d/1P4O0MdbQUAUGz-xNL-neMHX5ukDuLTjCq-nXpEaFdb8/viewform?edit_requested=true'
 
 export default function SurveyBanner({ className = '' }) {

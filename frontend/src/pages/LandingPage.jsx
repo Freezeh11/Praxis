@@ -1,6 +1,5 @@
-import ThemeToggle from '../components/ui/ThemeToggle.jsx'
+import AppHeader from '../components/layout/AppHeader.jsx'
 import { Link } from 'react-router-dom'
-import logoFull from '../assets/logo-full.png'
 import { motion } from 'framer-motion'
 import SurveyButton from '../components/layout/SurveyButton'
 import SoundToggle from '../components/ui/SoundToggle'
@@ -27,25 +26,23 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
+    <div className="min-h-screen min-h-[100dvh] bg-transparent flex flex-col relative overflow-hidden">
+      {/* Light canvas wash: a faint indigo veil behind the hero so the page
+          opens on tinted air instead of flat white. Decorative only, and the
+          root stays transparent — text always computes its contrast against the
+          solid body canvas, never against this gradient. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[68vh] bg-gradient-to-b from-indigo-100/60 via-sky-50/40 to-transparent dark:from-indigo-500/10 dark:via-cyan-500/5" />
+
       {/* Header */}
-      <header className="relative w-full h-[72px] [@media(max-height:480px)]:h-[52px] px-4 sm:px-8 flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center">
-          <img src={logoFull} alt="Praxis" className="h-8 [@media(max-height:480px)]:h-6 object-contain" />
-        </div>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <ThemeToggle />
-          <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
-          <SurveyButton compact />
-          {session ? (
-            <ProfileLink />
-          ) : (
-            <Link to="/login" className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
-              Log In
-            </Link>
-          )}
-        </div>
-      </header>
+      <AppHeader
+        right={(
+          <>
+            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+            <SurveyButton compact />
+            {session ? <ProfileLink /> : null}
+          </>
+        )}
+      />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center praxis-page-x py-6 z-10 -mt-10 [@media(max-height:480px)]:mt-0">
@@ -58,18 +55,25 @@ export default function LandingPage() {
 
           {/* Badge */}
           <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
-            <span className="px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold uppercase tracking-wider">
+            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700 shadow-chip ring-1 ring-indigo-500/5 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:shadow-none dark:ring-0">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-[0_0_0_3px_rgba(79,70,229,0.12)]" />
               Interactive Learning
             </span>
           </motion.div>
 
-          {/* Headline */}
+          {/* Headline. The accent phrase keeps a solid indigo-600 foreground —
+              contrast is measured against a real colour, never against a
+              clipped gradient — and the gradient lives in the rule beneath it. */}
           <motion.h1 variants={itemVariants} className="text-[32px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-4 sm:mb-6">
-            Master Boolean Algebra<br className="hidden md:block" /> Without the Headache.
+            Master Boolean Algebra<br className="hidden md:block" />{' '}
+            <span className="relative inline-block text-indigo-600 dark:text-cyan-300">
+              Without the Headache.
+              <span aria-hidden="true" className="absolute inset-x-1 -bottom-1 h-[5px] rounded-full bg-gradient-to-r from-indigo-500/70 via-indigo-400/50 to-cyan-400/60 sm:h-[7px]" />
+            </span>
           </motion.h1>
 
           {/* Subheadline */}
-          <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-text-3 font-medium max-w-xl mb-6 sm:mb-10 leading-relaxed">
+          <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-text-2 font-medium max-w-xl mb-6 sm:mb-8 leading-relaxed">
             Practice Boolean algebra, apply laws, and prove equivalences with a clear interactive approach.
           </motion.p>
 
@@ -78,21 +82,21 @@ export default function LandingPage() {
             {session ? (
               <Link
                 to="/levels"
-                className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-accent text-on-accent rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
               >
-                Go to Level Selection <span>→</span>
+                Go to Level Selection <span aria-hidden="true">→</span>
               </Link>
             ) : (
               <>
                 <Link
                   to="/register"
-                  className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-accent text-on-accent rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[transform,filter,box-shadow] duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 sm:w-auto dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 dark:focus-visible:ring-offset-[#0B0F19]"
                 >
-                  Start Learning Free <span>→</span>
+                  Start Learning Free <span aria-hidden="true">→</span>
                 </Link>
                 <Link
                   to="/login"
-                  className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-bg-card text-text-1 border-[1.5px] border-border rounded-xl font-bold text-[15px] shadow-sm hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all text-center"
+                  className="flex min-h-12 w-full items-center justify-center rounded-xl border border-slate-200 bg-white/85 px-8 py-3.5 text-[15px] font-bold text-slate-700 shadow-card transition-[transform,border-color,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white hover:text-slate-900 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 sm:w-auto dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:border-white/20 dark:hover:bg-slate-800/80 dark:focus-visible:ring-cyan-400/60"
                 >
                   I already have an account
                 </Link>
@@ -103,8 +107,8 @@ export default function LandingPage() {
       </main>
 
       {/* Decorative Blur Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-accent/20 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green/10 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-32 -top-40 -z-10 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.18),transparent_62%)] dark:bg-[radial-gradient(circle,rgba(99,102,241,0.16),transparent_62%)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-44 -right-32 -z-10 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.14),transparent_62%)] dark:bg-[radial-gradient(circle,rgba(6,182,212,0.12),transparent_62%)]" />
     </div>
   )
 }
