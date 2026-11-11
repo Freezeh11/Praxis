@@ -39,8 +39,7 @@ const CONDITIONS = {
   absorption: 'Absorption removes a redundant operand, as in A + AB = A or A(A + B) = A. Select the complete operands; one must make the other redundant.',
   distributive: 'Factoring needs matching literals in separate terms or clauses. Select the shared literal in each, rather than both whole terms.',
   'double-neg': 'Double Negation needs two nested negations. Select the outer negation bar of that group.',
-  'demorgan-and': "This De Morgan form needs a negated product, (AB)'. Select its outer negation bar.",
-  'demorgan-or': "This De Morgan form needs a negated sum, (A+B)'. Select its outer negation bar.",
+  demorgan: "De Morgan's Law needs a negated product (AB)' or negated sum (A+B)'. Select its outer negation bar.",
 }
 
 export function evaluateLawChoice(expr, selection, lawId, options = {}) {

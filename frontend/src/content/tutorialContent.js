@@ -295,12 +295,12 @@ export const TUTORIAL_STAGES = {
       tooltipPosition: 'bottom',
     },
     {
-      id: 'choose-demorgan-or',
+      id: 'choose-demorgan',
       title: "Choose De Morgan's Law",
-      desc: 'First, choose "De Morgan\'s (OR→AND)" from the palette so we can expand the negated group.',
-      target: '[data-law-id="demorgan-or"]',
+      desc: 'First, choose \"De Morgan\'s Law\" from the palette so we can expand the negated group.',
+      target: '[data-law-id="demorgan"]',
       actionType: 'choose_law',
-      lawId: 'demorgan-or',
+      lawId: 'demorgan',
       tooltipPosition: 'top',
     },
     {
@@ -315,10 +315,10 @@ export const TUTORIAL_STAGES = {
     {
       id: 'apply-demorgan',
       title: "Expand with De Morgan's Law",
-      desc: "Press \"Apply De Morgan's (OR→AND)\" to expand the inverted sum into \"x'y'\".",
+      desc: "Press \"Apply De Morgan's Law\" to expand the inverted sum into \"x'y'\".",
       target: '[data-tutorial="apply-law"]',
       actionType: 'apply_law',
-      expectedLaw: "De Morgan's (OR→AND)",
+      expectedLaw: "De Morgan's Law",
       tooltipPosition: 'top',
     },
     {

@@ -37,8 +37,6 @@ export function buildHintText(law, paths, expr) {
       case 'double-neg':
         return `There's a term with two negations stacked on top of each other. Double Negation can clean that up: (A')' = A.`
       case 'demorgan':
-      case 'demorgan-and':
-      case 'demorgan-or':
         return `There's a negated group in the expression. Try applying De Morgan's Law to expand it.`
       case 'absorption':
         return isProdContext

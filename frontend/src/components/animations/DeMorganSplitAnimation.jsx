@@ -14,7 +14,7 @@ export default function DeMorganSplitAnimation({ rects, data, lawId }) {
   const r = rects[0]
   if (!r) return null
 
-  const isAndToOr = lawId === 'demorgan-and' || data?.isAndToOr
+  const isAndToOr = lawId === 'demorgan' ? (data?.isAndToOr ?? true) : (data?.isAndToOr ?? false)
   let subterms = data?.deMorganTerms
 
   // Fallback if deMorganTerms wasn't passed directly: extract from AST exprBefore

@@ -91,7 +91,7 @@ export function paletteLawIds(levelId, stageIdx) {
   if (Number(levelId) !== 1) return null
   const ids = ['absorption']
   if (stageIdx >= 2) ids.push('idempotent', 'distributive', 'complement', 'identity')
-  if (stageIdx >= 4) ids.push('demorgan-and', 'demorgan-or')
+  if (stageIdx >= 4) ids.push('demorgan')
   if (stageIdx >= 6) ids.push('annulment')
   return ids
 }

@@ -29,7 +29,7 @@ test('Level 1 progressively adds palette choices; other workspaces show the full
 test('R4 wrong choices preserve the expression and explain law-specific conditions', () => {
   const expr = parseExpr('A + B')
   const before = structuredClone(expr)
-  for (const id of ['complement', 'identity', 'annulment', 'absorption', 'idempotent', 'distributive', 'double-neg', 'demorgan-or', 'demorgan-and']) {
+  for (const id of ['complement', 'identity', 'annulment', 'absorption', 'idempotent', 'distributive', 'double-neg', 'demorgan']) {
     const result = evaluateLawChoice(expr, pair('R.0', 'R.1'), id)
     assert.equal(result.ok, false, id)
     assert.equal(result.code, 'pattern')
@@ -46,7 +46,7 @@ test('R7 accepts every applicable choice, including unary and selected constants
     ['A + A\'', pair('R.0', 'R.1'), 'complement', '1'],
     ['A + AB', pair('R.0', 'R.1'), 'absorption', 'A'],
     ['AB + AC', pair('R.0.0', 'R.1.0', false), 'distributive', 'A(B+C)'],
-    ['(A+B)\'', [{ path: 'R', isTermSel: false }], 'demorgan-or', "A'B'"],
+    ['(A+B)\'', [{ path: 'R', isTermSel: false }], 'demorgan', "A'B'"],
     ['A + 0', [{ path: 'R.1', isTermSel: false }], 'identity', 'A'],
     ['A0', [{ path: 'R.1', isTermSel: false }], 'annulment', '0'],
   ]

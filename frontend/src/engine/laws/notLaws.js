@@ -2,8 +2,8 @@
  * Single-node NOT laws — what a selected negation can become.
  *
  *   ( A' )'   -> A                       Double Negation
- *   ( A·B )'  -> A' + B'                 De Morgan's (AND→OR)
- *   ( A+B )'  -> A' · B'                 De Morgan's (OR→AND)
+ *   ( A·B )'  -> A' + B'                 De Morgan's Law (AND→OR)
+ *   ( A+B )'  -> A' · B'                 De Morgan's Law (OR→AND)
  *
  * Pure module: no React/DOM/network.
  */
@@ -59,7 +59,7 @@ export function notLaws(expr, path) {
       ...child.factors.map(f => (f.type === 'lit' ? lit(f.v, !f.n) : neg(cloneN(f))))
     )
     laws.push({
-      ...defineLaw("De Morgan's (AND→OR)", LAW_FORM.NODE),
+      ...defineLaw("De Morgan's Law", LAW_FORM.NODE),
       desc: `${nodeText(node)} = ${nodeText(expanded)}`,
       animPaths: [path],
       deMorganTerms,
@@ -89,7 +89,7 @@ export function notLaws(expr, path) {
       ...child.terms.map(t => (t.type === 'lit' ? lit(t.v, !t.n) : neg(cloneN(t))))
     )
     laws.push({
-      ...defineLaw("De Morgan's (OR→AND)", LAW_FORM.NODE),
+      ...defineLaw("De Morgan's Law", LAW_FORM.NODE),
       desc: `${nodeText(node)} = ${nodeText(expanded)}`,
       animPaths: [path],
       deMorganTerms,

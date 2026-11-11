@@ -49,8 +49,7 @@ export const LAW_DEFINITIONS = [
 
   // ── single-node laws ─────────────────────────────────────────────────────
   { id: 'double-neg', name: 'Double Negation', formula: "(A')' = A", mode: LAW_MODE.TERM, form: LAW_FORM.NODE },
-  { id: 'demorgan-and', name: "De Morgan's (AND→OR)", formula: "(AB)' = A' + B'", mode: LAW_MODE.TERM, form: LAW_FORM.NODE },
-  { id: 'demorgan-or', name: "De Morgan's (OR→AND)", formula: "(A+B)' = A'B'", mode: LAW_MODE.TERM, form: LAW_FORM.NODE },
+  { id: 'demorgan', name: "De Morgan's Law", formula: "(AB)' = A'+B'  /  (A+B)' = A'B'", mode: LAW_MODE.TERM, form: LAW_FORM.NODE },
 ]
 
 // Keyed by name+form: `Identity Law` legitimately has a sum and a product
