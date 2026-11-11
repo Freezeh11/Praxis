@@ -1,6 +1,8 @@
 __pycache__/
 venv/
-.env
+# Environment files — secrets never belong in git (.env.example is a template).
+.env*
+!.env.example
 auth-server/node_modules/
 
 # Python
@@ -22,3 +24,8 @@ dist/
 
 # OS
 .DS_Store
+
+# local visual-audit output
+.e2e/shots-*/
+.e2e/ux/
+.sdd-work/

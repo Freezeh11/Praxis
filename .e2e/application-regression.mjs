@@ -17,6 +17,9 @@ const {chromium}=require(process.env.PRAXIS_PLAYWRIGHT_MODULE || 'playwright')
 const root=fileURLToPath(new URL('../frontend',import.meta.url))
 const resultDir=fileURLToPath(new URL('./_results',import.meta.url))
 process.chdir(root)
+// The dev CSP narrows connect-src to the configured Supabase origin; tests mock that origin.
+process.env.VITE_SUPABASE_URL='https://praxis-test.invalid'
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY='isolated-test-key'
 const server=await createServer({root,configFile:path.join(root,'vite.config.js'),
   define:{'import.meta.env.VITE_SUPABASE_URL':JSON.stringify('https://praxis-test.invalid'),'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY':JSON.stringify('isolated-test-key')},
   server:{host:'127.0.0.1',port:5191,strictPort:true,open:false}})
@@ -91,27 +94,31 @@ try{
   await page.getByText('Invalid login credentials',{exact:false}).waitFor()
  })
  await check('sign-in restores a protected session',async()=>{await login(page);await puzzleReady(page)})
- await check('independent stage exposes nine choices without selection cues',async()=>{
-  assert.equal(await page.locator('[data-law-id]').count(),9)
-  await page.locator('[data-testid="independent-practice"]').waitFor()
+ await check('independent stage exposes the unlocked law palette',async()=>{
+  const ids=await page.locator('[data-law-id]').evaluateAll(els=>els.map(el=>el.getAttribute('data-law-id')))
+  assert.deepEqual(ids,['absorption','idempotent','distributive','complement','identity','demorgan','annulment'])
+  await page.locator('[data-testid="laws-list"]').waitFor()
  })
  await check('wrong law gives feedback without transforming expression',async()=>{
-  await page.locator('[data-tutorial="active-equation"] [data-tutorial="not-bar"]').click()
   const before=await page.locator('[data-tutorial="active-equation"]').innerText()
   await page.locator('[data-law-id="identity"]').click()
+  await page.locator('[data-tutorial="active-equation"] [data-tutorial="not-bar"]').first().click()
+  await page.locator('[data-testid="apply-selected-law"]').click()
   await page.getByText(/Not matched for/).first().waitFor()
   assert.equal(await page.locator('[data-tutorial="active-equation"]').innerText(),before)
-  assert.equal(await page.locator('[data-law-id]').count(),9)
+  assert.equal(await page.locator('[data-tutorial="past-equation"]').count(),0)
  })
  await check('correct choices complete and submit actual law history',async()=>{
-  await page.locator('[data-law-id="demorgan-and"]').click()
+  await page.locator('[data-law-id="demorgan"]').click()
+  await page.locator('[data-tutorial="active-equation"] [data-tutorial="not-bar"]').first().click()
+  await page.locator('[data-testid="apply-selected-law"]').click()
   await page.waitForFunction(()=>document.querySelectorAll('[data-tutorial="past-equation"]').length===1)
   await page.locator('[data-tutorial="guide-button"]').first().click()
-  await page.getByText(/Guide: apply Absorption/).first().waitFor()
-  await page.locator('[data-law-id="absorption"]').click()
+  await page.getByText(/Guide: press Apply to use Absorption/).first().waitFor()
+  await page.locator('[data-testid="apply-selected-law"]').click()
   await page.locator('[data-tutorial="score-modal"]').waitFor()
   assert.equal(state.scores.at(-1).stepsUsed,2)
-  assert.deepEqual(state.scores.at(-1).lawsUsed,['demorgan-and','absorption'])
+  assert.deepEqual(state.scores.at(-1).lawsUsed,['demorgan','absorption'])
   assert.equal(state.scores.at(-1).guidesUsed,1)
  })
  await check('refresh restores completed derivation and local progress',async()=>{
@@ -128,10 +135,11 @@ try{
   await page.locator('[data-tutorial="reopen-score-btn"]').waitFor()
   assert.equal(await page.locator('[data-tutorial="past-equation"]').count(),1)
  })
- await check('earlier unsolved stage remains guided',async()=>{
+ await check('earlier unsolved stage keeps the starter palette only',async()=>{
   await puzzleReady(page,1,2)
-  assert.equal(await page.locator('[data-law-id]').count(),0)
-  assert.equal(await page.locator('[data-testid="independent-practice"]').count(),0)
+  const ids=await page.locator('[data-law-id]').evaluateAll(els=>els.map(el=>el.getAttribute('data-law-id')))
+  assert.deepEqual(ids,['absorption'])
+  assert.equal(await page.locator('[data-law-id="demorgan"]').count(),0)
  })
  await check('sandbox rejects invalid input and solves custom input',async()=>{
   await page.goto(base+'sandbox');await page.locator('[data-tutorial="active-equation"]').waitFor()
@@ -142,21 +150,19 @@ try{
   await page.getByRole('button',{name:/Validate.*Play/}).click()
   await page.locator('[data-testid="custom-expression-label"]').filter({hasText:'A + AB'}).waitFor()
   await page.locator('[data-tutorial="guide-button"]').first().click()
-  await page.locator('[data-law-id="absorption"]').click()
+  await page.getByText(/Guide: press Apply/).first().waitFor()
+  await page.locator('[data-testid="apply-selected-law"]').click()
   await page.locator('[data-tutorial="score-modal"]').waitFor()
   await page.getByText('Free practice: no points or progress recorded.').waitFor()
  })
  await check('API outage does not block local completion',async()=>{
   state.offline=true
   await puzzleReady(page,1,8)
-  const puzzle=levels[1].puzzles[7],used=[]
-  let expr=parseExpr(puzzle.expr)
   for(let i=0;i<2;i++){
-   const plan=planGuidance(expr,canonText(parseExpr(puzzle.goal)),puzzle.targetLaws,used)
    await page.locator('[data-tutorial="guide-button"]').first().click()
-   await page.locator(`[data-law-id="${plan.transition.lawId}"]`).click()
+   await page.getByText(/Guide: press Apply/).first().waitFor()
+   await page.locator('[data-testid="apply-selected-law"]').click()
    await page.waitForFunction(n=>document.querySelectorAll('[data-tutorial="past-equation"]').length===n,i+1)
-   used.push(plan.transition.lawId);expr=plan.transition.nextTree
   }
   await page.locator('[data-tutorial="score-modal"]').waitFor()
   state.offline=false
@@ -185,10 +191,10 @@ try{
  await puzzleReady(page,2,1)
  if(await page.locator('[data-tutorial="active-equation"]').count())observations.push({name:'Existing direct-route prerequisite bypass',detail:'Level 2 puzzle opens directly despite incomplete Level 1; carousel prerequisites are not enforced at the puzzle route.'})
  await check('sign-out cancellation preserves session and confirmation revokes it',async()=>{
-  await page.goto(base+'levels')
-  await page.getByRole('button',{name:'Sign Out',exact:true}).first().click()
+  await page.goto(base+'profile')
+  await page.getByRole('button',{name:'Sign out',exact:true}).first().click()
   await page.getByRole('button',{name:'Cancel',exact:true}).click()
-  await page.getByRole('button',{name:'Sign Out',exact:true}).first().click()
+  await page.getByRole('button',{name:'Sign out',exact:true}).first().click()
   await page.locator('.praxis-modal-panel').filter({has:page.getByRole('heading',{name:'Sign out?',exact:true})}).getByRole('button',{name:'Sign Out',exact:true}).click()
   await page.waitForURL(base)
   await page.goto(base+'level/1/stage/7');await page.waitForURL('**/login')
@@ -204,9 +210,9 @@ try{
  const phone=await contextFor({viewport:{width:844,height:390},touch:true})
  await check('phone landscape keeps all independent choices reachable',async()=>{
   await login(phone.page);await puzzleReady(phone.page)
-  assert.equal(await phone.page.locator('[data-law-id]').count(),9)
-  await phone.page.locator('[data-law-id="demorgan-or"]').scrollIntoViewIfNeeded()
-  assert.equal(await phone.page.locator('[data-law-id="demorgan-or"]').isVisible(),true)
+  assert.equal(await phone.page.locator('[data-law-id]').count(),7)
+  await phone.page.locator('[data-law-id="demorgan"]').scrollIntoViewIfNeeded()
+  assert.equal(await phone.page.locator('[data-law-id="demorgan"]').isVisible(),true)
   assert.ok(await phone.page.locator('[data-testid="derivation-scroll"]').evaluate(el=>el.clientHeight>30))
  })
  await check('phone portrait gate clears after rotation to landscape',async()=>{
