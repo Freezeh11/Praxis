@@ -398,3 +398,83 @@ plain loops instead of `every`/`some` closures.
 Lint over `frontend/src` remains at its pre-existing baseline: 10 errors and 3
 warnings, all `react-hooks/set-state-in-effect` / `exhaustive-deps` findings in
 files this pass did not touch (confirmed against `git archive HEAD`).
+
+## 7. Round 11 — QA and security hardening
+
+Three read-only auditors (journeys, edge cases, accessibility) and one security
+auditor drove this pass. Everything below was re-tested after the fix.
+
+### 7.1 Security
+
+| finding | disposition |
+| --- | --- |
+| 502 bodies forwarded upstream text, leaking the project ref and user id | fixed: storage failures log the exception type only and raise a detail-free `UpstreamError` |
+| CORS headers missing on 413/429 | fixed: `CORSMiddleware` now wraps the limiters |
+| `ALLOWED_HOSTS` read nowhere, so `TrustedHost` never installed | fixed: read from the environment; set in `render.yaml` |
+| any auth non-200 (429/5xx) collapsed to 401 "Invalid session" | fixed: 401/403 → no user, everything else → `UpstreamError` |
+| httpx INFO logs carried full upstream URLs including `user_id` | fixed: `httpx`/`httpcore` pinned to WARNING |
+| 5 unpinned dependencies, one unused | fixed: pinned; `python-multipart` dropped |
+| service-role key used for every database call (RLS inert) | accepted: the backend is the only writer and every query is user-scoped; RLS policies remain for a future user-scoped client |
+| score is client-computed and persisted | accepted: no leaderboard or ranking surface exists, and the limits hold |
+| Supabase tokens in `localStorage` | accepted: strict CSP and no XSS sink in the bundle |
+| last-hop `X-Forwarded-For` trust | accepted: opt-in, documented for the Render topology |
+
+Backend tests grew to **25** (four new security tests: no storage detail in a 502,
+CORS outside the limiters, auth outage is an upstream failure, allowed hosts from
+the environment).
+
+`streak`/`bestStreak` were removed end to end — the product has no streak
+feature: schema, service, routes, frontend store, login copy, terms, README and
+19 current-state documentation pages. Historical verification reports were left
+untouched.
+
+### 7.2 Accessibility
+
+Score modal and tutorial welcome became real dialogs (role, aria-modal,
+labelled title, focus trap, Escape, focus restore); the law drawer leaves the tab
+order when closed and traps focus when open; derivation literals are keyboard
+buttons; every gradient CTA moved to the 4.5:1 pair
+(`from-indigo-600 to-cyan-700`, dark `from-indigo-600 to-cyan-700`); level cards
+are buttons with an exposed locked state; `/levels` has a `<main>`; the app has a
+skip link and the workspace has an `<h1>`; placeholders and the coach card's step
+counter were fixed; login/register validation errors are now inline and bound to
+the field. Contrast audit: every surface clean in both themes.
+
+### 7.3 Resilience
+
+| failure | before | after |
+| --- | --- | --- |
+| `GET /api/progress` never answers | tutorial-gate spinner forever | 15 s client timeout, then the local snapshot renders |
+| `{"stageProgress":null}` in storage | full-screen error boundary | the field is dropped |
+| `{"stageProgress":{"1":5}}` | unhandled TypeError, hydration never completes | the field is dropped |
+| 2000-character sandbox expression | >100 s frozen renderer | refused instantly by the 64-token ceiling |
+| `(A+B)`×8 | >25 s frozen | the 10 s search deadline returns "too complex" |
+
+The published six-term reference needs ~7.8 s, so the deadline sits above it.
+Kept as documented limitations: no autosave of an in-progress derivation, the
+portrait rotate gate, and the seconds-long worst-case sandbox build.
+
+### 7.4 Teaching layer
+
+- Term grips are visible without hovering, so "select the whole term" is
+  followable with a mouse; the tutorial copy names the grip.
+- The stage-4 "dead end" no longer claims `x + x'y` cannot be simplified — it can,
+  and the card now says it is simply not the simplest form yet.
+- "Exit Tutorial" asks before discarding a derivation.
+- Completed stages without a stored score show **Completed**, not **Locked**.
+- Spotlight cutout rects carry numeric attributes, ending the per-step SVG
+  console errors.
+
+### 7.5 Verification
+
+| check | result |
+| --- | --- |
+| `cd frontend && npx vite build` | exit 0, 1.16 s |
+| `cd frontend && npm test` | **103 / 103** |
+| `cd backend && ./venv/bin/python3.14 -m pytest -q` | **25 passed**, 20 subtests |
+| `node .e2e/application-regression.mjs` | **18 / 18** |
+| `node .e2e/theme-contrast.mjs` | every label clean, both themes |
+| `node .e2e/workspace-layout.mjs` | **8 / 8** |
+| `node .e2e/password-reset.mjs` | **12 / 12** |
+| `node .e2e/qa-round11-fixes.mjs` | **5 / 5** (corrupt storage, hang, grip, exit) |
+
