@@ -44,11 +44,11 @@ export const TERMS_SECTIONS = [
     id: 'your-learning-data',
     title: 'Your learning data',
     paragraphs: [
-      'Your progress (completed levels, stars, streaks, stage results and circuit attempts) is stored with your account so you can pick up where you left off on any device.',
+      'Your progress (completed levels, stars, stage results and circuit attempts) is stored with your account so you can pick up where you left off on any device.',
     ],
     bullets: [
       'Your name and email are used to identify your account and to sign you in.',
-      'Your practice history is used to show you progress, mastery and streak information.',
+      'Your practice history is used to show you progress and mastery information.',
       'You can ask for a copy of your learning data, or for your account and its data to be deleted, at any time.',
     ],
   },

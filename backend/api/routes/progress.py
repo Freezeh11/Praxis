@@ -33,8 +33,6 @@ async def save_progress(
     await progress_service.save_progress(
         user_id=user["id"],
         points=progress.points,
-        streak=progress.streak,
-        best_streak=progress.bestStreak,
         stage_progress=progress.stageProgress,
         stage_scores=progress.stageScores,
     )

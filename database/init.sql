@@ -3,12 +3,10 @@
 -- These tables store user game progress and score history.
 -- Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`.
 
--- User game progress (points, streak, etc.)
+-- User game progress (points)
 CREATE TABLE IF NOT EXISTS user_progress (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,        -- References Supabase auth.users
   points INTEGER DEFAULT 0,
-  streak INTEGER DEFAULT 0,
-  best_streak INTEGER DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 

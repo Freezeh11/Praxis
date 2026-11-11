@@ -34,7 +34,7 @@ def build_progress(
     user_progress: Mapping[str, Any] | None,
     stages: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
-    """Merge stored rows into ``{points, streak, bestStreak, stage*, …}``."""
+    """Merge stored rows into ``{points, stageProgress, stageScores}``."""
     # Indices are collected as sets: the rows arrive in whatever order storage
     # returns them (and the saves that created them may run in parallel), while
     # the API payload has always been ascending. Sorting here keeps the response
@@ -52,8 +52,6 @@ def build_progress(
 
     return {
         "points": user_progress["points"] if user_progress else 0,
-        "streak": user_progress["streak"] if user_progress else 0,
-        "bestStreak": user_progress["best_streak"] if user_progress else 0,
         "stageProgress": {key: sorted(indices) for key, indices in stage_progress.items()},
         "stageScores": stage_scores,
     }
@@ -63,8 +61,6 @@ async def save_progress(
     *,
     user_id: str,
     points: int,
-    streak: int,
-    best_streak: int,
     stage_progress: Mapping[str, Sequence[int]],
     stage_scores: Mapping[str, int | float],
 ) -> None:
@@ -84,8 +80,6 @@ async def save_progress(
             {
                 "user_id": user_id,
                 "points": points,
-                "streak": streak,
-                "best_streak": best_streak,
             },
         ),
         asyncio.to_thread(progress_repository.list_stage_progress_rows, user_id),

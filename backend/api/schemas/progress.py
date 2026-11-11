@@ -24,8 +24,6 @@ MAX_SCORE_ENTRIES = 4096
 
 class ProgressData(BaseModel):
     points: int = Field(default=0, ge=0, le=MAX_POINTS)
-    streak: int = Field(default=0, ge=0, le=100_000)
-    bestStreak: int = Field(default=0, ge=0, le=100_000)
     stageProgress: dict[str, list[int]] = Field(default_factory=dict)
     # Numeric as sent: the ``int | float`` union keeps whole scores as ints so the
     # value written to Supabase is byte-identical to the request.

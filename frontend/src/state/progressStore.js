@@ -3,7 +3,7 @@
  *
  * Before this module `useProgress()` was a hook holding its own `useState`, so
  * the level screen, the stage screen, the puzzle screen and the tutorial gate
- * each had a private copy of points, streak, scores and completed stages. They
+ * each had a private copy of points, scores and completed stages. They
  * only agreed with each other by accident (each wrote localStorage on change,
  * none re-read it), which meant earning points on the puzzle screen did not
  * update the points chip behind it until a reload.
@@ -29,8 +29,6 @@ export const GUEST_USER_ID = 'guest'
 
 const defaultProgress = {
   points: 0,
-  streak: 0,
-  bestStreak: 0,
   levelsCompleted: [],        // [1, 2, 3]
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5 } → best total score per stage
@@ -134,8 +132,6 @@ function mergeServerProgress(local, server) {
     ...defaultProgress,
     ...local,
     points: Math.max(local.points, server.points || 0),
-    streak: server.streak || local.streak,
-    bestStreak: Math.max(local.bestStreak, server.bestStreak || 0),
   }
 
   const stageProgress = { ...local.stageProgress }
@@ -215,8 +211,6 @@ export const addPoints = (amount) =>
   update((p) => ({
     ...p,
     points: p.points + amount,
-    streak: p.streak + 1,
-    bestStreak: Math.max(p.bestStreak, p.streak + 1),
   }))
 
 export const deductPoints = (amount) =>
@@ -269,7 +263,6 @@ export const saveSolution = (levelId, stageIdx, steps) =>
     }
   })
 
-export const resetStreak = () => update((p) => ({ ...p, streak: 0 }))
 
 export const markTutorialSeen = () => update((p) => ({ ...p, hasSeenTutorial: true }))
 

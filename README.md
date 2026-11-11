@@ -25,7 +25,7 @@ Praxis is an interactive desktop web application designed to help first-year com
 - **9-Law Challenge Palette & Explanatory Feedback:** Earlier stages (Stages 1-6) scaffold learners with focused law sets, while harder stages (Stages 7-12) present all **9 simplification laws** and provide specific explanatory feedback when a chosen law's preconditions do not match the selected sub-expression.
 - **Custom Expression Sandbox Mode:** Allows learners to enter and simplify custom Boolean expressions up to 4 variables, automatically validating syntax and generating an equivalent simplified target and replayable reference solution.
 - **Tiered Scaffolding & Reference Tools:** Features point-redeemable **Guide highlights** (free in Tutorial and Sandbox), **3-tier progressive worded hints**, a collapsible **Law Reference Drawer**, and a chronological **Step History** log with animated state transitions.
-- **Composite Scoring & Learner Profile:** Evaluates completed stages on a 100-point composite rubric (**40% Step Efficiency**, **30% Target Law Application**, **30% Hint Independence**) and tracks cumulative points, daily streaks, and per-level completion badges on the **Learner Profile** page.
+- **Composite Scoring & Learner Profile:** Evaluates completed stages on a 100-point composite rubric (**40% Step Efficiency**, **30% Target Law Application**, **30% Hint Independence**) and tracks cumulative points, stars and per-level completion badges on the **Learner Profile** page.
 - **Desktop Target Environment:** Optimized for desktop and laptop browsers (`>= 1366 px` viewport width).
 
 ---
@@ -137,7 +137,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<your-supabase-anon-key>
 
 ### 3. Start the Backend API (Terminal 1)
 
-The FastAPI server serves canonical law and level content (`/api/laws`, `/api/levels`), computes composite stage scores (`/api/score`), and persists learner progress and streaks (`/api/progress`).
+The FastAPI server serves canonical law and level content (`/api/laws`, `/api/levels`), computes composite stage scores (`/api/score`), and persists learner progress (`/api/progress`).
 
 ```bash
 # Navigate to backend directory
@@ -190,7 +190,7 @@ npm run dev
 1. Open a desktop/laptop browser (`>= 1366 px` width) and navigate to `http://localhost:5173`.
 2. Click **Start Learning Free** or **Sign Up** to create an account.
 3. Complete the **4-stage interactive Tutorial** (brand-new accounts must finish the tutorial before Graded Levels 1-3 and Sandbox Mode unlock).
-4. Select any unlocked level or open **Sandbox Mode**. Your completed stages, streaks, and composite score breakdowns will automatically sync with Supabase.
+4. Select any unlocked level or open **Sandbox Mode**. Your completed stages and composite score breakdowns will automatically sync with Supabase.
 
 ---
 
