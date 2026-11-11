@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from core.errors import UpstreamError
+from core.logging import get_logger, log_fields
 from supabase_client import supabase
 
 USER_PROGRESS_TABLE = "user_progress"
@@ -23,7 +24,14 @@ def _execute(builder: Any) -> Any:
     try:
         return builder.execute()
     except httpx.HTTPError as exc:
-        raise UpstreamError("Progress storage is unavailable", detail=str(exc)) from exc
+        # The transport message contains the full PostgREST URL, including the
+        # Supabase project ref and the caller's user id. Log the failure type
+        # only and hand the client a generic envelope.
+        get_logger(__name__).warning(
+            "progress storage request failed",
+            extra=log_fields(error=type(exc).__name__),
+        )
+        raise UpstreamError("Progress storage is unavailable") from exc
 
 
 def get_user_progress_row(user_id: str) -> dict[str, Any] | None:

@@ -58,17 +58,6 @@ app.add_middleware(RequestContextMiddleware)
 # thirds for a few milliseconds of CPU. Below 1 KB the header costs more than it
 # saves, so smaller bodies pass through untouched.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    # Explicit lists instead of "*": the API only serves these methods, and the
-    # browser only ever sends these request headers (see services/apiClient.js).
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Accept", "Authorization", "Content-Type"],
-    expose_headers=["X-Request-ID"],
-    max_age=600,
-)
 if settings.allowed_hosts != ["*"]:
     from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -78,6 +67,21 @@ app.add_middleware(
     RateLimitMiddleware,
     enabled=settings.rate_limit_enabled,
     trust_proxy=settings.trust_proxy,
+)
+# CORS is added after the limiters so it wraps them: a 413 from the body cap and
+# a 429 from the rate limiter must still carry Access-Control-Allow-Origin, or
+# the browser reports an opaque network error and the SPA cannot read
+# Retry-After. It still sits inside SecurityHeadersMiddleware.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    # Explicit lists instead of "*": the API only serves these methods, and the
+    # browser only ever sends these request headers (see services/apiClient.js).
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Accept", "Authorization", "Content-Type"],
+    expose_headers=["X-Request-ID", "Retry-After"],
+    max_age=600,
 )
 app.add_middleware(SecurityHeadersMiddleware)
 

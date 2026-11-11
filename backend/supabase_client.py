@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from config.settings import settings
+from core.errors import UpstreamError
 
 # One pooled client per process. Creating a client per query paid a fresh
 # TCP+TLS handshake on every PostgREST call; httpx.Client is thread-safe, so a
@@ -126,6 +127,13 @@ class SupabaseRESTClient:
             "Authorization": f"Bearer {jwt_token}"
         }
         response = await self._async().get(url, headers=headers)
+        if response.status_code in (401, 403):
+            return None
+        if response.status_code == 429 or response.status_code >= 500:
+            # Supabase throttling or an outage is not an expired session; treat it
+            # as an upstream failure so clients retry instead of signing the user
+            # out. Never echo the upstream body: it can contain request detail.
+            raise UpstreamError("Authentication service is unavailable")
         if response.status_code != 200:
             return None
         return response.json()

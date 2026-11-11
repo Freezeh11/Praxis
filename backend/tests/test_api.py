@@ -3,10 +3,13 @@
 No real credentials or PostgreSQL writes. Transport bounds and the security
 middleware are exercised here because they are the API's public contract.
 """
+import asyncio
 import os
 import unittest
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
+
+import httpx
 
 os.environ["SUPABASE_URL"] = "https://praxis-test.invalid"
 os.environ["SUPABASE_SERVICE_KEY"] = "isolated-test-key"
@@ -14,6 +17,8 @@ os.environ["SUPABASE_SERVICE_KEY"] = "isolated-test-key"
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from main import app
+from config.settings import Settings
+from core.errors import UpstreamError
 from core.rate_limit import BodySizeLimitMiddleware, RateLimitMiddleware, Rule
 from repositories import progress_repository as repo
 from supabase_client import supabase
@@ -74,7 +79,7 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(self.client.post("/api/progress/save", headers=headers, json={"progress": {}}).status_code, 401)
 
     def test_progress_roundtrip_and_user_isolation(self):
-        progress = {"points": 25, "streak": 2, "bestStreak": 3, "stageProgress": {"0": [0, 1, 2, 3], "1": [0]}, "stageScores": {"1:0": 90}}
+        progress = {"points": 25, "stageProgress": {"0": [0, 1, 2, 3], "1": [0]}, "stageScores": {"1:0": 90}}
         response = self.client.post("/api/progress/save", headers=self.headers(), json={"progress": progress})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.client.get("/api/progress", headers=self.headers()).json()["data"], progress)
@@ -91,8 +96,8 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(faked["breakdown"]["optimalSteps"], honest["breakdown"]["optimalSteps"])
 
     def test_stale_progress_save_cannot_lower_a_best_score(self):
-        first = {"points": 10, "streak": 1, "bestStreak": 1, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 90}}
-        stale = {"points": 0, "streak": 0, "bestStreak": 1, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 20}}
+        first = {"points": 10, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 90}}
+        stale = {"points": 0, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 20}}
         self.client.post("/api/progress/save", headers=self.headers(), json={"progress": first})
         self.client.post("/api/progress/save", headers=self.headers(), json={"progress": stale})
         stored = self.client.get("/api/progress", headers=self.headers()).json()["data"]
@@ -148,7 +153,7 @@ class ApiTests(unittest.TestCase):
             {"stageProgress": {"1": [0, 0]}},
             {"stageScores": {"99:-1": 999}},
             {"stageScores": {"1:0": 120}},
-            {"streak": -2},
+            {"stageProgress": {"1": [100]}},
         )
         for bad in bad_payloads:
             with self.subTest(payload=bad):
@@ -258,6 +263,73 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(
             trusted.get("/api/score", headers={"X-Forwarded-For": "8.8.8.8, 9.9.9.9"}).status_code, 429
         )
+
+    def test_upstream_failure_never_leaks_storage_details(self):
+        secret = "https://project-ref.supabase.co/rest/v1/user_progress?user_id=eq.learner-a"
+        headers = {"Authorization": "Bearer learner-a"}
+        auth = patch.object(supabase, "get_user", AsyncMock(return_value={"id": "learner-a"}))
+        auth.start()
+        self.addCleanup(auth.stop)
+        class _Builder:
+            def select(self, *_args, **_kwargs):
+                return self
+
+            def eq(self, *_args, **_kwargs):
+                return self
+
+            def execute(self):
+                raise httpx.ConnectError(secret)
+
+        with patch.object(supabase, "table", return_value=_Builder()):
+            response = self.client.get("/api/progress", headers=headers)
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json()["error"]["code"], "upstream_error")
+        self.assertIsNone(response.json()["error"]["detail"])
+        self.assertNotIn("supabase.co", response.text)
+        self.assertNotIn("learner-a", response.text)
+
+    def test_cors_wraps_the_limiters(self):
+        # Starlette keeps the most recently added middleware outermost; CORS has
+        # to sit outside the body cap and the rate limiter, or their 413/429
+        # responses reach the browser without Access-Control-Allow-Origin.
+        from starlette.middleware.cors import CORSMiddleware
+
+        names = [entry.cls.__name__ for entry in app.user_middleware]
+        cors = names.index(CORSMiddleware.__name__)
+        self.assertLess(cors, names.index(BodySizeLimitMiddleware.__name__))
+        self.assertLess(cors, names.index(RateLimitMiddleware.__name__))
+        self.assertGreater(cors, 0)  # SecurityHeadersMiddleware stays outermost
+
+    def test_auth_outage_is_upstream_not_unauthorized(self):
+        class _Response:
+            def __init__(self, status):
+                self.status_code = status
+
+            def json(self):
+                return {}
+
+        class _Client:
+            def __init__(self, status):
+                self.status = status
+
+            async def get(self, *_args, **_kwargs):
+                return _Response(self.status)
+
+        for status in (429, 500, 503):
+            with patch.object(supabase, "_async", return_value=_Client(status)):
+                with self.assertRaises(UpstreamError):
+                    asyncio.run(supabase.get_user("token"))
+        # A rejected token is still an ordinary "no user", not an outage.
+        with patch.object(supabase, "_async", return_value=_Client(401)):
+            self.assertIsNone(asyncio.run(supabase.get_user("token")))
+
+    def test_allowed_hosts_read_from_environment(self):
+        os.environ["ALLOWED_HOSTS"] = "praxis-backend-5302.onrender.com,localhost"
+        try:
+            parsed = Settings.from_env().allowed_hosts
+        finally:
+            os.environ.pop("ALLOWED_HOSTS", None)
+        self.assertEqual(parsed, ["praxis-backend-5302.onrender.com", "localhost"])
 
     def test_body_limit_reports_invalid_content_length(self):
         small = FastAPI()

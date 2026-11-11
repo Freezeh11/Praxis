@@ -95,6 +95,9 @@ class Settings:
             supabase_service_key=require_env("SUPABASE_SERVICE_KEY"),
             frontend_url=os.getenv("FRONTEND_URL"),
             cors_allow_origins=os.getenv("CORS_ALLOW_ORIGINS"),
+            # Host-header allowlist. Unset means "*" (dev); production sets a
+            # narrow list so a poisoned Host cannot reach any handler.
+            allowed_hosts=os.getenv("ALLOWED_HOSTS"),
         )
 
 
