@@ -92,10 +92,10 @@ function StepHistoryPanel({
               onClick={() => onToggleInspectStep(prev => (prev === i ? null : i))}
               className={`border rounded-xl px-3 py-2.5 font-mono cursor-pointer shadow-chip transition-all ${touchTargets ? 'min-h-[44px] text-[14px]' : 'text-[11px]'} ${
                 isInspected
-                  ? 'border-teal bg-teal-50/90 shadow-md ring-2 ring-teal/30 -translate-y-px'
+                  ? 'border-teal bg-teal-50/90 shadow-md ring-2 ring-teal/30 -translate-y-px dark:border-cyan-300 dark:ring-cyan-400/25'
                   : isLatest
-                  ? 'border-teal/60 bg-teal-light hover:border-teal hover:shadow-sm'
-                  : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_8px_18px_-14px_rgba(15,23,42,0.40)]'
+                  ? 'border-teal/60 bg-teal-light hover:border-teal hover:shadow-sm dark:border-cyan-400/50 dark:hover:border-cyan-300'
+                  : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_8px_18px_-14px_rgba(15,23,42,0.40)] dark:hover:border-cyan-400/40 dark:hover:bg-cyan-400/5'
               }`}
             >
               <div className="text-text-2 leading-relaxed">
@@ -107,8 +107,8 @@ function StepHistoryPanel({
               <div
                 className={`mt-1.5 inline-flex items-center font-sans font-semibold rounded px-2 py-0.5 transition-colors ${touchTargets ? 'text-[12px]' : 'text-[10px]'} ${
                   isInspected
-                    ? 'bg-teal text-white shadow-xs'
-                    : 'text-teal bg-bg-card border border-teal'
+                    ? 'bg-teal text-white shadow-xs dark:bg-cyan-400 dark:text-slate-950'
+                    : 'text-teal bg-bg-card border border-teal dark:border-cyan-400 dark:text-cyan-200'
                 }`}
               >
                 {s.law}

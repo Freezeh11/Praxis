@@ -16,6 +16,9 @@ export default {
         'bg-card': 'rgb(var(--bg-card) / <alpha-value>)',
         border: 'rgb(var(--border) / <alpha-value>)',
         'border-dark': 'rgb(var(--border-dark) / <alpha-value>)',
+        // The workspace stepper rail: its own token because the slate remap
+        // maps bg-slate-300 onto the card surface, which erased the rail in dark.
+        rail: 'rgb(var(--rail) / <alpha-value>)',
         text: {
           1: 'rgb(var(--text-1) / <alpha-value>)',
           2: 'rgb(var(--text-2) / <alpha-value>)',

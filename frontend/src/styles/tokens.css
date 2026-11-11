@@ -43,6 +43,7 @@ a { text-decoration: none; }
   --accent: 79 70 229;      /* #4F46E5 indigo-600 */
   --accent-hover: 67 56 202;/* #4338CA indigo-700 */
   --on-accent: 255 255 255;
+  --rail: 203 213 225;      /* #CBD5E1 stepper connector */
 }
 
 :root[data-theme="dark"] {
@@ -57,6 +58,7 @@ a { text-decoration: none; }
   --accent: 99 102 241;     /* #6366F1 indigo-500 */
   --accent-hover: 79 70 229;
   --on-accent: 255 255 255;
+  --rail: 100 116 139;      /* #64748B stepper connector, legible on #0B0F19 */
   --color-amber-light: #392d1b;
   --color-bg: #0B0F19;
   --color-text-1: #f1f5f9;
@@ -79,12 +81,20 @@ a { text-decoration: none; }
   .hover\:bg-emerald-100\/90:hover
 ) { background-color: #14372e; }
 
+/* Blue/indigo tints: a raised navy ink, so a selected capsule reads as a
+   surface that was lifted off the canvas instead of a black hole in it. */
 [data-theme="dark"] :is(
   .bg-blue-50,
   .bg-indigo-50\/80,
   .bg-sky-50,
   .bg-sky-50\/70,
-  .bg-sky-50\/80,
+  .bg-sky-50\/80
+) { background-color: #1b2f52; }
+
+/* Teal tints: the workspace "current/selected" surface. #164e63 stays cyan
+   enough that a selected literal, term or step card is obviously picked, while
+   #F1F5F9 body text and #7DD3FC subscript still clear 4.5:1 on it. */
+[data-theme="dark"] :is(
   .bg-teal-50,
   .bg-teal-50\/50,
   .bg-teal-50\/90,
@@ -92,7 +102,7 @@ a { text-decoration: none; }
   .bg-teal-light\/70,
   .hover\:bg-teal-light:hover,
   .hover\:bg-teal-light\/60:hover
-) { background-color: #182f48; }
+) { background-color: #164e63; }
 
 [data-theme="dark"] :is(
   .bg-amber-100,

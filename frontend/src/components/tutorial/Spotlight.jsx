@@ -58,25 +58,13 @@ export default function Spotlight({
             <defs>
               <mask id="tutorial-spotlight-mask">
                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                <m.rect
+                {/*
+                  Plain SVG geometry, never animated through framer: framer turns
+                  animated x/y into a CSS translate on top of the x/y attributes,
+                  which moved the hole by its own offset and left the target dimmed.
+                */}
+                <rect
                   key={`cutout-pri-${currentStep?.id || 'target'}`}
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: 1,
-                    x: primaryGeometry.x,
-                    y: primaryGeometry.y,
-                    width: primaryGeometry.width,
-                    height: primaryGeometry.height,
-                    rx: primaryGeometry.rx,
-                    ry: primaryGeometry.rx,
-                  }}
-                  transition={{
-                    duration: 0.3,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  // Static numeric attributes as well as the animated values: the
-                  // first frame would otherwise write "undefined" into width/height
-                  // and the browser logs an SVG attribute error on every step.
                   x={primaryGeometry.x}
                   y={primaryGeometry.y}
                   width={primaryGeometry.width}
@@ -86,22 +74,8 @@ export default function Spotlight({
                   fill="black"
                 />
                 {secondaryHighlightRect && (
-                  <m.rect
+                  <rect
                     key={`cutout-sec-${currentStep?.id || 'sec'}`}
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      x: secondaryGeometry.x,
-                      y: secondaryGeometry.y,
-                      width: secondaryGeometry.width,
-                      height: secondaryGeometry.height,
-                      rx: secondaryGeometry.rx,
-                      ry: secondaryGeometry.rx,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
                     x={secondaryGeometry.x}
                     y={secondaryGeometry.y}
                     width={secondaryGeometry.width}
@@ -195,15 +169,9 @@ export default function Spotlight({
             <m.div
               key={`ring-pri-${currentStep?.id || 'target'}`}
               initial={{ opacity: 0, scale: 0.98 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                top: highlightRect.ringTop ?? highlightRect.top,
-                left: highlightRect.ringLeft ?? highlightRect.left,
-                width: highlightRect.ringWidth ?? highlightRect.width,
-                height: highlightRect.ringHeight ?? highlightRect.height,
-                borderRadius: `${highlightRect.ringRx ?? 10}px`,
-              }}
+              // Geometry is static: only opacity and scale animate, so the ring
+              // never animates layout boxes (and never drifts from its target).
+              animate={{ opacity: 1, scale: 1 }}
               transition={{
                 duration: 0.3,
                 ease: [0.22, 1, 0.36, 1],
@@ -211,7 +179,14 @@ export default function Spotlight({
               className={`fixed border-2 border-sky-500 ring-4 ring-sky-400/25 shadow-lg pointer-events-none dark:border-cyan-400 dark:ring-cyan-400/30 dark:shadow-[0_0_35px_rgba(34,211,238,0.45)] ${
                 highlightRect.isScoreModal ? 'border-teal/50 rounded-2xl' : isPreLawHighlight ? 'rounded-xl' : 'rounded-xl animate-pulse'
               }`}
-              style={{ zIndex: 52 }}
+              style={{
+                zIndex: 52,
+                top: highlightRect.ringTop ?? highlightRect.top,
+                left: highlightRect.ringLeft ?? highlightRect.left,
+                width: highlightRect.ringWidth ?? highlightRect.width,
+                height: highlightRect.ringHeight ?? highlightRect.height,
+                borderRadius: `${highlightRect.ringRx ?? 10}px`,
+              }}
             />
           )}
 
@@ -220,21 +195,20 @@ export default function Spotlight({
             <m.div
               key={`ring-sec-${currentStep?.id || 'sec'}`}
               initial={{ opacity: 0, scale: 0.98 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.3,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="fixed border-2 border-dashed border-sky-500/70 ring-4 ring-sky-400/15 pointer-events-none rounded-xl flex items-center justify-center dark:border-cyan-400/70 dark:ring-cyan-400/20"
+              style={{
+                zIndex: 52,
                 top: secondaryHighlightRect.ringTop ?? secondaryHighlightRect.top,
                 left: secondaryHighlightRect.ringLeft ?? secondaryHighlightRect.left,
                 width: secondaryHighlightRect.ringWidth ?? secondaryHighlightRect.width,
                 height: secondaryHighlightRect.ringHeight ?? secondaryHighlightRect.height,
                 borderRadius: `${secondaryHighlightRect.ringRx ?? 10}px`,
               }}
-              transition={{
-                duration: 0.3,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="fixed border-2 border-dashed border-sky-500/70 ring-4 ring-sky-400/15 pointer-events-none rounded-xl flex items-center justify-center dark:border-cyan-400/70 dark:ring-cyan-400/20"
-              style={{ zIndex: 52 }}
             >
               {currentStep.actionType === 'swap' && (
                 <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white dark:bg-cyan-400 dark:text-slate-950 text-[9.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider shadow-xs whitespace-nowrap">

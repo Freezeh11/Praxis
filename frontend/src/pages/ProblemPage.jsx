@@ -226,7 +226,13 @@ export default function ProblemPage() {
     anchorSelector: inspectAnchorSelector,
     candidates: INSPECT_POPUP_CANDIDATES,
     fullWidthOnNarrow: 480,
-    enabled: inspectedStepIdx !== null || showStepInspectionTip,
+    // The law-explanation card hangs off a derivation line; when no candidate
+    // fits it is clamped into the viewport, and this keeps that clamp below the
+    // workspace header instead of painting over the page title.
+    minTop: 60,
+    // Only a real inspection drives the layer: the first-run tip is centred
+    // below, in its own container, rather than anchored to the expression.
+    enabled: inspectedStepIdx !== null,
   })
 
   const {
@@ -565,7 +571,7 @@ export default function ProblemPage() {
       <div
         data-testid="inspect-popup-layer"
         style={{ ...inspectPopupStyle, pointerEvents: 'none' }}
-        aria-hidden={!showStepInspectionTip && inspectedStepIdx === null}
+        aria-hidden={inspectedStepIdx === null}
         onClick={e => e.stopPropagation()}
       >
         <div ref={inspectPopupNode}>
@@ -579,16 +585,26 @@ export default function ProblemPage() {
               />
             )}
 
-            {/* First-run hint that a past step can be inspected. */}
-            {showStepInspectionTip && inspectedStepIdx === null && (
-              <StepInspectionTip
-                ready={inspectPopupReady}
-                onDismiss={dismissInspectionTip}
-              />
-            )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* First-run hint that a past step can be inspected. It is a one-time
+          explainer, not an annotation of one line, so it reads as a centred
+          card over the workspace instead of floating beside the expression. */}
+      <AnimatePresence>
+        {showStepInspectionTip && inspectedStepIdx === null && (
+          <div
+            key="step-inspection-tip"
+            className="fixed inset-0 z-40 flex items-center justify-center px-4 pointer-events-none"
+            aria-hidden={false}
+          >
+            <div className="pointer-events-auto">
+              <StepInspectionTip ready={inspectPopupReady} onDismiss={dismissInspectionTip} />
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── INTERACTIVE TUTORIAL OVERLAY ── */}
       {isTutorialLevel && isTutorialActive && (

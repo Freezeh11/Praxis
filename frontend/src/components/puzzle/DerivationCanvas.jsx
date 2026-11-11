@@ -169,8 +169,8 @@ function DerivationCanvas({
                           <div
                             className={`h-full rounded-full transition-all duration-200 ${
                               inspectedStepIdx === line.stepIdx
-                                ? 'bg-teal w-[3.5px] shadow-[0_0_8px_rgba(13,148,136,0.4)]'
-                                : 'bg-slate-300 w-[2px] group-hover:bg-teal group-hover:w-[3px]'
+                                ? 'bg-teal w-[3.5px] shadow-[0_0_8px_rgba(13,148,136,0.4)] dark:bg-cyan-400 dark:shadow-[0_0_10px_rgba(34,211,238,0.45)]'
+                                : 'bg-rail w-[2px] group-hover:bg-teal group-hover:w-[3px] dark:group-hover:bg-cyan-400'
                             }`}
                           />
                         </button>
@@ -178,13 +178,13 @@ function DerivationCanvas({
 
                       {/* Node Dot */}
                       {isLineHighlighted ? (
-                        <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200" />
+                        <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200 dark:bg-cyan-400 dark:ring-cyan-400/25" />
                       ) : line.isActive ? (
-                        <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-bg-card shadow-xs transition-all">
-                          <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
+                        <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-bg-card shadow-xs transition-all dark:border-cyan-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse dark:bg-cyan-400" />
                         </div>
                       ) : (
-                        <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-slate-300 transition-all duration-200" />
+                        <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-rail transition-all duration-200" />
                       )}
 
                       {/* The law-explanation card and the step-inspection tip
@@ -203,7 +203,7 @@ function DerivationCanvas({
                         !line.isActive ? 'cursor-pointer hover:bg-slate-50/70 hover:shadow-chip' : ''
                       } ${
                         isLineHighlighted
-                          ? 'border-teal/30 bg-teal-50/50 shadow-[0_4px_14px_-10px_rgba(13,148,136,0.55)] ring-1 ring-teal/20'
+                          ? 'border-teal/30 bg-teal-50/50 shadow-[0_4px_14px_-10px_rgba(13,148,136,0.55)] ring-1 ring-teal/20 dark:border-cyan-400/40 dark:ring-cyan-400/25'
                           : 'border-transparent'
                       }`}
                     >
@@ -230,7 +230,7 @@ function DerivationCanvas({
                       ) : (
                         <ExprText
                           text={line.text}
-                          className={isLineHighlighted ? 'text-slate-900 font-semibold' : 'text-text-1'}
+                          className={isLineHighlighted ? 'text-slate-900 font-semibold dark:text-slate-100' : 'text-text-1'}
                         />
                       )}
                     </div>

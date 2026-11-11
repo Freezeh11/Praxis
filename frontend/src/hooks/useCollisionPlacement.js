@@ -130,6 +130,9 @@ export const popupLayerStyle = (placement) => ({
  * @param hardAvoidSelector  a region the popup must leave alone outright (only
  *                           for popups that may leave the canvas — see callers)
  * @param fullWidthOnNarrow  below this viewport width the popup spans the screen
+ * @param minTop             top of the free band in px (the workspace header
+ *                           height): a card clamped to the viewport edge must
+ *                           not bury the page title
  */
 const DEFAULT_POPUP_CANDIDATES = [{ side: 'below' }, { side: 'above' }, { side: 'top-center' }, { side: 'bottom-center' }]
 /**
@@ -173,6 +176,8 @@ export default function useCollisionPlacement({
   /** Region the popup only prefers to leave alone (tiny viewports: nothing fits). */
   softAvoidSelector = null,
   fullWidthOnNarrow = 480,
+  /** Top of the free band (the workspace header height), in px. */
+  minTop = 0,
   enabled = true,
 }) {
   const nodeRef = useRef(null)
@@ -288,7 +293,8 @@ export default function useCollisionPlacement({
 
       const resolve = (candidate, h) => {
         const boxHeight = candidate.height ?? h
-        const top = clampNum(candidate.top, vp.top + POPUP_MARGIN, Math.max(vp.top + POPUP_MARGIN, vp.bottom - POPUP_MARGIN - boxHeight))
+        const bandTop = vp.top + Math.max(POPUP_MARGIN, minTop)
+        const top = clampNum(candidate.top, bandTop, Math.max(bandTop, vp.bottom - POPUP_MARGIN - boxHeight))
         const width = Math.min(candidate.width ?? natW, boxW)
         // A candidate with an explicit left is an edge/column placement: keep it
         // (clamped for safety), so the engine can slide free of the controls.
