@@ -13,7 +13,7 @@
  * after preflight exactly as they did when everything lived in one file.
  */
 :root {
-  --color-bg:          #f0f2f7;
+  --color-bg:          #F7F8FC;
   --color-text-1:      #1a2035;
   --color-text-2:      #4b5468;
   --color-accent:      #1a2035;
@@ -30,34 +30,38 @@ button { font-family: var(--font-sans); cursor: pointer; border: none; backgroun
 a { text-decoration: none; }
 
 :root {
-  --bg: 240 242 247;
+  /* Light: crisp blueprint on a barely-cool canvas. Plain RGB triples keep
+     Tailwind's alpha modifiers working. #F7F8FC is a hair cooler than slate-50
+     so pure-white cards separate from it without needing a heavier border. */
+  --bg: 247 248 252;        /* #F7F8FC */
   --bg-card: 255 255 255;
-  --border: 226 229 237;
-  --border-dark: 200 204 214;
-  --text-1: 26 32 53;
-  --text-2: 75 84 104;
-  --text-3: 99 108 129;
-  --accent: 26 32 53;
-  --accent-hover: 40 50 75;
+  --border: 226 232 240;    /* #E2E8F0 */
+  --border-dark: 203 213 225;
+  --text-1: 15 23 42;       /* #0F172A */
+  --text-2: 71 85 105;      /* #475569 */
+  --text-3: 100 116 139;    /* #64748B */
+  --accent: 79 70 229;      /* #4F46E5 indigo-600 */
+  --accent-hover: 67 56 202;/* #4338CA indigo-700 */
   --on-accent: 255 255 255;
 }
 
 :root[data-theme="dark"] {
-  --bg: 17 24 39;
-  --bg-card: 27 37 55;
-  --border: 57 72 94;
-  --border-dark: 83 100 125;
-  --text-1: 235 241 250;
-  --text-2: 193 204 222;
-  --text-3: 155 173 198;
-  --accent: 168 187 255;
-  --accent-hover: 195 208 255;
-  --on-accent: 17 24 39;
+  /* Dark: obsidian. Same indigo/cyan family, lifted off #0B0F19 so every pair stays high-contrast. */
+  --bg: 11 15 25;           /* #0B0F19 */
+  --bg-card: 15 23 42;      /* #0F172A slate-900 */
+  --border: 51 65 85;       /* #334155 */
+  --border-dark: 71 85 105;
+  --text-1: 241 245 249;    /* #F1F5F9 */
+  --text-2: 203 213 225;    /* #CBD5E1 */
+  --text-3: 148 163 184;    /* #94A3B8 */
+  --accent: 99 102 241;     /* #6366F1 indigo-500 */
+  --accent-hover: 79 70 229;
+  --on-accent: 255 255 255;
   --color-amber-light: #392d1b;
-  --color-bg: #111827;
-  --color-text-1: #ebf1fa;
-  --color-text-2: #c1ccde;
-  --color-accent: #a8bbff;
+  --color-bg: #0B0F19;
+  --color-text-1: #f1f5f9;
+  --color-text-2: #cbd5e1;
+  --color-accent: #6366f1;
 }
 
 /* Text on pale success/warning surfaces needs a darker foreground in light mode. */

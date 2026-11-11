@@ -220,5 +220,22 @@
   100% { transform: translate(var(--annul-dx), var(--annul-dy)) scale(0); opacity: 0; }
 }
 
+/* ── LogicCircuitBackdrop ──────────────────────────────────────────────────
+   Both keyframes animate transform and/or opacity only. They live here (not
+   only in tailwind.config.js) because the backdrop drives them from an inline
+   style, so Tailwind's animate-* utilities never appear in the class scan. */
+@keyframes circuitPulse {
+  0%   { transform: translate3d(0, 0, 0) scale(0.55); opacity: 0; }
+  10%  { opacity: 0.9; }
+  55%  { transform: translate3d(var(--pulse-x, 120px), var(--pulse-y, 60px), 0) scale(1); opacity: 0.55; }
+  90%  { opacity: 0; }
+  100% { transform: translate3d(calc(var(--pulse-x, 120px) * 2), calc(var(--pulse-y, 60px) * 2), 0) scale(0.55); opacity: 0; }
+}
+
+@keyframes gateDrift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -10px, 0); }
+}
+
 /* ── Transformation Subtitle Pill ── */
 /* ── Left-to-Right Step Cascade Animations ── */
