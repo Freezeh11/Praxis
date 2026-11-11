@@ -59,7 +59,14 @@ def save_progress(
     stage_progress: Mapping[str, Sequence[int]],
     stage_scores: Mapping[str, int | float],
 ) -> None:
-    """Write the client's snapshot: one totals row plus one row per stage."""
+    """Write the client's snapshot: one totals row plus one row per stage.
+
+    Offline play means the browser owns the snapshot, so totals are stored as
+    sent (bounded by the schema). Stage rows are merged, never overwritten: a
+    later sync with a stale or forged best score can lower neither a stored best
+    nor un-complete a stage. Finishing a stage still goes through /api/score,
+    which computes the score server-side.
+    """
     progress_repository.upsert_user_progress(
         {
             "user_id": user_id,
@@ -69,10 +76,17 @@ def save_progress(
         }
     )
 
+    stored = {
+        (row["level_id"], row["stage_idx"]): row
+        for row in progress_repository.list_stage_progress_rows(user_id)
+    }
+
     for level_key, completed_stages in stage_progress.items():
         level_id = int(level_key)
         for stage_idx in completed_stages:
-            best_score = stage_scores.get(f"{level_id}:{stage_idx}", 0)
+            incoming = stage_scores.get(f"{level_id}:{stage_idx}", 0) or 0
+            previous = stored.get((level_id, stage_idx), {})
+            best_score = max(float(previous.get("best_score") or 0), float(incoming))
             progress_repository.upsert_stage_progress(
                 {
                     "user_id": user_id,

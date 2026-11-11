@@ -53,6 +53,7 @@ export default function AuthTextField({
   hint,
   describedBy,
   hintLive = false,
+  maxLength = type === 'email' ? 254 : 80,
 }) {
   const message = typeof error === 'string' && error ? error : hint
   const isInvalid = Boolean(invalid || (typeof error === 'string' && error))
@@ -75,6 +76,7 @@ export default function AuthTextField({
           placeholder={placeholder}
           required={required}
           autoComplete={autoComplete}
+          maxLength={maxLength}
           aria-invalid={isInvalid || undefined}
           aria-describedby={describedById}
           className={`${authInputClassName({ border: borderClassName, padLeft: Boolean(icon), invalid: isInvalid })} ${className}`}

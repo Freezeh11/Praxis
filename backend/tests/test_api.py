@@ -1,7 +1,7 @@
 """Real FastAPI routes/services with isolated Auth and repository doubles.
 
-No real credentials or PostgreSQL writes. Expected failures document existing
-input-integrity gaps rather than treating those gaps as correct behavior.
+No real credentials or PostgreSQL writes. Transport bounds and the security
+middleware are exercised here because they are the API's public contract.
 """
 import os
 import unittest
@@ -11,8 +11,10 @@ from unittest.mock import AsyncMock, patch
 os.environ["SUPABASE_URL"] = "https://praxis-test.invalid"
 os.environ["SUPABASE_SERVICE_KEY"] = "isolated-test-key"
 
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from main import app
+from core.rate_limit import BodySizeLimitMiddleware, RateLimitMiddleware, Rule
 from repositories import progress_repository as repo
 from supabase_client import supabase
 
@@ -80,6 +82,29 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(other["points"], 0)
         self.assertEqual(other["stageProgress"], {})
 
+    def test_forged_optimal_steps_cannot_raise_a_score(self):
+        honest = self.client.post("/api/score", headers=self.headers(), json=self.score(stepsUsed=4)).json()["data"]
+        forged = self.score(stepsUsed=4, optimalSteps=1)
+        faked = self.client.post("/api/score", headers=self.headers(), json=forged).json()["data"]
+        self.assertEqual(faked["total"], honest["total"])
+        self.assertLess(faked["total"], 100)
+        self.assertEqual(faked["breakdown"]["optimalSteps"], honest["breakdown"]["optimalSteps"])
+
+    def test_stale_progress_save_cannot_lower_a_best_score(self):
+        first = {"points": 10, "streak": 1, "bestStreak": 1, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 90}}
+        stale = {"points": 0, "streak": 0, "bestStreak": 1, "stageProgress": {"1": [0]}, "stageScores": {"1:0": 20}}
+        self.client.post("/api/progress/save", headers=self.headers(), json={"progress": first})
+        self.client.post("/api/progress/save", headers=self.headers(), json={"progress": stale})
+        stored = self.client.get("/api/progress", headers=self.headers()).json()["data"]
+        self.assertEqual(stored["stageScores"]["1:0"], 90)
+
+    def test_blank_bearer_is_anonymous_and_leaks_no_upstream_text(self):
+        for header in ("Bearer ", "Bearer    ", "Basic abc"):
+            with self.subTest(header=header):
+                response = self.client.get("/api/progress", headers={"Authorization": header})
+                self.assertEqual(response.status_code, 401)
+                self.assertNotIn("Illegal header", response.text)
+
     def test_score_persistence_and_best_score(self):
         response = self.client.post("/api/score", headers=self.headers(), json=self.score())
         self.assertEqual(response.json()["data"]["total"], 100)
@@ -105,24 +130,146 @@ class ApiTests(unittest.TestCase):
         payload["stageIdx"] = 99
         self.assertEqual(self.client.post("/api/score", json=payload).status_code, 404)
 
-    @unittest.expectedFailure
-    def test_known_gap_negative_score_inputs_should_be_rejected(self):
+    def test_negative_and_zero_step_scores_are_rejected(self):
         payload = self.score()
         payload["stageIdx"] = -1
         payload["stepsUsed"] = -1
         self.assertEqual(self.client.post("/api/score", json=payload).status_code, 422)
 
-    @unittest.expectedFailure
-    def test_known_gap_invalid_progress_values_should_be_rejected(self):
-        response = self.client.post("/api/progress/save", headers=self.headers(), json={"progress": {"points": -5, "stageProgress": {"99": [-1]}, "stageScores": {"99:-1": 999}}})
-        self.assertEqual(response.status_code, 422)
+        zero = self.score()
+        zero["stepsUsed"] = 0
+        self.assertEqual(self.client.post("/api/score", json=zero).status_code, 422)
 
-    @unittest.expectedFailure
-    def test_known_gap_zero_step_claim_should_not_receive_perfect_score(self):
-        payload = self.score()
-        payload["stepsUsed"] = 0
-        response = self.client.post("/api/score", json=payload)
-        self.assertNotEqual(response.json().get("data", {}).get("total"), 100)
+    def test_invalid_progress_values_are_rejected(self):
+        bad_payloads = (
+            {"points": -5},
+            {"stageProgress": {"99": [-1]}},
+            {"stageProgress": {"x": [0]}},
+            {"stageProgress": {"1": [0, 0]}},
+            {"stageScores": {"99:-1": 999}},
+            {"stageScores": {"1:0": 120}},
+            {"streak": -2},
+        )
+        for bad in bad_payloads:
+            with self.subTest(payload=bad):
+                response = self.client.post("/api/progress/save", headers=self.headers(), json={"progress": bad})
+                self.assertEqual(response.status_code, 422)
+
+    def test_validation_errors_do_not_reflect_input(self):
+        response = self.client.post("/api/score", json=self.score(stepsUsed=-3))
+        self.assertEqual(response.status_code, 422)
+        detail = response.json()["error"]["detail"]
+        self.assertTrue(detail)
+        for item in detail:
+            self.assertEqual(set(item), {"loc", "msg", "type"})
+        self.assertNotIn('"input"', response.text)
+        self.assertNotIn("-3", response.text)
+
+
+class SecurityTests(unittest.TestCase):
+    """Hardening added in round 9: envelope-level limits and headers."""
+
+    def setUp(self):
+        self.client = TestClient(app)
+        self.addCleanup(self.client.close)
+
+    def test_oversized_body_is_rejected_before_parsing(self):
+        payload = {"progress": {"points": 1, "stageScores": {}}}
+        payload["progress"]["padding"] = "x" * 300_000
+        response = self.client.post("/api/progress/save", json=payload)
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(response.json()["error"]["code"], "payload_too_large")
+
+    def test_https_responses_get_hsts_and_api_gets_no_store(self):
+        secure = self.client.get("/api/levels", headers={"X-Forwarded-Proto": "https"})
+        self.assertEqual(secure.status_code, 200)
+        self.assertIn("max-age=63072000", secure.headers["strict-transport-security"])
+        self.assertEqual(secure.headers["cache-control"], "no-store")
+        self.assertEqual(secure.headers["x-content-type-options"], "nosniff")
+        self.assertEqual(secure.headers["x-permitted-cross-domain-policies"], "none")
+        plain = self.client.get("/api/levels")
+        self.assertNotIn("strict-transport-security", plain.headers)
+
+    def test_score_bucket_returns_429_with_retry_after(self):
+        os.environ["RATE_LIMIT_SCORE"] = "2"
+        try:
+            small = FastAPI()
+
+            @small.get("/api/score")
+            def _score():
+                return {"success": True}
+
+            limited = TestClient(RateLimitMiddleware(small))
+        finally:
+            os.environ.pop("RATE_LIMIT_SCORE", None)
+        self.assertEqual(limited.get("/api/score").status_code, 200)
+        self.assertEqual(limited.get("/api/score").status_code, 200)
+        blocked = limited.get("/api/score")
+        self.assertEqual(blocked.status_code, 429)
+        self.assertEqual(blocked.json()["error"]["code"], "rate_limited")
+        self.assertGreaterEqual(int(blocked.headers["retry-after"]), 1)
+        self.assertEqual(blocked.headers["cache-control"], "no-store")
+
+    def test_chunked_body_is_aborted_at_the_cap(self):
+        small = FastAPI()
+
+        @small.post("/api/progress/save")
+        async def _save(request: Request):
+            await request.body()
+            return {"success": True}
+
+        limited = TestClient(BodySizeLimitMiddleware(small, max_bytes=1024))
+
+        def chunks():
+            for _ in range(4):
+                yield b"x" * 512
+
+        response = limited.post("/api/progress/save", content=chunks())
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(response.json()["error"]["code"], "payload_too_large")
+
+    def test_spoofed_forwarded_for_cannot_pick_its_own_bucket(self):
+        def build(**kwargs):
+            small = FastAPI()
+
+            @small.get("/api/score")
+            def _score():
+                return {"success": True}
+
+            gate = RateLimitMiddleware(small, **kwargs)
+            gate.score = Rule(2, 60.0)
+            return TestClient(gate)
+
+        self.assertEqual(build().get("/api/score", headers={"X-Forwarded-For": "1.1.1.1"}).status_code, 200)
+        self.assertEqual(build().get("/api/score", headers={"X-Forwarded-For": "2.2.2.2"}).status_code, 200)
+        # Different spoofed first hops, same socket peer: one shared bucket.
+        untrusted = build()
+        untrusted.get("/api/score", headers={"X-Forwarded-For": "3.3.3.3"})
+        untrusted.get("/api/score", headers={"X-Forwarded-For": "4.4.4.4"})
+        self.assertEqual(untrusted.get("/api/score", headers={"X-Forwarded-For": "5.5.5.5"}).status_code, 429)
+
+        trusted = build(trust_proxy=True)
+        trusted.get("/api/score", headers={"X-Forwarded-For": "6.6.6.6, 9.9.9.9"})
+        trusted.get("/api/score", headers={"X-Forwarded-For": "7.7.7.7, 9.9.9.9"})
+        self.assertEqual(
+            trusted.get("/api/score", headers={"X-Forwarded-For": "8.8.8.8, 9.9.9.9"}).status_code, 429
+        )
+
+    def test_body_limit_reports_invalid_content_length(self):
+        small = FastAPI()
+
+        @small.post("/api/progress/save")
+        def _save():
+            return {"success": True}
+
+        limited = TestClient(BodySizeLimitMiddleware(small, max_bytes=1024))
+        response = limited.post(
+            "/api/progress/save",
+            content=b"{}",
+            headers={"Content-Length": "not-a-number"},
+        )
+        self.assertEqual(response.status_code, 400)
+
 
 
 if __name__ == "__main__":

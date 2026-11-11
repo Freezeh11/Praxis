@@ -56,11 +56,36 @@ class Settings:
         supabase_service_key: str,
         frontend_url: str | None,
         cors_allow_origins: str | None = None,
+        allowed_hosts: str | None = None,
+        environment: str | None = None,
+        rate_limit_enabled: str | None = None,
+        max_body_bytes: str | None = None,
     ) -> None:
         self.supabase_url = supabase_url
         self.supabase_service_key = supabase_service_key
         self.frontend_url = frontend_url
-        self.cors_origins = build_cors_origins(frontend_url, parse_origins(cors_allow_origins))
+        self.environment = (environment or os.getenv("ENVIRONMENT") or "development").strip().lower()
+        self.is_production = self.environment == "production"
+        self.cors_origins = build_cors_origins(
+            frontend_url,
+            parse_origins(cors_allow_origins),
+            include_dev_defaults=not self.is_production,
+        )
+        # Only trust X-Forwarded-For when the deployment actually sits behind a
+        # proxy that overwrites/appends it (Render, Fly, a load balancer). Off by
+        # default: otherwise any client can pick its own rate-limit bucket.
+        self.trust_proxy = (os.getenv("TRUST_PROXY_HEADERS") or "0").strip().lower() in {"1", "true", "yes", "on"}
+        self.allowed_hosts = parse_origins(allowed_hosts) or ["*"]
+        self.rate_limit_enabled = (rate_limit_enabled or os.getenv("RATE_LIMIT_ENABLED") or "1").strip().lower() not in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
+        try:
+            self.max_body_bytes = max(1024, int(max_body_bytes or os.getenv("MAX_BODY_BYTES") or 262144))
+        except (TypeError, ValueError):
+            self.max_body_bytes = 262144
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -73,14 +98,19 @@ class Settings:
         )
 
 
-def build_cors_origins(frontend_url: str | None, explicit: list[str] | None = None) -> list[str]:
+def build_cors_origins(
+    frontend_url: str | None,
+    explicit: list[str] | None = None,
+    *,
+    include_dev_defaults: bool = True,
+) -> list[str]:
     """Build the CORS allowlist: explicit env list first, dev defaults otherwise.
 
     CORS_ALLOW_ORIGINS is the deployment's source of truth. FRONTEND_URL is
     appended as a fallback so an existing deployment that only sets that
     variable keeps working, and the deployed origin is never locked out.
     """
-    origins = list(explicit) if explicit else list(DEFAULT_CORS_ORIGINS)
+    origins = list(explicit) if explicit else (list(DEFAULT_CORS_ORIGINS) if include_dev_defaults else [])
     if frontend_url:
         normalized = frontend_url.strip().rstrip("/")
         if normalized:

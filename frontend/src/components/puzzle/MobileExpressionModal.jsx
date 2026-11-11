@@ -166,6 +166,7 @@ export default function MobileExpressionModal({
                   id="mobile-sandbox-input"
                   ref={inputRef}
                   type="text"
+                  maxLength={160}
                   value={rawExpr}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}

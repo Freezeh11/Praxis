@@ -38,6 +38,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
+        headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+
+        # HSTS only over TLS: browsers ignore it on plain HTTP, and sending it
+        # from http://localhost would pin the developer's browser.
+        forwarded = request.headers.get("x-forwarded-proto", request.url.scheme)
+        if forwarded.split(",")[0].strip().lower() == "https":
+            headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+
+        # Authenticated payloads must never sit in a shared cache.
+        if request.url.path.startswith("/api/"):
+            headers.setdefault("Cache-Control", "no-store")
 
         if not request.url.path.startswith(_DOC_PATHS):
             headers.setdefault("Content-Security-Policy", API_CSP)

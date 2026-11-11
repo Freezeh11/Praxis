@@ -232,6 +232,7 @@ export default function SidePanel({
                   ref={inputRef}
                   data-testid="sandbox-expression-input"
                   type="text"
+                  maxLength={160}
                   value={rawExpr}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}

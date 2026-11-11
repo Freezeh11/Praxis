@@ -17,6 +17,8 @@ class ErrorCode:
     UNAUTHORIZED = "unauthorized"
     VALIDATION = "validation_error"
     HTTP = "http_error"
+    RATE_LIMITED = "rate_limited"
+    PAYLOAD_TOO_LARGE = "payload_too_large"
     INTERNAL = "internal_error"
 
 

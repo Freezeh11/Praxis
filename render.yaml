@@ -7,6 +7,12 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     rootDir: backend
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      # Render terminates TLS and appends the caller's address to
+      # X-Forwarded-For; without this every request shares one rate-limit bucket.
+      - key: TRUST_PROXY_HEADERS
+        value: "1"
       - key: FRONTEND_URL
         value: https://praxis-seven-puce.vercel.app
       - key: SUPABASE_URL

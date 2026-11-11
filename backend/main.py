@@ -17,13 +17,22 @@ from config.settings import settings
 from core.errors import AppError, ErrorCode
 from core.logging import configure_logging, get_logger, log_fields
 from core.middleware import RequestContextMiddleware
+from core.rate_limit import BodySizeLimitMiddleware, RateLimitMiddleware
 from core.responses import error_response, failure
 from core.security_headers import SecurityHeadersMiddleware
 
 configure_logging()
 logger = get_logger("praxis.api")
 
-app = FastAPI(title="Praxis API", version="1.0.0")
+# Interactive docs stay available while developing; a production deployment can
+# switch them off with ENVIRONMENT=production.
+app = FastAPI(
+    title="Praxis API",
+    version="1.0.0",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
+)
 
 # Added inner-first. SecurityHeadersMiddleware is added last so it is the
 # outermost layer: every response - including CORS preflights and the 500
@@ -41,6 +50,16 @@ app.add_middleware(
     allow_headers=["Accept", "Authorization", "Content-Type"],
     expose_headers=["X-Request-ID"],
     max_age=600,
+)
+if settings.allowed_hosts != ["*"]:
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.max_body_bytes)
+app.add_middleware(
+    RateLimitMiddleware,
+    enabled=settings.rate_limit_enabled,
+    trust_proxy=settings.trust_proxy,
 )
 app.add_middleware(SecurityHeadersMiddleware)
 
@@ -68,10 +87,19 @@ async def handle_http_exception(request: Request, exc: StarletteHTTPException) -
 
 @app.exception_handler(RequestValidationError)
 async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Malformed request bodies stay 422, now inside the envelope."""
+    """Malformed request bodies stay 422, now inside the envelope.
+
+    Only the field location, the message and the rule name are returned. Raw
+    input values and the validator context are dropped: echoing them back turns
+    a validation error into a reflection surface and can leak submitted secrets.
+    """
+    safe_errors = [
+        {"loc": list(error.get("loc", ())), "msg": error.get("msg", ""), "type": error.get("type", "")}
+        for error in exc.errors()[:20]
+    ]
     return JSONResponse(
         status_code=422,
-        content=failure(ErrorCode.VALIDATION, "Request validation failed", jsonable_encoder(exc.errors())),
+        content=failure(ErrorCode.VALIDATION, "Request validation failed", safe_errors),
     )
 
 
