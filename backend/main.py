@@ -18,22 +18,31 @@ from core.errors import AppError, ErrorCode
 from core.logging import configure_logging, get_logger, log_fields
 from core.middleware import RequestContextMiddleware
 from core.responses import error_response, failure
+from core.security_headers import SecurityHeadersMiddleware
 
 configure_logging()
 logger = get_logger("praxis.api")
 
 app = FastAPI(title="Praxis API", version="1.0.0")
 
-# Added inner-first: CORS must stay outermost so its headers land on every
-# response, including the 500 envelope produced by the middleware below.
+# Added inner-first. SecurityHeadersMiddleware is added last so it is the
+# outermost layer: every response - including CORS preflights and the 500
+# envelope produced by RequestContextMiddleware - leaves with the hardening
+# headers. CORS still wraps the request middleware, so its headers reach that
+# envelope too.
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # Explicit lists instead of "*": the API only serves these methods, and the
+    # browser only ever sends these request headers (see services/apiClient.js).
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Accept", "Authorization", "Content-Type"],
+    expose_headers=["X-Request-ID"],
+    max_age=600,
 )
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 @app.exception_handler(AppError)
