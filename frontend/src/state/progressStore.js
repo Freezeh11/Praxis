@@ -72,14 +72,66 @@ function persistLocal() {
   }
 }
 
+/**
+ * A stored progress blob is untrusted: it can be written by an older build, half
+ * written, or edited by hand. Every reader therefore goes through
+ * normalizeProgress(), which drops fields of the wrong type instead of letting a
+ * null map reach the merge loop (that used to crash the whole app).
+ */
+const asCount = (value) => (Number.isFinite(value) ? Math.trunc(value) : null)
+
+function normalizeStageProgress(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out
+  for (const [key, stages] of Object.entries(raw)) {
+    if (!Array.isArray(stages)) continue
+    const list = stages.filter((stage) => Number.isInteger(stage) && stage >= 0)
+    if (list.length > 0) out[key] = [...new Set(list)].sort((a, b) => a - b)
+  }
+  return out
+}
+
+function normalizeScores(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out
+  for (const [key, score] of Object.entries(raw)) {
+    if (typeof score === 'number' && Number.isFinite(score) && score >= 0) out[key] = score
+  }
+  return out
+}
+
+function normalizeSolutions(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out
+  for (const [key, steps] of Object.entries(raw)) {
+    if (Array.isArray(steps)) out[key] = steps
+  }
+  return out
+}
+
+function normalizeProgress(raw) {
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
+  const levels = Array.isArray(source.levelsCompleted)
+    ? source.levelsCompleted.filter((id) => Number.isInteger(id))
+    : []
+  return {
+    points: Math.max(0, asCount(source.points) ?? 0),
+    levelsCompleted: [...new Set(levels)],
+    stageProgress: normalizeStageProgress(source.stageProgress),
+    stageScores: normalizeScores(source.stageScores),
+    stageSolutions: normalizeSolutions(source.stageSolutions),
+    hasSeenTutorial: Boolean(source.hasSeenTutorial),
+  }
+}
+
 function readLocal(id) {
   try {
     const saved = localStorage.getItem(progressKey(id))
-    if (saved) return { ...defaultProgress, ...JSON.parse(saved) }
+    if (saved) return normalizeProgress(JSON.parse(saved))
   } catch {
     // Corrupt or unavailable storage — fall back to a fresh profile.
   }
-  return defaultProgress
+  return normalizeProgress(null)
 }
 
 function scheduleServerSave() {
@@ -128,36 +180,36 @@ function writeServerCache(id, serverProgress) {
 
 /** Merges a server snapshot into local progress without ever losing a best value. */
 function mergeServerProgress(local, server) {
-  const merged = {
-    ...defaultProgress,
-    ...local,
-    points: Math.max(local.points, server.points || 0),
+  const base = normalizeProgress(local)
+  const incoming = normalizeProgress(server)
+
+  const stageProgress = { ...base.stageProgress }
+  for (const [key, stages] of Object.entries(incoming.stageProgress)) {
+    stageProgress[key] = [...new Set([...(stageProgress[key] || []), ...stages])].sort((a, b) => a - b)
   }
 
-  const stageProgress = { ...local.stageProgress }
-  for (const [key, stages] of Object.entries(server.stageProgress || {})) {
-    stageProgress[key] = [...new Set([...(stageProgress[key] || []), ...stages])]
-  }
-  merged.stageProgress = stageProgress
-
-  const stageScores = { ...local.stageScores }
-  for (const [key, score] of Object.entries(server.stageScores || {})) {
+  const stageScores = { ...base.stageScores }
+  for (const [key, score] of Object.entries(incoming.stageScores)) {
     stageScores[key] = Math.max(stageScores[key] || 0, score)
   }
-  merged.stageScores = stageScores
 
-  // Local solutions win: they are the ones this device can replay offline.
-  merged.stageSolutions = { ...(server.stageSolutions || {}), ...(local.stageSolutions || {}) }
+  const levelsCompleted = [...new Set([...base.levelsCompleted, ...incoming.levelsCompleted])]
 
-  const levelsCompleted = [...new Set([...(local.levelsCompleted || []), ...(server.levelsCompleted || [])])]
-  merged.levelsCompleted = levelsCompleted
-  merged.hasCompletedTutorial = Boolean(
-    local.hasCompletedTutorial ||
-    server.hasCompletedTutorial ||
-    levelsCompleted.includes(0)
-  )
-
-  return merged
+  return {
+    ...base,
+    // Best value wins in both directions: neither side can lower a figure.
+    points: Math.max(base.points, incoming.points),
+    stageProgress,
+    stageScores,
+    // Local solutions win: they are the ones this device can replay offline.
+    stageSolutions: { ...incoming.stageSolutions, ...base.stageSolutions },
+    levelsCompleted,
+    hasCompletedTutorial: Boolean(
+      base.hasCompletedTutorial ||
+      incoming.hasCompletedTutorial ||
+      levelsCompleted.includes(0)
+    ),
+  }
 }
 
 /* ── store API ─────────────────────────────────────────────────────────── */
@@ -201,6 +253,12 @@ export function setUser(nextUserId) {
     }
     serverLoaded = true
     persistLocal()
+    publish()
+  }).catch(() => {
+    // Offline or a server error must not gate the app forever: the local
+    // snapshot is still playable and the next visit revalidates.
+    if (userId !== id) return
+    serverLoaded = true
     publish()
   })
 }
