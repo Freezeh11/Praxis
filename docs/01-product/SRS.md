@@ -125,7 +125,7 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
-| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181` |
+| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. ⑤ Every card keeps one identical width, height and border width in every selection state, including the active card's gate bar; selection changes border colour, ring and shadow only, never geometry. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181`; `.e2e/level-card-sizing.mjs` |
 | **FR-12** | ① Level 2 is locked while any Level 1 stage is incomplete, even if the average is 100. ② Level 2 is locked while the Level 1 average is below 80, even if all stages are done. ③ Both conditions true ⇒ unlocked. ④ The same rule applies Level 2 → Level 3. ⑤ The threshold is 80, not 70. | `frontend/src/state/progressStore.js:291-313` (`allDone && avgScore >= UNLOCK_AVERAGE_SCORE`); `frontend/src/config/gameRules.js:49`; `backend/config/constants.py:26` |
 | **FR-13** | ① Stage 0 is always playable. ② Stage *N* is `locked` until stage *N−1* is in the completed set. ③ Locked cards are `disabled` and render a lock glyph. | `frontend/src/pages/StageSelectorPage.jsx:56`, `:58-62`, `:294` |
 | **FR-14** | ① A stored score ≥ 90 shows 3 stars, ≥ 75 shows 2, any completion shows 1. ② A completed stage with no stored score still shows 1 star. ③ A stage that is neither completed nor scored shows 0 stars. ④ Levels 1–3 additionally require re-entering the tutorial check only for level 1. | `frontend/src/pages/StageSelectorPage.jsx:68-78`; `frontend/src/state/progressStore.js:281-285` |
@@ -423,7 +423,7 @@ documentation pass — see §9 for why the backend has no automated suite.
 | FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |
 | FR-9 | `backend/api/routes/laws.py:18` | `live` |
 | FR-10 | `backend/repositories/content_repository.py:16`, `frontend/vite.config.js:16` | `.e2e/verify-sandbox.mjs`; `live` |
-| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs` |
+| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs`, `.e2e/level-card-sizing.mjs` (64 checks over four viewports × three selection states) |
 | FR-12 | `frontend/src/state/progressStore.js:291`, `frontend/src/pages/LevelSelectPage.jsx:94` | `.e2e/gameplay.mjs` |
 | FR-13 | `frontend/src/pages/StageSelectorPage.jsx:56` | `.e2e/gameplay.mjs` |
 | FR-14 | `frontend/src/pages/StageSelectorPage.jsx:68`, `frontend/src/state/progressStore.js:281` | `.e2e/gameplay.mjs` |

@@ -261,7 +261,7 @@ export default function LevelSelectPage() {
         >
           <div
             ref={rowRef}
-            className="relative flex shrink-0 items-center justify-center gap-5 [perspective:1000px] transition-transform duration-300 ease-out"
+            className="relative flex shrink-0 items-stretch justify-center gap-5 transition-transform duration-300 ease-out"
             style={{ transform: `translateX(${rowShift}px)` }}
           >
             {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
@@ -283,10 +283,10 @@ export default function LevelSelectPage() {
                   ref={el => { cardRefs.current[i] = el }}
                   data-level-card={lv.id}
                   data-active={isActive ? 'true' : 'false'}
-                  className={`w-[240px] [@media(max-width:379px)]:w-[200px] rounded-[20px] bg-white dark:bg-slate-900/70 dark:border-white/10 px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-all duration-250 ease-out select-none
-                    ${isActive ? 'border-[2px] border-indigo-500 ring-2 ring-inset ring-indigo-500/20 scale-100 translate-y-0 opacity-100 shadow-lift' : 'border-[1.5px] border-slate-200/80 scale-[0.92] translate-y-1 opacity-100 shadow-card'}
+                  className={`w-[240px] [@media(max-width:379px)]:w-[200px] rounded-[20px] bg-white dark:bg-slate-900/70 px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-[border-color,background-color,box-shadow,transform] duration-250 ease-out select-none
+                    ${isActive ? 'border-2 border-indigo-500 ring-2 ring-inset ring-indigo-500/20 shadow-lift' : 'border-2 border-slate-200/80 dark:border-white/10 shadow-card'}
                     ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}
-                    ${!locked && !isActive ? 'hover:scale-95 hover:translate-y-0.5 hover:border-indigo-200 hover:shadow-card-hover' : ''}
+                    ${!locked && !isActive ? 'hover:-translate-y-1 hover:border-indigo-300 hover:shadow-card-hover' : ''}
                   `}
                   role={isActive ? undefined : 'button'}
                   tabIndex={isActive ? undefined : 0}
@@ -315,14 +315,14 @@ export default function LevelSelectPage() {
                 >
                   {/* Icon */}
                   <div className={`w-16 h-16 [@media(max-height:480px)]:w-12 [@media(max-height:480px)]:h-12 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
-                    ${isActive ? 'border-transparent bg-gradient-to-br from-indigo-600 to-cyan-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-inset ring-white/25 dark:from-indigo-500 dark:to-cyan-500 dark:text-white text-[28px] [@media(max-height:480px)]:text-[22px]' : 'border-slate-200/80 bg-gradient-to-b from-white to-slate-50 text-slate-600 shadow-chip dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-300 text-[26px] [@media(max-height:480px)]:text-[20px]'}
+                    ${isActive ? 'border-transparent bg-gradient-to-br from-indigo-600 to-cyan-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-inset ring-white/25 dark:from-indigo-500 dark:to-cyan-500 dark:text-white text-[27px] [@media(max-height:480px)]:text-[21px]' : 'border-slate-200/80 bg-gradient-to-b from-white to-slate-50 text-slate-600 shadow-chip dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-300 text-[27px] [@media(max-height:480px)]:text-[21px]'}
                     ${done && !isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300' : ''}
                     ${locked ? 'border-slate-200 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-slate-900 dark:text-slate-600' : ''}
                   `}>
                     {locked ? <Icon name="lock" /> : isSandbox ? <Icon name="flask" /> : isComingSoon ? <Icon name="lock" /> : done ? <Icon name="check" /> : lv.id}
                   </div>
 
-                  <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'} [@media(max-height:480px)]:text-[16px]`}>{lv.name}</div>
+                  <div className="font-bold text-[18px] text-text-1 tracking-[-0.3px] [@media(max-height:480px)]:text-[16px]">{lv.name}</div>
                   <div className="text-[13px] [@media(max-height:480px)]:text-[12px] [@media(max-height:359px)]:hidden text-text-3 text-center">{lv.desc}</div>
 
                 {/* Score gate progress for Level 2/3 */}
