@@ -20,6 +20,7 @@ import LawExplanationCard from '../components/puzzle/LawExplanationCard'
 import LawPanel from '../components/puzzle/LawPanel'
 import LawsReferenceSheet from '../components/puzzle/LawsReferenceSheet'
 import ResetConfirmModal from '../components/puzzle/ResetConfirmModal'
+import ExitTutorialConfirm from '../components/tutorial/ExitTutorialConfirm'
 import ScoreModal from '../components/puzzle/ScoreModal'
 import SidePanel from '../components/puzzle/SidePanel'
 import StepHistoryPanel from '../components/puzzle/StepHistoryPanel'
@@ -111,6 +112,7 @@ export default function ProblemPage() {
   // leaving phone landscape/tablet portrait closes it without an effect.
   const stepHistoryOpen = showStepHistory && useOverlayHistory
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showExitTutorialConfirm, setShowExitTutorialConfirm] = useState(false)
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
   const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
   const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
@@ -136,6 +138,7 @@ export default function ProblemPage() {
   const closeLaws = useCallback(() => setShowLawsDrawer(false), [])
   const closeStepHistory = useCallback(() => setShowStepHistory(false), [])
   const closeResetConfirm = useCallback(() => setShowResetConfirm(false), [])
+  const closeExitTutorialConfirm = useCallback(() => setShowExitTutorialConfirm(false), [])
   const closeMobileExpression = useCallback(() => setShowMobileExpressionCreator(false), [])
   const handleDismissReviewReminder = useCallback(() => setDismissReviewReminder(true), [])
   const closeHint = useCallback(() => setShowHint(false), [])
@@ -358,6 +361,24 @@ export default function ProblemPage() {
     }
   }, [isComplete, steps.length, executeReset])
 
+  /** Leaves the tutorial; the only path that is allowed to discard the derivation. */
+  const exitTutorial = useCallback(() => {
+    setShowExitTutorialConfirm(false)
+    setIsTutorialActive(false)
+    setShowStepHistory(false)
+    navigate('/level/0/stages')
+  }, [navigate])
+
+  const handleTutorialExit = useCallback(() => {
+    // Exiting with moves on the board would silently throw the work away, so ask
+    // exactly like Reset does. A freshly started stage exits straight away.
+    if (steps.length > 0 && !isComplete) {
+      setShowExitTutorialConfirm(true)
+      return
+    }
+    exitTutorial()
+  }, [steps.length, isComplete, exitTutorial])
+
   const handleUndo = useCallback(() => {
     setInspectedStepIdx(null)
     clearLoadedAsSaved()
@@ -528,6 +549,11 @@ export default function ProblemPage() {
         onConfirm={executeReset}
       />
 
+      <ExitTutorialConfirm
+        show={showExitTutorialConfirm} shortViewport={shortViewport}
+        onClose={closeExitTutorialConfirm} onConfirm={exitTutorial}
+      />
+
       {/* ── NON-BLOCKING POPUP LAYER ──
            Hints are centered. Inspection tips and law explanations use
            collision placement to stay within the viewport. */}
@@ -590,11 +616,7 @@ export default function ProblemPage() {
               navigate('/levels')
             }
           }}
-          onSkip={() => {
-            setIsTutorialActive(false)
-            setShowStepHistory(false)
-            navigate('/level/0/stages')
-          }}
+          onSkip={handleTutorialExit}
           onOpenStepHistory={openStepHistory}
         />
       )}

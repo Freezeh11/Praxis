@@ -74,6 +74,15 @@ export default function Spotlight({
                     duration: 0.3,
                     ease: [0.22, 1, 0.36, 1],
                   }}
+                  // Static numeric attributes as well as the animated values: the
+                  // first frame would otherwise write "undefined" into width/height
+                  // and the browser logs an SVG attribute error on every step.
+                  x={primaryGeometry.x}
+                  y={primaryGeometry.y}
+                  width={primaryGeometry.width}
+                  height={primaryGeometry.height}
+                  rx={primaryGeometry.rx}
+                  ry={primaryGeometry.rx}
                   fill="black"
                 />
                 {secondaryHighlightRect && (
@@ -93,6 +102,12 @@ export default function Spotlight({
                       duration: 0.3,
                       ease: [0.22, 1, 0.36, 1],
                     }}
+                    x={secondaryGeometry.x}
+                    y={secondaryGeometry.y}
+                    width={secondaryGeometry.width}
+                    height={secondaryGeometry.height}
+                    rx={secondaryGeometry.rx}
+                    ry={secondaryGeometry.rx}
                     fill="black"
                   />
                 )}

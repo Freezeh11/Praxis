@@ -357,18 +357,26 @@ export default function StageSelectorPage() {
 
                   {/* Card Bottom: Score or Action Button */}
                   <div className="flex items-center justify-between border-t border-slate-200/70 pt-1 dark:border-white/10">
-                    {isCompleted && score !== null ? (
-                      <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold shadow-chip dark:shadow-none ${
-                          score >= 80
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
-                            : score >= 50
-                              ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300'
-                              : 'border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400'
-                        }`}
-                      >
-                        {score} pts
-                      </span>
+                    {isCompleted ? (
+                      score !== null ? (
+                        <span
+                          className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold shadow-chip dark:shadow-none ${
+                            score >= 80
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                              : score >= 50
+                                ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300'
+                                : 'border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400'
+                          }`}
+                        >
+                          {score} pts
+                        </span>
+                      ) : (
+                        /* Tutorial stages can be completed without a stored score
+                           entry; the badge must follow completion, not the score. */
+                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          Completed
+                        </span>
+                      )
                     ) : isCurrent ? (
                       <span className="rounded-full border border-amber-300/70 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300">
                         ● Available

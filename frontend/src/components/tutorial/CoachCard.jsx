@@ -82,7 +82,7 @@ export default function CoachCard({
               if (stageIdx === 3 && currentStep.id === 'challenge-solve') {
                 const lastLaw = steps.length > 0 ? steps[steps.length - 1]?.law : null
                 if (lastLaw?.includes('Absorption') && !isComplete) {
-                  return 'Absorbing "xy" into "x" left "x + x\'y", which cannot be simplified further. Use "↶ Undo" or "↺ Reset" at the top to retrace your move and try a different approach (like factoring common variables)!'
+                  return 'Absorbing "xy" into "x" left "x + x\'y", which is not the simplest form yet. Use "↶ Undo" or "↺ Reset" at the top to retrace your move and try a different approach (like factoring common variables)!'
                 }
                 return currentStep.desc
               }

@@ -190,7 +190,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
           ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
           : touchTargets
             ? 'opacity-85 bg-slate-700/85 text-white hover:opacity-100 active:bg-indigo-600 active:scale-105'
-            : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto'}`}
+            : 'opacity-70 bg-slate-700/90 text-white hover:opacity-100 hover:bg-indigo-600 hover:scale-105 focus-visible:opacity-100'}`}
         title={gripTitle}
         aria-label={gripTitle}
         aria-pressed={selected}
