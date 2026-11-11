@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import AuthCard from '../components/ui/AuthCard.jsx'
 import PasswordField from '../components/ui/PasswordField.jsx'
@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthShell>
-      <motion.div initial="hidden" animate="show" variants={cardVariants(reduceMotion)}>
+      <m.div initial="hidden" animate="show" variants={cardVariants(reduceMotion)}>
         {finished ? (
           <AuthCard
             eyebrow="All set"
@@ -214,7 +214,7 @@ export default function ResetPasswordPage() {
             </form>
           </AuthCard>
         )}
-      </motion.div>
+      </m.div>
     </AuthShell>
   )
 }

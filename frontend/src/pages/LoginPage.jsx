@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { signIn } from '../services/authActions.js'
 import { useSession } from '../state/useSession.js'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import AuthCard from '../components/ui/AuthCard.jsx'
 import ThemeToggle from '../components/ui/ThemeToggle.jsx'
@@ -34,6 +34,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
+  // Inline validation replaces native bubbles (form is noValidate) so the message
+  // is announced and styled consistently with the rest of the auth pages.
+  const [errors, setErrors] = useState({})
 
   // Wait for session state to update before navigating
   useEffect(() => {
@@ -44,6 +47,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const next = {}
+    if (!email.trim()) next.email = 'Enter your email address.'
+    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) next.email = 'Enter a valid email address.'
+    if (!password) next.password = 'Enter your password.'
+    if (Object.keys(next).length > 0) {
+      setErrors(next)
+      document.getElementById('login-' + Object.keys(next)[0])?.focus()
+      return
+    }
+    setErrors({})
     setLoading(true)
 
     try {
@@ -95,7 +108,7 @@ export default function LoginPage() {
       </header>
 
       <main className="mx-auto flex w-full flex-1 items-center justify-center py-6 sm:py-10">
-        <motion.div
+        <m.div
           initial="hidden"
           animate="show"
           variants={containerVariants}
@@ -126,27 +139,35 @@ export default function LoginPage() {
                 </div>
               }
             >
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
                 <AuthTextField
                   id="login-email"
                   label="Email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+                  }}
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
                   icon="mail"
+                  error={errors.email}
                 />
 
                 <PasswordField
                   id="login-password"
                   label="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
+                  }}
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
+                  error={errors.password}
                 />
 
                 <div className="-mt-1 flex justify-end">
@@ -164,7 +185,7 @@ export default function LoginPage() {
               </form>
             </AuthCard>
           </div>
-        </motion.div>
+        </m.div>
       </main>
 
       <TermsDialog open={termsOpen} onClose={() => setTermsOpen(false)} />

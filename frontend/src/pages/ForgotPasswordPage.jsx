@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { Link, Navigate } from 'react-router-dom'
+import { m, useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import AuthCard from '../components/ui/AuthCard.jsx'
 import AuthTextField from '../components/ui/AuthTextField.jsx'
 import SubmitButton from '../components/ui/SubmitButton.jsx'
 import ThemeToggle from '../components/ui/ThemeToggle.jsx'
 import { requestPasswordReset } from '../services/authActions.js'
+import { useSession } from '../state/useSession.js'
 
 // Auth pages paint their own faint blueprint grid and never mount
 // LogicCircuitBackdrop, so the page root is opaque and blur-free.
@@ -59,12 +60,25 @@ const cardVariants = reduceMotion => ({
 
 export default function ForgotPasswordPage() {
   const reduceMotion = useReducedMotion()
+  const { data: session } = useSession()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sentTo, setSentTo] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (!email.trim()) {
+      setEmailError('Enter your email address.')
+      document.getElementById('forgot-email')?.focus()
+      return
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setEmailError('Enter a valid email address.')
+      document.getElementById('forgot-email')?.focus()
+      return
+    }
+    setEmailError('')
     setLoading(true)
     try {
       const result = await requestPasswordReset(email)
@@ -81,9 +95,12 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  // Recovery is pointless for a learner who is already signed in.
+  if (session) return <Navigate to="/levels" replace />
+
   return (
     <AuthShell>
-      <motion.div initial="hidden" animate="show" variants={cardVariants(reduceMotion)}>
+      <m.div initial="hidden" animate="show" variants={cardVariants(reduceMotion)}>
         {sentTo ? (
           <AuthCard
             eyebrow="Check your inbox"
@@ -128,17 +145,21 @@ export default function ForgotPasswordPage() {
               </div>
             }
           >
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
               <AuthTextField
                 id="forgot-email"
                 label="Email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value)
+                  if (emailError) setEmailError('')
+                }}
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
                 icon="mail"
+                error={emailError}
               />
               <SubmitButton loading={loading} busyLabel="Sending link...">
                 Send Reset Link
@@ -146,7 +167,7 @@ export default function ForgotPasswordPage() {
             </form>
           </AuthCard>
         )}
-      </motion.div>
+      </m.div>
     </AuthShell>
   )
 }

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { signUp } from '../services/authActions.js'
 import { passwordError } from '../services/passwordPolicy.js'
 import { useSession } from '../state/useSession.js'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import AuthCard from '../components/ui/AuthCard.jsx'
 import ThemeToggle from '../components/ui/ThemeToggle.jsx'
@@ -37,6 +37,7 @@ export default function RegisterPage() {
   // checklist can guide an in-progress password instead of flagging every keystroke.
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
+  const [errors, setErrors] = useState({})
 
   // Wait for session state to update before navigating
   useEffect(() => {
@@ -48,15 +49,21 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Validation
-    if (passwordError(password)) {
-      toast.error(passwordError(password))
+    // Inline validation (the form is noValidate) so Enter-to-submit cannot fall
+    // back to browser bubbles that vanish on the next keystroke.
+    const next = {}
+    if (!name.trim()) next.name = 'Enter your name.'
+    if (!email.trim()) next.email = 'Enter your email address.'
+    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) next.email = 'Enter a valid email address.'
+    if (passwordError(password)) next.password = passwordError(password)
+    if (password !== confirmPassword) next.confirm = 'Passwords do not match.'
+    if (Object.keys(next).length > 0) {
+      setErrors(next)
+      const focusId = { name: 'register-name', email: 'register-email', password: 'register-password', confirm: 'register-confirm' }[Object.keys(next)[0]]
+      document.getElementById(focusId)?.focus()
       return
     }
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match')
-      return
-    }
+    setErrors({})
 
     setLoading(true)
 
@@ -114,7 +121,7 @@ export default function RegisterPage() {
       </header>
 
       <main className="mx-auto flex w-full flex-1 items-center justify-center py-6 sm:py-10">
-        <motion.div
+        <m.div
           initial="hidden"
           animate="show"
           variants={containerVariants}
@@ -145,17 +152,21 @@ export default function RegisterPage() {
                 </div>
               }
             >
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
                 <AuthTextField
                   id="register-name"
                   label="Full Name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
+                  }}
                   placeholder="John Doe"
                   required
                   autoComplete="name"
                   icon="user"
+                  error={errors.name}
                 />
 
                 <AuthTextField
@@ -163,24 +174,32 @@ export default function RegisterPage() {
                   label="Email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+                  }}
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
                   icon="mail"
+                  error={errors.email}
                 />
 
                 <PasswordField
                   id="register-password"
                   label="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
+                  }}
                   placeholder="At least 8 characters"
                   required
                   autoComplete="new-password"
                   onBlur={() => setPasswordTouched(true)}
-                  invalid={passwordInvalid}
-                  describedBy="register-password-requirements"
+                  invalid={passwordInvalid || Boolean(errors.password)}
+                  error={errors.password}
+                  describedBy={errors.password ? undefined : 'register-password-requirements'}
                 >
                   <PasswordChecklist id="register-password-requirements" password={password} />
                 </PasswordField>
@@ -189,11 +208,14 @@ export default function RegisterPage() {
                   id="register-confirm"
                   label="Confirm Password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value)
+                    if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
+                  }}
                   placeholder="••••••••"
                   required
                   autoComplete="new-password"
-                  error={!passwordsMatch ? 'Passwords do not match.' : ''}
+                  error={errors.confirm || (!passwordsMatch ? 'Passwords do not match.' : '')}
                   hintLive
                 />
 
@@ -203,7 +225,7 @@ export default function RegisterPage() {
               </form>
             </AuthCard>
           </div>
-        </motion.div>
+        </m.div>
       </main>
 
       <TermsDialog open={termsOpen} onClose={() => setTermsOpen(false)} />
