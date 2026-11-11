@@ -43,7 +43,7 @@ export default function WelcomeModal({
                 setShowWelcomeModal(false)
                 onResetStage?.()
               }}
-              className="absolute top-6 right-6 [@media(max-height:480px)]:top-2 [@media(max-height:480px)]:right-2 min-h-11 px-2.5 py-1 inline-flex items-center rounded-lg text-xs font-semibold text-text-3 hover:text-text-1 hover:bg-slate-100 transition-colors"
+              className="absolute top-6 right-6 [@media(max-height:480px)]:top-2 [@media(max-height:480px)]:right-2 min-h-11 px-2.5 py-1 inline-flex items-center rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
             >
               Skip <Icon name="close" />
             </button>
@@ -110,7 +110,7 @@ export default function WelcomeModal({
                   <button
                     type="button"
                     onClick={() => setCurrentSlideIdx(prev => Math.max(0, prev - 1))}
-                    className="h-11 px-4 rounded-xl text-xs font-bold text-text-2 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center"
+                    className="h-11 px-4 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
                   >
                     ← Back
                   </button>
@@ -125,7 +125,7 @@ export default function WelcomeModal({
                   <div
                     key={i}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === currentSlideIdx ? 'w-6 bg-teal' : 'w-2 bg-slate-200'
+                      i === currentSlideIdx ? 'w-6 bg-indigo-600 dark:bg-cyan-400' : 'w-2 bg-slate-200 dark:bg-slate-700'
                     }`}
                   />
                 ))}
@@ -148,7 +148,7 @@ export default function WelcomeModal({
                       setShowWelcomeModal(false)
                       onResetStage?.()
                     }}
-                    className="h-11 px-4 rounded-xl text-xs font-extrabold bg-teal text-white hover:bg-teal-600 transition-colors flex items-center justify-center shrink-0 whitespace-nowrap shadow-sm"
+                    className="h-11 px-4 rounded-xl text-xs font-extrabold bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition-colors flex items-center justify-center shrink-0 whitespace-nowrap shadow-sm"
                   >
                     {activeSlide.buttonText}
                   </button>

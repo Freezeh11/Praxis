@@ -297,7 +297,7 @@ export const TUTORIAL_STAGES = {
     {
       id: 'choose-demorgan',
       title: "Choose De Morgan's Law",
-      desc: 'First, choose \"De Morgan\'s Law\" from the palette so we can expand the negated group.',
+      desc: 'First, choose "De Morgan\'s Law" from the palette so we can expand the negated group.',
       target: '[data-law-id="demorgan"]',
       actionType: 'choose_law',
       lawId: 'demorgan',

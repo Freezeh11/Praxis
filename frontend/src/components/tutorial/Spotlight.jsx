@@ -83,7 +83,7 @@ export default function Spotlight({
               y="0"
               width="100%"
               height="100%"
-              fill="rgba(15, 23, 42, 0.40)"
+              className="fill-slate-900/35 dark:fill-black/80"
               mask="url(#tutorial-spotlight-mask)"
             />
           </svg>
@@ -173,7 +173,7 @@ export default function Spotlight({
                 duration: 0.3,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className={`fixed border-2 border-teal pointer-events-none shadow-[0_0_0_4px_rgba(46,196,182,0.25)] ${
+              className={`fixed border-2 border-sky-500 ring-4 ring-sky-400/25 shadow-lg pointer-events-none dark:border-cyan-400 dark:ring-cyan-400/30 dark:shadow-[0_0_35px_rgba(34,211,238,0.45)] ${
                 highlightRect.isScoreModal ? 'border-teal/50 rounded-2xl' : isPreLawHighlight ? 'rounded-xl' : 'rounded-xl animate-pulse'
               }`}
               style={{ zIndex: 52 }}
@@ -198,11 +198,11 @@ export default function Spotlight({
                 duration: 0.3,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="fixed border-2 border-dashed border-teal/70 pointer-events-none shadow-[0_0_0_4px_rgba(46,196,182,0.15)] rounded-xl flex items-center justify-center"
+              className="fixed border-2 border-dashed border-sky-500/70 ring-4 ring-sky-400/15 pointer-events-none rounded-xl flex items-center justify-center dark:border-cyan-400/70 dark:ring-cyan-400/20"
               style={{ zIndex: 52 }}
             >
               {currentStep.actionType === 'swap' && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider shadow-xs whitespace-nowrap">
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white dark:bg-cyan-400 dark:text-slate-950 text-[9.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider shadow-xs whitespace-nowrap">
                   Target
                 </span>
               )}
