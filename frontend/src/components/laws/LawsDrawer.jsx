@@ -8,7 +8,7 @@ import LawCard from './LawCard'
  * Spans the full height of the right edge with a clean, comfortable reading width,
  * smooth animations, accessible close target, and escape-key dismissal.
  */
-export default function LawsDrawer({ show, onClose, laws, placement }) {
+export default function LawsDrawer({ show, onClose, laws }) {
   const scrollRef = useRef(null)
 
   // Open/close feedback, whatever closed it (✕, scrim, Escape).

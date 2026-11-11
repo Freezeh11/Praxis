@@ -37,7 +37,7 @@ export default function ScoreModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className={`fixed inset-0 z-50 flex items-center justify-center p-3 cursor-pointer will-change-[opacity] ${
-            isTutorialActive ? 'bg-transparent' : 'bg-black/45'
+            isTutorialActive ? 'bg-transparent' : 'bg-black/45 dark:bg-black/70'
           }`}
           onClick={() => onClose()}
         >
@@ -72,15 +72,15 @@ export default function ScoreModal({
               {isSandbox && (
                 <div className="w-full flex flex-col items-center">
                   {/* Solved in X steps | optimal Y pill */}
-                  <div className="inline-flex items-center justify-center gap-2 px-4 py-1 rounded-full border border-sky-100 bg-sky-50/70 text-xs text-slate-600 font-medium mb-4 select-none">
+                  <div className="mb-4 inline-flex select-none items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-xs font-medium text-slate-600 dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-300">
                     <span>
                       Solved in <strong className="font-bold text-emerald-600 text-[13px]">{steps.length}</strong> {steps.length === 1 ? 'step' : 'steps'}
                     </span>
                     {optimalSteps > 0 && (
                       <>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-slate-300 dark:text-slate-600">|</span>
                         <span>
-                          optimal <strong className="font-bold text-slate-700">{optimalSteps}</strong>
+                          optimal <strong className="font-bold text-slate-700 dark:text-slate-200">{optimalSteps}</strong>
                         </span>
                       </>
                     )}
@@ -131,7 +131,7 @@ export default function ScoreModal({
                   </div>
 
                   {/* Free practice notice */}
-                  <div className="w-full border border-sky-200 bg-sky-50 text-sky-700 rounded-xl py-2 px-3 text-xs font-medium flex items-center justify-center gap-1.5 mb-4 select-none">
+                  <div className="mb-4 flex w-full select-none items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-300">
                     <span className="text-sm"><Icon name="flask" /></span>
                     <span>Free practice: no points or progress recorded.</span>
                   </div>
@@ -188,12 +188,12 @@ export default function ScoreModal({
 
                   {/* Optimal hint shown if efficiency < max */}
                   {scoreResult.efficiency < 40 && puzzle?.optimalHint && (
-                    <div className={`text-[12px] text-amber-800 bg-amber-50 border border-amber/30 rounded-lg w-full leading-relaxed ${shortViewport ? 'praxis-hide-short p-2' : 'p-3'} text-left`}>
+                    <div className={`w-full rounded-lg border border-amber-200 bg-amber-50 text-[12px] leading-relaxed text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200 ${shortViewport ? 'praxis-hide-short p-2' : 'p-3'} text-left`}>
                       <strong><Icon name="bulb" /> Tip:</strong> {puzzle.optimalHint}
                     </div>
                   )}
 
-                  <div className="inline-block text-[14px] font-bold text-amber-600 bg-amber-50 border-2 border-amber px-4 py-1.5 rounded-full shadow-sm mt-1">
+                  <div className="mt-1 inline-block rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-[14px] font-bold text-amber-700 shadow-sm dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-300">
                     +{earnedXp + (scoreResult?.earnedPoints ?? 0)} Points
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export default function ScoreModal({
                   <button
                     type="button"
                     data-tutorial="new-expression-modal-btn"
-                    className="flex-1 bg-[#1E2433] hover:bg-[#2B3347] text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+                    className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 active:scale-[0.99] dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25"
                     onClick={() => {
                       if (isCustomSandbox) onNewExpression()
                       else onRandomize()
@@ -226,7 +226,7 @@ export default function ScoreModal({
                   <button
                     type="button"
                     disabled={isTutorialActive}
-                    className={`flex-1 bg-[#1E2433] hover:bg-[#2B3347] text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all ${
+                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 ${
                       isTutorialActive ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'
                     }`}
                     onClick={onNextStage}
@@ -237,7 +237,7 @@ export default function ScoreModal({
                   <button
                     type="button"
                     disabled={isTutorialActive}
-                    className={`flex-1 bg-[#1E2433] hover:bg-[#2B3347] text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all ${
+                    className={`flex-1 bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 transition-[filter] hover:brightness-105 dark:bg-indigo-500 dark:from-indigo-500 dark:to-cyan-500 dark:shadow-lg dark:shadow-indigo-500/25 ${
                       isTutorialActive ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'
                     }`}
                     onClick={onBackToStages}
@@ -250,7 +250,7 @@ export default function ScoreModal({
                 <button
                   type="button"
                   disabled={isTutorialActive}
-                  className={`shrink-0 bg-transparent hover:bg-slate-100 text-text-2 font-bold text-xs py-3 px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+                  className={`shrink-0 rounded-xl bg-transparent text-slate-600 font-bold text-xs py-3 px-3 sm:px-4 flex items-center justify-center gap-1.5 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 ${
                     isTutorialActive ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
                   }`}
                   onClick={onReset}

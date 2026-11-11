@@ -79,9 +79,11 @@ export default function ProblemPage() {
   // right panel folds into the header (assistance) or the bottom dock (laws).
   const useOverlayHistory = isPhoneLandscape || isTabletPortrait || isNarrowViewport
   const showRightPanel = !useOverlayHistory
-  const lawsAsStrip = isPhoneLandscape || isNarrowViewport
+  const lawsAsStrip = isPhoneLandscape || isNarrowViewport || isTabletLandscape
   const lawsAsGrid = isTabletPortrait && !isNarrowViewport
-  const lawsInRightColumn = isTabletLandscape
+  // The law palette always lives in the bottom dock. It used to replace the
+  // stage list in the right rail on tablet landscape, which hid the stages and
+  // squeezed the palette into a 300px column.
   const compactHeader = useOverlayHistory || isTabletLandscape
   /** Compact tiers re-home the workspace controls into a second header row. */
   const headerControlRail = useOverlayHistory
@@ -404,7 +406,7 @@ export default function ProblemPage() {
   )
 
   return (
-    <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-bg' : 'flex h-screen overflow-hidden bg-bg'}>
+    <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-transparent' : 'flex h-screen overflow-hidden bg-transparent'}>
       <StepHistoryPanel
         steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={setInspectedStepIdx}
         useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
@@ -415,7 +417,7 @@ export default function ProblemPage() {
       />
 
       {/* ── CENTER PANEL: Expression Workspace ── */}
-      <main className={`flex-1 flex flex-col bg-bg-card border border-border rounded-xl shadow-sm overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
+      <main className={`flex-1 flex flex-col bg-bg-card border border-border rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.05),0_24px_48px_-32px_rgba(15,23,42,0.42)] overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
         <WorkspaceHeader
           isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} compactHeader={compactHeader}
           headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}
@@ -439,11 +441,11 @@ export default function ProblemPage() {
           isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle} zoom={zoom}
         />
 
-        {!lawsInRightColumn && lawsPanel}
+        {lawsPanel}
       </main>
 
       <SidePanel
-        showRightPanel={showRightPanel} lawsInRightColumn={lawsInRightColumn} lawsPanel={lawsPanel}
+        showRightPanel={showRightPanel}
         isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} level={level}
         stageNum={stageNum} completedSet={completedSet} points={progress.points}
         steps={steps} optimalSteps={optimalSteps} isComplete={isComplete}

@@ -24,7 +24,7 @@ const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) (up to ${SANDBOX.max
 const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a simpler one.'
 
 export default function SidePanel({
-  showRightPanel, lawsInRightColumn, lawsPanel, isSandbox, isCustomSandbox, level,
+  showRightPanel, isSandbox, isCustomSandbox, level,
   stageNum, completedSet, points, steps, optimalSteps, isComplete, showSuccess,
   dismissReviewReminder, onDismissReviewReminder, isTutorialActive, isTutorialLevel, onSelectStage,
   onNavigateStages, assistanceInHeader, guideCost, onHint, onGuide, onOpenLaws,
@@ -125,11 +125,9 @@ export default function SidePanel({
       {/* ── RIGHT PANEL: Level Progress, Points, Assistance & Stages / Expression Creator ──
            Hidden on the tiers that fold it into the header / bottom dock. */}
       {showRightPanel && (
-      <aside className={lawsInRightColumn
-        ? 'w-[300px] min-w-[260px] bg-bg-card border-l border-border flex flex-col overflow-hidden'
-        : isSandbox
-        ? 'w-[305px] min-w-[280px] bg-bg-card border-l border-border flex flex-col overflow-hidden'
-        : 'w-[280px] min-w-[240px] bg-bg-card border-l border-border flex flex-col overflow-hidden'}>
+      <aside className={isSandbox
+        ? 'w-[305px] min-w-[280px] bg-bg-card border-l border-border flex flex-col overflow-hidden shadow-[inset_1px_0_0_rgba(15,23,42,0.05)]'
+        : 'w-[280px] min-w-[240px] bg-bg-card border-l border-border flex flex-col overflow-hidden shadow-[inset_1px_0_0_rgba(15,23,42,0.05)]'}>
         {/* Top: Stage / Level Progress (sandbox shows problem stats instead) */}
         {isSandbox ? (
           <div data-tutorial="sandbox-stats" className="border-b border-border p-3.5 pt-4 bg-bg/30">
@@ -137,9 +135,9 @@ export default function SidePanel({
               <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">SANDBOX</span>
               <span className="text-xs font-bold text-sky-700">{isCustomSandbox ? 'Custom' : 'Free Practice'}</span>
             </div>
-            <div className="h-1.5 bg-border rounded-full mb-2 overflow-hidden">
+            <div className="h-1.5 bg-border rounded-full mb-2 overflow-hidden shadow-[inset_0_1px_1px_rgba(15,23,42,0.08)]">
               <div
-                className="h-full bg-teal transition-all duration-300 rounded-full"
+                className="h-full bg-teal transition-all duration-300 rounded-full shadow-[0_1px_2px_rgba(13,148,136,0.35)]"
                 style={{ width: `${optimalSteps > 0 ? Math.min(100, (steps.length / optimalSteps) * 100) : (isComplete ? 100 : 0)}%` }}
               />
             </div>
@@ -157,9 +155,9 @@ export default function SidePanel({
             <span className="text-[10px] font-bold tracking-[1px] uppercase text-text-3">LEVEL PROGRESS</span>
             <span className="text-xs font-bold text-teal">{completedSet.size} / {level?.puzzles.length ?? '?'} Completed</span>
           </div>
-          <div className="h-1.5 bg-border rounded-full mb-1.5 overflow-hidden">
+          <div className="h-1.5 bg-border rounded-full mb-1.5 overflow-hidden shadow-[inset_0_1px_1px_rgba(15,23,42,0.08)]">
             <div
-              className="h-full bg-teal transition-all duration-300 rounded-full"
+              className="h-full bg-teal transition-all duration-300 rounded-full shadow-[0_1px_2px_rgba(13,148,136,0.35)]"
               style={{ width: `${level && level.puzzles.length > 0 ? (completedSet.size / level.puzzles.length) * 100 : 0}%` }}
             />
           </div>
@@ -183,18 +181,18 @@ export default function SidePanel({
               </div>
             </div>
           ) : (
-          <div data-tutorial="points-card" className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70 border border-amber/40 rounded-xl gap-2">
+          <div data-tutorial="points-card" className="flex items-center justify-between gap-2 rounded-xl border border-amber-300/70 bg-amber-50 px-3.5 py-2.5 shadow-chip dark:border-amber-400/30 dark:bg-amber-400/10 dark:shadow-none">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-lg shrink-0">⭐</span>
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900/80 truncate">TOTAL POINTS</div>
-                <div className="text-base font-extrabold text-amber-600 leading-none mt-0.5">
-                  {points ?? 0} <span className="text-[11px] font-semibold text-amber-700">pts</span>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900/90 truncate dark:text-amber-200/90">POINTS</div>
+                <div className="mt-0.5 text-base font-extrabold leading-none text-amber-700 dark:text-amber-300">
+                  {points ?? 0} <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">pts</span>
                 </div>
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="inline-flex items-center whitespace-nowrap text-[10px] font-bold text-teal bg-teal/10 border border-teal/30 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center whitespace-nowrap rounded-full border border-teal/30 bg-teal/10 px-2 py-0.5 text-[10px] font-bold text-teal dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-300">
                 +10 to +15 on clear
               </span>
             </div>
@@ -211,7 +209,6 @@ export default function SidePanel({
         </div>
 
         {/* Level Puzzles List OR Sandbox Expression Creator */}
-        {lawsInRightColumn ? lawsPanel : (
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
           {isSandbox ? (
             /* Expression Creator Section */
@@ -271,7 +268,7 @@ export default function SidePanel({
                       key={ex}
                       type="button"
                       onClick={() => handleExample(ex)}
-                      className="px-2 py-1 rounded-md border border-border bg-bg hover:border-teal hover:text-text-1 font-mono text-[11px] font-semibold text-text-2 transition-all cursor-pointer shadow-2xs"
+                      className="px-2 py-1 rounded-md border border-border bg-bg hover:border-teal hover:text-text-1 hover:shadow-sm font-mono text-[11px] font-semibold text-text-2 transition-all cursor-pointer shadow-chip"
                     >
                       {ex}
                     </button>
@@ -360,12 +357,12 @@ export default function SidePanel({
                 className={`flex items-center justify-between p-2.5 rounded-lg text-left transition-all border ${
                   isTutorialActive
                     ? isCurrent
-                      ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
+                      ? 'bg-teal/10 border-teal text-teal font-bold shadow-chip'
                       : 'bg-transparent border-transparent text-text-3 opacity-40 cursor-not-allowed pointer-events-none'
                     : isNextAvailable
                     ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-md animate-pulse cursor-pointer'
                     : isCurrent
-                    ? 'bg-teal/10 border-teal text-teal font-bold shadow-xs'
+                    ? 'bg-teal/10 border-teal text-teal font-bold shadow-chip'
                     : isCompleted
                     ? 'bg-bg/50 border-transparent text-text-2 hover:bg-bg hover:border-border cursor-pointer'
                     : isAvailable
@@ -388,7 +385,6 @@ export default function SidePanel({
           </>
           )}
         </div>
-        )}
       </aside>
       )}
 

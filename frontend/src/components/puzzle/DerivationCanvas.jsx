@@ -12,6 +12,7 @@ import { motion } from 'framer-motion'
 import AnimationOverlay from '../AnimationOverlay'
 import ExpressionDisplay from '../ExpressionDisplay'
 import ExprText from '../ExprText'
+import WorkspaceLiveBackdrop from './WorkspaceLiveBackdrop'
 
 export default function DerivationCanvas({
   expr, sel, steps, status, statusMsg, isAnimating, animationData,
@@ -20,23 +21,33 @@ export default function DerivationCanvas({
   isCustomSandbox, customPuzzle, zoom,
 }) {
   return (
-    <div data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`flex-1 min-h-0 flex flex-col overflow-auto bg-bg-card bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
+    <div className="relative flex-1 min-h-0 flex flex-col">
+      {/* Live wallpaper layer — one flat canvas behind the equations, clipped
+          to the workspace and never hit-testable. It replaces the old static
+          28px gradient grid, which read flat on large screens. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <WorkspaceLiveBackdrop />
+      </div>
+
+      {/* This stays the ONE scrolling element (same testid/role/aria/tabIndex);
+          its background is transparent so the wallpaper shows through. */}
+      <div data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`relative flex-1 min-h-0 flex flex-col overflow-auto shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
       {isAnimating && <AnimationOverlay data={animationData} />}
 
       {/* Status banner — placed in flow at top with a stable reserved slot so it NEVER overlays equations or causes vertical layout shift */}
       <div className={`w-full flex justify-center items-center px-4 z-20 shrink-0 select-none ${isPhoneLandscape ? 'pt-1 pb-0.5 min-h-[30px]' : 'pt-2.5 pb-1 min-h-[42px]'}`}>
         <div
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200 ${
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-[0_2px_10px_-6px_rgba(15,23,42,0.35)] border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200 ${
             status === 'select'
               ? 'opacity-0 pointer-events-none'
               : status === 'error'
-              ? 'bg-red-100 text-red-700 border-red-300 opacity-100'
+              ? 'border-rose-300 bg-rose-100 text-rose-700 opacity-100 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-300'
               : status === 'laws'
-              ? 'bg-teal-light text-sky-700 border-sky-300 opacity-100'
+              ? 'border-sky-300 bg-sky-50 text-sky-700 opacity-100 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-300'
               : status === 'applying'
-              ? 'bg-teal-light text-sky-800 border-sky-300 opacity-100'
+              ? 'border-sky-300 bg-sky-50 text-sky-800 opacity-100 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200'
               : status === 'success'
-              ? 'bg-green-light text-green-800 border-green-300 opacity-100'
+              ? 'border-emerald-300 bg-emerald-100 text-emerald-800 opacity-100 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300'
               : 'opacity-0 pointer-events-none'
           } ${isPhoneLandscape ? 'py-1 text-[11px]' : ''}`}
         >
@@ -60,10 +71,10 @@ export default function DerivationCanvas({
           {isCustomSandbox && (
             <div
               data-testid="custom-expression-label"
-              className={`mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-1.5 ${isPhoneLandscape ? 'text-[14px]' : 'text-[12px]'}`}
+              className={`mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-1.5 shadow-chip dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:shadow-none ${isPhoneLandscape ? 'text-[14px]' : 'text-[12px]'}`}
             >
-              <span className="font-bold uppercase tracking-wider text-sky-900/70">Your expression</span>
-              <span className={`font-mono font-semibold text-sky-900 whitespace-nowrap ${isPhoneLandscape ? 'text-[16px]' : 'text-[15px]'}`}>
+              <span className="font-bold uppercase tracking-wider text-sky-900/70 dark:text-cyan-300/80">Your expression</span>
+              <span className={`whitespace-nowrap font-mono font-semibold text-sky-900 dark:text-cyan-100 ${isPhoneLandscape ? 'text-[16px]' : 'text-[15px]'}`}>
                 {customPuzzle.expr}
               </span>
             </div>
@@ -185,10 +196,10 @@ export default function DerivationCanvas({
                         setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
                       } : undefined}
                       className={`relative flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
-                        !line.isActive ? 'cursor-pointer hover:bg-slate-50/70' : ''
+                        !line.isActive ? 'cursor-pointer hover:bg-slate-50/70 hover:shadow-chip' : ''
                       } ${
                         isLineHighlighted
-                          ? 'border-teal/30 bg-teal-50/50 shadow-xs ring-1 ring-teal/20'
+                          ? 'border-teal/30 bg-teal-50/50 shadow-[0_4px_14px_-10px_rgba(13,148,136,0.55)] ring-1 ring-teal/20'
                           : 'border-transparent'
                       }`}
                     >
@@ -232,6 +243,7 @@ export default function DerivationCanvas({
             canvas on a 320px-tall phone. It renders in the collision layer
             below instead. */}
       </div>
+      </div>{/* end derivation-scroll */}
     </div>
   )
 }

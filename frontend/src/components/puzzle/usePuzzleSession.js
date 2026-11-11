@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 
 import { TIMING, TUTORIAL, paletteLawIds } from '../../config/gameRules.js'
 import { effectiveOptimalSteps, estimateScore, lawsUsedFromSteps, buildSandboxPuzzle } from '../../engine/index.js'
-import { playSound } from '../../services/soundEffects.js'
+import { cueLengthMs, playSound } from '../../services/soundEffects.js'
 import { useGameContent } from '../../state/useGameContent.js'
 import { useGameState } from '../../state/useGameState.js'
 import { useProgress } from '../../state/useProgress.js'
@@ -32,7 +32,7 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { fetchLevel, laws, submitScore } = useGameContent()
-  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, saveSolution, getSavedSolution } = useProgress()
+  const { progress, addPoints, deductPoints, completeStage, saveScore, getStagesCompleted, getLevelProgress, saveSolution, getSavedSolution } = useProgress()
 
   // Sandbox mode: reached via /sandbox, which supplies no route params. It
   // reuses this exact workspace but drives it from a locally generated puzzle
@@ -69,6 +69,16 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   const [showSuccess, setShowSuccess] = useState(false)
   const [scoreResult, setScoreResult] = useState(null)
   const loadedAsSavedRef = useRef(false)
+  /**
+   * The completion fanfare and the reward bell fire on timers, after the store
+   * has recorded this stage. By then the render snapshot captured when the
+   * puzzle was solved is stale, so the latest level-progress query is kept in
+   * a ref and refreshed on every commit.
+   */
+  const getLevelProgressRef = useRef(getLevelProgress)
+  useEffect(() => {
+    getLevelProgressRef.current = getLevelProgress
+  }, [getLevelProgress])
 
   useStoredCustomPuzzleSlot(isSandbox, customPuzzle)
 
@@ -162,10 +172,22 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     }
 
     const isFirstTime = !completedSet.has(stageNum)
+    /** Best score already banked for this stage, read before this run writes its own. */
+    const previousBest = progress?.stageScores?.[`${levelId}:${stageNum}`] ?? null
+    const levelStages = level?.puzzles?.length ?? 0
+    /** Whether the level was already open before this completion landed. */
+    const wasMastered = levelStages > 0 && getLevelProgress(Number(levelId), levelStages).unlocked
 
     // Solve fanfare. Only when the learner actually earned it — a stage merely
     // re-opened from its saved solution is not news, and stays silent.
-    playSound('complete')
+    //
+    // The state machine has just fired the short solve sparkle, so the fanfare
+    // answers it instead of stacking on it, and the reward bell answers the
+    // fanfare. Three cues in sequence, never three at once; the durations come
+    // from the cue data itself.
+    const sparkleMs = cueLengthMs('correct')
+    const fanfareMs = cueLengthMs('complete')
+    const fanfareTimer = setTimeout(() => playSound('complete'), sparkleMs + 40)
 
     // Derive lawsUsed from step history at this moment
     const lawsUsed = lawsUsedFromSteps(steps)
@@ -189,8 +211,13 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
     // derives its summary from `steps`/`optimalSteps`/`hintsUsed` directly, so
     // there is no score result to store.
     if (isSandbox) {
+      // Free practice is unscored: it gets the fanfare, but never a star or an
+      // unlock, because nothing is recorded.
       const sandboxTimer = setTimeout(() => setShowSuccess(true), TIMING.successModalDelayMs)
-      return () => clearTimeout(sandboxTimer)
+      return () => {
+        clearTimeout(sandboxTimer)
+        clearTimeout(fanfareTimer)
+      }
     }
 
     if (isFirstTime) {
@@ -201,6 +228,17 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
 
     setScoreResult(immediateScore)
     saveScore(Number(levelId), stageNum, immediateScore.total)
+
+    // The reward bell is the last word: a level that just opened outranks a new
+    // personal best, and neither ever fires on top of the fanfare. The check is
+    // deferred to the timer because only then has the store recorded this stage.
+    const rewardTimer = setTimeout(() => {
+      const openedNow = levelStages > 0
+        && !wasMastered
+        && getLevelProgressRef.current(Number(levelId), levelStages).unlocked
+      if (openedNow) playSound('unlock')
+      else if (previousBest === null || immediateScore.total > previousBest) playSound('star')
+    }, sparkleMs + 40 + fanfareMs + 80)
 
     // Submit score in background to sync with server/database
     submitScore({
@@ -220,7 +258,11 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
 
     // Auto-pop the complete modal promptly after solving
     const timer = setTimeout(() => setShowSuccess(true), TIMING.successModalDelayMs)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(fanfareTimer)
+      clearTimeout(rewardTimer)
+    }
     // Intentionally keyed only on completion: the surrounding values are read
     // at the moment the puzzle is solved. isSandbox is route-derived and stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps

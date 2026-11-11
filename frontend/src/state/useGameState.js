@@ -19,7 +19,12 @@ export function useGameState(options = {}) {
   const [history, setHistory] = useState([]) // Array of { expr, step }
   const expr = history.length > 0 ? history[history.length - 1].expr : null
   const steps = useMemo(() => history.slice(1).map(h => h.step), [history])
-  const exprHistory = history.length > 1 ? history.slice(0, -1).map(h => h.expr) : []
+  // Derived from history only; rebuilt on every render before, including the
+  // renders triggered by a selection or a status message.
+  const exprHistory = useMemo(
+    () => (history.length > 1 ? history.slice(0, -1).map(h => h.expr) : []),
+    [history],
+  )
 
   const [sel, setSel] = useState([])
   const [selectedLaw, setSelectedLaw] = useState(null)
@@ -570,6 +575,10 @@ export function useGameState(options = {}) {
     }
 
     if (isTutorial) {
+      // The pause that explains the next step has no gesture of its own, so it
+      // gets a soft two-note guide tick; the step cue follows after the law
+      // animation, keeping the two apart.
+      playSound('tutorialStep')
       setIsPreLawHighlight(true)
       preLawTimerRef.current = setTimeout(() => {
         preLawTimerRef.current = null
@@ -716,11 +725,13 @@ export function useGameState(options = {}) {
 
     setActiveGuidePaths(paths)
     setSel(nextSel)
-    const guidedLaw = selectionLaws(expr, nextSel, engineOptions).find(l => l.id === result.transition.lawId)
+    // One analysis feeds both the guided law and the palette. This ran
+    // selectionLaws() twice with identical arguments on every guide activation.
+    const laws = selectionLaws(expr, nextSel, engineOptions)
+    const guidedLaw = laws.find(l => l.id === result.transition.lawId)
     setSelectedLaw(guidedLaw)
 
     // Guide supplies both the law and targets; applying remains an explicit action.
-    const laws = selectionLaws(expr, nextSel, engineOptions)
     setApplicableLaws(independent ? [] : laws)
     setStatus(laws.length ? 'laws' : 'select')
     setStatusMsg(`Guide: press Apply to use ${result.transition.law} on the highlighted selection. ${independent ? 'This decision is assisted. ' : ''}${result.objective ? '' : 'This route reaches the target but skips a remaining target law.'}`)
