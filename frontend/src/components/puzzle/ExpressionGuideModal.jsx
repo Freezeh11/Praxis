@@ -3,7 +3,7 @@ import Icon from '../ui/Icon'
  * ExpressionGuideModal: Guide modal explaining how to write, format,
  * and test Boolean expressions in Praxis.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 const EXAMPLES = [
   {
@@ -47,7 +47,7 @@ export default function ExpressionGuideModal({ show, onClose, onSelectExample })
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-[2px]"
         onClick={onClose}
       >
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.96, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -198,7 +198,7 @@ export default function ExpressionGuideModal({ show, onClose, onSelectExample })
               Got it
             </button>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </AnimatePresence>
   )

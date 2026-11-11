@@ -4,7 +4,7 @@ import Icon from '../ui/Icon'
  * @description The two-slide cinematic welcome modal: slide content, slide dots
  * and the Skip/Back/Continue action row. Copy comes from WELCOME_SLIDES.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { WELCOME_SLIDES } from '../../content/tutorialContent.js'
 import logoFull from '../../assets/logo-full.png'
 
@@ -20,7 +20,7 @@ export default function WelcomeModal({
   return (
     <AnimatePresence>
       {showWelcomeModal && (
-        <motion.div
+        <m.div
           key="welcome-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -28,7 +28,7 @@ export default function WelcomeModal({
           transition={{ duration: 0.22, ease: 'easeOut' }}
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 pointer-events-auto will-change-[opacity]"
         >
-          <motion.div
+          <m.div
             layout
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             initial={{ opacity: 0, scale: 0.97, y: 10 }}
@@ -51,7 +51,7 @@ export default function WelcomeModal({
             {/* Dynamic Slide Content */}
             <div className="min-h-[250px] [@media(max-height:480px)]:min-h-0 flex flex-col justify-center items-center mt-3 [@media(max-height:480px)]:mt-0">
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={currentSlideIdx}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -98,7 +98,7 @@ export default function WelcomeModal({
                       </p>
                     </>
                   )}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             </div>
 
@@ -155,8 +155,8 @@ export default function WelcomeModal({
                 )}
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

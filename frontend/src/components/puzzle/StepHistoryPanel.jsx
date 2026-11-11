@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { memo, useEffect } from 'react'
 import Icon from '../ui/Icon'
 /**
  * StepHistoryPanel — the derivation history. It is the first column on the wide
@@ -11,12 +11,14 @@ import usePanelSound from '../../hooks/usePanelSound'
 import ExprText from '../ExprText'
 import TutorialToggle from './TutorialToggle'
 import ZoomControls from './ZoomControls'
+import { useZoom } from './zoomStore'
 
-export default function StepHistoryPanel({
+function StepHistoryPanel({
   steps, inspectedStepIdx, onToggleInspectStep, useOverlayHistory, isPhoneLandscape,
   stepHistoryOpen, onCloseStepHistory, isSandbox, onBack, touchTargets,
-  zoom, onZoom, isTutorialActive, isTutorialLevel, onToggleTutorial, chromeText, chromeHeight,
+  isTutorialActive, isTutorialLevel, onToggleTutorial, chromeText, chromeHeight,
 }) {
+  const { zoom, setZoom: onZoom } = useZoom()
   // Only the overlay-drawer variant opens and closes — on the wide tiers this
   // panel is a permanent column, so the flag stays false and the cue is unused.
   usePanelSound(stepHistoryOpen)
@@ -162,3 +164,5 @@ export default function StepHistoryPanel({
     </>
   )
 }
+
+export default memo(StepHistoryPanel)

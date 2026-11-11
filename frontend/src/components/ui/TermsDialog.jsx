@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { LAST_UPDATED, TERMS_SECTIONS } from '../../content/termsContent.js'
 import Icon from './Icon.jsx'
 
@@ -115,7 +115,7 @@ export default function TermsDialog({ open, onClose }) {
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/40 p-3 backdrop-blur-sm sm:p-6 dark:bg-black/60"
       onClick={() => onCloseRef.current?.()}
     >
-      <motion.div
+      <m.div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
@@ -199,7 +199,7 @@ export default function TermsDialog({ open, onClose }) {
             Close
           </button>
         </div>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   )

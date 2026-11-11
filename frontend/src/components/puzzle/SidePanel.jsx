@@ -4,8 +4,8 @@ import Icon from '../ui/Icon'
  * the points card with the Hint/Guide/Laws actions, the quick stage picker
  * with its review reminder, and in Sandbox mode, the interactive Expression Creator.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { m } from 'framer-motion'
 
 import AssistanceControls from './AssistanceControls'
 import { LawsReferenceButton } from './LawsReferenceSheet'
@@ -23,7 +23,7 @@ const EXAMPLES = [
 const IDLE_HINT = `Accepted: A, A', AB, A(B + C), !(A · B) (up to ${SANDBOX.maxVariables} variables)`
 const BUILD_FALLBACK_ERROR = 'This expression could not be simplified. Try a simpler one.'
 
-export default function SidePanel({
+function SidePanel({
   showRightPanel, isSandbox, isCustomSandbox, level,
   stageNum, completedSet, points, steps, optimalSteps, isComplete, showSuccess,
   dismissReviewReminder, onDismissReviewReminder, isTutorialActive, isTutorialLevel, onSelectStage,
@@ -303,7 +303,7 @@ export default function SidePanel({
           <>
           {/* Review Mode Reminder Card: ONLY shown in tutorial stages */}
           {isTutorialLevel && isComplete && !showSuccess && !dismissReviewReminder && level && stageNum + 1 < level.puzzles.length && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -327,7 +327,7 @@ export default function SidePanel({
                   Okay
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )}
 
           <div className="flex items-center justify-between mb-1.5 px-1">
@@ -400,3 +400,5 @@ export default function SidePanel({
     </>
   )
 }
+
+export default memo(SidePanel)

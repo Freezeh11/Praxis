@@ -9,7 +9,7 @@
  * the screen. This file owns the device tier, the transient UI state and the
  * wiring between them.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -25,6 +25,7 @@ import SidePanel from '../components/puzzle/SidePanel'
 import StepHistoryPanel from '../components/puzzle/StepHistoryPanel'
 import StepInspectionTip from '../components/puzzle/StepInspectionTip'
 import WorkspaceHeader from '../components/puzzle/WorkspaceHeader'
+import ZoomProvider from '../components/puzzle/ZoomProvider'
 import MobileExpressionModal from '../components/puzzle/MobileExpressionModal'
 import usePuzzleSession from '../components/puzzle/usePuzzleSession'
 import InteractiveTutorial from '../components/InteractiveTutorial'
@@ -103,7 +104,6 @@ export default function ProblemPage() {
   const [hintExpression, setHintExpression] = useState(null)
   const hintDismissTimerRef = useRef(null)
   useEffect(() => () => clearTimeout(hintDismissTimerRef.current), [])
-  const [zoom, setZoom] = useState(1.0)
   const [inspectedStepIdx, setInspectedStepIdx] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
   const [showStepHistory, setShowStepHistory] = useState(false)
@@ -121,17 +121,26 @@ export default function ProblemPage() {
   // this page only hands it to the header toggle.
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
-  const handlePuzzleChange = () => {
+  const handlePuzzleChange = useCallback(() => {
     clearTimeout(hintDismissTimerRef.current)
     setShowHint(false)
-  }
+  }, [])
   /** A randomize swaps the problem: every transient overlay goes with it. */
-  const handleWorkspaceReset = () => {
+  const handleWorkspaceReset = useCallback(() => {
     clearTimeout(hintDismissTimerRef.current)
     setShowHint(false)
     setInspectedStepIdx(null)
     setShowResetConfirm(false)
-  }
+  }, [])
+
+  const closeLaws = useCallback(() => setShowLawsDrawer(false), [])
+  const closeStepHistory = useCallback(() => setShowStepHistory(false), [])
+  const closeResetConfirm = useCallback(() => setShowResetConfirm(false), [])
+  const closeMobileExpression = useCallback(() => setShowMobileExpressionCreator(false), [])
+  const handleDismissReviewReminder = useCallback(() => setDismissReviewReminder(true), [])
+  const closeHint = useCallback(() => setShowHint(false), [])
+  const closeInspect = useCallback(() => setInspectedStepIdx(null), [])
+  const dismissInspectionTip = useCallback(() => setShowStepInspectionTip(false), [])
 
   /**
    * The panels cue their own open/close (hooks/usePanelSound), so these only
@@ -139,18 +148,18 @@ export default function ProblemPage() {
    * the step history has not clicked a term yet, and an unprimed AudioContext
    * would swallow the cue.
    */
-  const openLaws = () => {
+  const openLaws = useCallback(() => {
     primeAudio()
     setShowLawsDrawer(true)
-  }
-  const toggleStepHistory = () => {
+  }, [])
+  const toggleStepHistory = useCallback(() => {
     primeAudio()
     setShowStepHistory(prev => !prev)
-  }
-  const openStepHistory = () => {
+  }, [])
+  const openStepHistory = useCallback(() => {
     primeAudio()
     setShowStepHistory(true)
-  }
+  }, [])
 
   const {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
@@ -162,6 +171,15 @@ export default function ProblemPage() {
     applyLaw, undoAction, resetPuzzle, requestHint, swapTerms, activateGuide,
     hintsUsed, guidesUsed, optimalSteps,
   } = usePuzzleSession({ onPuzzleChange: handlePuzzleChange, onWorkspaceReset: handleWorkspaceReset })
+
+  /** Stable navigation + dismiss callbacks: the memoised panels compare props by
+   * identity, so an arrow rebuilt on every render would defeat the memo. They
+   * live below the session hook because they read its route identity. */
+  const navToStages = useCallback(
+    () => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`),
+    [navigate, isSandbox, levelId],
+  )
+  const closeSuccess = useCallback(() => setShowSuccess(false), [setShowSuccess])
 
   // An accidental refresh used to wipe an in-progress derivation with no
   // warning (only completed stages are persisted). Ask before discarding it.
@@ -175,7 +193,7 @@ export default function ProblemPage() {
     return () => window.removeEventListener('beforeunload', guard)
   }, [steps.length, isComplete])
 
-  const handleNewExpression = () => {
+  const handleNewExpression = useCallback(() => {
     setShowSuccess(false)
     if (showRightPanel) {
       expressionInputRef.current?.focus()
@@ -183,7 +201,7 @@ export default function ProblemPage() {
     } else {
       setShowMobileExpressionCreator(true)
     }
-  }
+  }, [showRightPanel, setShowSuccess])
 
   const isTutorialLevel = !isSandbox && Number(levelId) === TUTORIAL.levelId
 
@@ -266,7 +284,7 @@ export default function ProblemPage() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [inspectedStepIdx])
 
-  const handleHint = () => {
+  const handleHint = useCallback(() => {
     if (!puzzle || isComplete) return
     const hint = requestHint(puzzle)
     if (hint) {
@@ -276,9 +294,9 @@ export default function ProblemPage() {
       setShowHint(true)
       hintDismissTimerRef.current = setTimeout(() => setShowHint(false), TIMING.hintAutoDismissMs)
     }
-  }
+  }, [puzzle, isComplete, requestHint, expr])
 
-  const handleNextStage = () => {
+  const handleNextStage = useCallback(() => {
     const nextIdx = stageNum + 1
     if (level && nextIdx < level.puzzles.length) {
       const isTutLevel = Number(levelId) === TUTORIAL.levelId
@@ -290,20 +308,20 @@ export default function ProblemPage() {
       }
       navigate(`/level/${levelId}/stages`)
     }
-  }
+  }, [stageNum, level, levelId, navigate])
 
-  const handleSelectStage = (idx) => {
+  const handleSelectStage = useCallback((idx) => {
     if (!levelId) return
     const isTutLevel = Number(levelId) === TUTORIAL.levelId
     const tutParam = isTutLevel ? '?tutorial=true' : ''
     navigate(`/level/${levelId}/stage/${idx + 1}${tutParam}`)
-  }
+  }, [levelId, navigate])
 
   // The Guide is a graded-level aid: 20 points there, free in the unscored
   // sandbox (the spec requires Hint/Guide to stay available while practicing).
   const guideCost = isSandbox ? 0 : GUIDE_COST_POINTS
 
-  const handleGuide = () => {
+  const handleGuide = useCallback(() => {
     if (isComplete) return
     if (guideCost === 0 || (progress.points ?? 0) >= guideCost) {
       const activated = activateGuide()
@@ -313,9 +331,21 @@ export default function ProblemPage() {
     } else {
       toast.error(`Not enough points! You need ${guideCost} points to use the Guide.`)
     }
-  }
+  }, [isComplete, guideCost, progress.points, activateGuide, deductPoints])
 
-  const handleResetClick = () => {
+  const executeReset = useCallback(() => {
+    if (dontAskResetAgain) {
+      sessionStorage.setItem(SKIP_RESET_CONFIRM, 'true')
+    }
+    setInspectedStepIdx(null)
+    clearLoadedAsSaved()
+    setShowResetConfirm(false)
+    setShowSuccess(false)
+    setShowHint(false)
+    resetPuzzle(puzzle)
+  }, [dontAskResetAgain, clearLoadedAsSaved, resetPuzzle, puzzle, setShowSuccess])
+
+  const handleResetClick = useCallback(() => {
     // Confirm whenever reset would destroy something: a solved stage OR an
     // in-progress derivation. Previously only the solved case asked, so the
     // commonest destructive reset - mid-derivation - was silent.
@@ -326,47 +356,35 @@ export default function ProblemPage() {
     } else {
       executeReset()
     }
-  }
+  }, [isComplete, steps.length, executeReset])
 
-  const executeReset = () => {
-    if (dontAskResetAgain) {
-      sessionStorage.setItem(SKIP_RESET_CONFIRM, 'true')
-    }
-    setInspectedStepIdx(null)
-    clearLoadedAsSaved()
-    setShowResetConfirm(false)
-    setShowSuccess(false)
-    setShowHint(false)
-    resetPuzzle(puzzle)
-  }
-
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     setInspectedStepIdx(null)
     clearLoadedAsSaved()
     undoAction()
-  }
+  }, [clearLoadedAsSaved, undoAction])
 
   /* Wrapper functions to pass current expr snapshot to handlers */
-  const onClickLit = (path) => {
+  const onClickLit = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickLit(path, expr)
-  }
-  const onClickNot = (path) => {
+  }, [expr, handleClickLit])
+  const onClickNot = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickNot(path, expr)
-  }
-  const onClickTerm = (path) => {
+  }, [expr, handleClickNot])
+  const onClickTerm = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickTerm(path, expr)
-  }
-  const onApplyLaw = (law) => {
+  }, [expr, handleClickTerm])
+  const onApplyLaw = useCallback((law) => {
     setInspectedStepIdx(null)
     clearLoadedAsSaved()
     const enableTutorialPause = isTutorialActive && stageNum < 3
     if (expr) applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)
-  }
+  }, [expr, applyLaw, steps, hintsUsed, isTutorialActive, stageNum, clearLoadedAsSaved])
 
-  const handleTutorialToggle = () => {
+  const handleTutorialToggle = useCallback(() => {
     if (!isTutorialLevel) return
     setIsTutorialActive(prev => {
       const next = !prev
@@ -379,7 +397,7 @@ export default function ProblemPage() {
       }
       return next
     })
-  }
+  }, [isTutorialLevel, puzzle, clearLoadedAsSaved, resetPuzzle, setShowSuccess, setScoreResult])
 
   if (!level || !puzzle) {
     return (
@@ -414,18 +432,19 @@ export default function ProblemPage() {
       sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
       touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
-      onNextStage={handleNextStage} onBackToStages={() => navigate(`/level/${levelId}/stages`)} onRandomize={handleRandomize}
+      onNextStage={handleNextStage} onBackToStages={navToStages} onRandomize={handleRandomize}
       onNewExpression={handleNewExpression}
     />
   )
 
   return (
+    <ZoomProvider>
     <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-transparent' : 'flex h-screen overflow-hidden bg-transparent'}>
       <StepHistoryPanel
         steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={setInspectedStepIdx}
         useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
-        onCloseStepHistory={() => setShowStepHistory(false)} isSandbox={isSandbox} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)}
-        touchTargets={touchTargets} zoom={zoom} onZoom={setZoom}
+        onCloseStepHistory={closeStepHistory} isSandbox={isSandbox} onBack={navToStages}
+        touchTargets={touchTargets}
         isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} chromeText={chromeText}
         chromeHeight={chromeHeight}
       />
@@ -436,7 +455,7 @@ export default function ProblemPage() {
           isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} compactHeader={compactHeader}
           headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}
           chromeHeight={chromeHeight} steps={steps} optimalSteps={optimalSteps}
-          points={progress.points} zoom={zoom} onZoom={setZoom}
+          points={progress.points}
           isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
           guideCost={guideCost} onHint={handleHint} onGuide={handleGuide}
           onOpenLaws={openLaws} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
@@ -452,7 +471,7 @@ export default function ProblemPage() {
           activeGuidePaths={activeGuidePaths} onClickLit={onClickLit} onClickNot={onClickNot}
           onClickTerm={onClickTerm} swapTerms={swapTerms} touchTargets={touchTargets}
           isPhoneLandscape={isPhoneLandscape} isSandbox={isSandbox} sandboxNonce={sandboxNonce}
-          isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle} zoom={zoom}
+          isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle}
         />
 
         {lawsPanel}
@@ -463,8 +482,8 @@ export default function ProblemPage() {
         isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} level={level}
         stageNum={stageNum} completedSet={completedSet} points={progress.points}
         steps={steps} optimalSteps={optimalSteps} isComplete={isComplete}
-        showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={() => setDismissReviewReminder(true)}
-        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
+        showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={handleDismissReviewReminder}
+        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onSelectStage={handleSelectStage} onNavigateStages={navToStages}
         assistanceInHeader={assistanceInHeader} guideCost={guideCost} onHint={handleHint}
         onGuide={handleGuide} onOpenLaws={openLaws} onRandomize={handleRandomize}
         onLoadCustomExpression={handleLoadCustomExpression} expressionInputRef={expressionInputRef}
@@ -474,11 +493,11 @@ export default function ProblemPage() {
       <LawsReferenceSheet
         show={showLawsDrawer} lawsSheet={lawsSheet} laws={laws}
         nodeRef={lawsPanelNode} band={lawsPanelBand} ready={lawsPanelReady}
-        onClose={() => setShowLawsDrawer(false)}
+        onClose={closeLaws}
       />
 
       <ScoreModal
-        showSuccess={showSuccess} onClose={() => setShowSuccess(false)} isTutorialActive={isTutorialActive}
+        showSuccess={showSuccess} onClose={closeSuccess} isTutorialActive={isTutorialActive}
         shortViewport={shortViewport} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
         steps={steps} optimalSteps={optimalSteps} hintsUsed={hintsUsed}
         guidesUsed={guidesUsed} scoreResult={scoreResult} earnedXp={earnedXp}
@@ -490,7 +509,7 @@ export default function ProblemPage() {
       {isSandbox && (
         <MobileExpressionModal
           show={showMobileExpressionCreator}
-          onClose={() => setShowMobileExpressionCreator(false)}
+          onClose={closeMobileExpression}
           onLoadCustomExpression={handleLoadCustomExpression}
           onRandomize={handleRandomize}
         />
@@ -498,7 +517,7 @@ export default function ProblemPage() {
 
       <ResetConfirmModal
         show={showResetConfirm} shortViewport={shortViewport} isSandbox={isSandbox}
-        dontAskResetAgain={dontAskResetAgain} onToggleDontAsk={setDontAskResetAgain} onClose={() => setShowResetConfirm(false)}
+        dontAskResetAgain={dontAskResetAgain} onToggleDontAsk={setDontAskResetAgain} onClose={closeResetConfirm}
         onConfirm={executeReset}
       />
 
@@ -507,7 +526,7 @@ export default function ProblemPage() {
            collision placement to stay within the viewport. */}
       <HintBubble
         show={showHint && hintExpression === expr && !isComplete && !isAnimating && !isPreLawHighlight} hint={currentHint} isPhoneLandscape={isPhoneLandscape}
-        isNarrowViewport={isNarrowViewport} onClose={() => setShowHint(false)}
+        isNarrowViewport={isNarrowViewport} onClose={closeHint}
       />
 
       <div
@@ -523,7 +542,7 @@ export default function ProblemPage() {
               <LawExplanationCard
                 lawName={steps[inspectedStepIdx]?.law}
                 explanation={steps[inspectedStepIdx]?.explanation}
-                ready={inspectPopupReady} onClose={() => setInspectedStepIdx(null)}
+                ready={inspectPopupReady} onClose={closeInspect}
               />
             )}
 
@@ -531,7 +550,7 @@ export default function ProblemPage() {
             {showStepInspectionTip && inspectedStepIdx === null && (
               <StepInspectionTip
                 ready={inspectPopupReady}
-                onDismiss={() => setShowStepInspectionTip(false)}
+                onDismiss={dismissInspectionTip}
               />
             )}
           </AnimatePresence>
@@ -573,5 +592,6 @@ export default function ProblemPage() {
         />
       )}
     </div>
+    </ZoomProvider>
   )
 }

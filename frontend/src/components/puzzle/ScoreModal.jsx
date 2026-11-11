@@ -5,7 +5,7 @@ import Icon from '../ui/Icon'
  * because nothing is awarded or persisted there.
  */
 import { useEffect, useMemo } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 export default function ScoreModal({
   showSuccess, onClose, isTutorialActive, shortViewport, isSandbox, isCustomSandbox,
@@ -41,7 +41,7 @@ export default function ScoreModal({
   return (
     <AnimatePresence>
       {showSuccess && (
-        <motion.div
+        <m.div
           key="success-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -52,7 +52,7 @@ export default function ScoreModal({
           }`}
           onClick={() => onClose()}
         >
-          <motion.div
+          <m.div
             data-tutorial="score-modal"
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -285,8 +285,8 @@ export default function ScoreModal({
                 <span>Review Completed Derivation</span>
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

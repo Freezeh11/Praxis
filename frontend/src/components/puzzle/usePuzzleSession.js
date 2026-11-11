@@ -85,7 +85,10 @@ export default function usePuzzleSession({ onPuzzleChange, onWorkspaceReset }) {
   // URL uses 1-based stage numbers (stage/1 = first puzzle, stage/2 = second, …)
   // Subtract 1 to get the 0-based puzzle array index.
   const stageNum = isSandbox ? 0 : parseInt(stageIdx) - 1
-  const completedSet = new Set(isSandbox ? [] : getStagesCompleted(Number(levelId)))
+  const completedSet = useMemo(
+    () => new Set(isSandbox ? [] : getStagesCompleted(Number(levelId))),
+    [isSandbox, levelId, getStagesCompleted],
+  )
 
   /** The puzzle currently being played — generated in sandbox, fetched otherwise. */
   const puzzle = levelPuzzle

@@ -1,7 +1,7 @@
 import Icon from '../components/ui/Icon'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useGameContent } from '../state/useGameContent.js'
 import { useProgress } from '../state/useProgress.js'
 import { usePageOverlays } from '../hooks/usePageOverlays'
@@ -310,7 +310,7 @@ export default function StageSelectorPage() {
               const stars = getStageStars(idx)
 
               return (
-                <motion.button
+                <m.button
                   key={idx}
                   data-stage-card={idx}
                   initial={{ opacity: 0, y: 10 }}
@@ -391,7 +391,7 @@ export default function StageSelectorPage() {
                       </span>
                     )}
                   </div>
-                </motion.button>
+                </m.button>
               )
             })}
           </div>

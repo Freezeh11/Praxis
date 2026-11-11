@@ -7,17 +7,22 @@ import Icon from '../ui/Icon'
  *
  * Presentational: the law list, the layout flags and the callbacks come in.
  */
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { independentChoices } from '../../engine/index.js'
 
-export default function LawPanel({
+function LawPanel({
   isComplete, isSandbox, isCustomSandbox, steps, optimalSteps,
   sel, lawsAsStrip, lawsAsGrid, touchTargets, onApplyLaw,
   level, stageNum, onOpenScoreSummary, onNextStage, onBackToStages,
   onRandomize, onNewExpression, referenceLaws = [], busy = false,
   selectedLaw, onChooseLaw, lawIds = null, allowExpand = false,
 }) {
-  const choices = independentChoices(referenceLaws, { lawIds, allowExpand })
+  // independentChoices walks the law list and filters it; without this memo the
+  // palette re-derived on every workspace render, including pure UI toggles.
+  const choices = useMemo(
+    () => independentChoices(referenceLaws, { lawIds, allowExpand }),
+    [referenceLaws, lawIds, allowExpand],
+  )
   /** Re-anchor the strip only when the available palette changes. */
   const applicableLawKey = choices.map(l => l.id).join('|')
   const lawsStripRef = useRef(null)
@@ -145,3 +150,5 @@ export default function LawPanel({
     </div>
   )
 }
+
+export default memo(LawPanel)

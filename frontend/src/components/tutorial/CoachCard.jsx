@@ -5,7 +5,7 @@ import Icon from '../ui/Icon'
  * title/description, exit control, manual action button, and its own
  * pre-measurement placement style helper.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { getTooltipStyle } from './coachCardFallbackStyle'
 
 export default function CoachCard({
@@ -26,7 +26,7 @@ export default function CoachCard({
   return (
     <AnimatePresence mode="wait">
       {!showWelcomeModal && !isPreLawHighlight && !isAnimating && currentStep && (
-        <motion.div
+        <m.div
           ref={cardRef}
           data-tutorial-card="true"
           key={currentStep.id}
@@ -95,7 +95,7 @@ export default function CoachCard({
             </button>
           </div>
         )}
-      </motion.div>
+      </m.div>
     )}
     </AnimatePresence>
   )

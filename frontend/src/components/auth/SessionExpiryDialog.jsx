@@ -6,11 +6,23 @@
  * absolute cap binds, staying is not offered and the primary button is disabled.
  */
 import { useEffect, useRef } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 
+import MotionProvider from '../motion/MotionProvider.jsx'
 import { formatCountdown } from '../../config/sessionRules.js'
 
-export default function SessionExpiryDialog({ open, secondsLeft, canExtend, onStay, onSignOut }) {
+export default function SessionExpiryDialog(props) {
+  // AuthProvider renders this above the router, outside every route's motion
+  // boundary, so it brings its own LazyMotion context instead of reaching for
+  // the page provider (which would not exist on a page without animation).
+  return (
+    <MotionProvider>
+      <SessionExpiryDialogView {...props} />
+    </MotionProvider>
+  )
+}
+
+function SessionExpiryDialogView({ open, secondsLeft, canExtend, onStay, onSignOut }) {
   const reduceMotion = useReducedMotion()
   const stayButtonRef = useRef(null)
   const signOutButtonRef = useRef(null)
@@ -40,7 +52,7 @@ export default function SessionExpiryDialog({ open, secondsLeft, canExtend, onSt
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <m.div
           key="session-expiry"
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -49,7 +61,7 @@ export default function SessionExpiryDialog({ open, secondsLeft, canExtend, onSt
           className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/30 p-3 backdrop-blur-[2px] dark:bg-black/65"
           onClick={onStay}
         >
-          <motion.div
+          <m.div
             role="dialog"
             aria-modal="true"
             aria-labelledby="session-expiry-title"
@@ -113,8 +125,8 @@ export default function SessionExpiryDialog({ open, secondsLeft, canExtend, onSt
                 Stay signed in
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

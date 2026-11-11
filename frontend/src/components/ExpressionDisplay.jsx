@@ -21,7 +21,7 @@
  */
 
 import { createContext, useContext } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 import useTermDrag from '../hooks/useTermDrag.js'
 
@@ -46,7 +46,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   const touchTargets = useContext(TouchTargetsContext)
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       className={`inline-flex items-baseline rounded-[4px] cursor-pointer transition-all border-[1.5px] touch-none select-none
@@ -64,7 +64,7 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
           ? <span style={{ textDecoration: 'overline', textUnderlineOffset: '2px' }}>{node.v}</span>
           : node.v
       ) : node.val}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -75,7 +75,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   const touchTargets = useContext(TouchTargetsContext)
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       className={`inline-flex items-baseline rounded-[5px] cursor-pointer transition-all border-[1.5px] touch-none select-none
@@ -136,7 +136,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         </span>
       </span>
       <span className="text-text-3 select-none self-center">)</span>
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -150,7 +150,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
   const { isDragging, isDragTarget, handlers } = useTermDrag({ group, index, onSwapTerms })
 
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       data-path={`${group}.${index}`}
@@ -191,7 +191,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
       </button>
 
       {children}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -204,7 +204,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
   const hasMultiple = isTopLevel && node.factors.length >= 2
 
   return (
-    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-baseline gap-0 ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
+    <m.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-baseline gap-0 ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.factors.map((f, i) => {
         const fPath = `${path}.${i}`
         const factorSel = sel.some(s => s.path === fPath)
@@ -215,7 +215,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
         const isSumClause = f?.type === 'sum'
 
         return (
-          <motion.span layout transition={transitionConfig} key={f._id || fPath} className="inline-flex items-baseline">
+          <m.span layout transition={transitionConfig} key={f._id || fPath} className="inline-flex items-baseline">
             {(prevIsConst || currIsConst) && i > 0 && (
               <span className={`text-text-3 mx-0.5 text-[0.9em] self-center ${factorAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}> · </span>
             )}
@@ -264,7 +264,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 )}
               </DragCapsule>
             ) : (
-              <motion.span
+              <m.span
                 layout
                 transition={transitionConfig}
                 data-path={fPath}
@@ -280,12 +280,12 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 ) : (
                   <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
                 )}
-              </motion.span>
+              </m.span>
             )}
-          </motion.span>
+          </m.span>
         )
       })}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -298,7 +298,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
 
   return (
-    <motion.span layout transition={transitionConfig} className={`inline-flex ${isTopLevel ? 'flex-wrap' : 'flex-nowrap whitespace-nowrap'} items-baseline gap-0 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
+    <m.span layout transition={transitionConfig} className={`inline-flex ${isTopLevel ? 'flex-wrap' : 'flex-nowrap whitespace-nowrap'} items-baseline gap-0 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.terms.map((t, i) => {
         const tPath = `${path}.${i}`
         const termSel = sel.some(s => s.path === tPath)
@@ -306,7 +306,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         const termAnimatingHide = isNodeAnimatingHide(tPath, animationPaths, animationLaw)
 
         return (
-          <motion.span layout transition={transitionConfig} key={t._id || tPath} className="inline-flex items-baseline">
+          <m.span layout transition={transitionConfig} key={t._id || tPath} className="inline-flex items-baseline">
             {i > 0 && (
               <span className={`text-text-2 font-normal mx-1.5 select-none self-center ${termAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}>
                 +
@@ -339,7 +339,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 />
               </DragCapsule>
             ) : (
-              <motion.span
+              <m.span
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
@@ -347,12 +347,12 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 onClick={(e) => { e.stopPropagation(); onClickTerm(tPath) }}
               >
                 <ExprNode node={t} path={tPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
-              </motion.span>
+              </m.span>
             )}
-          </motion.span>
+          </m.span>
         )
       })}
-    </motion.span>
+    </m.span>
   )
 }
 

@@ -3,7 +3,7 @@
  * @description The in-situ workspace spotlight: masked backdrop cutout, rigid
  * click blockers outside the hole(s) and the primary/secondary highlight rings.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 export default function Spotlight({
   showWelcomeModal,
@@ -44,7 +44,7 @@ export default function Spotlight({
         } : null
 
         return (
-          <motion.div
+          <m.div
             key="spotlight-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -58,7 +58,7 @@ export default function Spotlight({
             <defs>
               <mask id="tutorial-spotlight-mask">
                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                <motion.rect
+                <m.rect
                   key={`cutout-pri-${currentStep?.id || 'target'}`}
                   initial={{ opacity: 0 }}
                   animate={{
@@ -77,7 +77,7 @@ export default function Spotlight({
                   fill="black"
                 />
                 {secondaryHighlightRect && (
-                  <motion.rect
+                  <m.rect
                     key={`cutout-sec-${currentStep?.id || 'sec'}`}
                     initial={{ opacity: 0 }}
                     animate={{
@@ -177,7 +177,7 @@ export default function Spotlight({
 
           {/* Highlight ring on target element */}
           {highlightRect && (
-            <motion.div
+            <m.div
               key={`ring-pri-${currentStep?.id || 'target'}`}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{
@@ -202,7 +202,7 @@ export default function Spotlight({
 
           {/* Secondary highlight ring on drop target element ('z') */}
           {secondaryHighlightRect && !isPreLawHighlight && (
-            <motion.div
+            <m.div
               key={`ring-sec-${currentStep?.id || 'sec'}`}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{
@@ -226,9 +226,9 @@ export default function Spotlight({
                   Target
                 </span>
               )}
-            </motion.div>
+            </m.div>
           )}
-        </motion.div>
+        </m.div>
         )
       })()}
     </AnimatePresence>

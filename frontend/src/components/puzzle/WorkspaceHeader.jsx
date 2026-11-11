@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 import ThemeToggle from '../ui/ThemeToggle.jsx'
 import Icon from '../ui/Icon'
 /**
@@ -12,16 +14,18 @@ import AssistanceControls from './AssistanceControls'
 import { LawsReferenceButton } from './LawsReferenceSheet'
 import TutorialToggle from './TutorialToggle'
 import ZoomControls from './ZoomControls'
+import { useZoom } from './zoomStore'
 import SoundToggle from '../ui/SoundToggle'
 
-export default function WorkspaceHeader({
+function WorkspaceHeader({
   isSandbox, isCustomSandbox, compactHeader, headerControlRail, showStepHistoryToggle,
   chromeText, chromeHeight,
-  steps, optimalSteps, points, zoom, onZoom, isTutorialActive, isTutorialLevel, onToggleTutorial,
+  steps, optimalSteps, points, isTutorialActive, isTutorialLevel, onToggleTutorial,
   isComplete, guideCost, onHint, onGuide, onOpenLaws, stepHistoryOpen,
   onToggleStepHistory, onRandomize, onNewExpression, onUndo, onReset,
   soundEnabled, onToggleSound,
 }) {
+  const { zoom, setZoom: onZoom } = useZoom()
   /** Header title/subtitle — custom sandbox announces the typed expression. */
   const workspaceTitle = isSandbox ? 'Sandbox' : 'Simplify Expression'
   const workspaceSubtitle = isSandbox
@@ -184,3 +188,5 @@ export default function WorkspaceHeader({
         </div>
   )
 }
+
+export default memo(WorkspaceHeader)

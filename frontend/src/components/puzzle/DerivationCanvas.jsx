@@ -7,19 +7,23 @@ import Icon from '../ui/Icon'
  *
  * Presentational: the whole game state arrives as props.
  */
-import { motion } from 'framer-motion'
+import { memo } from 'react'
+
+import { m } from 'framer-motion'
 
 import AnimationOverlay from '../AnimationOverlay'
 import ExpressionDisplay from '../ExpressionDisplay'
 import ExprText from '../ExprText'
 import WorkspaceLiveBackdrop from './WorkspaceLiveBackdrop'
+import { useZoom } from './zoomStore'
 
-export default function DerivationCanvas({
+function DerivationCanvas({
   expr, sel, steps, status, statusMsg, isAnimating, animationData,
   inspectedStepIdx, setInspectedStepIdx, activeGuidePaths, onClickLit, onClickNot,
   onClickTerm, swapTerms, touchTargets, isPhoneLandscape, isSandbox, sandboxNonce,
-  isCustomSandbox, customPuzzle, zoom,
+  isCustomSandbox, customPuzzle,
 }) {
+  const { zoom } = useZoom()
   return (
     <div className="relative flex-1 min-h-0 flex flex-col">
       {/* Live wallpaper layer — one flat canvas behind the equations, clipped
@@ -127,7 +131,7 @@ export default function DerivationCanvas({
           }
 
           return (
-            <motion.div
+            <m.div
               layout
               className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start select-none"
               onClick={() => setInspectedStepIdx(null)}
@@ -137,7 +141,7 @@ export default function DerivationCanvas({
                 const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
                 const isLineHighlighted = isFromInspected || isToInspected
                 return (
-                  <motion.div
+                  <m.div
                     layout
                     key={line.key}
                     initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
@@ -230,10 +234,10 @@ export default function DerivationCanvas({
                         />
                       )}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )
               })}
-            </motion.div>
+            </m.div>
           )
         })()}
         </div>{/* end zoom wrapper */}
@@ -247,3 +251,5 @@ export default function DerivationCanvas({
     </div>
   )
 }
+
+export default memo(DerivationCanvas)

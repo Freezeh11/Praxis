@@ -22,7 +22,7 @@
  * overwrites, so a learner who played offline does not lose local progress.
  */
 import { TIMING, TUTORIAL, UNLOCK_AVERAGE_SCORE, MAX_STARS_PER_STAGE, STAR_THRESHOLDS } from '../config/gameRules.js'
-import { PROGRESS_KEY_PREFIX, progressKey } from '../config/storageKeys.js'
+import { PROGRESS_KEY_PREFIX, progressKey, serverProgressKey } from '../config/storageKeys.js'
 import * as progressApi from '../services/progressApi.js'
 
 export const GUEST_USER_ID = 'guest'
@@ -89,8 +89,43 @@ function scheduleServerSave() {
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     saveTimer = null
-    progressApi.saveProgress(progress)
+    const savedFor = userId
+    const savedProgress = progress
+    progressApi.saveProgress(savedProgress).then((result) => {
+      // A successful write makes this snapshot the freshest server truth we
+      // know about, so the next cold boot can paint it before revalidating.
+      if (result && userId === savedFor) writeServerCache(savedFor, savedProgress)
+    })
   }, TIMING.progressSaveDebounceMs)
+}
+
+const SERVER_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+/**
+ * The last server snapshot for this learner, or null when missing, corrupt or
+ * older than a day. A day is deliberately generous: the value is only ever a
+ * first paint, and mergeServerProgress() can only raise figures, never lower them.
+ */
+function readServerCache(id) {
+  try {
+    const raw = localStorage.getItem(serverProgressKey(id))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || !parsed.progress) return null
+    if (!Number.isFinite(parsed.at) || Date.now() - parsed.at > SERVER_CACHE_MAX_AGE_MS) return null
+    return parsed.progress
+  } catch {
+    return null
+  }
+}
+
+function writeServerCache(id, serverProgress) {
+  if (!serverProgress) return
+  try {
+    localStorage.setItem(serverProgressKey(id), JSON.stringify({ at: Date.now(), progress: serverProgress }))
+  } catch {
+    // Storage full or unavailable — the cache is an optimisation, never required.
+  }
 }
 
 /** Merges a server snapshot into local progress without ever losing a best value. */
@@ -149,16 +184,25 @@ export function setUser(nextUserId) {
   if (id === userId) return
 
   userId = id
-  progress = readLocal(id)
-  serverLoaded = id === GUEST_USER_ID
+  const local = readLocal(id)
+  const cached = id === GUEST_USER_ID ? null : readServerCache(id)
+
+  // Stale-while-revalidate: a cached server snapshot paints the real figures on
+  // the first frame, then the request below refreshes them. Without a cache the
+  // route gates keep waiting, because half-merged progress would flicker.
+  progress = cached ? mergeServerProgress(local, cached) : local
+  serverLoaded = id === GUEST_USER_ID || Boolean(cached)
   publish()
 
-  if (serverLoaded) return
+  if (id === GUEST_USER_ID) return
 
   progressApi.loadProgress().then((serverProgress) => {
     // A newer setUser() won the race — drop this response.
     if (userId !== id) return
-    if (serverProgress) progress = mergeServerProgress(progress, serverProgress)
+    if (serverProgress) {
+      progress = mergeServerProgress(progress, serverProgress)
+      writeServerCache(id, serverProgress)
+    }
     serverLoaded = true
     persistLocal()
     publish()

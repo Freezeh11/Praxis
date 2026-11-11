@@ -12,7 +12,7 @@ import Icon from '../ui/Icon'
  * put it in the header rail, the wide ones in the side panel.
  */
 import { useEffect } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 import usePanelSound from '../../hooks/usePanelSound'
 import LawCard from '../laws/LawCard'
@@ -60,7 +60,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
     <AnimatePresence>
       {show && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -68,7 +68,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
             className="fixed inset-0 z-40 bg-black/25"
             onClick={() => onClose()}
           />
-          <motion.div
+          <m.div
             data-testid={lawsSheet ? 'laws-sheet' : 'laws-drawer'}
             role="dialog"
             aria-modal="true"
@@ -106,7 +106,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
                 <LawCard key={law.id} law={law} />
               ))}
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
