@@ -9,7 +9,7 @@
  * Pure module: no React/DOM/network.
  */
 import { cloneN, con, lit, prod, sum } from '../node.js'
-import { getNode, sumContainsLit } from '../tree.js'
+import { getNode, setNode, sumContainsLit } from '../tree.js'
 import { nodeText } from '../render.js'
 import { normalize, normalizeFlat } from '../normalize.js'
 import { removeLitFromSumNode } from '../tree.js'

@@ -208,8 +208,13 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
   const visited = new Set([initialCanon])
   let statesExplored = 0
 
-  while (queue.length > 0) {
-    const current = queue.shift()
+  // Array.shift() is O(n), so dequeuing every state made these searches O(n^2)
+  // in the state budget. A read cursor keeps the same FIFO order at O(1) per
+  // dequeue, which matters most for the 3000/8000-state graded and generator
+  // searches that run on the main thread when a puzzle loads.
+  let head = 0
+  while (head < queue.length) {
+    const current = queue[head++]
 
     if (current.depth >= maxDepth || statesExplored >= maxStates) {
       continue
@@ -303,8 +308,13 @@ export function findOptimalPathWithLaws(startExpr, targetCanon, requiredLawIds, 
   const visited = new Set([stateKey(initialCanon, [])])
   let statesExplored = 0
 
-  while (queue.length > 0) {
-    const current = queue.shift()
+  // Array.shift() is O(n), so dequeuing every state made these searches O(n^2)
+  // in the state budget. A read cursor keeps the same FIFO order at O(1) per
+  // dequeue, which matters most for the 3000/8000-state graded and generator
+  // searches that run on the main thread when a puzzle loads.
+  let head = 0
+  while (head < queue.length) {
+    const current = queue[head++]
 
     if (current.depth >= maxDepth || statesExplored >= maxStates) {
       continue
@@ -392,8 +402,13 @@ export function findSimplestForm(startExpr, options = {}) {
   const visited = new Set([initialCanon])
   let statesExplored = 0
 
-  while (queue.length > 0) {
-    const current = queue.shift()
+  // Array.shift() is O(n), so dequeuing every state made these searches O(n^2)
+  // in the state budget. A read cursor keeps the same FIFO order at O(1) per
+  // dequeue, which matters most for the 3000/8000-state graded and generator
+  // searches that run on the main thread when a puzzle loads.
+  let head = 0
+  while (head < queue.length) {
+    const current = queue[head++]
 
     const transitions = getLegalTransitions(current.tree, options)
     statesExplored += transitions.length

@@ -57,9 +57,17 @@ const puzzleFailure = (errorCode, error) => ({ ok: false, errorCode, error })
 
 /* ── Workspace self-checks (same move set the UI is given) ────────────────── */
 
-/** True when the workspace would offer no further move from `tree`. */
+/**
+ * True when no law can simplify `tree` further.
+ *
+ * Distributive (Expand) is excluded here: it grows an expression, so it can
+ * never be the last step of a simplification. Counting it as a move makes every
+ * factored form non-terminal and forces the goal search to expand first, which
+ * turns a four-variable input into a 19-step, 25-second build. Learners can
+ * still use expansion in the workspace (puzzle.allowExpand).
+ */
 function isUiTerminal(tree) {
-  return getLegalTransitions(tree, SANDBOX_ENGINE).length === 0
+  return getLegalTransitions(tree, { allowExpand: false }).length === 0
 }
 
 /**
@@ -150,7 +158,7 @@ export function buildSandboxPuzzle(raw, options = {}) {
 
   /* 3. fully simplified terminal form — the sandbox opts into the gated
         Distributive-Expand law, which graded levels never enable */
-  const simplest = findSimplestForm(parsed, { ...budget.simplestForm, allowExpand: true })
+  const simplest = findSimplestForm(parsed, { ...budget.simplestForm, allowExpand: false })
   if (!simplest.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }
@@ -163,7 +171,7 @@ export function buildSandboxPuzzle(raw, options = {}) {
   }
 
   /* 4. guaranteed legal forward path (the step-locking rule needs one) */
-  const solution = findOptimalPath(parsed, simplest.canon, { ...budget.optimalPath, allowExpand: true })
+  const solution = findOptimalPath(parsed, simplest.canon, { ...budget.optimalPath, allowExpand: false })
   if (!solution.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }
