@@ -58,6 +58,15 @@ sign-in: the SPA talks to Supabase directly to obtain an access token, and the b
 tables, the 2 content JSON documents, the browser-storage contracts, and the quality
 attributes in NFR-1 – NFR-15.
 
+**User-facing terms.** The Terms and Conditions dialog
+(`frontend/src/content/termsContent.js`, rendered by
+`frontend/src/components/ui/TermsDialog.jsx`) is the learner-facing summary of this scope
+and of the LAWS proposal. It quotes the rules in §3.4, §3.6 and §3.9: the 80% average to
+unlock a level, 10 points per stage plus up to 5 bonus, stars at 90 and 75, the 20-point
+Guide, free worded hints, and a sandbox that records nothing. It also lists the data in §6.
+Change that file in the same commit as any rule change here; `.e2e/terms-copy.mjs` fails
+the build when the two drift apart.
+
 **Out of scope:** Supabase's own service behaviour, the `.e2e/` harness internals, and
 anything in the frozen legacy documents ([`context.md`](../context.md),
 [`ARCHITECTURE.md`](../ARCHITECTURE.md)).
