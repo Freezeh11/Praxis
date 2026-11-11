@@ -4,7 +4,7 @@ import Icon from '../ui/Icon'
  * breakdown; the sandbox gets the compact attempt summary with law pills,
  * because nothing is awarded or persisted there.
  */
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export default function ScoreModal({
@@ -15,6 +15,17 @@ export default function ScoreModal({
   const uniqueLaws = useMemo(() => {
     return [...new Set(steps.map(s => s?.law).filter(Boolean))]
   }, [steps])
+
+  // Completion is a dialog: Escape dismisses it, matching the laws sheet and
+  // the reset confirmation.
+  useEffect(() => {
+    if (!showSuccess) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [showSuccess, onClose])
 
   const problemExprText = puzzle?.expr || (isCustomSandbox ? 'Your expression' : 'Random practice')
 

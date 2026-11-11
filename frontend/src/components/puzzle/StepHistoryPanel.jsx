@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Icon from '../ui/Icon'
 /**
  * StepHistoryPanel — the derivation history. It is the first column on the wide
@@ -19,6 +20,17 @@ export default function StepHistoryPanel({
   // Only the overlay-drawer variant opens and closes — on the wide tiers this
   // panel is a permanent column, so the flag stays false and the cue is unused.
   usePanelSound(stepHistoryOpen)
+
+  // The overlay variant is modal on compact tiers; Escape must dismiss it like
+  // every other dialog in the app (the wide column never sets this flag).
+  useEffect(() => {
+    if (!useOverlayHistory || !stepHistoryOpen) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onCloseStepHistory()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [useOverlayHistory, stepHistoryOpen, onCloseStepHistory])
 
   const stepHistoryPanel = (
     <aside

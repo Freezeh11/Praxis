@@ -163,6 +163,18 @@ export default function ProblemPage() {
     hintsUsed, guidesUsed, optimalSteps,
   } = usePuzzleSession({ onPuzzleChange: handlePuzzleChange, onWorkspaceReset: handleWorkspaceReset })
 
+  // An accidental refresh used to wipe an in-progress derivation with no
+  // warning (only completed stages are persisted). Ask before discarding it.
+  useEffect(() => {
+    if (steps.length === 0 || isComplete) return undefined
+    const guard = (event) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', guard)
+    return () => window.removeEventListener('beforeunload', guard)
+  }, [steps.length, isComplete])
+
   const handleNewExpression = () => {
     setShowSuccess(false)
     if (showRightPanel) {
@@ -304,9 +316,11 @@ export default function ProblemPage() {
   }
 
   const handleResetClick = () => {
-    // If the stage is completed and user hasn't opted out in this session
+    // Confirm whenever reset would destroy something: a solved stage OR an
+    // in-progress derivation. Previously only the solved case asked, so the
+    // commonest destructive reset - mid-derivation - was silent.
     const skipPrompt = sessionStorage.getItem(SKIP_RESET_CONFIRM) === 'true'
-    if (isComplete && !skipPrompt) {
+    if ((isComplete || steps.length > 0) && !skipPrompt) {
       setDontAskResetAgain(false)
       setShowResetConfirm(true)
     } else {

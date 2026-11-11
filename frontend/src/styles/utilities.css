@@ -71,6 +71,15 @@
   scrollbar-width: thin;
 }
 
+/* Header control rail: no hidden controls on short landscape screens. Wrapping
+   beats horizontal scrolling here because an off-screen Undo/Reset/History is
+   unusable and there is no scroll affordance to discover. */
+.praxis-rail-wrap {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  scroll-snap-type: none;
+}
+
 .praxis-rail > * {
   flex: 0 0 auto;
   scroll-snap-align: start;

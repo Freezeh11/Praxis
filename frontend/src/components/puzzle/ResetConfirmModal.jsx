@@ -1,3 +1,5 @@
+import useDialogA11y from '../../hooks/useDialogA11y.js'
+
 /**
  * ResetConfirmModal — the confirmation shown when a solved stage is reset,
  * with the per-session opt-out.
@@ -5,6 +7,7 @@
 export default function ResetConfirmModal({
   show, shortViewport, isSandbox, dontAskResetAgain, onToggleDontAsk, onClose, onConfirm,
 }) {
+  const panelRef = useDialogA11y(show, onClose)
   if (!show) return null
 
   return (
@@ -13,6 +16,11 @@ export default function ResetConfirmModal({
       onClick={() => onClose()}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reset-confirm-title"
+        aria-describedby="reset-confirm-description"
         className={`flex w-full max-w-[380px] cursor-default flex-col rounded-2xl border border-slate-200/90 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-slate-900/95 praxis-modal-panel ${shortViewport ? 'p-4' : 'p-6'}`}
         onClick={e => e.stopPropagation()}
       >
@@ -21,10 +29,10 @@ export default function ResetConfirmModal({
             ↺
           </div>
           <div>
-            <h3 className="text-[16px] font-bold text-text-1">
+            <h3 id="reset-confirm-title" className="text-[16px] font-bold text-text-1">
               {isSandbox ? 'Reset this problem?' : 'Reset this stage?'}
             </h3>
-            <p className="text-xs text-text-3 mt-0.5">
+            <p id="reset-confirm-description" className="text-xs text-text-3 mt-0.5">
               {isSandbox
                 ? 'This clears your current derivation so you can solve the same random problem again.'
                 : 'Are you sure you want to reset the stage? This will clear your current derivation so you can solve it from scratch.'}
@@ -58,7 +66,7 @@ export default function ResetConfirmModal({
             style={{ backgroundColor: '#b91c1c', color: '#ffffff' }}
             onClick={onConfirm}
           >
-            Reset Stage
+            {isSandbox ? 'Reset Problem' : 'Reset Stage'}
           </button>
         </div>
       </div>

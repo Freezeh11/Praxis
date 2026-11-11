@@ -173,7 +173,7 @@ export default function WorkspaceHeader({
           {headerControlRail && (
             <div
               data-testid="header-control-rail"
-              className="praxis-rail flex-wrap items-center gap-1.5 w-full pb-0.5"
+              className="praxis-rail praxis-rail-wrap items-center gap-1.5 w-full pb-0.5"
             >
               {undoResetGroup}
               <AssistanceControls compact isComplete={isComplete} isSandbox={isSandbox} guideCost={guideCost} points={points} onHint={onHint} onGuide={onGuide} chromeText={chromeText} chromeHeight={chromeHeight} />
