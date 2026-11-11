@@ -180,13 +180,17 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(response.status_code, 413)
         self.assertEqual(response.json()["error"]["code"], "payload_too_large")
 
-    def test_https_responses_get_hsts_and_api_gets_no_store(self):
+    def test_https_responses_get_hsts_and_api_cache_policy(self):
         secure = self.client.get("/api/levels", headers={"X-Forwarded-Proto": "https"})
         self.assertEqual(secure.status_code, 200)
         self.assertIn("max-age=63072000", secure.headers["strict-transport-security"])
-        self.assertEqual(secure.headers["cache-control"], "no-store")
+        # Shared, non-personal content may be reused briefly by the browser.
+        self.assertIn("max-age=300", secure.headers["cache-control"])
         self.assertEqual(secure.headers["x-content-type-options"], "nosniff")
         self.assertEqual(secure.headers["x-permitted-cross-domain-policies"], "none")
+        # Authenticated payloads never enter a shared cache.
+        private = self.client.get("/api/progress")
+        self.assertEqual(private.headers["cache-control"], "no-store")
         plain = self.client.get("/api/levels")
         self.assertNotIn("strict-transport-security", plain.headers)
 

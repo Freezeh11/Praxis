@@ -20,7 +20,7 @@ router = APIRouter()
 @router.get("/progress", response_model=Envelope)
 async def get_progress(user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
     """Full progress snapshot for the authenticated user."""
-    return success(progress_service.load_progress(user["id"]))
+    return success(await progress_service.load_progress(user["id"]))
 
 
 @router.post("/progress/save", response_model=Envelope)
@@ -30,7 +30,7 @@ async def save_progress(
 ) -> dict[str, Any]:
     """Save/update the progress snapshot for the authenticated user."""
     progress = req.progress
-    progress_service.save_progress(
+    await progress_service.save_progress(
         user_id=user["id"],
         points=progress.points,
         streak=progress.streak,

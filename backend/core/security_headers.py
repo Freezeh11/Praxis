@@ -46,9 +46,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if forwarded.split(",")[0].strip().lower() == "https":
             headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 
-        # Authenticated payloads must never sit in a shared cache.
-        if request.url.path.startswith("/api/"):
-            headers.setdefault("Cache-Control", "no-store")
+        # Public content is identical for every caller and changes only with a
+        # deploy, so let the browser reuse it briefly while revalidating in the
+        # background. Everything else may carry user data and must not be cached.
+        path = request.url.path
+        if path.startswith("/api/"):
+            public = request.method == "GET" and path.startswith(("/api/levels", "/api/laws"))
+            headers.setdefault(
+                "Cache-Control",
+                "public, max-age=300, stale-while-revalidate=86400" if public else "no-store",
+            )
 
         if not request.url.path.startswith(_DOC_PATHS):
             headers.setdefault("Content-Security-Policy", API_CSP)

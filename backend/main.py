@@ -5,12 +5,15 @@ Started by ``uvicorn main:app`` from ``backend/``.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.gzip import GZipMiddleware
 
 from api.routes import health, laws, levels, progress, score
 from config.settings import settings
@@ -20,9 +23,19 @@ from core.middleware import RequestContextMiddleware
 from core.rate_limit import BodySizeLimitMiddleware, RateLimitMiddleware
 from core.responses import error_response, failure
 from core.security_headers import SecurityHeadersMiddleware
+from supabase_client import supabase
 
 configure_logging()
 logger = get_logger("praxis.api")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Close pooled Supabase connections when the server stops."""
+    try:
+        yield
+    finally:
+        await supabase.aclose()
+
 
 # Interactive docs stay available while developing; a production deployment can
 # switch them off with ENVIRONMENT=production.
@@ -32,6 +45,7 @@ app = FastAPI(
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None if settings.is_production else "/redoc",
     openapi_url=None if settings.is_production else "/openapi.json",
+    lifespan=lifespan,
 )
 
 # Added inner-first. SecurityHeadersMiddleware is added last so it is the
@@ -40,6 +54,10 @@ app = FastAPI(
 # headers. CORS still wraps the request middleware, so its headers reach that
 # envelope too.
 app.add_middleware(RequestContextMiddleware)
+# JSON envelopes are repetitive; gzip cuts progress payloads by roughly two
+# thirds for a few milliseconds of CPU. Below 1 KB the header costs more than it
+# saves, so smaller bodies pass through untouched.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
