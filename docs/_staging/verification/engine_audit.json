@@ -1,0 +1,445 @@
+###JSON###
+{
+ "engineDistinctIds": [
+  "distributive",
+  "complement",
+  "identity",
+  "annulment",
+  "idempotent",
+  "absorption",
+  "distributive-expand",
+  "double-neg",
+  "demorgan-and",
+  "demorgan-or"
+ ],
+ "engineDefinitionCount": 16,
+ "LAW_NAME_TO_ID": {
+  "Distributive (Factor)": "distributive",
+  "Complement Law": "complement",
+  "Identity Law": "identity",
+  "Annulment Law": "annulment",
+  "Idempotent Law": "idempotent",
+  "Absorption Law": "absorption",
+  "Distributive (POS)": "distributive",
+  "Complement Law (Product)": "complement",
+  "Idempotent Law (Product)": "idempotent",
+  "Absorption Law (Product)": "absorption",
+  "Annulment Law (Product)": "annulment",
+  "Distributive (Expand)": "distributive-expand",
+  "Double Negation": "double-neg",
+  "De Morgan's (AND→OR)": "demorgan-and",
+  "De Morgan's (OR→AND)": "demorgan-or"
+ },
+ "engineIndexExports": [
+  "DIFFICULTIES",
+  "LAW_DEFINITIONS",
+  "LAW_FORM",
+  "LAW_MODE",
+  "LAW_NAME_TO_ID",
+  "MAX_SANDBOX_VARS",
+  "SANDBOX_POOL",
+  "VAR_POOL",
+  "VAR_POOL_COMPLEX",
+  "analyzeNot",
+  "analyzeProductConst",
+  "analyzeSelection",
+  "analyzeSumConst",
+  "buildSandboxPuzzle",
+  "canonText",
+  "cloneN",
+  "con",
+  "effectiveOptimalSteps",
+  "ensureNodeId",
+  "estimateScore",
+  "evalAST",
+  "extractVariables",
+  "findCommonProd",
+  "findCommonSum",
+  "findOptimalPath",
+  "findSimplestForm",
+  "generatePuzzlePair",
+  "generateRandomPuzzle",
+  "getLegalTransitions",
+  "getLits",
+  "getNode",
+  "getSumLits",
+  "isEquivalent",
+  "isSubSum",
+  "isSubT",
+  "lawIdOf",
+  "lawsUsedFromSteps",
+  "lit",
+  "makeRng",
+  "neg",
+  "nextNodeId",
+  "nodeText",
+  "normalize",
+  "normalizeDifficulty",
+  "normalizeFlat",
+  "normalizeSandboxExpr",
+  "parseExpr",
+  "prod",
+  "randomPoolEquation",
+  "randomSeed",
+  "removeLitFromNode",
+  "removeLitFromSumNode",
+  "scanHints",
+  "setNode",
+  "sum",
+  "sumContainsLit",
+  "termContainsLit",
+  "termsEq",
+  "validateExpr",
+  "validateSandboxInput"
+ ],
+ "renderExports": [
+  "canonText",
+  "nodeText"
+ ],
+ "text:x + xy": {
+  "nodeText": "x + xy",
+  "canonText": "x+xy"
+ },
+ "text:x'y + xy": {
+  "nodeText": "x'y + xy",
+  "canonText": "x'y+xy"
+ },
+ "text:(x+y)": {
+  "nodeText": "x + y",
+  "canonText": "x+y"
+ },
+ "text:xy": {
+  "nodeText": "xy",
+  "canonText": "xy"
+ },
+ "text:x''": {
+  "nodeText": "x",
+  "canonText": "x"
+ },
+ "text:x + 0": {
+  "nodeText": "x + 0",
+  "canonText": "0+x"
+ },
+ "text:x·y": {
+  "nodeText": "xy",
+  "canonText": "xy"
+ },
+ "completionProbes": [
+  {
+   "expr": "x + xy",
+   "goal": "x",
+   "canonEqual": false,
+   "canonExpr": "x+xy",
+   "canonGoal": "x",
+   "semanticallyEquivalent": true
+  },
+  {
+   "expr": "x + y",
+   "goal": "y + x",
+   "canonEqual": true,
+   "canonExpr": "x+y",
+   "canonGoal": "x+y",
+   "semanticallyEquivalent": true
+  },
+  {
+   "expr": "x' + x",
+   "goal": "1",
+   "canonEqual": false,
+   "canonExpr": "x+x'",
+   "canonGoal": "1",
+   "semanticallyEquivalent": true
+  },
+  {
+   "expr": "x + x",
+   "goal": "x",
+   "canonEqual": false,
+   "canonExpr": "x+x",
+   "canonGoal": "x",
+   "semanticallyEquivalent": true
+  },
+  {
+   "expr": "xy",
+   "goal": "yx",
+   "canonEqual": true,
+   "canonExpr": "xy",
+   "canonGoal": "xy",
+   "semanticallyEquivalent": true
+  }
+ ],
+ "levelMeta": [
+  {
+   "id": 0,
+   "name": "Tutorial",
+   "varCount": 2,
+   "n": 4
+  },
+  {
+   "id": 1,
+   "name": "Level 1",
+   "varCount": 2,
+   "n": 12
+  },
+  {
+   "id": 2,
+   "name": "Level 2",
+   "varCount": 3,
+   "n": 12
+  },
+  {
+   "id": 3,
+   "name": "Level 3 — Boss",
+   "varCount": 4,
+   "n": 12
+  }
+ ],
+ "solverOnContent": {
+  "0:0": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "0:1": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "0:2": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "0:3": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:0": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:1": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:2": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:3": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:4": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:5": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:6": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:7": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:8": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:9": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:10": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "1:11": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:0": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:1": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:2": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:3": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:4": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:5": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:6": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:7": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:8": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:9": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:10": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "2:11": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:0": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:1": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:2": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:3": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:4": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:5": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:6": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:7": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:8": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:9": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:10": {
+   "error": "findOptimalSteps is not a function"
+  },
+  "3:11": {
+   "error": "findOptimalSteps is not a function"
+  }
+ },
+ "hintLawIds": [
+  null
+ ],
+ "scanErrors": [],
+ "contentTargetLawIds": [
+  "absorption",
+  "annulment",
+  "complement",
+  "demorgan-and",
+  "demorgan-or",
+  "distributive",
+  "idempotent",
+  "identity"
+ ],
+ "cardIds": [
+  "complement",
+  "idempotent",
+  "absorption",
+  "identity",
+  "annulment",
+  "distributive",
+  "double-neg",
+  "demorgan-and",
+  "demorgan-or",
+  "associative"
+ ],
+ "cardKeys": [
+  "desc",
+  "formulas",
+  "id",
+  "name"
+ ],
+ "cardSample": {
+  "id": "complement",
+  "name": "Complement Law",
+  "formulas": [
+   "A + A' = 1",
+   "A · A' = 0"
+  ],
+  "desc": "A variable OR its complement is 1; AND with its complement is 0."
+ },
+ "sandboxValidateExports": [
+  "canonicalTokenText",
+  "normalizeSandboxExpr",
+  "resolveMaxVariables",
+  "scanTokens",
+  "validateSandboxInput"
+ ],
+ "sandboxInputExports": [
+  "MAX_SANDBOX_VARS",
+  "buildSandboxPuzzle",
+  "normalizeSandboxExpr",
+  "validateSandboxInput"
+ ],
+ "sandboxGeneratorExports": [
+  "DIFFICULTIES",
+  "VAR_POOL",
+  "VAR_POOL_COMPLEX",
+  "generatePuzzlePair",
+  "generateRandomPuzzle",
+  "makeRng",
+  "normalizeDifficulty",
+  "randomSeed"
+ ],
+ "sandboxExpandExports": [
+  "coverVariables",
+  "expandOnce",
+  "isPosRoot",
+  "isSopRoot"
+ ],
+ "sandboxPoolExports": [
+  "SANDBOX_POOL",
+  "randomPoolEquation"
+ ],
+ "scoringExports": [
+  "effectiveOptimalSteps",
+  "estimateScore",
+  "lawIdOf",
+  "lawsUsedFromSteps"
+ ],
+ "solverExports": [
+  "findOptimalPath",
+  "findSimplestForm",
+  "getLegalTransitions"
+ ],
+ "parseExports": [
+  "parseExpr"
+ ],
+ "normalizeExports": [
+  "normalize",
+  "normalizeFlat"
+ ],
+ "validateExports": [
+  "validateExpr"
+ ],
+ "treeExports": [
+  "findCommonProd",
+  "findCommonSum",
+  "getNode",
+  "getSumLits",
+  "isSubSum",
+  "removeLitFromNode",
+  "removeLitFromSumNode",
+  "setNode",
+  "sumContainsLit",
+  "termContainsLit"
+ ],
+ "nodeExports": [
+  "cloneN",
+  "con",
+  "ensureNodeId",
+  "lit",
+  "neg",
+  "nextNodeId",
+  "prod",
+  "sum"
+ ],
+ "equivalenceExports": [
+  "evalAST",
+  "extractVariables",
+  "isEquivalent"
+ ],
+ "expandCases": [
+  {
+   "expr": "x(y + z)",
+   "error": "path.slice(...).split is not a function"
+  }
+ ]
+}

@@ -1,0 +1,1826 @@
+[
+ {
+  "doc": "01-product/PRD.md:270",
+  "ident": "score_history",
+  "file": "backend/services/progress_service.py",
+  "fileline": 87,
+  "text": "def persist_score(user_id: str, outcome: ScoreOutcome) -> None:",
+  "docline": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_scor"
+ },
+ {
+  "doc": "01-product/PRD.md:270",
+  "ident": "stage_progress.best_score",
+  "file": "backend/services/progress_service.py",
+  "fileline": 87,
+  "text": "def persist_score(user_id: str, outcome: ScoreOutcome) -> None:",
+  "docline": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_scor"
+ },
+ {
+  "doc": "01-product/PRD.md:270",
+  "ident": "score_history",
+  "file": "backend/api/routes/score.py",
+  "fileline": 39,
+  "text": "background_tasks.add_task(progress_service.persist_score, user[\"id\"], outcome)",
+  "docline": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_scor"
+ },
+ {
+  "doc": "01-product/PRD.md:270",
+  "ident": "stage_progress.best_score",
+  "file": "backend/api/routes/score.py",
+  "fileline": 39,
+  "text": "background_tasks.add_task(progress_service.persist_score, user[\"id\"], outcome)",
+  "docline": "| **FR-28** | A signed-in learner's score is persisted: one `score_history` row per attempt and a raised `stage_progress.best_scor"
+ },
+ {
+  "doc": "01-product/PRD.md:307",
+  "ident": "fetch",
+  "file": "frontend/src/engine/scoring.js",
+  "fileline": 18,
+  "text": "} from '../config/gameRules.js'",
+  "docline": "| **NFR-2** | **Engine purity.** `frontend/src/engine/**` imports only `config/` and itself \u2014 no React, no DOM, no network, no `fe"
+ },
+ {
+  "doc": "01-product/PRD.md:307",
+  "ident": "fetch",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 36,
+  "text": "import { SANDBOX } from '../../config/gameRules.js'",
+  "docline": "| **NFR-2** | **Engine purity.** `frontend/src/engine/**` imports only `config/` and itself \u2014 no React, no DOM, no network, no `fe"
+ },
+ {
+  "doc": "01-product/PRD.md:329",
+  "ident": "isComplete",
+  "file": "database/init.sql",
+  "fileline": 28,
+  "text": "CREATE TABLE IF NOT EXISTS score_history (",
+  "docline": "| **M1 Completion rate** | Share of started stages that reach `isComplete`. | `score_history` row count vs `stage_progress` rows p"
+ },
+ {
+  "doc": "01-product/PRD.md:329",
+  "ident": "stage_progress",
+  "file": "database/init.sql",
+  "fileline": 28,
+  "text": "CREATE TABLE IF NOT EXISTS score_history (",
+  "docline": "| **M1 Completion rate** | Share of started stages that reach `isComplete`. | `score_history` row count vs `stage_progress` rows p"
+ },
+ {
+  "doc": "01-product/PRD.md:333",
+  "ident": "stage_progress.best_score",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 291,
+  "text": "export function getLevelProgress(state, levelId, totalStages) {",
+  "docline": "| **M5 Mastery reach** | Share of learners who unlock Level 3, i.e. reach an 80 average on Levels 1 and 2. | `stage_progress.best_"
+ },
+ {
+  "doc": "01-product/SRS.md:77",
+  "ident": "absorption",
+  "file": "frontend/src/engine/laws/definitions.js",
+  "fileline": 29,
+  "text": "export const LAW_DEFINITIONS = [",
+  "docline": "| **law id** | The stable identifier in `frontend/src/engine/laws/definitions.js:29`, e.g. `absorption`, `demorgan-and`. |"
+ },
+ {
+  "doc": "01-product/SRS.md:94",
+  "ident": "name",
+  "file": "frontend/src/pages/RegisterPage.jsx",
+  "fileline": 32,
+  "text": "if (password.length < 6) {",
+  "docline": "| **FR-1** | \u2460 Submitting the register form with `password.length < 6` shows \"Password must be at least 6 characters\" and issues n"
+ },
+ {
+  "doc": "01-product/SRS.md:103",
+  "ident": "replace",
+  "file": "frontend/src/components/ProtectedRoute.jsx",
+  "fileline": 9,
+  "text": "if (isPending) {",
+  "docline": "| **FR-5** | \u2460 Visiting `/levels`, `/level/:id/stages`, `/level/:id/stage/:idx`, `/sandbox` or `/sandbox/play` with no session red"
+ },
+ {
+  "doc": "01-product/SRS.md:104",
+  "ident": "returnTo",
+  "file": "frontend/src/components/TutorialGate.jsx",
+  "fileline": 47,
+  "text": "if (!progressHydrated) return <TutorialGateLoading />",
+  "docline": "| **FR-6** | \u2460 On a fresh account, visiting `/level/1/stages` lands on `/level/0/stage/0?tutorial=true&returnTo=\u2026`. \u2461 After all 4 "
+ },
+ {
+  "doc": "01-product/SRS.md:104",
+  "ident": "returnTo",
+  "file": "frontend/src/state/useProgress.js",
+  "fileline": 69,
+  "text": "progressHydrated: snapshot.hydrated,",
+  "docline": "| **FR-6** | \u2460 On a fresh account, visiting `/level/1/stages` lands on `/level/0/stage/0?tutorial=true&returnTo=\u2026`. \u2461 After all 4 "
+ },
+ {
+  "doc": "01-product/SRS.md:111",
+  "ident": "puzzles",
+  "file": "backend/api/routes/levels.py",
+  "fileline": 18,
+  "text": "@router.get(\"/levels\", response_model=Envelope)",
+  "docline": "| **FR-8** | \u2460 `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. \u2461 `GET /api/levels/1` retu"
+ },
+ {
+  "doc": "01-product/SRS.md:111",
+  "ident": "IndexError",
+  "file": "backend/api/routes/levels.py",
+  "fileline": 18,
+  "text": "@router.get(\"/levels\", response_model=Envelope)",
+  "docline": "| **FR-8** | \u2460 `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. \u2461 `GET /api/levels/1` retu"
+ },
+ {
+  "doc": "01-product/SRS.md:111",
+  "ident": "puzzles",
+  "file": "backend/services/content_service.py",
+  "fileline": 24,
+  "text": "def get_level(level_id: int) -> dict[str, Any]:",
+  "docline": "| **FR-8** | \u2460 `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. \u2461 `GET /api/levels/1` retu"
+ },
+ {
+  "doc": "01-product/SRS.md:111",
+  "ident": "IndexError",
+  "file": "backend/services/content_service.py",
+  "fileline": 24,
+  "text": "def get_level(level_id: int) -> dict[str, Any]:",
+  "docline": "| **FR-8** | \u2460 `GET /api/levels` returns 4 summaries with keys `id, name, desc, varCount, puzzleCount`. \u2461 `GET /api/levels/1` retu"
+ },
+ {
+  "doc": "01-product/SRS.md:113",
+  "ident": "LEVEL_SUMMARIES",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 16,
+  "text": "CONTENT_DIR = Path(__file__).resolve().parents[2] / \"content\"",
+  "docline": "| **FR-10** | \u2460 The bytes the API serves are the bytes the SPA bundles: both read `<repo>/content/*.json`. \u2461 Deleting `content/` m"
+ },
+ {
+  "doc": "01-product/SRS.md:113",
+  "ident": "LEVEL_SUMMARIES",
+  "file": "frontend/vite.config.js",
+  "fileline": 16,
+  "text": "'@content': fileURLToPath(new URL('../content', import.meta.url)),",
+  "docline": "| **FR-10** | \u2460 The bytes the API serves are the bytes the SPA bundles: both read `<repo>/content/*.json`. \u2461 Deleting `content/` m"
+ },
+ {
+  "doc": "01-product/SRS.md:121",
+  "ident": "locked",
+  "file": "frontend/src/pages/StageSelectorPage.jsx",
+  "fileline": 56,
+  "text": "const isAvailable = (idx) => idx === 0 || completedSet.has(idx - 1)",
+  "docline": "| **FR-13** | \u2460 Stage 0 is always playable. \u2461 Stage *N* is `locked` until stage *N\u22121* is in the completed set. \u2462 Locked cards are "
+ },
+ {
+  "doc": "01-product/SRS.md:121",
+  "ident": "disabled",
+  "file": "frontend/src/pages/StageSelectorPage.jsx",
+  "fileline": 56,
+  "text": "const isAvailable = (idx) => idx === 0 || completedSet.has(idx - 1)",
+  "docline": "| **FR-13** | \u2460 Stage 0 is always playable. \u2461 Stage *N* is `locked` until stage *N\u22121* is in the completed set. \u2462 Locked cards are "
+ },
+ {
+  "doc": "01-product/SRS.md:128",
+  "ident": "not",
+  "file": "frontend/src/engine/laws/index.js",
+  "fileline": 33,
+  "text": "export function analyzeSelection(expr, sel, options = {}) {",
+  "docline": "| **FR-15** | \u2460 Clicking a literal toggles it into the selection; a third click replaces the oldest selection (max 2). \u2461 Clicking "
+ },
+ {
+  "doc": "01-product/SRS.md:139",
+  "ident": "hintsUsed",
+  "file": "frontend/src/state/hintText.js",
+  "fileline": 18,
+  "text": "export function buildHintText(law, paths, expr) {",
+  "docline": "| **FR-21** | \u2460 Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a sugge"
+ },
+ {
+  "doc": "01-product/SRS.md:139",
+  "ident": "scanHints",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 66,
+  "text": "hintAutoDismissMs: 6000,",
+  "docline": "| **FR-21** | \u2460 Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a sugge"
+ },
+ {
+  "doc": "01-product/SRS.md:139",
+  "ident": "hintsUsed",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 66,
+  "text": "hintAutoDismissMs: 6000,",
+  "docline": "| **FR-21** | \u2460 Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a sugge"
+ },
+ {
+  "doc": "01-product/SRS.md:139",
+  "ident": "null",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 66,
+  "text": "hintAutoDismissMs: 6000,",
+  "docline": "| **FR-21** | \u2460 Hint text is derived from the **current** expression via `scanHints`, not from the authored list, whenever a sugge"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "useGameState",
+  "file": "frontend/src/engine/laws/helpers.js",
+  "fileline": 77,
+  "text": "return isEquivalent(prod(cloneN(survivor), cloneN(absorbed)), absorbed)",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "useGameState",
+  "file": "frontend/src/engine/sandbox/generator.js",
+  "fileline": 94,
+  "text": "if (!isEquivalent(parsed, simplest.tree)) return null",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "useGameState",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 161,
+  "text": "if (!isEquivalent(parsed, simplest.tree)) {",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "isEquivalent",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 83,
+  "text": "const gCanon = canonText(parseExpr(puzzle.goal))",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "isEquivalent",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 83,
+  "text": "const gCanon = canonText(parseExpr(puzzle.goal))",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "isEquivalent",
+  "file": "frontend/src/engine/render.js",
+  "fileline": 28,
+  "text": "export function canonText(n) {",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "useGameState",
+  "file": "frontend/src/engine/render.js",
+  "fileline": 28,
+  "text": "export function canonText(n) {",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:146",
+  "ident": "isEquivalent",
+  "file": "frontend/src/engine/render.js",
+  "fileline": 28,
+  "text": "export function canonText(n) {",
+  "docline": "| **FR-23** | \u2460 Completion is decided by **canonical-text equality** of the current tree against the parsed goal: `canonText(newEx"
+ },
+ {
+  "doc": "01-product/SRS.md:148",
+  "ident": "scoreResult",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 31,
+  "text": "return apiRequest('/api/score', {",
+  "docline": "| **FR-25** | \u2460 The completion modal opens within 200 ms of the solve, before any network answer. \u2461 When `POST /api/score` answers"
+ },
+ {
+  "doc": "01-product/SRS.md:148",
+  "ident": "result.total",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 31,
+  "text": "return apiRequest('/api/score', {",
+  "docline": "| **FR-25** | \u2460 The completion modal opens within 200 ms of the solve, before any network answer. \u2461 When `POST /api/score` answers"
+ },
+ {
+  "doc": "01-product/SRS.md:157",
+  "ident": "localStorage",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| **FR-29** | \u2460 Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. \u2461 For a signed-in learner wit"
+ },
+ {
+  "doc": "01-product/SRS.md:157",
+  "ident": "localStorage",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 68,
+  "text": "progressSaveDebounceMs: 500,",
+  "docline": "| **FR-29** | \u2460 Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. \u2461 For a signed-in learner wit"
+ },
+ {
+  "doc": "01-product/SRS.md:168",
+  "ident": "addPoints",
+  "file": "frontend/src/pages/SandboxPage.jsx",
+  "fileline": 178,
+  "text": "navigate('/sandbox/play', {",
+  "docline": "| **FR-35** | \u2460 Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. \u2461 The work"
+ },
+ {
+  "doc": "01-product/SRS.md:168",
+  "ident": "completeStage",
+  "file": "frontend/src/pages/SandboxPage.jsx",
+  "fileline": 178,
+  "text": "navigate('/sandbox/play', {",
+  "docline": "| **FR-35** | \u2460 Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. \u2461 The work"
+ },
+ {
+  "doc": "01-product/SRS.md:168",
+  "ident": "saveScore",
+  "file": "frontend/src/pages/SandboxPage.jsx",
+  "fileline": 178,
+  "text": "navigate('/sandbox/play', {",
+  "docline": "| **FR-35** | \u2460 Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. \u2461 The work"
+ },
+ {
+  "doc": "01-product/SRS.md:168",
+  "ident": "submitScore",
+  "file": "frontend/src/pages/SandboxPage.jsx",
+  "fileline": 178,
+  "text": "navigate('/sandbox/play', {",
+  "docline": "| **FR-35** | \u2460 Submitting a valid expression navigates to `/sandbox/play` with route state `{customPuzzle, exprText}`. \u2461 The work"
+ },
+ {
+  "doc": "01-product/SRS.md:178",
+  "ident": "localStorage",
+  "file": "frontend/src/services/soundEffects.js",
+  "fileline": 43,
+  "text": "export function isSoundEnabled() {",
+  "docline": "| **FR-40** | \u2460 Cues exist for `step, hint, guide, correct, wrong, reset, complete`. \u2461 The preference persists in `localStorage` a"
+ },
+ {
+  "doc": "01-product/SRS.md:178",
+  "ident": "AudioContext",
+  "file": "frontend/src/services/soundEffects.js",
+  "fileline": 43,
+  "text": "export function isSoundEnabled() {",
+  "docline": "| **FR-40** | \u2460 Cues exist for `step, hint, guide, correct, wrong, reset, complete`. \u2461 The preference persists in `localStorage` a"
+ },
+ {
+  "doc": "01-product/SRS.md:178",
+  "ident": "localStorage",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 203,
+  "text": "primeAudio()",
+  "docline": "| **FR-40** | \u2460 Cues exist for `step, hint, guide, correct, wrong, reset, complete`. \u2461 The preference persists in `localStorage` a"
+ },
+ {
+  "doc": "01-product/SRS.md:178",
+  "ident": "AudioContext",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 203,
+  "text": "primeAudio()",
+  "docline": "| **FR-40** | \u2460 Cues exist for `step, hint, guide, correct, wrong, reset, complete`. \u2461 The preference persists in `localStorage` a"
+ },
+ {
+  "doc": "01-product/SRS.md:178",
+  "ident": "AudioContext",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 28,
+  "text": "export const SOUND_ENABLED = 'praxis_sound_enabled'",
+  "docline": "| **FR-40** | \u2460 Cues exist for `step, hint, guide, correct, wrong, reset, complete`. \u2461 The preference persists in `localStorage` a"
+ },
+ {
+  "doc": "01-product/SRS.md:188",
+  "ident": "fetch",
+  "file": "./frontend/src/engine/scoring.js",
+  "fileline": 18,
+  "text": "} from '../config/gameRules.js'",
+  "docline": "| **NFR-2** | No file under `frontend/src/engine/` imports React, a DOM global, `fetch`, or any folder other than `engine/` and `c"
+ },
+ {
+  "doc": "01-product/SRS.md:188",
+  "ident": "fetch",
+  "file": "./frontend/src/engine/sandbox/input.js",
+  "fileline": 36,
+  "text": "import { SANDBOX } from '../../config/gameRules.js'",
+  "docline": "| **NFR-2** | No file under `frontend/src/engine/` imports React, a DOM global, `fetch`, or any folder other than `engine/` and `c"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "submitScore",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 34,
+  "text": "silent: true,",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "loadProgress",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 34,
+  "text": "silent: true,",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "saveProgress",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 34,
+  "text": "silent: true,",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "null",
+  "file": "frontend/src/services/scoreApi.js",
+  "fileline": 34,
+  "text": "silent: true,",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "submitScore",
+  "file": "frontend/src/services/progressApi.js",
+  "fileline": 12,
+  "text": "return apiRequest('/api/progress', { silent: true })",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "saveProgress",
+  "file": "frontend/src/services/progressApi.js",
+  "fileline": 12,
+  "text": "return apiRequest('/api/progress', { silent: true })",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "submitScore",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 53,
+  "text": "* @param {boolean} [options.silent] return null instead of throwing on failure",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "loadProgress",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 53,
+  "text": "* @param {boolean} [options.silent] return null instead of throwing on failure",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:195",
+  "ident": "saveProgress",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 53,
+  "text": "* @param {boolean} [options.silent] return null instead of throwing on failure",
+  "docline": "| **NFR-9** | \u2460 `submitScore`, `loadProgress` and `saveProgress` pass `silent: true`. \u2461 A network failure therefore returns `null`"
+ },
+ {
+  "doc": "01-product/SRS.md:272",
+  "ident": "supabase.auth.signUp",
+  "file": "frontend/src/services/authActions.js",
+  "fileline": 11,
+  "text": "const { data, error } = await supabase.auth.signInWithPassword({ email, password })",
+  "docline": "| Auth \u2014 password sign-in / sign-up | SPA \u2192 Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/s"
+ },
+ {
+  "doc": "01-product/SRS.md:272",
+  "ident": "VITE_SUPABASE_URL",
+  "file": "frontend/src/services/authActions.js",
+  "fileline": 11,
+  "text": "const { data, error } = await supabase.auth.signInWithPassword({ email, password })",
+  "docline": "| Auth \u2014 password sign-in / sign-up | SPA \u2192 Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/s"
+ },
+ {
+  "doc": "01-product/SRS.md:272",
+  "ident": "VITE_SUPABASE_PUBLISHABLE_KEY",
+  "file": "frontend/src/services/authActions.js",
+  "fileline": 11,
+  "text": "const { data, error } = await supabase.auth.signInWithPassword({ email, password })",
+  "docline": "| Auth \u2014 password sign-in / sign-up | SPA \u2192 Supabase | `supabase.auth.signInWithPassword`, `supabase.auth.signUp` via `@supabase/s"
+ },
+ {
+  "doc": "01-product/SRS.md:273",
+  "ident": "onAuthStateChange",
+  "file": "frontend/src/state/AuthProvider.jsx",
+  "fileline": 23,
+  "text": "const { data: { session }, error } = await supabase.auth.getSession()",
+  "docline": "| Auth \u2014 session | SPA \u2190 Supabase | `supabase.auth.getSession()` and `onAuthStateChange`; the access token is attached as a bearer"
+ },
+ {
+  "doc": "01-product/SRS.md:273",
+  "ident": "onAuthStateChange",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 28,
+  "text": "const { data } = await supabase.auth.getSession()",
+  "docline": "| Auth \u2014 session | SPA \u2190 Supabase | `supabase.auth.getSession()` and `onAuthStateChange`; the access token is attached as a bearer"
+ },
+ {
+  "doc": "01-product/SRS.md:282",
+  "ident": "localStorage",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| `praxis_v1_<userId>` | `localStorage` | `progressStore.persistLocal` | The whole progress snapshot per learner. `frontend/src/co"
+ },
+ {
+  "doc": "01-product/SRS.md:282",
+  "ident": "progressStore.persistLocal",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| `praxis_v1_<userId>` | `localStorage` | `progressStore.persistLocal` | The whole progress snapshot per learner. `frontend/src/co"
+ },
+ {
+  "doc": "01-product/SRS.md:372",
+  "ident": "stageProgress",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 123,
+  "text": "merged.hasCompletedTutorial = Boolean(",
+  "docline": "(`frontend/src/state/progressStore.js:123`). `stageProgress` and `stageScores` are the only"
+ },
+ {
+  "doc": "01-product/SRS.md:372",
+  "ident": "stageScores",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 123,
+  "text": "merged.hasCompletedTutorial = Boolean(",
+  "docline": "(`frontend/src/state/progressStore.js:123`). `stageProgress` and `stageScores` are the only"
+ },
+ {
+  "doc": "01-product/SRS.md:390",
+  "ident": "SUPABASE_URL",
+  "file": "backend/config/settings.py",
+  "fileline": 75,
+  "text": "settings = Settings.from_env()",
+  "docline": "| C-3 | Settings are an **import-time singleton**: `settings = Settings.from_env()` raises if `SUPABASE_URL` or `SUPABASE_SERVICE_"
+ },
+ {
+  "doc": "01-product/SRS.md:390",
+  "ident": "SUPABASE_SERVICE_KEY",
+  "file": "backend/config/settings.py",
+  "fileline": 75,
+  "text": "settings = Settings.from_env()",
+  "docline": "| C-3 | Settings are an **import-time singleton**: `settings = Settings.from_env()` raises if `SUPABASE_URL` or `SUPABASE_SERVICE_"
+ },
+ {
+  "doc": "01-product/SRS.md:416",
+  "ident": "live",
+  "file": "backend/api/routes/levels.py",
+  "fileline": 18,
+  "text": "@router.get(\"/levels\", response_model=Envelope)",
+  "docline": "| FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:416",
+  "ident": "live",
+  "file": "backend/services/content_service.py",
+  "fileline": 24,
+  "text": "def get_level(level_id: int) -> dict[str, Any]:",
+  "docline": "| FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:417",
+  "ident": "live",
+  "file": "backend/api/routes/laws.py",
+  "fileline": 18,
+  "text": "@router.get(\"/laws\", response_model=Envelope)",
+  "docline": "| FR-9 | `backend/api/routes/laws.py:18` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:418",
+  "ident": "live",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 16,
+  "text": "CONTENT_DIR = Path(__file__).resolve().parents[2] / \"content\"",
+  "docline": "| FR-10 | `backend/repositories/content_repository.py:16`, `frontend/vite.config.js:16` | `.e2e/verify-sandbox.mjs`; `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:432",
+  "ident": "live",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 32,
+  "text": "def compute_score(",
+  "docline": "| FR-24 | `backend/services/scoring_service.py:32`, `backend/config/constants.py:9` | `live` (11 cases incl. edge cases) |"
+ },
+ {
+  "doc": "01-product/SRS.md:432",
+  "ident": "live",
+  "file": "backend/config/constants.py",
+  "fileline": 9,
+  "text": "EFFICIENCY_WEIGHT = 40.0  # steps taken vs optimal steps",
+  "docline": "| FR-24 | `backend/services/scoring_service.py:32`, `backend/config/constants.py:9` | `live` (11 cases incl. edge cases) |"
+ },
+ {
+  "doc": "01-product/SRS.md:436",
+  "ident": "live",
+  "file": "backend/api/routes/score.py",
+  "fileline": 39,
+  "text": "background_tasks.add_task(progress_service.persist_score, user[\"id\"], outcome)",
+  "docline": "| FR-28 | `backend/api/routes/score.py:39`, `backend/services/progress_service.py:87` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:436",
+  "ident": "live",
+  "file": "backend/services/progress_service.py",
+  "fileline": 87,
+  "text": "def persist_score(user_id: str, outcome: ScoreOutcome) -> None:",
+  "docline": "| FR-28 | `backend/api/routes/score.py:39`, `backend/services/progress_service.py:87` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:440",
+  "ident": "live",
+  "file": "backend/api/routes/progress.py",
+  "fileline": 20,
+  "text": "@router.get(\"/progress\", response_model=Envelope)",
+  "docline": "| FR-32 | `backend/api/routes/progress.py:20`, `:26` | `live` |"
+ },
+ {
+  "doc": "01-product/SRS.md:461",
+  "ident": "live",
+  "file": "backend/core/responses.py",
+  "fileline": 32,
+  "text": "def success(data: Any) -> dict[str, Any]:",
+  "docline": "| NFR-5 | `backend/core/responses.py:32`, `backend/main.py:50` | `live` (success, 404, 422, 401, unknown path) |"
+ },
+ {
+  "doc": "01-product/SRS.md:461",
+  "ident": "live",
+  "file": "backend/main.py",
+  "fileline": 50,
+  "text": "@app.exception_handler(StarletteHTTPException)",
+  "docline": "| NFR-5 | `backend/core/responses.py:32`, `backend/main.py:50` | `live` (success, 404, 422, 401, unknown path) |"
+ },
+ {
+  "doc": "01-product/SRS.md:462",
+  "ident": "live",
+  "file": "backend/core/security.py",
+  "fileline": 17,
+  "text": "async def get_current_user(request: Request) -> dict[str, Any]:",
+  "docline": "| NFR-6 | `backend/core/security.py:17` | `live` (401 bodies) |"
+ },
+ {
+  "doc": "01-product/SRS.md:466",
+  "ident": "live",
+  "file": "backend/core/middleware.py",
+  "fileline": 26,
+  "text": "async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:",
+  "docline": "| NFR-10 | `backend/core/middleware.py:26`, `backend/core/logging.py:34` | `live` (X-Request-ID present; one JSON line per request"
+ },
+ {
+  "doc": "01-product/SRS.md:466",
+  "ident": "live",
+  "file": "backend/core/logging.py",
+  "fileline": 34,
+  "text": "class JsonFormatter(logging.Formatter):",
+  "docline": "| NFR-10 | `backend/core/middleware.py:26`, `backend/core/logging.py:34` | `live` (X-Request-ID present; one JSON line per request"
+ },
+ {
+  "doc": "01-product/SRS.md:470",
+  "ident": "live",
+  "file": "render.yaml",
+  "fileline": 1,
+  "text": "services:",
+  "docline": "| NFR-14 | `render.yaml:1`, `frontend/vercel.json:1` | Read + `live` (deployed host appears in the rewrite target) |"
+ },
+ {
+  "doc": "01-product/SRS.md:470",
+  "ident": "live",
+  "file": "frontend/vercel.json",
+  "fileline": 1,
+  "text": "{",
+  "docline": "| NFR-14 | `render.yaml:1`, `frontend/vercel.json:1` | Read + `live` (deployed host appears in the rewrite target) |"
+ },
+ {
+  "doc": "02-architecture/SAD.md:386",
+  "ident": "localStorage",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 60,
+  "text": "function update(updater) {",
+  "docline": "| Progress snapshot | `state/progressStore.js` | every screen | `localStorage` + Supabase | The store is the only writer (`fronten"
+ },
+ {
+  "doc": "02-architecture/SAD.md:404",
+  "ident": "ErrorCode",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 70,
+  "text": "throw new ApiError('Could not reach the Praxis server.', {",
+  "docline": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_er"
+ },
+ {
+  "doc": "02-architecture/SAD.md:404",
+  "ident": "invalid_response",
+  "file": "frontend/src/services/apiClient.js",
+  "fileline": 70,
+  "text": "throw new ApiError('Could not reach the Praxis server.', {",
+  "docline": "| Codes | 7 codes in `ErrorCode` (`backend/core/errors.py:11-21`) | Re-uses the server's code verbatim, or synthesizes `network_er"
+ },
+ {
+  "doc": "02-architecture/SAD.md:477",
+  "ident": "SUPABASE_URL",
+  "file": "backend/config/settings.py",
+  "fileline": 75,
+  "text": "settings = Settings.from_env()",
+  "docline": "`backend/config/settings.py:75` is an **import-time singleton**: a missing `SUPABASE_URL` or"
+ },
+ {
+  "doc": "02-architecture/SDD.md:209",
+  "ident": "NotFoundError",
+  "file": "./backend/api/routes/levels.py",
+  "fileline": 25,
+  "text": "def read_level(level_id: int) -> dict[str, Any]:",
+  "docline": "| `read_level` | `(level_id: int) -> dict[str, Any]` `levels.py:25` | Delegates; the service raises `NotFoundError` \u2192 404 |"
+ },
+ {
+  "doc": "02-architecture/SDD.md:950",
+  "ident": "useGameState",
+  "file": "./frontend/src/engine/sandbox/generator.js",
+  "fileline": 94,
+  "text": "if (!isEquivalent(parsed, simplest.tree)) return null",
+  "docline": "(`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`) \u2014 never `useGameState`."
+ },
+ {
+  "doc": "02-architecture/SDD.md:950",
+  "ident": "useGameState",
+  "file": "./frontend/src/engine/sandbox/input.js",
+  "fileline": 161,
+  "text": "if (!isEquivalent(parsed, simplest.tree)) {",
+  "docline": "(`engine/sandbox/generator.js:94`, `engine/sandbox/input.js:161`) \u2014 never `useGameState`."
+ },
+ {
+  "doc": "02-architecture/SDD.md:1004",
+  "ident": "earned_points",
+  "file": "frontend/src/engine/scoring.js",
+  "fileline": 80,
+  "text": "const earnedPoints = Math.round((total / 100) * SCORE_BONUS_MAX_POINTS)",
+  "docline": "| D21 | `earned_points` uses Python `round()`; the client mirror uses `Math.round`. | \u2014 | `backend/services/scoring_service.py:55`"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:199",
+  "ident": "useState",
+  "file": "frontend/src/state/useProgress.js",
+  "fileline": 24,
+  "text": "const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)",
+  "docline": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:199",
+  "ident": "update",
+  "file": "frontend/src/state/useProgress.js",
+  "fileline": 24,
+  "text": "const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)",
+  "docline": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:199",
+  "ident": "useState",
+  "file": "./frontend/src/state/progressStore.js",
+  "fileline": 60,
+  "text": "function update(updater) {",
+  "docline": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:199",
+  "ident": "useSyncExternalStore",
+  "file": "./frontend/src/state/progressStore.js",
+  "fileline": 60,
+  "text": "function update(updater) {",
+  "docline": "| **One progress store**: `state/progressStore.js` | every `useProgress()` call holding its own `useState` copy | The module-level"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:265",
+  "ident": "nameToId",
+  "file": "./frontend/src/engine/laws/definitions.js",
+  "fileline": 63,
+  "text": "export const LAW_NAME_TO_ID = Object.fromEntries(",
+  "docline": "| 14 | \u00a73: \"the `nameToId` map duplicated inside the puzzle screen \u2026 deleted\" | Absent; `LAW_NAME_TO_ID` is derived at `definition"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:269",
+  "ident": "hints_used",
+  "file": "./backend/services/progress_service.py",
+  "fileline": 51,
+  "text": "",
+  "docline": "| 18 | \u00a76.4: \"The database schema is untouched. Guide usage is folded into the existing `hints_used` column\" | `persist_score` wri"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:269",
+  "ident": "persist_score",
+  "file": "./backend/services/progress_service.py",
+  "fileline": 51,
+  "text": "",
+  "docline": "| 18 | \u00a76.4: \"The database schema is untouched. Guide usage is folded into the existing `hints_used` column\" | `persist_score` wri"
+ },
+ {
+  "doc": "02-architecture/REFACTOR-NOTES.md:272",
+  "ident": "server.fs.allow",
+  "file": "./frontend/vite.config.js",
+  "fileline": 16,
+  "text": "'@content': fileURLToPath(new URL('../content', import.meta.url)),",
+  "docline": "| 21 | \u00a76.1: Vite `@content` alias, `server.fs.allow`, restart needed | `vite.config.js:16`, `:22`; still true | agrees |"
+ },
+ {
+  "doc": "03-database/ERD.md:86",
+  "ident": "stage_progress",
+  "file": "database/init.sql",
+  "fileline": 24,
+  "text": "UNIQUE(user_id, level_id, stage_idx)",
+  "docline": "| `\\|\\|--o{` | exactly one \u2192 | zero or more | A learner owns **any number** of `stage_progress` rows, but at most one per `(level_"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:58",
+  "ident": "auth.users",
+  "file": "backend/services/progress_service.py",
+  "fileline": 63,
+  "text": "progress_repository.upsert_user_progress(",
+  "docline": "| `user_progress` | The learner's running totals: points, current streak, best streak. | **At most 1** \u2014 the PK *is* the FK to `au"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:98",
+  "ident": "get_current_user",
+  "file": "backend/api/routes/progress.py",
+  "fileline": 34,
+  "text": "user_id=user[\"id\"],",
+  "docline": "| `user_id` | The Supabase Auth user id (`auth.users.id`), passed as `user[\"id\"]` from the bearer token. | `backend/api/routes/pro"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:101",
+  "ident": "best_streak",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 173,
+  "text": "points: p.points + amount,",
+  "docline": "| `best_streak` | High-water mark of `streak`, also computed client-side. | `frontend/src/state/progressStore.js:173` |"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:301",
+  "ident": "user_progress_pkey",
+  "file": "backend/repositories/progress_repository.py",
+  "fileline": 32,
+  "text": "supabase.table(USER_PROGRESS_TABLE).select(\"*\").eq(\"user_id\", user_id)",
+  "docline": "| `user_progress_pkey` | `user_progress` | `PRIMARY KEY (user_id)` \u2014 also serves the `eq(\"user_id\", \u2026)` lookup at `backend/reposit"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:378",
+  "ident": "progress_service.save_progress",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 68,
+  "text": "progressSaveDebounceMs: 500,",
+  "docline": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per complete"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:378",
+  "ident": "user_progress",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 68,
+  "text": "progressSaveDebounceMs: 500,",
+  "docline": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per complete"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:378",
+  "ident": "stage_progress",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 68,
+  "text": "progressSaveDebounceMs: 500,",
+  "docline": "| `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per complete"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:410",
+  "ident": "auth.users",
+  "file": "database/init.sql",
+  "fileline": 4,
+  "text": "-- Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`.",
+  "docline": "| **D3** | `database/init.sql:4` \u2014 \"Better Auth tables (user, session, account, verification) are created automatically by `npx au"
+ },
+ {
+  "doc": "03-database/SCHEMA.md:410",
+  "ident": "auth.users",
+  "file": "frontend/src/services/authActions.js",
+  "fileline": 11,
+  "text": "const { data, error } = await supabase.auth.signInWithPassword({ email, password })",
+  "docline": "| **D3** | `database/init.sql:4` \u2014 \"Better Auth tables (user, session, account, verification) are created automatically by `npx au"
+ },
+ {
+  "doc": "04-api/API-REFERENCE.md:325",
+  "ident": "true",
+  "file": "backend/main.py",
+  "fileline": 33,
+  "text": "allow_credentials=True,",
+  "docline": "| `allow_credentials` | `true` | `backend/main.py:33` |"
+ },
+ {
+  "doc": "04-api/API-REFERENCE.md:1327",
+  "ident": "data",
+  "file": "backend/api/routes/progress.py",
+  "fileline": 41,
+  "text": "return success({\"status\": \"ok\"})",
+  "docline": "`data` has exactly one key, `status`, always the string `\"ok\"` (`backend/api/routes/progress.py:41`)."
+ },
+ {
+  "doc": "05-guides/tutorials/understanding-the-engine.md:322",
+  "ident": "buildSandboxPuzzle",
+  "file": "./frontend/src/pages/SandboxPage.jsx",
+  "fileline": 122,
+  "text": "const live = useMemo(() => validateSandboxInput(debouncedRaw), [debouncedRaw])",
+  "docline": "| `validateSandboxInput` (`sandbox/validate.js:155`) | `pages/SandboxPage.jsx:122` and `:124` \u2014 the **sandbox screen** \u2014 and `sand"
+ },
+ {
+  "doc": "05-guides/tutorials/understanding-the-engine.md:322",
+  "ident": "buildSandboxPuzzle",
+  "file": "./frontend/src/engine/sandbox/input.js",
+  "fileline": 113,
+  "text": "const validation = validateSandboxInput(raw, { maxVariables: resolveMaxVariables(options) })",
+  "docline": "| `validateSandboxInput` (`sandbox/validate.js:155`) | `pages/SandboxPage.jsx:122` and `:124` \u2014 the **sandbox screen** \u2014 and `sand"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "localStorage",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "levelsCompleted",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "stageProgress",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "stageScores",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "stageSolutions",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "05-guides/how-to/reset-user-progress.md:32",
+  "ident": "hasSeenTutorial",
+  "file": "frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `sta"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:34",
+  "ident": "SCORE_WEIGHTS.efficiency",
+  "file": "backend/config/constants.py",
+  "fileline": 9,
+  "text": "EFFICIENCY_WEIGHT = 40.0  # steps taken vs optimal steps",
+  "docline": "| `EFFICIENCY_WEIGHT` / `SCORE_WEIGHTS.efficiency` | `40.0` / `40` | `backend/config/constants.py:9` | `frontend/src/config/gameRu"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:34",
+  "ident": "EFFICIENCY_WEIGHT",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 15,
+  "text": "efficiency: 40,",
+  "docline": "| `EFFICIENCY_WEIGHT` / `SCORE_WEIGHTS.efficiency` | `40.0` / `40` | `backend/config/constants.py:9` | `frontend/src/config/gameRu"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:35",
+  "ident": "SCORE_WEIGHTS.targetLaw",
+  "file": "backend/config/constants.py",
+  "fileline": 10,
+  "text": "TARGET_LAW_WEIGHT = 30.0  # share of the puzzle's target laws actually applied",
+  "docline": "| `TARGET_LAW_WEIGHT` / `SCORE_WEIGHTS.targetLaw` | `30.0` / `30` | `backend/config/constants.py:10` | `frontend/src/config/gameRu"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:35",
+  "ident": "TARGET_LAW_WEIGHT",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 16,
+  "text": "targetLaw: 30,",
+  "docline": "| `TARGET_LAW_WEIGHT` / `SCORE_WEIGHTS.targetLaw` | `30.0` / `30` | `backend/config/constants.py:10` | `frontend/src/config/gameRu"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:36",
+  "ident": "SCORE_WEIGHTS.hintIndependence",
+  "file": "backend/config/constants.py",
+  "fileline": 11,
+  "text": "HINT_INDEPENDENCE_WEIGHT = 30.0  # solved without hints/guides",
+  "docline": "| `HINT_INDEPENDENCE_WEIGHT` / `SCORE_WEIGHTS.hintIndependence` | `30.0` / `30` | `backend/config/constants.py:11` | `frontend/src"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:36",
+  "ident": "HINT_INDEPENDENCE_WEIGHT",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 17,
+  "text": "hintIndependence: 30,",
+  "docline": "| `HINT_INDEPENDENCE_WEIGHT` / `SCORE_WEIGHTS.hintIndependence` | `30.0` / `30` | `backend/config/constants.py:11` | `frontend/src"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:38",
+  "ident": "SCORE_PENALTY.stepOverOptimal",
+  "file": "backend/config/constants.py",
+  "fileline": 15,
+  "text": "STEP_PENALTY = 10.0  # points lost per step over the optimal solution",
+  "docline": "| `STEP_PENALTY` / `SCORE_PENALTY.stepOverOptimal` | `10.0` / `10` | `backend/config/constants.py:15` | `frontend/src/config/gameR"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:38",
+  "ident": "STEP_PENALTY",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 23,
+  "text": "stepOverOptimal: 10,",
+  "docline": "| `STEP_PENALTY` / `SCORE_PENALTY.stepOverOptimal` | `10.0` / `10` | `backend/config/constants.py:15` | `frontend/src/config/gameR"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:39",
+  "ident": "SCORE_PENALTY.assistance",
+  "file": "backend/config/constants.py",
+  "fileline": 16,
+  "text": "ASSISTANCE_PENALTY = 10.0  # points lost per hint or guide consumed",
+  "docline": "| `ASSISTANCE_PENALTY` / `SCORE_PENALTY.assistance` | `10.0` / `10` | `backend/config/constants.py:16` | `frontend/src/config/game"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:39",
+  "ident": "ASSISTANCE_PENALTY",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 25,
+  "text": "assistance: 10,",
+  "docline": "| `ASSISTANCE_PENALTY` / `SCORE_PENALTY.assistance` | `10.0` / `10` | `backend/config/constants.py:16` | `frontend/src/config/game"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:40",
+  "ident": "SCORE_BONUS_MAX_POINTS",
+  "file": "backend/config/constants.py",
+  "fileline": 19,
+  "text": "MAX_BONUS_POINTS = 5  # awarded on top of the base 10 when the total is MAX_SCORE",
+  "docline": "| `MAX_BONUS_POINTS` / `SCORE_BONUS_MAX_POINTS` | `5` / `5` | `backend/config/constants.py:19` | `frontend/src/config/gameRules.js"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:40",
+  "ident": "MAX_BONUS_POINTS",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 29,
+  "text": "export const SCORE_BONUS_MAX_POINTS = 5",
+  "docline": "| `MAX_BONUS_POINTS` / `SCORE_BONUS_MAX_POINTS` | `5` / `5` | `backend/config/constants.py:19` | `frontend/src/config/gameRules.js"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:41",
+  "ident": "round1",
+  "file": "backend/config/constants.py",
+  "fileline": 22,
+  "text": "SCORE_ROUNDING_DP = 1  # decimals kept on every reported score component",
+  "docline": "| `SCORE_ROUNDING_DP` | `1` | `backend/config/constants.py:22` | `\u2014` (frontend hardcodes `round1`, `frontend/src/engine/scoring.js"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:41",
+  "ident": "SCORE_ROUNDING_DP",
+  "file": "frontend/src/engine/scoring.js",
+  "fileline": 22,
+  "text": "const round1 = (value) => Math.round(value * 10) / 10",
+  "docline": "| `SCORE_ROUNDING_DP` | `1` | `backend/config/constants.py:22` | `\u2014` (frontend hardcodes `round1`, `frontend/src/engine/scoring.js"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:44",
+  "ident": "UNLOCK_AVERAGE_SCORE",
+  "file": "backend/config/constants.py",
+  "fileline": 26,
+  "text": "UNLOCK_AVERAGE = 80.0  # average stage score needed to unlock the next level",
+  "docline": "| `UNLOCK_AVERAGE` / `UNLOCK_AVERAGE_SCORE` | `80.0` / `80` | `backend/config/constants.py:26` | `frontend/src/config/gameRules.js"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:99",
+  "ident": "NotFoundError",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 43,
+  "text": "puzzle = content_service.get_puzzle(level_id, stage_idx)",
+  "docline": "(`backend/services/scoring_service.py:43`). Unknown level or stage raises `NotFoundError`, which"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:209",
+  "ident": "null",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 73,
+  "text": "\"hintsUsed\": hints_used or 0,",
+  "docline": "| `hintsUsed` | `int` | Hints submitted (`null` \u2192 0). | `backend/services/scoring_service.py:73` |"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:210",
+  "ident": "null",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 74,
+  "text": "\"guidesUsed\": guides_used or 0,",
+  "docline": "| `guidesUsed` | `int` | Guides submitted (`null` \u2192 0). | `backend/services/scoring_service.py:74` |"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:211",
+  "ident": "ASSISTANCE_PENALTY",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 75,
+  "text": "\"totalAssistance\": assistance_used,",
+  "docline": "| `totalAssistance` | `int` | `hintsUsed + guidesUsed` \u2014 the figure multiplied by `ASSISTANCE_PENALTY`. | `backend/services/scorin"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:562",
+  "ident": "earnedPoints",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 29,
+  "text": "export const SCORE_BONUS_MAX_POINTS = 5",
+  "docline": "| Score bonus | `+0 \u2026 +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:"
+ },
+ {
+  "doc": "06-reference/scoring-and-rewards.md:562",
+  "ident": "earnedPoints",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 55,
+  "text": "earned_points = round((total / constants.MAX_SCORE) * constants.MAX_BONUS_POINTS)",
+  "docline": "| Score bonus | `+0 \u2026 +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:"
+ },
+ {
+  "doc": "06-reference/config-reference.md:38",
+  "ident": "SUPABASE_URL",
+  "file": "backend/supabase_client.py",
+  "fileline": 24,
+  "text": "self.base_url = f\"{self.url}/rest/v1\"",
+  "docline": "| `SUPABASE_URL` | **yes** | no | `https://<project-ref>.supabase.co` | `backend/config/settings.py:60` | `backend/supabase_client"
+ },
+ {
+  "doc": "06-reference/config-reference.md:39",
+  "ident": "apikey",
+  "file": "backend/config/settings.py",
+  "fileline": 61,
+  "text": "supabase_service_key=require_env(\"SUPABASE_SERVICE_KEY\"),",
+  "docline": "| `SUPABASE_SERVICE_KEY` | **yes** | **yes** | `<service-role-key>` | `backend/config/settings.py:61` | `backend/supabase_client.p"
+ },
+ {
+  "doc": "06-reference/config-reference.md:39",
+  "ident": "Authorization",
+  "file": "backend/config/settings.py",
+  "fileline": 61,
+  "text": "supabase_service_key=require_env(\"SUPABASE_SERVICE_KEY\"),",
+  "docline": "| `SUPABASE_SERVICE_KEY` | **yes** | **yes** | `<service-role-key>` | `backend/config/settings.py:61` | `backend/supabase_client.p"
+ },
+ {
+  "doc": "06-reference/config-reference.md:95",
+  "ident": "earnedPoints",
+  "file": "backend/config/constants.py",
+  "fileline": 19,
+  "text": "MAX_BONUS_POINTS = 5  # awarded on top of the base 10 when the total is MAX_SCORE",
+  "docline": "| `MAX_BONUS_POINTS` | `5` | `backend/config/constants.py:19` | `earnedPoints` ceiling, paid **on top of** the frontend's base `ST"
+ },
+ {
+  "doc": "06-reference/config-reference.md:95",
+  "ident": "STAGE_COMPLETION_XP",
+  "file": "backend/config/constants.py",
+  "fileline": 19,
+  "text": "MAX_BONUS_POINTS = 5  # awarded on top of the base 10 when the total is MAX_SCORE",
+  "docline": "| `MAX_BONUS_POINTS` | `5` | `backend/config/constants.py:19` | `earnedPoints` ceiling, paid **on top of** the frontend's base `ST"
+ },
+ {
+  "doc": "06-reference/config-reference.md:239",
+  "ident": "localStorage",
+  "file": "./frontend/src/config/storageKeys.js",
+  "fileline": 10,
+  "text": "export const progressKey = (userId) => `praxis_v1_${userId}`",
+  "docline": "| `progressKey(userId)` | `` `praxis_v1_${userId}` `` | `localStorage` | `storageKeys.js:10` | the learner's progress snapshot; **"
+ },
+ {
+  "doc": "06-reference/config-reference.md:368",
+  "ident": "STAGE_COMPLETION_XP",
+  "file": "backend/config/constants.py",
+  "fileline": 19,
+  "text": "MAX_BONUS_POINTS = 5  # awarded on top of the base 10 when the total is MAX_SCORE",
+  "docline": "| 5 bonus points | `backend/config/constants.py:19` | `gameRules.js:29` | paid on top of `STAGE_COMPLETION_XP` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:110",
+  "ident": "unauthorized",
+  "file": "backend/core/security.py",
+  "fileline": 22,
+  "text": "raise UnauthorizedError(\"Not authenticated\")",
+  "docline": "| `backend/core/security.py:22` | `unauthorized` | `Not authenticated` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:111",
+  "ident": "upstream_error",
+  "file": "backend/core/security.py",
+  "fileline": 29,
+  "text": "raise UpstreamError(\"Authentication service is unavailable\", detail=str(exc)) from exc",
+  "docline": "| `backend/core/security.py:29` | `upstream_error` | `Authentication service is unavailable` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:112",
+  "ident": "unauthorized",
+  "file": "backend/core/security.py",
+  "fileline": 32,
+  "text": "raise UnauthorizedError(\"Invalid session\")",
+  "docline": "| `backend/core/security.py:32` | `unauthorized` | `Invalid session` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:113",
+  "ident": "content_unavailable",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 25,
+  "text": "raise ContentUnavailableError(",
+  "docline": "| `backend/repositories/content_repository.py:25` | `content_unavailable` | `Game content is unavailable` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:114",
+  "ident": "upstream_error",
+  "file": "backend/repositories/progress_repository.py",
+  "fileline": 26,
+  "text": "raise UpstreamError(\"Progress storage is unavailable\", detail=str(exc)) from exc",
+  "docline": "| `backend/repositories/progress_repository.py:26` | `upstream_error` | `Progress storage is unavailable` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:115",
+  "ident": "not_found",
+  "file": "backend/services/content_service.py",
+  "fileline": 28,
+  "text": "raise NotFoundError(f\"Level {level_id} not found\")",
+  "docline": "| `backend/services/content_service.py:28` | `not_found` | `Level {level_id} not found` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:116",
+  "ident": "not_found",
+  "file": "backend/services/content_service.py",
+  "fileline": 41,
+  "text": "raise NotFoundError(f\"Stage {stage_idx} not found\")",
+  "docline": "| `backend/services/content_service.py:41` | `not_found` | `Stage {stage_idx} not found` |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:195",
+  "ident": "_load",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 25,
+  "text": "raise ContentUnavailableError(",
+  "docline": "| **Raised at** | `backend/repositories/content_repository.py:25` (inside `_load`, `:19-31`) |"
+ },
+ {
+  "doc": "06-reference/error-codes.md:267",
+  "ident": "stage_progress",
+  "file": "backend/repositories/progress_repository.py",
+  "fileline": 26,
+  "text": "raise UpstreamError(\"Progress storage is unavailable\", detail=str(exc)) from exc",
+  "docline": "| `backend/repositories/progress_repository.py:26` | `Progress storage is unavailable` | any `.execute()` against `user_progress` "
+ },
+ {
+  "doc": "06-reference/error-codes.md:267",
+  "ident": "score_history",
+  "file": "backend/repositories/progress_repository.py",
+  "fileline": 26,
+  "text": "raise UpstreamError(\"Progress storage is unavailable\", detail=str(exc)) from exc",
+  "docline": "| `backend/repositories/progress_repository.py:26` | `Progress storage is unavailable` | any `.execute()` against `user_progress` "
+ },
+ {
+  "doc": "06-reference/error-codes.md:342",
+  "ident": "None",
+  "file": "backend/core/security.py",
+  "fileline": 32,
+  "text": "raise UnauthorizedError(\"Invalid session\")",
+  "docline": "| `Invalid session` | `backend/core/security.py:32` | the header is well-formed but `supabase.get_user(token)` returned `None` \u2014 S"
+ },
+ {
+  "doc": "06-reference/error-codes.md:376",
+  "ident": "progressStore.setUser",
+  "file": "frontend/src/state/progressStore.js",
+  "fileline": 85,
+  "text": "}",
+  "docline": "(`progressStore.setUser` skips guests \u2014 `frontend/src/state/progressStore.js:85`), and both"
+ },
+ {
+  "doc": "06-reference/error-codes.md:539",
+  "ident": "GET",
+  "file": "backend/api/routes/health.py",
+  "fileline": 15,
+  "text": "@router.get(\"/\")",
+  "docline": "`backend/api/routes/health.py:15` declares `GET` only. Render's health check uses `GET`, so"
+ },
+ {
+  "doc": "06-reference/error-codes.md:539",
+  "ident": "GET",
+  "file": "backend/api/routes/health.py",
+  "fileline": 15,
+  "text": "@router.get(\"/\")",
+  "docline": "`backend/api/routes/health.py:15` declares `GET` only. Render's health check uses `GET`, so"
+ },
+ {
+  "doc": "06-reference/error-codes.md:567",
+  "ident": "AppError",
+  "file": "backend/core/errors.py",
+  "fileline": 32,
+  "text": "default_message: str = \"Unexpected error\"",
+  "docline": "`AppError` default, `backend/core/errors.py:32`)."
+ },
+ {
+  "doc": "06-reference/error-codes.md:946",
+  "ident": "internal_error",
+  "file": "backend/core/errors.py",
+  "fileline": 32,
+  "text": "default_message: str = \"Unexpected error\"",
+  "docline": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but"
+ },
+ {
+  "doc": "06-reference/error-codes.md:946",
+  "ident": "internal_error",
+  "file": "backend/core/responses.py",
+  "fileline": 59,
+  "text": "content=failure(ErrorCode.INTERNAL, \"Internal server error\"),",
+  "docline": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but"
+ },
+ {
+  "doc": "06-reference/error-codes.md:946",
+  "ident": "AppError.default_message",
+  "file": "backend/core/responses.py",
+  "fileline": 59,
+  "text": "content=failure(ErrorCode.INTERNAL, \"Internal server error\"),",
+  "docline": "| `internal_error` message `Unexpected error` | That string exists in `AppError.default_message` (`backend/core/errors.py:32`) but"
+ },
+ {
+  "doc": "07-explanation/why-this-architecture.md:137",
+  "ident": "isEquivalent",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 437,
+  "text": "if (canonText(newExpr) === goalCanonRef.current) {",
+  "docline": "(`frontend/src/state/useGameState.js:437`). `isEquivalent` is used where *soundness* is at"
+ },
+ {
+  "doc": "07-explanation/why-this-architecture.md:161",
+  "ident": "lru_cache",
+  "file": "./backend/repositories/content_repository.py",
+  "fileline": 16,
+  "text": "CONTENT_DIR = Path(__file__).resolve().parents[2] / \"content\"",
+  "docline": "| `content/*.json` | Must be found relative to the source tree, may be missing at deploy time, and is cached process-globally | `c"
+ },
+ {
+  "doc": "07-explanation/design-decisions.md:161",
+  "ident": "useGameState",
+  "file": "./frontend/src/engine/sandbox/input.js",
+  "fileline": 161,
+  "text": "if (!isEquivalent(parsed, simplest.tree)) {",
+  "docline": "`engine/sandbox/input.js:161`) \u2014 and never in `useGameState`."
+ },
+ {
+  "doc": "07-explanation/design-decisions.md:527",
+  "ident": "lru_cache",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 16,
+  "text": "CONTENT_DIR = Path(__file__).resolve().parents[2] / \"content\"",
+  "docline": "(`backend/repositories/content_repository.py:16`), cached with `lru_cache`."
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "VITE_AUTH_URL",
+  "file": "database/init.sql",
+  "fileline": 4,
+  "text": "-- Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`.",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "init.sql",
+  "file": "frontend/src/pages/LandingPage.jsx",
+  "fileline": 21,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "VITE_AUTH_URL",
+  "file": "frontend/src/pages/LandingPage.jsx",
+  "fileline": 21,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "init.sql",
+  "file": "frontend/src/pages/LandingPage.jsx",
+  "fileline": 21,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "init.sql",
+  "file": "frontend/src/pages/LevelSelectPage.jsx",
+  "fileline": 142,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "VITE_AUTH_URL",
+  "file": "frontend/src/pages/LevelSelectPage.jsx",
+  "fileline": 142,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:67",
+  "ident": "init.sql",
+  "file": "frontend/src/pages/LevelSelectPage.jsx",
+  "fileline": 142,
+  "text": "// Wait a moment for Better Auth's global state to clear before routing",
+  "docline": "| **D3** | `init.sql` header: \"Better Auth tables (user, session, account, verification) are created automatically by `npx auth mi"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:92",
+  "ident": "AnimationOverlay.jsx",
+  "file": "frontend/src/state/useGameState.js",
+  "fileline": 447,
+  "text": "}, TIMING.lawAnimationMs)",
+  "docline": "| **D12** | \"**Animation pipeline** \u2014 When a law is applied, `useGameState.js` triggers a **2.5-second** animation via `AnimationO"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:101",
+  "ident": "SandboxPage.jsx",
+  "file": "frontend/src/engine/sandbox/validate.js",
+  "fileline": 155,
+  "text": "export function validateSandboxInput(raw, options = {}) {",
+  "docline": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for i"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:101",
+  "ident": "ProblemPage",
+  "file": "frontend/src/engine/sandbox/validate.js",
+  "fileline": 155,
+  "text": "export function validateSandboxInput(raw, options = {}) {",
+  "docline": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for i"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:101",
+  "ident": "SandboxPage.jsx",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 109,
+  "text": "export function buildSandboxPuzzle(raw, options = {}) {",
+  "docline": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for i"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:101",
+  "ident": "ProblemPage",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 109,
+  "text": "export function buildSandboxPuzzle(raw, options = {}) {",
+  "docline": "| **D1** | The task brief's diagram list implies a `POST /sandbox/validate` endpoint and a request/response sequence diagram for i"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:105",
+  "ident": "Security",
+  "file": "backend/core/security.py",
+  "fileline": 17,
+  "text": "async def get_current_user(request: Request) -> dict[str, Any]:",
+  "docline": "| **D22** | Not claimed anywhere; discovered by inspecting the generated spec. | The OpenAPI document declares **no security schem"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:125",
+  "ident": "stepsUsed",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 32,
+  "text": "def compute_score(",
+  "docline": "so `backend/services/scoring_service.py:32` receives `stepsUsed`, `lawsUsed[]`, `hintsUsed` and"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:125",
+  "ident": "hintsUsed",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 32,
+  "text": "def compute_score(",
+  "docline": "so `backend/services/scoring_service.py:32` receives `stepsUsed`, `lawsUsed[]`, `hintsUsed` and"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:319",
+  "ident": "auth",
+  "file": "frontend/src/services/supabaseClient.js",
+  "fileline": 10,
+  "text": "export const supabase = createClient(supabaseUrl, supabaseKey)",
+  "docline": "Supabase client for `auth` only (`frontend/src/services/supabaseClient.js:10`) and sends all data"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:418",
+  "ident": "definitionsForId",
+  "file": "./frontend/src/engine/laws/definitions.js",
+  "fileline": 67,
+  "text": "/** Definitions grouped by reference-card id, in declaration order. */",
+  "docline": "| **A dangling doc comment survives a deletion** | `engine/laws/definitions.js:67` documents `definitionsForId`, which no longer e"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:435",
+  "ident": "applyLaw",
+  "file": "./frontend/src/state/useGameState.js",
+  "fileline": 425,
+  "text": "setHistory(h => [...h, { expr: newExpr, step: { law: law.name, from: before, to: after } }])",
+  "docline": "| \"Step-locking requires explicit law application at every intermediate stage before the expression advances.\" | **Confirmed.** | "
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:446",
+  "ident": "targetLaws",
+  "file": "./backend/services/scoring_service.py",
+  "fileline": 102,
+  "text": "return constants.TARGET_LAW_WEIGHT  # no target laws defined -> full marks",
+  "docline": "| A puzzle with no `targetLaws` gets the full 30 for that band. | Otherwise such a puzzle would be unwinnable at full marks. | `sc"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:447",
+  "ident": "stageScores",
+  "file": "./backend/services/progress_service.py",
+  "fileline": 41,
+  "text": "if stage.get(\"best_score\") and stage[\"best_score\"] > 0:",
+  "docline": "| `stageScores` never contains a `0`. | `build_progress` guards with `best_score > 0`, so an unsolved stage is simply absent. | `p"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:447",
+  "ident": "build_progress",
+  "file": "./backend/services/progress_service.py",
+  "fileline": 41,
+  "text": "if stage.get(\"best_score\") and stage[\"best_score\"] > 0:",
+  "docline": "| `stageScores` never contains a `0`. | `build_progress` guards with `best_score > 0`, so an unsolved stage is simply absent. | `p"
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:462",
+  "ident": "fastapi.testclient",
+  "file": "frontend/vercel.json",
+  "fileline": 5,
+  "text": "\"destination\": \"https://praxis-backend-5302.onrender.com/api/$1\"",
+  "docline": "| **The live deployed API's behaviour** | All API verification was against `backend/main.py` in-process with `fastapi.testclient`."
+ },
+ {
+  "doc": "07-explanation/known-limitations.md:463",
+  "ident": "STAGE_CONFLICT_COLUMNS",
+  "file": "./database/init.sql",
+  "fileline": 24,
+  "text": "UNIQUE(user_id, level_id, stage_idx)",
+  "docline": "| **Whether Supabase enforces the `UNIQUE(user_id, level_id, stage_idx)` constraint as the upsert conflict target expects** | The "
+ },
+ {
+  "doc": "08-devops/configuration-guide.md:202",
+  "ident": "CORSMiddleware",
+  "file": "backend/config/settings.py",
+  "fileline": 69,
+  "text": "if frontend_url and frontend_url not in origins:",
+  "docline": "(`backend/config/settings.py:69`). The resulting list is passed to `CORSMiddleware`"
+ },
+ {
+  "doc": "08-devops/configuration-guide.md:426",
+  "ident": "auth.users",
+  "file": "database/init.sql",
+  "fileline": 4,
+  "text": "-- Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`.",
+  "docline": "| `npx auth migrate` instruction | `database/init.sql:4` | Comment only. The four \"Better Auth tables\" it mentions are never creat"
+ },
+ {
+  "doc": "08-devops/runbooks.md:414",
+  "ident": "httpx.HTTPStatusError",
+  "file": "backend/supabase_client.py",
+  "fileline": 80,
+  "text": "response.raise_for_status()",
+  "docline": "`response.raise_for_status()` (`backend/supabase_client.py:80`) turns into an `httpx.HTTPStatusError`"
+ },
+ {
+  "doc": "09-diagrams/DIAGRAMS.md:152",
+  "ident": "text_array",
+  "file": "backend/services/scoring_service.py",
+  "fileline": 51,
+  "text": "assistance_used = (hints_used or 0) + (guides_used or 0)",
+  "docline": "figure (`backend/services/scoring_service.py:51`). The visual type `text_array` stands for the real"
+ },
+ {
+  "doc": "09-diagrams/DIAGRAMS.md:236",
+  "ident": "validateSandboxInput",
+  "file": "./frontend/src/engine/sandbox/generator.js",
+  "fileline": 84,
+  "text": "if (!validateExpr(exprString).valid) return null",
+  "docline": "*generated* sandbox expressions from `sandbox/generator.js:84`; `validateSandboxInput`"
+ },
+ {
+  "doc": "09-diagrams/DIAGRAMS.md:239",
+  "ident": "buildSandboxPuzzle",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 113,
+  "text": "const validation = validateSandboxInput(raw, { maxVariables: resolveMaxVariables(options) })",
+  "docline": "`buildSandboxPuzzle` (`frontend/src/engine/sandbox/input.js:113`). Merging them into one \"validator\""
+ },
+ {
+  "doc": "09-diagrams/DIAGRAMS.md:679",
+  "ident": "Redirected",
+  "file": "./frontend/src/components/puzzle/usePuzzleSession.js",
+  "fileline": 118,
+  "text": "navigate(`/level/${levelId}/stages`, { replace: true })",
+  "docline": "- `Redirected` is a real exit, not decoration: `usePuzzleSession.js:118` navigates to the stage list for"
+ },
+ {
+  "doc": "10-project/glossary.md:145",
+  "ident": "LAW_FORM.SUM",
+  "file": "frontend/src/engine/sandbox/expand.js",
+  "fileline": 86,
+  "text": "export const isSopRoot = (n) => Boolean(n) && n.type === 'sum' && n.terms.some(t => t.type === 'prod')",
+  "docline": "(`LAW_FORM.SUM` arms), [`frontend/src/engine/sandbox/expand.js:86`](../../frontend/src/engine/sandbox/expand.js#L86)"
+ },
+ {
+  "doc": "10-project/glossary.md:321",
+  "ident": "undoAction",
+  "file": "frontend/src/engine/sandbox/input.js",
+  "fileline": 67,
+  "text": "* offer from the matching state \u2014 this is what step-locking relies on.",
+  "docline": "(`undoAction`), [`frontend/src/engine/sandbox/input.js:67`](../../frontend/src/engine/sandbox/input.js#L67)"
+ },
+ {
+  "doc": "10-project/glossary.md:409",
+  "ident": "activateGuide",
+  "file": "frontend/src/config/gameRules.js",
+  "fileline": 35,
+  "text": "export const GUIDE_COST_POINTS = 20",
+  "docline": "(`activateGuide`), [`frontend/src/config/gameRules.js:35`](../../frontend/src/config/gameRules.js#L35)"
+ },
+ {
+  "doc": "10-project/glossary.md:410",
+  "ident": "GUIDE_COST_POINTS",
+  "file": "backend/config/constants.py",
+  "fileline": 16,
+  "text": "ASSISTANCE_PENALTY = 10.0  # points lost per hint or guide consumed",
+  "docline": "(`GUIDE_COST_POINTS`), [`backend/config/constants.py:16`](../../backend/config/constants.py#L16)"
+ },
+ {
+  "doc": "10-project/glossary.md:610",
+  "ident": "addPoints",
+  "file": "database/init.sql",
+  "fileline": 9,
+  "text": "points INTEGER DEFAULT 0,",
+  "docline": "(`addPoints` / `deductPoints`), [`database/init.sql:9`](../../database/init.sql#L9) (`points INTEGER`)."
+ },
+ {
+  "doc": "10-project/glossary.md:610",
+  "ident": "deductPoints",
+  "file": "database/init.sql",
+  "fileline": 9,
+  "text": "points INTEGER DEFAULT 0,",
+  "docline": "(`addPoints` / `deductPoints`), [`database/init.sql:9`](../../database/init.sql#L9) (`points INTEGER`)."
+ },
+ {
+  "doc": "10-project/file-map.md:212",
+  "ident": "repositories",
+  "file": "backend/api/routes/levels.py",
+  "fileline": 13,
+  "text": "from services import content_service",
+  "docline": "| `api/routes/*` import `services` and `core`, never `repositories` | `backend/api/routes/levels.py:13`, `backend/api/routes/score"
+ },
+ {
+  "doc": "10-project/file-map.md:212",
+  "ident": "repositories",
+  "file": "backend/api/routes/score.py",
+  "fileline": 15,
+  "text": "from services import progress_service, scoring_service",
+  "docline": "| `api/routes/*` import `services` and `core`, never `repositories` | `backend/api/routes/levels.py:13`, `backend/api/routes/score"
+ },
+ {
+  "doc": "10-project/file-map.md:213",
+  "ident": "api",
+  "file": "backend/services/content_service.py",
+  "fileline": 11,
+  "text": "from repositories import content_repository",
+  "docline": "| `services/*` import `repositories`, never `api` | `backend/services/content_service.py:11`, `backend/services/progress_service.p"
+ },
+ {
+  "doc": "10-project/file-map.md:213",
+  "ident": "api",
+  "file": "backend/services/progress_service.py",
+  "fileline": 12,
+  "text": "from repositories import progress_repository",
+  "docline": "| `services/*` import `repositories`, never `api` | `backend/services/content_service.py:11`, `backend/services/progress_service.p"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "complement",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "idempotent",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "absorption",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "identity",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "annulment",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "distributive",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "associative",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 37,
+  "text": "return _load(\"laws.json\")",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "complement",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "idempotent",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "absorption",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "identity",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "annulment",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "distributive",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:227",
+  "ident": "associative",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 14,
+  "text": "import lawsData from '@content/laws.json'",
+  "docline": "| [`content/laws.json`](../../content/laws.json) | The **10 Boolean law reference cards**, in authoring order. Each element is exa"
+ },
+ {
+  "doc": "10-project/file-map.md:228",
+  "ident": "varCount",
+  "file": "backend/repositories/content_repository.py",
+  "fileline": 43,
+  "text": "return _load(\"levels.json\")",
+  "docline": "| [`content/levels.json`](../../content/levels.json) | The **4 levels and their 40 puzzles**: Tutorial (id `0`, `varCount` 2, 4 pu"
+ },
+ {
+  "doc": "10-project/file-map.md:228",
+  "ident": "varCount",
+  "file": "frontend/src/content/gameContent.js",
+  "fileline": 15,
+  "text": "import levelsData from '@content/levels.json'",
+  "docline": "| [`content/levels.json`](../../content/levels.json) | The **4 levels and their 40 puzzles**: Tutorial (id `0`, `varCount` 2, 4 pu"
+ }
+]

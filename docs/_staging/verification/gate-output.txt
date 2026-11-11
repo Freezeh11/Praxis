@@ -1,0 +1,143 @@
+========================================================================
+1. COMPLETENESS
+========================================================================
+  ok       docs/README.md    255 lines     1 citations
+  ok       docs/01-product/PRD.md    397 lines   128 citations
+  ok       docs/01-product/SRS.md    544 lines   239 citations
+  ok       docs/02-architecture/SAD.md    646 lines    82 citations
+  ok       docs/02-architecture/SDD.md   1006 lines    63 citations
+  ok       docs/02-architecture/REFACTOR-NOTES.md    365 lines    35 citations
+  ok       docs/03-database/ERD.md    252 lines    43 citations
+  ok       docs/03-database/SCHEMA.md    458 lines   121 citations
+  ok       docs/04-api/API-REFERENCE.md   1790 lines   148 citations
+  ok       docs/05-guides/tutorials/getting-started.md    480 lines    22 citations
+  ok       docs/05-guides/tutorials/understanding-the-engine.md    771 lines    98 citations
+  ok       docs/05-guides/tutorials/first-contribution.md    549 lines    28 citations
+  ok       docs/05-guides/how-to/add-a-new-level.md    593 lines    56 citations
+  ok       docs/05-guides/how-to/add-a-new-problem.md    852 lines    63 citations
+  ok       docs/05-guides/how-to/add-a-new-law.md    268 lines    41 citations
+  ok       docs/05-guides/how-to/debug-a-failing-step.md    243 lines    59 citations
+  ok       docs/05-guides/how-to/reset-user-progress.md    409 lines    16 citations
+  ok       docs/05-guides/how-to/run-locally-with-docker.md    340 lines    18 citations
+  ok       docs/06-reference/boolean-laws.md    962 lines   143 citations
+  ok       docs/06-reference/scoring-and-rewards.md    666 lines   145 citations
+  ok       docs/06-reference/config-reference.md    381 lines   158 citations
+  ok       docs/06-reference/error-codes.md    963 lines    61 citations
+  ok       docs/07-explanation/why-this-architecture.md    486 lines    37 citations
+  ok       docs/07-explanation/design-decisions.md    750 lines    31 citations
+  ok       docs/07-explanation/known-limitations.md    508 lines    77 citations
+  ok       docs/08-devops/installation-manual.md    909 lines    29 citations
+  ok       docs/08-devops/deployment.md    436 lines    41 citations
+  ok       docs/08-devops/configuration-guide.md    484 lines    43 citations
+  ok       docs/08-devops/runbooks.md    926 lines    46 citations
+  ok       docs/08-devops/monitoring.md    433 lines    28 citations
+  ok       docs/09-diagrams/DIAGRAMS.md    983 lines   213 citations
+  ok       docs/10-project/glossary.md    781 lines    85 citations
+  ok       docs/10-project/file-map.md    689 lines    20 citations
+  ok       docs/10-project/changelog.md    285 lines     2 citations
+  ok       docs/rules/RULES.md    880 lines    94 citations
+
+  required: 35   missing: 0
+  total lines across required docs: 21740
+  total file:line citations: 2514
+
+  extra docs present (not required): ARCHITECTURE.md, REFACTOR_REPORT.md, SKILLS.md, Software Proposal Writing Guide (LAWS) v2.0.docx.md, context.md
+
+========================================================================
+2. CROSS-LINKS & ANCHORS
+========================================================================
+  BADANCH  docs/04-api/API-REFERENCE.md:25 -> #22-the-one-route-outside-the-envelope-get
+  BADANCH  docs/04-api/API-REFERENCE.md:35 -> #31-get
+  BADANCH  docs/04-api/API-REFERENCE.md:1700 -> #22-the-one-route-outside-the-envelope-get
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:12 -> #1-step-0-pick-the-shape-then-the-module
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:13 -> #2-step-1-the-six-fields-of-a-law-identity
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:14 -> #3-step-2-prove-the-law-before-you-code-it
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:15 -> #4-step-3-wire-the-builders
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:16 -> #5-step-4-make-it-reachable-by-the-solver
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:17 -> #6-step-5-hints-guide-and-hint-copy
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:18 -> #7-step-6-tests-that-actually-protect-the-law
+  BADANCH  docs/05-guides/how-to/add-a-new-law.md:19 -> #8-step-7-content-animation-docs
+  BADANCH  docs/05-guides/how-to/debug-a-failing-step.md:25 -> #6-decision-tree-symptom-cause-fix
+  BADANCH  docs/05-guides/how-to/debug-a-failing-step.md:200 -> ../tutorials/understanding-the-engine.md#13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:20 -> #4-stage-1-tokenizing
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:21 -> #5-stage-2-parsing-into-an-ast
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:22 -> #6-stage-3-rendering-nodetext-vs-canontext
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:23 -> #7-stage-4-normalising-normalize-vs-normalizeflat
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:24 -> #8-stage-5-validation-and-what-is-not-validated
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:25 -> #9-stage-6-semantics-the-truth-table
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:26 -> #10-stage-7-discovering-the-applicable-laws
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:27 -> #11-stage-8-choosing-and-applying-a-law
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:28 -> #12-stage-9-the-derivation-to-a-terminal-form
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:29 -> #13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:374 -> #13-stage-10-terminal-form-dead-ends-and-the-canonical-text-limitation
+  BADANCH  docs/05-guides/tutorials/understanding-the-engine.md:528 -> ../../06-reference/boolean-laws.md#53-absorption-absorption-law
+  BADANCH  docs/06-reference/boolean-laws.md:18 -> #3-the-cardengine-mismatch-read-this-before-adding-a-law
+  BADANCH  docs/06-reference/boolean-laws.md:21 -> #51-complement-complement-law
+  BADANCH  docs/06-reference/boolean-laws.md:22 -> #52-idempotent-idempotent-law
+  BADANCH  docs/06-reference/boolean-laws.md:23 -> #53-absorption-absorption-law
+  BADANCH  docs/06-reference/boolean-laws.md:24 -> #54-identity-identity-law
+  BADANCH  docs/06-reference/boolean-laws.md:25 -> #55-annulment-annulment-law
+  BADANCH  docs/06-reference/boolean-laws.md:26 -> #56-distributive-distributive-factor-distributive-pos
+  BADANCH  docs/06-reference/boolean-laws.md:27 -> #57-double-neg-double-negation
+  BADANCH  docs/06-reference/boolean-laws.md:28 -> #58-demorgan-and-de-morgans-andor
+  BADANCH  docs/06-reference/boolean-laws.md:29 -> #59-demorgan-or-de-morgans-orand
+  BADANCH  docs/06-reference/boolean-laws.md:30 -> #510-associative-associative-law-the-card-the-engine-does-not-implement
+  BADANCH  docs/06-reference/boolean-laws.md:31 -> #6-distributive-expand-the-internal-law-that-is-not-a-card
+  BADANCH  docs/06-reference/boolean-laws.md:158 -> #6-distributive-expand-the-internal-law-that-is-not-a-card
+  BADANCH  docs/06-reference/boolean-laws.md:161 -> #510-associative-associative-law-the-card-the-engine-does-not-implement
+  BADANCH  docs/06-reference/boolean-laws.md:953 -> #510-associative-associative-law-the-card-the-engine-does-not-implement
+  BADANCH  docs/06-reference/boolean-laws.md:954 -> #6-distributive-expand-the-internal-law-that-is-not-a-card
+  BADANCH  docs/06-reference/error-codes.md:23 -> #31-not_found-404
+  BADANCH  docs/06-reference/error-codes.md:24 -> #32-content_unavailable-503
+  BADANCH  docs/06-reference/error-codes.md:25 -> #33-upstream_error-502
+  BADANCH  docs/06-reference/error-codes.md:26 -> #34-unauthorized-401
+  BADANCH  docs/06-reference/error-codes.md:27 -> #35-validation_error-422
+  BADANCH  docs/06-reference/error-codes.md:28 -> #36-http_error-404-405-any-framework-status
+  BADANCH  docs/06-reference/error-codes.md:29 -> #37-internal_error-500
+  BADANCH  docs/06-reference/error-codes.md:33 -> #43-http_status
+  BADANCH  docs/06-reference/error-codes.md:92 -> #31-not_found-404
+  BADANCH  docs/06-reference/error-codes.md:93 -> #32-content_unavailable-503
+  BADANCH  docs/06-reference/error-codes.md:94 -> #33-upstream_error-502
+  BADANCH  docs/06-reference/error-codes.md:95 -> #34-unauthorized-401
+  BADANCH  docs/06-reference/error-codes.md:96 -> #35-validation_error-422
+  BADANCH  docs/06-reference/error-codes.md:97 -> #36-http_error-404-405-any-framework-status
+  BADANCH  docs/06-reference/error-codes.md:98 -> #37-internal_error-500
+  BADANCH  docs/06-reference/error-codes.md:101 -> #43-http_status
+  BADANCH  docs/06-reference/error-codes.md:363 -> #33-upstream_error-502
+  BROKEN   docs/10-project/changelog.md:65 -> ../verification-report.md
+  BROKEN   docs/10-project/changelog.md:284 -> ../verification-report.md
+  BROKEN   docs/README.md:20 -> verification-report.md
+  BROKEN   docs/README.md:122 -> verification-report.md
+  BROKEN   docs/README.md:220 -> verification-report.md
+  checked 1571 relative links, 747 with anchors
+
+========================================================================
+3. SECRET SCAN
+========================================================================
+  LEGACY   docs/context.md:232  (assigned SUPABASE_URL value) — pre-existing input, reported not enforced
+  LEGACY   docs/context.md:233  (supabase publishable key) — pre-existing input, reported not enforced
+  LEGACY   docs/context.md:233  (assigned VITE_SUPABASE_* value) — pre-existing input, reported not enforced
+  suite docs: clean — no secret-looking values
+  legacy inputs: 3 pre-existing value(s) — NOT owned by this suite (see verification report)
+
+========================================================================
+4. MERMAID FENCES
+========================================================================
+  mermaid fences found: 55
+
+========================================================================
+5. FINDINGS SUMMARY
+========================================================================
+  BLOCKER  5
+  MAJOR    0
+  MINOR    58
+  NIT      0
+
+  detail:
+    [BLOCKER] docs/10-project/changelog.md:65 — broken link target: ../verification-report.md
+    [BLOCKER] docs/10-project/changelog.md:284 — broken link target: ../verification-report.md
+    [BLOCKER] docs/README.md:20 — broken link target: verification-report.md
+    [BLOCKER] docs/README.md:122 — broken link target: verification-report.md
+    [BLOCKER] docs/README.md:220 — broken link target: verification-report.md
+
+  RESULT: ISSUES FOUND

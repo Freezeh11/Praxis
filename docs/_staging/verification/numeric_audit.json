@@ -1,0 +1,937 @@
+{
+ "_content": {
+  "0": [
+   {
+    "i": 0,
+    "expr": "x + xy",
+    "goal": "x",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 1,
+    "expr": "x'y + z + xy",
+    "goal": "y + z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 2,
+    "expr": "(x + y)' + x'y'",
+    "goal": "x'y'",
+    "targetLaws": [
+     "demorgan-or",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 3,
+    "expr": "x + x'y + xy",
+    "goal": "x + y",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 2
+   }
+  ],
+  "1": [
+   {
+    "i": 0,
+    "expr": "x + xy",
+    "goal": "x",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 1,
+    "expr": "x(x + y)",
+    "goal": "x",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 2,
+    "expr": "x'y + xy + xy",
+    "goal": "y",
+    "targetLaws": [
+     "idempotent",
+     "distributive",
+     "complement"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 3,
+    "expr": "(x' + y)(x + y)(x + y)",
+    "goal": "y",
+    "targetLaws": [
+     "idempotent",
+     "distributive",
+     "complement"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 4,
+    "expr": "(x + y')' + x'y",
+    "goal": "x'y",
+    "targetLaws": [
+     "demorgan-or",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 5,
+    "expr": "(xy')'(x' + y)",
+    "goal": "x' + y",
+    "targetLaws": [
+     "demorgan-and",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 6,
+    "expr": "(xy)' + x'y",
+    "goal": "x' + y'",
+    "targetLaws": [
+     "demorgan-and",
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 7,
+    "expr": "(x + y)'(x' + y)",
+    "goal": "x'y'",
+    "targetLaws": [
+     "demorgan-or",
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 8,
+    "expr": "x + x'y + xy",
+    "goal": "x + y",
+    "targetLaws": [
+     "distributive",
+     "complement"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 9,
+    "expr": "x(x' + y)(x + y)",
+    "goal": "xy",
+    "targetLaws": [
+     "distributive",
+     "complement"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 10,
+    "expr": "(x'y)' + (xy')' + xy",
+    "goal": "1",
+    "targetLaws": [
+     "demorgan-and",
+     "complement",
+     "annulment"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 11,
+    "expr": "(x' + y)'(x + y')'(x + y)",
+    "goal": "0",
+    "targetLaws": [
+     "demorgan-or",
+     "complement",
+     "annulment"
+    ],
+    "optimalSteps": 4
+   }
+  ],
+  "2": [
+   {
+    "i": 0,
+    "expr": "xy'z + xyz",
+    "goal": "xz",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 1,
+    "expr": "(x + y' + z)(x + y + z)",
+    "goal": "x + z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 2,
+    "expr": "xyz + xz + x'yz",
+    "goal": "xz + yz",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 3,
+    "expr": "(x + y + z)(x + z)(x' + y + z)",
+    "goal": "(x + z)(y + z)",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 4,
+    "expr": "(x + y + z')' + x'y'z",
+    "goal": "x'y'z",
+    "targetLaws": [
+     "demorgan-or",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 5,
+    "expr": "(xyz')'(x' + y' + z)",
+    "goal": "x' + y' + z",
+    "targetLaws": [
+     "demorgan-and",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 6,
+    "expr": "x'y' + x'yz + x'yz'",
+    "goal": "x'",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "absorption"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 7,
+    "expr": "(x' + y')(x' + y + z)(x' + y + z')",
+    "goal": "x'",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "absorption"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 8,
+    "expr": "(x + y)' + x'y'z",
+    "goal": "x'y'",
+    "targetLaws": [
+     "demorgan-or",
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 9,
+    "expr": "(xy)'(x' + y' + z)",
+    "goal": "x' + y'",
+    "targetLaws": [
+     "demorgan-and",
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 10,
+    "expr": "x'y'z + x'yz + xy'z + xyz",
+    "goal": "z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 11,
+    "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
+    "goal": "z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 4
+   }
+  ],
+  "3": [
+   {
+    "i": 0,
+    "expr": "wxyz + wxz + wyz + w",
+    "goal": "wxz + w",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 1,
+    "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
+    "goal": "(w + x + z)w",
+    "targetLaws": [
+     "absorption"
+    ],
+    "optimalSteps": 2
+   },
+   {
+    "i": 2,
+    "expr": "wxy'z + wxyz",
+    "goal": "wxz",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 3,
+    "expr": "(w + x + y' + z)(w + x + y + z)",
+    "goal": "w + x + z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 4,
+    "expr": "(w + x' + y + z')' + w'xy'z",
+    "goal": "w'xy'z",
+    "targetLaws": [
+     "demorgan-or",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 5,
+    "expr": "(w'xy'z)'(w + x' + y + z')",
+    "goal": "w + x' + y + z'",
+    "targetLaws": [
+     "demorgan-and",
+     "idempotent"
+    ],
+    "optimalSteps": 1
+   },
+   {
+    "i": 6,
+    "expr": "wx'y + wxy + wx'yz",
+    "goal": "wy",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "absorption"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 7,
+    "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
+    "goal": "w + y",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "absorption"
+    ],
+    "optimalSteps": 4
+   },
+   {
+    "i": 8,
+    "expr": "(wx)' + (w'xyz)' + z",
+    "goal": "1",
+    "targetLaws": [
+     "demorgan-and",
+     "complement",
+     "annulment"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 9,
+    "expr": "(w + x)'(w' + x + y + z)'z",
+    "goal": "0",
+    "targetLaws": [
+     "demorgan-or",
+     "complement",
+     "annulment"
+    ],
+    "optimalSteps": 3
+   },
+   {
+    "i": 10,
+    "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
+    "goal": "wz",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 7
+   },
+   {
+    "i": 11,
+    "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
+    "goal": "w + z",
+    "targetLaws": [
+     "distributive",
+     "complement",
+     "identity"
+    ],
+    "optimalSteps": 7
+   }
+  ]
+ },
+ "W1": {
+  "efficiency": 40.0,
+  "targetLaw": 30.0,
+  "hintIndependence": 30.0,
+  "total": 100.0,
+  "earnedPoints": 5,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [
+    "absorption"
+   ],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "W2": {
+  "efficiency": 40.0,
+  "targetLaw": 30.0,
+  "hintIndependence": 30.0,
+  "total": 100.0,
+  "earnedPoints": 5,
+  "breakdown": {
+   "stepsUsed": 2,
+   "optimalSteps": 2,
+   "targetLawsRequired": [
+    "distributive",
+    "idempotent",
+    "complement"
+   ],
+   "targetLawsUsed": [
+    "distributive",
+    "idempotent",
+    "complement"
+   ],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "W3": {
+  "efficiency": 20.0,
+  "targetLaw": 10.0,
+  "hintIndependence": 10.0,
+  "total": 40.0,
+  "earnedPoints": 2,
+  "breakdown": {
+   "stepsUsed": 5,
+   "optimalSteps": 3,
+   "targetLawsRequired": [
+    "distributive",
+    "identity",
+    "complement"
+   ],
+   "targetLawsUsed": [
+    "distributive"
+   ],
+   "hintsUsed": 1,
+   "guidesUsed": 1,
+   "totalAssistance": 2
+  }
+ },
+ "W4": {
+  "efficiency": 40.0,
+  "targetLaw": 20.0,
+  "hintIndependence": 30.0,
+  "total": 90.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 3,
+   "optimalSteps": 3,
+   "targetLawsRequired": [
+    "distributive",
+    "identity",
+    "complement"
+   ],
+   "targetLawsUsed": [
+    "distributive",
+    "complement"
+   ],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "W5": {
+  "efficiency": 20.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 50.0,
+  "earnedPoints": 2,
+  "breakdown": {
+   "stepsUsed": 5,
+   "optimalSteps": 3,
+   "targetLawsRequired": [
+    "distributive",
+    "identity",
+    "complement"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "W6_candidate_level3_stage10": {
+  "efficiency": 0.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 0.0,
+  "total": 0.0,
+  "earnedPoints": 0,
+  "breakdown": {
+   "stepsUsed": 15,
+   "optimalSteps": 7,
+   "targetLawsRequired": [
+    "distributive",
+    "identity",
+    "complement"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 3,
+   "guidesUsed": 1,
+   "totalAssistance": 4
+  }
+ },
+ "_W6_locations": [
+  [
+   3,
+   10,
+   [
+    "distributive",
+    "complement",
+    "identity"
+   ]
+  ],
+  [
+   3,
+   11,
+   [
+    "distributive",
+    "complement",
+    "identity"
+   ]
+  ]
+ ],
+ "W6_candidate_level3_stage11": {
+  "efficiency": 0.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 0.0,
+  "total": 0.0,
+  "earnedPoints": 0,
+  "breakdown": {
+   "stepsUsed": 15,
+   "optimalSteps": 7,
+   "targetLawsRequired": [
+    "distributive",
+    "identity",
+    "complement"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 3,
+   "guidesUsed": 1,
+   "totalAssistance": 4
+  }
+ },
+ "W7_candidate_level1_stage6": {
+  "efficiency": 30.0,
+  "targetLaw": 15.0,
+  "hintIndependence": 20.0,
+  "total": 65.0,
+  "earnedPoints": 3,
+  "breakdown": {
+   "stepsUsed": 3,
+   "optimalSteps": 2,
+   "targetLawsRequired": [
+    "demorgan-and",
+    "absorption"
+   ],
+   "targetLawsUsed": [
+    "demorgan-and"
+   ],
+   "hintsUsed": 1,
+   "guidesUsed": 0,
+   "totalAssistance": 1
+  }
+ },
+ "_W7_locations": [
+  [
+   1,
+   6,
+   [
+    "demorgan-and",
+    "absorption"
+   ]
+  ],
+  [
+   2,
+   9,
+   [
+    "demorgan-and",
+    "absorption"
+   ]
+  ]
+ ],
+ "W7_candidate_level2_stage9": {
+  "efficiency": 30.0,
+  "targetLaw": 15.0,
+  "hintIndependence": 20.0,
+  "total": 65.0,
+  "earnedPoints": 3,
+  "breakdown": {
+   "stepsUsed": 3,
+   "optimalSteps": 2,
+   "targetLawsRequired": [
+    "demorgan-and",
+    "absorption"
+   ],
+   "targetLawsUsed": [
+    "demorgan-and"
+   ],
+   "hintsUsed": 1,
+   "guidesUsed": 0,
+   "totalAssistance": 1
+  }
+ },
+ "W8": {
+  "efficiency": 40.0,
+  "targetLaw": 30.0,
+  "hintIndependence": 30.0,
+  "total": 100.0,
+  "earnedPoints": 5,
+  "breakdown": {
+   "stepsUsed": 2,
+   "optimalSteps": 2,
+   "targetLawsRequired": [],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "_target_law_empty": 30.0,
+ "NEG_stageIdx_-1_level1": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "demorgan-or",
+    "complement",
+    "annulment"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "NEG_stageIdx_-12_level1": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "NEG_stageIdx_-13_level1": {
+  "ERROR": "IndexError: list index out of range"
+ },
+ "NEG_stageIdx_-100_level1": {
+  "ERROR": "IndexError: list index out of range"
+ },
+ "NEG_stageIdx_-4_level1": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "distributive",
+    "complement"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "NEG_stageIdx_-5_level1": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "demorgan-or",
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "NEG_stageIdx_-4_level0": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "NEG_stageIdx_-5_level0": {
+  "ERROR": "IndexError: list index out of range"
+ },
+ "NEG_hints": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 1020.0,
+  "total": 1060.0,
+  "earnedPoints": 53,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": -99,
+   "guidesUsed": 0,
+   "totalAssistance": -99
+  }
+ },
+ "NEG_steps": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": -50,
+   "optimalSteps": -50,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "OVERRIDE_999": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "OVERRIDE_0": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "OVERRIDE_neg3": {
+  "efficiency": 40.0,
+  "targetLaw": 0.0,
+  "hintIndependence": 30.0,
+  "total": 70.0,
+  "earnedPoints": 4,
+  "breakdown": {
+   "stepsUsed": 1,
+   "optimalSteps": 1,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "D24_max": {
+  "efficiency": 40.0,
+  "targetLaw": 30.0,
+  "hintIndependence": 30.0,
+  "total": 100.0,
+  "earnedPoints": 5,
+  "breakdown": {
+   "stepsUsed": 0,
+   "optimalSteps": 0,
+   "targetLawsRequired": [
+    "absorption"
+   ],
+   "targetLawsUsed": [
+    "absorption"
+   ],
+   "hintsUsed": 0,
+   "guidesUsed": 0,
+   "totalAssistance": 0
+  }
+ },
+ "_reachable_totals": [
+  0.0,
+  10.0,
+  15.0,
+  20.0,
+  25.0,
+  30.0,
+  35.0,
+  40.0,
+  45.0,
+  50.0,
+  55.0,
+  60.0,
+  65.0,
+  70.0,
+  75.0,
+  80.0,
+  85.0,
+  90.0,
+  100.0
+ ],
+ "_divergence": [
+  {
+   "total": 10.0,
+   "server": 0,
+   "browser": 1
+  },
+  {
+   "total": 50.0,
+   "server": 2,
+   "browser": 3
+  },
+  {
+   "total": 90.0,
+   "server": 4,
+   "browser": 5
+  }
+ ],
+ "_constants": {
+  "ASSISTANCE_PENALTY": 10.0,
+  "EFFICIENCY_WEIGHT": 40.0,
+  "HINT_INDEPENDENCE_WEIGHT": 30.0,
+  "MAX_BONUS_POINTS": 5,
+  "MAX_SCORE": 100.0,
+  "SCORE_ROUNDING_DP": 1,
+  "STAR_THRESHOLDS": [
+   90.0,
+   75.0
+  ],
+  "STEP_PENALTY": 10.0,
+  "TARGET_LAW_WEIGHT": 30.0,
+  "UNLOCK_AVERAGE": 80.0
+ }
+}

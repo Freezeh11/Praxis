@@ -1,0 +1,110 @@
+import ThemeToggle from '../components/ui/ThemeToggle.jsx'
+import { Link } from 'react-router-dom'
+import logoFull from '../assets/logo-full.png'
+import { motion } from 'framer-motion'
+import SurveyButton from '../components/layout/SurveyButton'
+import SoundToggle from '../components/ui/SoundToggle'
+import { useSession } from '../state/useSession.js'
+import useSoundEnabled from '../hooks/useSoundEnabled.js'
+import ProfileLink from '../components/layout/ProfileLink.jsx'
+
+export default function LandingPage() {
+  const { data: session } = useSession()
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
+
+  // Fade-in animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  }
+
+  return (
+    <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
+      {/* Header */}
+      <header className="relative w-full h-[72px] [@media(max-height:480px)]:h-[52px] px-4 sm:px-8 flex items-center justify-between z-20 shrink-0">
+        <div className="flex items-center">
+          <img src={logoFull} alt="Praxis" className="h-8 [@media(max-height:480px)]:h-6 object-contain" />
+        </div>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
+          <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+          <SurveyButton compact />
+          {session ? (
+            <ProfileLink />
+          ) : (
+            <Link to="/login" className="h-9 [@media(max-height:480px)]:h-11 px-3 rounded-lg flex items-center justify-center text-[13px] font-bold text-text-2 bg-bg hover:bg-border hover:text-text-1 transition-all">
+              Log In
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center praxis-page-x py-6 z-10 -mt-10 [@media(max-height:480px)]:mt-0">
+        <motion.div
+          className="max-w-3xl w-full flex flex-col items-center text-center"
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+        >
+
+          {/* Badge */}
+          <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
+            <span className="px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold uppercase tracking-wider">
+              Interactive Learning
+            </span>
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1 variants={itemVariants} className="text-[32px] sm:text-5xl md:text-6xl font-extrabold text-text-1 tracking-tight leading-[1.1] mb-4 sm:mb-6">
+            Master Boolean Algebra<br className="hidden md:block" /> Without the Headache.
+          </motion.h1>
+
+          {/* Subheadline */}
+          <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-text-3 font-medium max-w-xl mb-6 sm:mb-10 leading-relaxed">
+            Practice Boolean algebra, apply laws, and prove equivalences with a clear interactive approach.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center">
+            {session ? (
+              <Link
+                to="/levels"
+                className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-accent text-on-accent rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                Go to Level Selection <span>→</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/register"
+                  className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-accent text-on-accent rounded-xl font-bold text-[15px] shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                >
+                  Start Learning Free <span>→</span>
+                </Link>
+                <Link
+                  to="/login"
+                  className="w-full sm:w-auto px-8 py-3.5 min-h-12 bg-bg-card text-text-1 border-[1.5px] border-border rounded-xl font-bold text-[15px] shadow-sm hover:border-text-2 hover:bg-bg-card hover:-translate-y-0.5 transition-all text-center"
+                >
+                  I already have an account
+                </Link>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      </main>
+
+      {/* Decorative Blur Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-accent/20 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-green/10 blur-[120px] -z-10 mix-blend-multiply pointer-events-none" />
+    </div>
+  )
+}

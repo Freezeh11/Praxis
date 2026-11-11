@@ -1,0 +1,224 @@
+/**
+ * Design tokens + base element styles.
+ *
+ * tailwind.config.js is the source of truth for anything reached through a class
+ * name. The custom properties here exist for the few inline styles that cannot
+ * use a class (the rotate banner/overlay chrome) and for the base element rules
+ * below. Every var listed has at least one consumer — check with
+ * `grep -rn "var(--" src` before adding another.
+ *
+ * Deliberately NOT wrapped in `@layer base`: this file is processed on its own
+ * (Tailwind rejects `@layer base` without a matching `@tailwind base` directive),
+ * and main.jsx imports it right after the Tailwind entry, so these rules land
+ * after preflight exactly as they did when everything lived in one file.
+ */
+:root {
+  --color-bg:          #f0f2f7;
+  --color-text-1:      #1a2035;
+  --color-text-2:      #4b5468;
+  --color-accent:      #1a2035;
+  --color-amber:       #f59e0b;
+  --color-amber-light: #fef3c7;
+
+  --font-sans:  'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; font-family: var(--font-sans); }
+body { background: var(--color-bg); color: var(--color-text-1); -webkit-font-smoothing: antialiased; }
+button { font-family: var(--font-sans); cursor: pointer; border: none; background: none; }
+a { text-decoration: none; }
+
+:root {
+  --bg: 240 242 247;
+  --bg-card: 255 255 255;
+  --border: 226 229 237;
+  --border-dark: 200 204 214;
+  --text-1: 26 32 53;
+  --text-2: 75 84 104;
+  --text-3: 99 108 129;
+  --accent: 26 32 53;
+  --accent-hover: 40 50 75;
+  --on-accent: 255 255 255;
+}
+
+:root[data-theme="dark"] {
+  --bg: 17 24 39;
+  --bg-card: 27 37 55;
+  --border: 57 72 94;
+  --border-dark: 83 100 125;
+  --text-1: 235 241 250;
+  --text-2: 193 204 222;
+  --text-3: 155 173 198;
+  --accent: 168 187 255;
+  --accent-hover: 195 208 255;
+  --on-accent: 17 24 39;
+  --color-amber-light: #392d1b;
+  --color-bg: #111827;
+  --color-text-1: #ebf1fa;
+  --color-text-2: #c1ccde;
+  --color-accent: #a8bbff;
+}
+
+/* Text on pale success/warning surfaces needs a darker foreground in light mode. */
+.text-green { color: #047857; }
+.text-amber, .text-amber-500, .text-amber-600 { color: #92400e; }
+
+/* Exact utility selectors preserve hover and group-hover state behavior. */
+[data-theme="dark"] :is(
+  .bg-emerald-100,
+  .bg-emerald-50,
+  .bg-emerald-50\/90,
+  .bg-green-light,
+  .bg-green-light\/60,
+  .hover\:bg-emerald-100:hover,
+  .hover\:bg-emerald-100\/90:hover
+) { background-color: #14372e; }
+
+[data-theme="dark"] :is(
+  .bg-blue-50,
+  .bg-indigo-50\/80,
+  .bg-sky-50,
+  .bg-sky-50\/70,
+  .bg-sky-50\/80,
+  .bg-teal-50,
+  .bg-teal-50\/50,
+  .bg-teal-50\/90,
+  .bg-teal-light,
+  .bg-teal-light\/70,
+  .hover\:bg-teal-light:hover,
+  .hover\:bg-teal-light\/60:hover
+) { background-color: #182f48; }
+
+[data-theme="dark"] :is(
+  .bg-amber-100,
+  .bg-amber-50,
+  .bg-amber-50\/60,
+  .bg-amber-50\/70,
+  .bg-amber-50\/80,
+  .bg-amber-light,
+  .hover\:bg-amber-100:hover,
+  .hover\:bg-amber-light\/60:hover
+) { background-color: #392d1b; }
+
+[data-theme="dark"] :is(
+  .bg-red-100,
+  .bg-red-50
+) { background-color: #451d2a; }
+
+[data-theme="dark"] :is(
+  .bg-slate-50,
+  .bg-slate-50\/80,
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-slate-50\/70:hover,
+  .hover\:bg-slate-50\/80:hover
+) { background-color: rgb(var(--bg)); }
+
+[data-theme="dark"] :is(
+  .bg-slate-100,
+  .bg-slate-200,
+  .bg-slate-300,
+  .hover\:bg-slate-100:hover,
+  .hover\:bg-slate-200:hover
+) { background-color: rgb(var(--bg-card)); }
+
+[data-theme="dark"] :is(
+  .border-emerald-200,
+  .border-emerald-300,
+  .border-green-300
+) { border-color: #326b58; }
+
+[data-theme="dark"] :is(
+  .border-blue-200,
+  .border-sky-100,
+  .border-sky-200,
+  .border-sky-200\/80,
+  .border-sky-300,
+  .border-teal-200
+) { border-color: #365b7e; }
+
+[data-theme="dark"] :is(
+  .border-amber-200\/80,
+  .border-amber-300\/90
+) { border-color: #80602c; }
+
+[data-theme="dark"] :is(
+  .border-red-200,
+  .border-red-300
+) { border-color: #9f3450; }
+
+[data-theme="dark"] :is(
+  .border-slate-100,
+  .border-slate-200,
+  .border-slate-200\/80,
+  .border-slate-200\/90,
+  .border-slate-300,
+  .hover\:border-slate-300:hover,
+  .hover\:border-slate-300\/80:hover,
+  .hover\:border-slate-400:hover
+) { border-color: rgb(var(--border)); }
+
+[data-theme="dark"] :is(
+  .text-emerald-600,
+  .text-emerald-700,
+  .text-emerald-800,
+  .text-emerald-900,
+  .text-emerald-950,
+  .text-green-600,
+  .text-green-800
+) { color: #a7f3d0; }
+
+[data-theme="dark"] :is(
+  .hover\:text-teal-600:hover,
+  .hover\:text-teal-700:hover,
+  .text-sky-700,
+  .text-sky-800,
+  .text-sky-900,
+  .text-sky-900\/70,
+  .text-sky-900\/80,
+  .text-sky-900\/90,
+  .text-sky-950\/90,
+  .text-teal-800
+) { color: #bae6fd; }
+
+[data-theme="dark"] :is(
+  .text-red-500,
+  .text-red-600,
+  .text-red-700
+) { color: #fda4af; }
+
+[data-theme="dark"] :is(
+  .hover\:text-amber-900:hover,
+  .text-amber-500,
+  .text-amber-600,
+  .text-amber-700,
+  .text-amber-800,
+  .text-amber-800\/70,
+  .text-amber-800\/80,
+  .text-amber-900,
+  .text-amber-900\/80,
+  .text-amber-950\/90
+) { color: #fde68a; }
+
+[data-theme="dark"] :is(
+  .hover\:text-slate-700:hover,
+  .hover\:text-slate-800:hover,
+  .hover\:text-slate-900:hover,
+  .text-slate-700,
+  .text-slate-800,
+  .text-slate-900
+) { color: rgb(var(--text-1)); }
+
+[data-theme="dark"] :is(
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600
+) { color: rgb(var(--text-2)); }
+
+[data-theme="dark"] .text-teal { color: #7dd3fc; }
+[data-theme="dark"] .text-green { color: #6ee7b7; }
+[data-theme="dark"] .text-amber { color: #fde68a; }
+[data-theme="dark"] .text-red { color: #fda4af; }
+[data-theme="dark"] img[alt="Praxis"] { filter: brightness(0) invert(1); }
+[data-sonner-toast][data-type="error"] { color: #b91c1c !important; background: #fef2f2 !important; border-color: #fca5a5 !important; }
+[data-theme="dark"] [data-sonner-toast][data-type="error"] { color: #fda4af !important; background: #451d2a !important; border-color: #9f3450 !important; }

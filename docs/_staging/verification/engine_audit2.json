@@ -1,0 +1,795 @@
+###JSON###
+{
+ "hintTokensAcross40": [
+  "absorption",
+  "demorgan",
+  "distributive",
+  "idempotent"
+ ],
+ "perPuzzle": {
+  "0:0": {
+   "expr": "x + xy",
+   "goal": "x",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption"
+   ]
+  },
+  "0:1": {
+   "expr": "x'y + z + xy",
+   "goal": "y + z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "0:2": {
+   "expr": "(x + y)' + x'y'",
+   "goal": "x'y'",
+   "targetLaws": [
+    "demorgan-or",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "0:3": {
+   "expr": "x + x'y + xy",
+   "goal": "x + y",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "1:0": {
+   "expr": "x + xy",
+   "goal": "x",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption"
+   ]
+  },
+  "1:1": {
+   "expr": "x(x + y)",
+   "goal": "x",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption"
+   ]
+  },
+  "1:2": {
+   "expr": "x'y + xy + xy",
+   "goal": "y",
+   "targetLaws": [
+    "idempotent",
+    "distributive",
+    "complement"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive",
+    "idempotent"
+   ]
+  },
+  "1:3": {
+   "expr": "(x' + y)(x + y)(x + y)",
+   "goal": "y",
+   "targetLaws": [
+    "idempotent",
+    "distributive",
+    "complement"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive",
+    "idempotent"
+   ]
+  },
+  "1:4": {
+   "expr": "(x + y')' + x'y",
+   "goal": "x'y",
+   "targetLaws": [
+    "demorgan-or",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "1:5": {
+   "expr": "(xy')'(x' + y)",
+   "goal": "x' + y",
+   "targetLaws": [
+    "demorgan-and",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "1:6": {
+   "expr": "(xy)' + x'y",
+   "goal": "x' + y'",
+   "targetLaws": [
+    "demorgan-and",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "1:7": {
+   "expr": "(x + y)'(x' + y)",
+   "goal": "x'y'",
+   "targetLaws": [
+    "demorgan-or",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "1:8": {
+   "expr": "x + x'y + xy",
+   "goal": "x + y",
+   "targetLaws": [
+    "distributive",
+    "complement"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "1:9": {
+   "expr": "x(x' + y)(x + y)",
+   "goal": "xy",
+   "targetLaws": [
+    "distributive",
+    "complement"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "1:10": {
+   "expr": "(x'y)' + (xy')' + xy",
+   "goal": "1",
+   "targetLaws": [
+    "demorgan-and",
+    "complement",
+    "annulment"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "1:11": {
+   "expr": "(x' + y)'(x + y')'(x + y)",
+   "goal": "0",
+   "targetLaws": [
+    "demorgan-or",
+    "complement",
+    "annulment"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "2:0": {
+   "expr": "xy'z + xyz",
+   "goal": "xz",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "2:1": {
+   "expr": "(x + y' + z)(x + y + z)",
+   "goal": "x + z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "2:2": {
+   "expr": "xyz + xz + x'yz",
+   "goal": "xz + yz",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "2:3": {
+   "expr": "(x + y + z)(x + z)(x' + y + z)",
+   "goal": "(x + z)(y + z)",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "2:4": {
+   "expr": "(x + y + z')' + x'y'z",
+   "goal": "x'y'z",
+   "targetLaws": [
+    "demorgan-or",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "2:5": {
+   "expr": "(xyz')'(x' + y' + z)",
+   "goal": "x' + y' + z",
+   "targetLaws": [
+    "demorgan-and",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "2:6": {
+   "expr": "x'y' + x'yz + x'yz'",
+   "goal": "x'",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "absorption"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "2:7": {
+   "expr": "(x' + y')(x' + y + z)(x' + y + z')",
+   "goal": "x'",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "absorption"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "2:8": {
+   "expr": "(x + y)' + x'y'z",
+   "goal": "x'y'",
+   "targetLaws": [
+    "demorgan-or",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "2:9": {
+   "expr": "(xy)'(x' + y' + z)",
+   "goal": "x' + y'",
+   "targetLaws": [
+    "demorgan-and",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "2:10": {
+   "expr": "x'y'z + x'yz + xy'z + xyz",
+   "goal": "z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "2:11": {
+   "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
+   "goal": "z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "3:0": {
+   "expr": "wxyz + wxz + wyz + w",
+   "goal": "wxz + w",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "3:1": {
+   "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
+   "goal": "(w + x + z)w",
+   "targetLaws": [
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "3:2": {
+   "expr": "wxy'z + wxyz",
+   "goal": "wxz",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "3:3": {
+   "expr": "(w + x + y' + z)(w + x + y + z)",
+   "goal": "w + x + z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "3:4": {
+   "expr": "(w + x' + y + z')' + w'xy'z",
+   "goal": "w'xy'z",
+   "targetLaws": [
+    "demorgan-or",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "3:5": {
+   "expr": "(w'xy'z)'(w + x' + y + z')",
+   "goal": "w + x' + y + z'",
+   "targetLaws": [
+    "demorgan-and",
+    "idempotent"
+   ],
+   "hintTokens": [
+    "absorption",
+    "demorgan"
+   ]
+  },
+  "3:6": {
+   "expr": "wx'y + wxy + wx'yz",
+   "goal": "wy",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "3:7": {
+   "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
+   "goal": "w + y",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "absorption"
+   ],
+   "hintTokens": [
+    "absorption",
+    "distributive"
+   ]
+  },
+  "3:8": {
+   "expr": "(wx)' + (w'xyz)' + z",
+   "goal": "1",
+   "targetLaws": [
+    "demorgan-and",
+    "complement",
+    "annulment"
+   ],
+   "hintTokens": [
+    "demorgan"
+   ]
+  },
+  "3:9": {
+   "expr": "(w + x)'(w' + x + y + z)'z",
+   "goal": "0",
+   "targetLaws": [
+    "demorgan-or",
+    "complement",
+    "annulment"
+   ],
+   "hintTokens": [
+    "demorgan"
+   ]
+  },
+  "3:10": {
+   "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
+   "goal": "wz",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  },
+  "3:11": {
+   "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
+   "goal": "w + z",
+   "targetLaws": [
+    "distributive",
+    "complement",
+    "identity"
+   ],
+   "hintTokens": [
+    "distributive"
+   ]
+  }
+ },
+ "expandToken": [
+  "absorption"
+ ],
+ "builderIds": [
+  "distributive",
+  "complement",
+  "identity",
+  "annulment",
+  "idempotent",
+  "absorption",
+  "distributive-expand",
+  "double-neg",
+  "demorgan-and",
+  "demorgan-or"
+ ],
+ "associativeInEngine": false,
+ "demorganBareHits": [
+  "laws/scanHints.js:38: else if (n.child.type === 'prod' || n.child.type === 'sum') add('demorgan', [p])"
+ ],
+ "completion": [
+  {
+   "key": "0:0",
+   "expr": "x + xy",
+   "goal": "x",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "0:1",
+   "expr": "x'y + z + xy",
+   "goal": "y + z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "0:2",
+   "expr": "(x + y)' + x'y'",
+   "goal": "x'y'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "0:3",
+   "expr": "x + x'y + xy",
+   "goal": "x + y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:0",
+   "expr": "x + xy",
+   "goal": "x",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:1",
+   "expr": "x(x + y)",
+   "goal": "x",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:2",
+   "expr": "x'y + xy + xy",
+   "goal": "y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:3",
+   "expr": "(x' + y)(x + y)(x + y)",
+   "goal": "y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:4",
+   "expr": "(x + y')' + x'y",
+   "goal": "x'y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:5",
+   "expr": "(xy')'(x' + y)",
+   "goal": "x' + y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:6",
+   "expr": "(xy)' + x'y",
+   "goal": "x' + y'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:7",
+   "expr": "(x + y)'(x' + y)",
+   "goal": "x'y'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:8",
+   "expr": "x + x'y + xy",
+   "goal": "x + y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:9",
+   "expr": "x(x' + y)(x + y)",
+   "goal": "xy",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:10",
+   "expr": "(x'y)' + (xy')' + xy",
+   "goal": "1",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "1:11",
+   "expr": "(x' + y)'(x + y')'(x + y)",
+   "goal": "0",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:0",
+   "expr": "xy'z + xyz",
+   "goal": "xz",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:1",
+   "expr": "(x + y' + z)(x + y + z)",
+   "goal": "x + z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:2",
+   "expr": "xyz + xz + x'yz",
+   "goal": "xz + yz",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:3",
+   "expr": "(x + y + z)(x + z)(x' + y + z)",
+   "goal": "(x + z)(y + z)",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:4",
+   "expr": "(x + y + z')' + x'y'z",
+   "goal": "x'y'z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:5",
+   "expr": "(xyz')'(x' + y' + z)",
+   "goal": "x' + y' + z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:6",
+   "expr": "x'y' + x'yz + x'yz'",
+   "goal": "x'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:7",
+   "expr": "(x' + y')(x' + y + z)(x' + y + z')",
+   "goal": "x'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:8",
+   "expr": "(x + y)' + x'y'z",
+   "goal": "x'y'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:9",
+   "expr": "(xy)'(x' + y' + z)",
+   "goal": "x' + y'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:10",
+   "expr": "x'y'z + x'yz + xy'z + xyz",
+   "goal": "z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "2:11",
+   "expr": "(x' + y' + z)(x' + y + z)(x + y' + z)(x + y + z)",
+   "goal": "z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:0",
+   "expr": "wxyz + wxz + wyz + w",
+   "goal": "wxz + w",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:1",
+   "expr": "(w + x + y + z)(w + x + z)(w + y + z)w",
+   "goal": "(w + x + z)w",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:2",
+   "expr": "wxy'z + wxyz",
+   "goal": "wxz",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:3",
+   "expr": "(w + x + y' + z)(w + x + y + z)",
+   "goal": "w + x + z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:4",
+   "expr": "(w + x' + y + z')' + w'xy'z",
+   "goal": "w'xy'z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:5",
+   "expr": "(w'xy'z)'(w + x' + y + z')",
+   "goal": "w + x' + y + z'",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:6",
+   "expr": "wx'y + wxy + wx'yz",
+   "goal": "wy",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:7",
+   "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
+   "goal": "w + y",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:8",
+   "expr": "(wx)' + (w'xyz)' + z",
+   "goal": "1",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:9",
+   "expr": "(w + x)'(w' + x + y + z)'z",
+   "goal": "0",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:10",
+   "expr": "wx'y'z + wx'yz + wxy'z + wxyz",
+   "goal": "wz",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  },
+  {
+   "key": "3:11",
+   "expr": "(w + x' + y' + z)(w + x' + y + z)(w + x + y' + z)(w + x + y + z)",
+   "goal": "w + z",
+   "canonEqual": false,
+   "semanticallyEquivalent": true
+  }
+ ],
+ "completionSummary": {
+  "canonEqualCount": 0,
+  "semanticallyEquivalentCount": 40
+ }
+}
