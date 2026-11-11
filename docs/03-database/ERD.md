@@ -40,8 +40,6 @@ erDiagram
     USER_PROGRESS {
         uuid user_id PK "FK -> auth.users(id) ON DELETE CASCADE"
         integer points "client-authoritative running total"
-        integer streak "current streak, client-computed"
-        integer best_streak "high-water mark of streak"
         timestamptz updated_at "insert time only - no trigger refreshes it"
     }
 
@@ -113,13 +111,13 @@ Two absences are as important as the three relationships:
 
 ### `USER_PROGRESS` — the learner's totals
 
-The one-row-per-learner headline numbers: `points`, `streak`, `best_streak`. Written only by
+The one-row-per-learner headline number: `points`. Written only by
 `POST /api/progress/save` (`backend/services/progress_service.py:63-70`), read only by
 `GET /api/progress` (`backend/repositories/progress_repository.py:29-34`).
 
-Two things to know before trusting these numbers:
+Two things to know before trusting it:
 
-- **They are client-computed.** The server stores the snapshot the browser pushes; it never adds up
+- **It is client-computed.** The server stores the snapshot the browser pushes; it never adds up
   points itself (`backend/api/schemas/progress.py:12`, `backend/services/progress_service.py:66`).
 - **A missing row is normal, not an error.** A learner who signed up but never triggered a save has
   no row, and `build_progress` substitutes zeros (`backend/services/progress_service.py:45-47`).

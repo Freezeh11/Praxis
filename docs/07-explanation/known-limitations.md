@@ -105,7 +105,7 @@ original task brief, or from the LAWS rubric
 | **D19** | Deploy = "Render (`render.yaml`)" for the whole app (`context.md` §12 implies one deployment). | `render.yaml` defines **one** service — `praxis-backend` (python, `rootDir: backend`, `uvicorn main:app`). The frontend is **not** in `render.yaml`; `frontend/vercel.json` plus `render.yaml`'s `FRONTEND_URL: https://praxis-seven-puce.vercel.app` show the SPA is deployed to **Vercel**. | **High** | [SAD.md](../02-architecture/SAD.md) §3 "Deployment shape"; [SRS.md](../01-product/SRS.md) NFR-14. |
 | **D20** | RLS is described as a safety feature ("configure Row Level Security"). | RLS is **enabled** on all three tables with one policy each literally named `"Service role full access"` and defined `FOR ALL USING (true)` — **fully permissive for every role, including `anon`**. There is **no `auth.uid() = user_id` predicate anywhere** in the schema, and the policy is not scoped to `service_role` despite its name. | **High** | Documented honestly in [SAD.md](../02-architecture/SAD.md) §7.2, [SRS.md](../01-product/SRS.md) DR-4 and §6. The schema is owned by another writer; this register records the finding. |
 | **D22** | Not claimed anywhere; discovered by inspecting the generated spec. | The OpenAPI document declares **no security scheme**, because auth is applied through `Depends(...)` rather than a `Security` requirement. `security=None` on all seven paths. `/docs` therefore shows no **Authorize** button and cannot exercise the two progress routes. | Medium | The bearer requirement is real and enforced (`backend/core/security.py:17`); it is only invisible in the generated spec. Recorded in [SRS.md](../01-product/SRS.md) §5.1 and [SAD.md](../02-architecture/SAD.md) §8.3. |
-| **D25** | Not claimed anywhere; discovered by inspecting the models and schema. | `POST /api/progress/save` has **no bounds or integrity validation**. `points: -5`, `streak: -99`, `level_id: 99`, `stage_idx: -4` and `best_score: 999.9` all parse and are written verbatim: `backend/api/schemas/progress.py` defines no validators, and `database/init.sql` has no `CHECK` constraints and no foreign key on level or stage. | **High** | Verified by instantiating `SaveProgressRequest` with out-of-range values (no live write performed). See §4. |
+| **D25** | Not claimed anywhere; discovered by inspecting the models and schema. | `POST /api/progress/save` has **no bounds or integrity validation**. `points: -5`, `level_id: 99`, `stage_idx: -4` and `best_score: 999.9` all parse and are written verbatim: `backend/api/schemas/progress.py` defines no validators, and `database/init.sql` has no `CHECK` constraints and no foreign key on level or stage. | **High** | Verified by instantiating `SaveProgressRequest` with out-of-range values (no live write performed). See §4. |
 | **D26** | Not claimed anywhere; discovered by reading the gate. | The unlock gate is **frontend-only and slightly wrong**. `UNLOCK_AVERAGE` and `STAR_THRESHOLDS` in `backend/config/constants.py:25-26` are **never read server-side**; `GET /api/levels/{id}` has no auth dependency; no server state records an unlock. Worse: `frontend/src/state/progressStore.js:301-303` applies `Math.round()` to the average **before** the comparison at `:309`, so a **true average of 79.5 rounds to 80 and passes the gate**. | Medium | `frontend/src/state/progressStore.js:291-313`. [SRS.md](../01-product/SRS.md) FR-12 states the rule as implemented; the rounding-before-comparison defect is recorded here and in §3.1. |
 
 ### 2.5 The proposal's own limitations section
@@ -242,7 +242,7 @@ updated_at TIMESTAMPTZ DEFAULT now()        -- database/init.sql:12
 ```
 
 No trigger exists in `init.sql`, and no writer ever sends the column:
-`upsert_user_progress` receives `{user_id, points, streak, best_streak}`
+`upsert_user_progress` receives `{user_id, points}`
 (`backend/services/progress_service.py:63-70`). So despite its name, the column holds the row's
 **insert** time forever. Any "last active" metric built on it will be wrong from the second write
 onward.
@@ -541,7 +541,7 @@ If someone is deciding what to work on, this is the order the evidence suggests:
 3. **Tighten the RLS policies** (§6.1, D20). Replace `USING (true)` with
    `auth.uid() = user_id` predicates and verify the service-role path still bypasses RLS. The
    schema already has the foreign key the predicate needs.
-4. **Add validation to `POST /api/progress/save`** (§6.2, D25). Bounds on `points`, `streak`,
+4. **Add validation to `POST /api/progress/save`** (§6.2, D25). Bounds on `points` and
    `best_score`, and range checks on level and stage — the pydantic models are the natural place.
 5. **Fix the unlock gate's rounding** (§3.5, D26). One line: compare the unrounded average, or
    state the intended `>= 79.5` explicitly.

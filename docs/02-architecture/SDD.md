@@ -190,7 +190,7 @@ backend uses camelCase; these do, because renaming a field breaks the client.
 |---|---|
 | `ScoreRequest` | `levelId:int`, `stageIdx:int`, `stepsUsed:int`, `lawsUsed:list[str]`, `hintsUsed:int`, `guidesUsed:int|None=0`, `optimalSteps:int|None=None` |
 | `ScoreResponse` | `efficiency:float`, `targetLaw:float`, `hintIndependence:float`, `total:float`, `earnedPoints:int`, `breakdown:dict[str,Any]` |
-| `ProgressData` | `points:int=0`, `streak:int=0`, `bestStreak:int=0`, `stageProgress:dict[str,list[int]]={}`, `stageScores:dict[str,int|float]={}` |
+| `ProgressData` | `points:int=0`, `stageProgress:dict[str,list[int]]={}`, `stageScores:dict[str,int|float]={}` |
 | `SaveProgressRequest` | `progress: ProgressData` |
 
 `stageScores` uses `int | float` deliberately: "the `int \| float` union keeps whole scores as
@@ -273,7 +273,7 @@ JS `Math.round` (half-up) — they disagree at exact `.5` totals [D21].
 ```python
 def load_progress(user_id: str) -> dict[str, Any]                 # :18
 def build_progress(user_progress, stages) -> dict[str, Any]       # :25
-def save_progress(*, user_id, points, streak, best_streak,
+def save_progress(*, user_id, points,
                   stage_progress, stage_scores) -> None           # :53
 def persist_score(user_id: str, outcome: ScoreOutcome) -> None    # :87
 ```
@@ -484,7 +484,7 @@ Ran: **81 tests, 81 pass, 0 fail** (`cd frontend && npm test`).
 `progressStore` is the single most consequential module in the frontend. Its header comment
 records the defect it was built to fix: "Before this module `useProgress()` was a hook holding
 its own `useState`, so the level screen, the stage screen, the puzzle screen and the tutorial
-gate each had a private copy of points, streak, scores and completed stages. They only agreed
+gate each had a private copy of points, scores and completed stages. They only agreed
 with each other by accident … which meant earning points on the puzzle screen did not update
 the points chip behind it until a reload" (`:1-23`).
 
@@ -772,8 +772,6 @@ Transport (`backend/api/schemas/progress.py:11-22`), camelCase:
 ```python
 class ProgressData(BaseModel):
     points: int = 0
-    streak: int = 0
-    bestStreak: int = 0
     stageProgress: dict[str, list[int]] = {}    # { "1": [0, 1, 2] }
     stageScores: dict[str, int | float] = {}    # { "1:0": 87.5 }
 ```
@@ -782,7 +780,7 @@ Client snapshot (`frontend/src/state/progressStore.js:30-39`) — a superset, be
 also remembers derivations and tutorial flags that never go to the server:
 
 ```js
-{ points, streak, bestStreak,
+{ points,
   levelsCompleted: [],   // numeric content ids, 0 = Tutorial
   stageProgress: {},     // { "1": [0,1,2] }
   stageScores: {},       // { "1:0": 87.5 }  ← best total per stage
@@ -790,8 +788,8 @@ also remembers derivations and tutorial flags that never go to the server:
   hasSeenTutorial: false }
 ```
 
-`build_progress` (server) produces the first five; `mergeServerProgress` (client, `:97-130`)
-folds the server's five into the local eight with max/union semantics and keeps local
+`build_progress` (server) produces the first three; `mergeServerProgress` (client, `:97-130`)
+folds the server's three into the local six with max/union semantics and keeps local
 `stageSolutions` as the winner (`:118-119`).
 
 ### 6.5 The law definition and a law instance

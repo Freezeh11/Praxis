@@ -155,9 +155,9 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
 | **FR-29** | ① Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. ② For a signed-in learner with a loaded server snapshot, a mutation schedules a save 500 ms later, coalescing bursts into one request. ③ A guest or a not-yet-hydrated learner schedules nothing. ④ A storage exception (private mode, quota) does not lose in-memory progress. | `frontend/src/state/progressStore.js:60-94`; `frontend/src/config/storageKeys.js:10`; `frontend/src/config/gameRules.js:68` |
-| **FR-30** | ① `points` takes the maximum of local and server. ② `bestStreak` takes the maximum; `streak` prefers the server value. ③ `stageScores` keeps the higher score per key. ④ `stageProgress` unions the stage lists and de-duplicates. ⑤ Local `stageSolutions` win over server ones. ⑥ Hydration never overwrites a local best with a lower server value. ⑦ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
+| **FR-30** | ① `points` takes the maximum of local and server. ② `stageScores` keeps the higher score per key. ③ `stageProgress` unions the stage lists and de-duplicates. ④ Local `stageSolutions` win over server ones. ⑤ Hydration never overwrites a local best with a lower server value. ⑥ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
 | **FR-31** | ① Revisiting a completed stage restores its derivation, marks the stage complete and shows the review message. ② The restored state does **not** auto-open the completion modal. ③ A stored derivation that fails to parse falls back to the initial expression with a warning instead of crashing. ④ Sandbox problems are never loaded from storage. | `frontend/src/state/useGameState.js:119-136`; `frontend/src/components/puzzle/usePuzzleSession.js:134-147`, `:154` |
-| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, streak, bestStreak, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
+| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
 
 ### 3.9 Sandbox (FR-33 – FR-37)
 
@@ -215,7 +215,7 @@ All paths are relative to the API origin. Every `/api/*` response uses the envel
 | 3 | GET | `/api/levels/{level_id}` | none | `200` envelope with the full level incl. `puzzles` | `404 not_found` |
 | 4 | GET | `/api/laws` | none | `200` envelope, 10 law cards `{id,name,formulas[],desc}` | — |
 | 5 | POST | `/api/score` | optional bearer | `200` envelope with `{efficiency,targetLaw,hintIndependence,total,earnedPoints,breakdown}` | `404 not_found`, `422 validation_error`, `502 upstream_error` (persistence is backgrounded and never fails the response) |
-| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,streak,bestStreak,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
+| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
 | 7 | POST | `/api/progress/save` | **required** bearer | `200` envelope `{"status":"ok"}` | `401 unauthorized`, `422 validation_error`, `502 upstream_error` |
 
 Plus FastAPI's own `/docs`, `/redoc`, `/openapi.json`, `/docs/oauth2-redirect`.
@@ -307,7 +307,7 @@ to in-memory behaviour rather than a broken screen
 
 | Table | Key | Columns | Cardinality |
 |---|---|---|---|
-| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `streak INTEGER DEFAULT 0`, `best_streak INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
+| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
 | `stage_progress` | `id UUID PK DEFAULT gen_random_uuid()`; `UNIQUE(user_id, level_id, stage_idx)` | `user_id UUID NOT NULL FK`, `level_id INTEGER NOT NULL`, `stage_idx INTEGER NOT NULL`, `best_score REAL DEFAULT 0`, `completed BOOLEAN DEFAULT FALSE`, `completed_at TIMESTAMPTZ DEFAULT now()` | one row per (learner, level, stage) |
 | `score_history` | `id UUID PK DEFAULT gen_random_uuid()` | `user_id UUID NOT NULL FK`, `level_id`, `stage_idx`, `steps_used INTEGER NOT NULL`, `laws_used TEXT[] NOT NULL`, `hints_used INTEGER NOT NULL`, `efficiency REAL NOT NULL`, `target_law REAL NOT NULL`, `hint_independence REAL NOT NULL`, `total REAL NOT NULL`, `earned_points INTEGER NOT NULL`, `created_at TIMESTAMPTZ DEFAULT now()` | one row per completed attempt |
 
@@ -357,8 +357,6 @@ Per-puzzle keys, exactly: `expr` (string), `goal` (string), `targetLaws` (law-id
 ```js
 {
   points: 0,            // integer; +10 per first completion, + bonus, −20 per Guide
-  streak: 0,            // incremented on every points award
-  bestStreak: 0,
   levelsCompleted: [],  // numeric content ids
   stageProgress: {},    // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},      // { "1:0": 87.5 } → best total per stage
@@ -373,7 +371,7 @@ Sibling fields the server may return and the merge accepts: `hasCompletedTutoria
 two fields written back to the server:
 
 ```json
-{ "progress": { "points": 0, "streak": 0, "bestStreak": 0,
+{ "progress": { "points": 0,
                 "stageProgress": { "1": [0,1] }, "stageScores": { "1:0": 87.5 } } }
 ```
 `backend/api/schemas/progress.py:11-22` — field names are a frozen contract with two clients.

@@ -284,7 +284,7 @@ Steps:
 curl -s -H 'Authorization: Bearer <token>' http://127.0.0.1:8000/api/progress
 ```
 
-Expected: `200` with a `data` object containing `points`, `streak`, `bestStreak`, `stageProgress`,
+Expected: `200` with a `data` object containing `points`, `stageProgress`,
 `stageScores` (`backend/services/progress_service.py:44-50`).
 
 Then, in the browser: complete one stage and confirm `POST /api/progress/save` returns
@@ -574,7 +574,7 @@ Only three tables hold learner state (`database/init.sql`):
 
 | Table | Holds | Loss impact |
 |---|---|---|
-| `user_progress` | points, streak, best streak | learner sees points reset to 0 |
+| `user_progress` | points | learner sees points reset to 0 |
 | `stage_progress` | per-stage completion and best score | level gates re-lock; stars disappear |
 | `score_history` | the append-only score log | history lost; current best scores survive in `stage_progress` |
 
@@ -624,7 +624,7 @@ Then delete and re-play their stages (see
 important warning about the frontend's merge rule).
 
 > ⚠️ **The client merges, it does not overwrite.** `mergeServerProgress` takes the **maximum** of
-> local and server `points`/`bestStreak` and unions completed stages
+> local and server `points` and unions completed stages
 > (`frontend/src/state/progressStore.js:96-130`). Clearing the database alone will therefore *not*
 > reset a learner whose browser still holds the local snapshot — and clearing the browser alone will
 > not reset them either, because the next hydration pulls the server values back. Reset both layers,

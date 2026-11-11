@@ -1188,20 +1188,18 @@ The learner's full progress snapshot, assembled from two Supabase tables.
 > and serialization below are the real route output; only the row data was substituted.
 
 ```json
-{"success":true,"data":{"points":42,"streak":3,"bestStreak":5,"stageProgress":{"1":[0],"0":[0]},"stageScores":{"1:0":87.5,"0:0":100.0}},"error":null}
+{"success":true,"data":{"points":42,"stageProgress":{"1":[0],"0":[0]},"stageScores":{"1:0":87.5,"0:0":100.0}},"error":null}
 ```
 
 A brand-new user with no rows yet (also observed):
 
 ```json
-{"success":true,"data":{"points":0,"streak":0,"bestStreak":0,"stageProgress":{},"stageScores":{}},"error":null}
+{"success":true,"data":{"points":0,"stageProgress":{},"stageScores":{}},"error":null}
 ```
 
 | Field | Type | Meaning |
 |---|---|---|
 | `points` | integer | lifetime points; `0` when no `user_progress` row exists |
-| `streak` | integer | current streak; `0` when no row exists |
-| `bestStreak` | integer | best streak ever; `0` when no row exists |
 | `stageProgress` | object | `{ "<levelId>": [stageIdx, …] }` — only stages whose row has `completed: true` |
 | `stageScores` | object | `{ "<levelId>:<stageIdx>": bestScore }` — only stages whose `best_score` is `> 0` |
 
@@ -1273,17 +1271,17 @@ const snapshot = await progressApi.loadProgress()   // unwrapped data, or null
 attaches the Supabase access token (`frontend/src/services/apiClient.js:27-31`). The single
 caller is `progressStore.setUser` (`frontend/src/state/progressStore.js:158`), which merges
 the snapshot into local state instead of overwriting it —
-`mergeServerProgress` (`:97-134`) takes `max` for points/bestStreak and per-stage scores, and
+`mergeServerProgress` (`:97-134`) takes `max` for points and per-stage scores, and
 unions the completed-stage lists. Local solutions win, so a device that played offline is not
 wiped by the server snapshot.
 
 > **Known gap: three fields the client merges are never returned.** `mergeServerProgress`
 > reads `server.stageSolutions` (`frontend/src/state/progressStore.js:119`),
 > `server.levelsCompleted` (`:121`) and `server.hasCompletedTutorial` (`:125`), but this
-> endpoint's payload contains only `points`, `streak`, `bestStreak`, `stageProgress` and
+> endpoint's payload contains only `points`, `stageProgress` and
 > `stageScores` (`backend/services/progress_service.py:44-50`). Those three therefore always
 > fall back to the local values (`|| {}` / `|| []` / `false`). Progress restore across devices
-> works for points, streaks, completed stages and best scores only; saved derivations
+> works for points, completed stages and best scores only; saved derivations
 > (`stageSolutions`) are never restored from the server. There is no error — the fields are
 > simply absent.
 
@@ -1328,8 +1326,6 @@ The body has exactly one required key, `progress`, which is a `ProgressData` obj
 |---|---|---|---|---|
 | `progress` | object | **yes** | — | the snapshot |
 | `progress.points` | integer | no | `0` | lifetime points |
-| `progress.streak` | integer | no | `0` | current streak |
-| `progress.bestStreak` | integer | no | `0` | best streak |
 | `progress.stageProgress` | object | no | `{}` | `{ "<levelId>": [stageIdx, …] }` — stages considered **completed** |
 | `progress.stageScores` | object | no | `{}` | `{ "<levelId>:<stageIdx>": score }` — each value an integer or a float |
 
@@ -1353,14 +1349,14 @@ Nothing about what was written is echoed back.
 Request body used:
 
 ```json
-{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0,1],"0":[0]},"stageScores":{"1:0":87.5,"1:1":60}}}
+{"progress":{"points":10,"stageProgress":{"1":[0,1],"0":[0]},"stageScores":{"1:0":87.5,"1:1":60}}}
 ```
 
 Repository calls the route made (captured by stubbing the two repository functions):
 
 ```json
 [
-  ["user_progress", {"user_id": "<uuid>", "points": 10, "streak": 1, "best_streak": 2}],
+  ["user_progress", {"user_id": "<uuid>", "points": 10}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 1, "stage_idx": 0, "best_score": 87.5, "completed": true}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 1, "stage_idx": 1, "best_score": 60, "completed": true}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 0, "stage_idx": 0, "best_score": 0, "completed": true}]
@@ -1406,12 +1402,12 @@ Not authenticated`). With a valid token the same bad body returns `422`.
 curl -s -X POST http://127.0.0.1:8000/api/progress/save \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-  -d '{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}' \
+  -d '{"progress":{"points":10,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}' \
   | python -m json.tool
 ```
 
 ```powershell
-$body = @{ progress = @{ points = 10; streak = 1; bestStreak = 2; stageProgress = @{ '1' = @(0) }; stageScores = @{ '1:0' = 87.5 } } } | ConvertTo-Json -Depth 5
+$body = @{ progress = @{ points = 10; stageProgress = @{ '1' = @(0) }; stageScores = @{ '1:0' = 87.5 } } } | ConvertTo-Json -Depth 5
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/progress/save -ContentType 'application/json' -Headers @{ Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN" } -Body $body
 ```
 
@@ -1516,8 +1512,6 @@ by pydantic's `extra="ignore"` and never read by `save_progress`).
 | Field | Type | Direction | Notes |
 |---|---|---|---|
 | `points` | integer | both | default `0` |
-| `streak` | integer | both | default `0` |
-| `bestStreak` | integer | both | default `0` |
 | `stageProgress` | object of integer arrays | both | `{ "1": [0,1,2] }`, keys are level ids as strings |
 | `stageScores` | object of numbers | both | `{ "1:0": 87.5 }` |
 | `stageSolutions` | object | client-only | never sent by the server, never stored (`frontend/src/state/progressStore.js:37,119`) |
@@ -1801,7 +1795,7 @@ curl -s -X POST $BASE/api/score -H 'Content-Type: application/json' \
 curl -s $BASE/api/progress -H "Authorization: Bearer $TOKEN"
 curl -s -X POST $BASE/api/progress/save -H 'Content-Type: application/json' \
      -H "Authorization: Bearer $TOKEN" \
-     -d '{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}'
+     -d '{"progress":{"points":10,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}'
 
 curl -s $BASE/openapi.json | python -m json.tool | head -40
 ```
