@@ -207,12 +207,13 @@ carry the headers while request-id logging still sees every request.
 
 ## 4. Deliberately not changed
 
-* **`engine` still loads on first paint** (43.88 kB, modulepreloaded in
+* **`engine` still loads on first paint** (superseded by §6.1: the landing page
+  no longer requests the engine, motion or Supabase chunks) (43.88 kB, modulepreloaded in
   `dist/index.html`). Something in the eager entry graph pulls
   `src/engine/index.js`; removing it needs edits to the guard/overlay components
   that are outside this pass's file ownership. Cost is bounded (43.88 kB raw /
   13.50 kB gzip) and it is cached separately, so it was left and recorded.
-* **The solver's 3.2 s worst case** for the hardest shipped 5-term expression
+* **The solver's 3.2 s worst case** (improved −12.9% in §6.4, still seconds) for the hardest shipped 5-term expression
   (`findOptimalPathWithLaws` on load) is unchanged. It is dominated by
   `getLegalTransitions` (7.55 ms/state), not by the dequeue fix; reworking it
   would change grading/hint behaviour, so it is documented rather than touched.
@@ -248,3 +249,152 @@ BFS change reverted (back to `queue.shift()`) produces the same 3 failures
 One transient interruption: at 23:48 the shared `frontend/src/config/gameRules.js`
 was mid-edit by another agent (stray `}` at line 433), which failed the build;
 the owner fixed it and the final build above is green.
+
+---
+
+## 6. Round 10 — runtime, render and API pass
+
+Everything below is measured on the same machine as sections 1–5 with
+`cd frontend && npm run build` (Vite 8, rolldown) and Node 24. The earlier
+numbers stay as the record of that pass; this section supersedes them.
+
+### 6.1 First paint: the landing page no longer ships the app
+
+| asset requested by `/` | raw | gzip |
+| --- | --- | --- |
+| entry `index-*.js` | 48.31 kB | **15.74 kB** |
+| `react-*.js` | 229.10 kB | **73.25 kB** |
+| `vendor-*.js` | 32.58 kB | **9.12 kB** |
+| `config-*.js` (game rules, split out of the solver chunk) | 4.91 kB | **2.08 kB** |
+| `useSession-*.js` | 4.29 kB | 2.38 kB |
+| `rolldown-runtime-*.js` | 0.90 kB | 0.51 kB |
+| `index-*.css` | 116.54 kB | **18.34 kB** |
+| **total JS+CSS** | | **≈121 kB** |
+
+The landing page previously also downloaded `motion` (43.42 kB gz), `supabase`
+(51.13 kB gz) and `engine` (13.50 kB gz) — three chunks it never executes. A
+Playwright request log against a production preview confirms the list above and
+nothing else (fonts aside).
+
+What changed:
+
+* **Route-level lazy chunks** for every page except the landing page, each wrapped
+  in its own `LazyMotion` boundary (`frontend/src/App.jsx`). The motion feature
+  bundle is now a dependency of the first *animated* page, not of the entry, so
+  `es-*.js` (113.73 kB / 36.56 kB gz) is fetched on navigation at the earliest.
+* **Framer removed from the hero.** `LandingPage` animates with the `praxis-rise`
+  CSS keyframe (`frontend/src/styles/utilities.css`): opacity and `translateY`
+  only, dropped under `prefers-reduced-motion`.
+* **Supabase SDK on demand.** `frontend/src/services/supabaseClient.js` no longer
+  calls `createClient` at import time; `getSupabase()` memoises a dynamic import.
+  `AuthProvider` connects immediately only when a stored session exists,
+  otherwise on first interaction, so an anonymous visitor never downloads the
+  51 kB gz SDK to read the landing page.
+* **Chunk map** (`frontend/vite.config.js`): `config` is matched before `engine`,
+  so `src/config` no longer rides the solver chunk into the landing preload list;
+  framer-motion has its own chunk.
+
+The workspace chunk stays heavy by design (188.64 kB / 48.97 kB gz: solver, law
+palette, all modals), but it is fetched once, after the learner has a session and
+has passed the tutorial gate.
+
+### 6.2 React: a click on a term repaints one subtree
+
+* `zoom` left `ProblemPage` state for `ZoomProvider`/`zoomStore`
+  (`frontend/src/components/puzzle/ZoomProvider.jsx`, `zoomStore.js`). Zooming
+  now repaints the canvas, the header and the step rail only; the law palette,
+  level panel and history do not re-render.
+* `LawPanel`, `SidePanel`, `StepHistoryPanel`, `DerivationCanvas` and
+  `WorkspaceHeader` are `memo` components; every handler passed from
+  `ProblemPage` is a `useCallback` with real dependencies, so a term click or a law
+  hover no longer invalidates the whole workspace tree.
+* `LawPanel` resolves the selectable laws once per (reference laws, selection)
+  pair with `useMemo` instead of on every render; the completed-stage `Set` is
+  memoised per level instead of being rebuilt each render.
+* The session dialog renders above the router, so it carries its own motion
+  boundary rather than reaching for a page provider that may not exist.
+
+### 6.3 Progress data: stale-while-revalidate
+
+`frontend/src/state/progressStore.js` caches the last server snapshot per user for
+24 h (`praxis_server_v1_<id>`) and merges it with local progress (values only
+rise). A reload paints the real figures on the first frame and revalidates in the
+background; routes no longer hold a spinner until `/api/progress` answers. The
+save path refreshes the cache when the server confirms a write.
+
+### 6.4 Engine: memoised renderings and transition sweeps
+
+`frontend/src/engine/render.js` memoises `nodeText` per node (`WeakMap`, ~85% hit
+rate during a law search) and `canonText` per tree root only — per-node canon
+entries were measured at 8% hits and 2× the cost, so they were rejected.
+`frontend/src/engine/tree.js` `setNode` forgets the edited node and every ancestor,
+the engine's only in-place edit path.
+
+`getLegalTransitions` (`frontend/src/engine/solver.js`) memoises its sweep in a
+200-entry LRU keyed by a nesting-preserving structural signature plus palette and
+expansion flags (`a + (b + c)` must not collide with `a + b + c`). Callers get
+their own array; transition objects are shared because law application always
+clones the tree it returns.
+
+`planGuidance` (`frontend/src/engine/practice.js`) now runs the root transition
+sweep once and reuses it instead of re-deriving it from a cache the search has
+already evicted.
+
+Measured (4-variable graded case, 6-term sandbox, median of three fresh
+processes):
+
+| operation | before | after | change |
+| --- | --- | --- | --- |
+| `findOptimalPath` (graded) | 846 ms | 737 ms | **−12.9%** |
+| `planGuidance` (graded hint) | 841 ms | 737 ms | **−12.4%** |
+| `findSimplestForm` (6-term sandbox) | 3647 ms | 3107 ms | **−14.8%** |
+
+The specified truth-table LRU for `isEquivalent` was implemented, measured and
+**rejected**: canonicalising both trees to build the key costs more than the 2–16
+row table it skips (+25% on the sandbox search, +4% on the graded path). The win
+came from removing allocations instead — one reused env object per table and
+plain loops instead of `every`/`some` closures.
+
+### 6.5 API: pooled clients, gathered I/O, gzip, cache policy
+
+* `backend/supabase_client.py`: one sync and one async `httpx.Client` per process
+  with explicit timeouts and limits, closed from the app lifespan
+  (`backend/main.py`) — no more client per query, and async routes no longer
+  block the loop on a sync Supabase round trip.
+* `backend/services/progress_service.py`: independent reads are gathered, a save
+  issues its stage upserts concurrently instead of N+1 serial round trips, and
+  gathered rows are sorted before they become the API payload (they arrive
+  unordered).
+* `backend/main.py`: `GZipMiddleware` with a 1 kB floor.
+* `backend/core/security_headers.py`: `/api/levels` and `/api/laws` are cacheable
+  public reads (`max-age=300, stale-while-revalidate=86400`); authenticated
+  responses stay `no-store`.
+
+### 6.6 Deliberately not changed
+
+* **Fonts remain render-blocking** (Google Fonts CSS + two woff2). Self-hosting
+  would remove the external connection setup but changes `index.html` and the CSP
+  allowlist; left for a follow-up with the font files in the repo.
+* **`frontend/src/pages/SandboxPage.jsx` and `components/layout/BackNav.jsx` are
+  unreferenced** (the unified `/sandbox` route renders `ProblemPage`). Both are
+  outside the bundle; deleting them is a separate cleanup.
+* **The 6-term sandbox build is still seconds-long** even after −14.8%; it is a
+  bounded search, not repeated work, and lowering it further means changing the
+  search or the puzzle contract.
+
+### 6.7 Verification
+
+| check | command | result |
+| --- | --- | --- |
+| production build | `cd frontend && npx vite build` | **exit 0**, 1.33 s |
+| unit tests | `cd frontend && npm test` | **100 / 100** (97 existing + 3 cache tests) |
+| backend tests | `cd backend && ./venv/bin/python3.14 -m pytest -q` | **21 passed** |
+| application regression | `node .e2e/application-regression.mjs` | **18 / 18** |
+| contrast audit | `node .e2e/theme-contrast.mjs` | every label clean, both themes |
+| workspace layout | `node .e2e/workspace-layout.mjs` | **8 / 8** |
+| password recovery | `node .e2e/password-reset.mjs` | **12 / 12** |
+| landing network | Playwright request log on `vite preview` | entry + react + vendor + config + useSession + css, no motion/supabase/engine |
+
+Lint over `frontend/src` remains at its pre-existing baseline: 10 errors and 3
+warnings, all `react-hooks/set-state-in-effect` / `exhaustive-deps` findings in
+files this pass did not touch (confirmed against `git archive HEAD`).
