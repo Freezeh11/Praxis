@@ -221,15 +221,20 @@ export default function LevelSelectPage() {
             <button
               data-popup-anchor="tutorial"
               onClick={handleTutorialClick}
-              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 text-[13px] font-bold text-indigo-700 transition-colors hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11"
+              className="hidden h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 text-[13px] font-bold text-indigo-700 sm:inline-flex transition-colors hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 sm:px-3 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11"
               title="Interactive Tutorial"
+              aria-label="Interactive Tutorial"
             >
-              <span>Tutorial</span>
+              {/* Narrow phones cannot fit seven labelled controls beside the
+                  wordmark, so the label collapses and the icon carries the
+                  button while the accessible name stays whole. */}
+              <Icon name="sparkle" />
+              <span className="hidden sm:inline">Tutorial</span>
             </button>
-            <button data-popup-anchor="laws" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white/80 px-3 text-[13px] font-bold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11" title="Law Reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}><Icon name="book" /> Law reference</button>
+            <button data-popup-anchor="laws" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white/80 px-2.5 text-[13px] font-bold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 sm:px-3 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11" title="Law Reference" aria-label="Law reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}><Icon name="book" /><span className="hidden sm:inline">Law reference</span></button>
             {/* Both keep the 36px desktop height of the rail and grow to 44px on
                 a landscape phone, where the compact variant is used. */}
-            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+            <span className="hidden sm:block"><SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact /></span>
             <SurveyButton compact />
             <ProfileLink />
           </div>
@@ -257,7 +262,7 @@ export default function LevelSelectPage() {
         <div
           ref={trackRef}
           data-carousel-track="true"
-          className="relative flex min-w-0 shrink items-center justify-center overflow-hidden"
+          className="relative flex min-w-0 shrink items-center justify-center overflow-hidden px-2 py-3 [@media(max-height:480px)]:py-1.5"
         >
           <div
             ref={rowRef}
@@ -278,13 +283,25 @@ export default function LevelSelectPage() {
               const isTutorialGated = lockState.reason === 'tutorial-gate'
 
               return (
+                <div key={lv.id} className="relative flex">
+                  {/* Halo behind the chosen card. It is a sibling painted before
+                      the card, so it can never tint the card's text, and opacity
+                      is the only animated property - the scale below is a
+                      transform, so the row's layout box never changes. */}
+                  <div
+                    aria-hidden="true"
+                    className={`level-glow pointer-events-none absolute -inset-4 rounded-[30px] blur-xl transition-opacity duration-500 ${isActive ? 'level-glow-pulse opacity-90' : 'opacity-0'}`}
+                  />
+                  <div
+                    aria-hidden="true"
+                    className={`level-ring pointer-events-none absolute -inset-[3px] rounded-[23px] transition-opacity duration-500 ${isActive ? 'level-glow-pulse opacity-100' : 'opacity-0'}`}
+                  />
                 <div
-                  key={lv.id}
                   ref={el => { cardRefs.current[i] = el }}
                   data-level-card={lv.id}
                   data-active={isActive ? 'true' : 'false'}
-                  className={`w-[240px] [@media(max-width:379px)]:w-[200px] rounded-[20px] bg-white dark:bg-slate-900/70 px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-[border-color,background-color,box-shadow,transform] duration-250 ease-out select-none
-                    ${isActive ? 'border-2 border-indigo-500 ring-2 ring-inset ring-indigo-500/20 shadow-lift' : 'border-2 border-slate-200/80 dark:border-white/10 shadow-card'}
+                  className={`relative w-[240px] [@media(max-width:379px)]:w-[200px] origin-center rounded-[20px] bg-white dark:bg-slate-900/70 px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-[border-color,background-color,box-shadow,transform] duration-250 ease-out select-none
+                    ${isActive ? 'scale-[1.055] border-2 border-indigo-500 ring-2 ring-inset ring-indigo-500/20 shadow-lift' : 'border-2 border-slate-200/80 dark:border-white/10 shadow-card'}
                     ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}
                     ${!locked && !isActive ? 'hover:-translate-y-1 hover:border-indigo-300 hover:shadow-card-hover' : ''}
                   `}
@@ -436,7 +453,8 @@ export default function LevelSelectPage() {
                     <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
                   </button>
                 )}
-              </div>
+                </div>
+                </div>
             )
           })}
           </div>
