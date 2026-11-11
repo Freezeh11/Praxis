@@ -77,7 +77,8 @@ try{
   await page.locator('input[type="email"]').fill(user.email)
   await page.locator('input[type="password"]').fill('local-test-password')
   await page.locator('button[type="submit"]').click()
-  await page.waitForURL(base)
+  // Protected-route sign-in now returns to the requested route, not '/'.
+  await page.waitForURL(url=>!url.pathname.startsWith('/login'))
  }
  async function puzzleReady(page,level=1,stage=7){
   await page.goto(base+`level/${level}/stage/${stage}`)
@@ -188,8 +189,9 @@ try{
   return getLevelProgress({stageScores:Object.fromEntries(Array.from({length:12},(_,i)=>['1:'+i,79.5])),stageProgress:{'1':Array.from({length:12},(_,i)=>i)}},1,12)
  })
  if(gate.unlocked)observations.push({name:'Existing progression boundary',detail:'A true average of 79.5 is rounded to 80 and unlocks the next level.'})
- await puzzleReady(page,2,1)
- if(await page.locator('[data-tutorial="active-equation"]').count())observations.push({name:'Existing direct-route prerequisite bypass',detail:'Level 2 puzzle opens directly despite incomplete Level 1; carousel prerequisites are not enforced at the puzzle route.'})
+ await page.goto(base+'level/2/stage/1')
+ await page.waitForURL(url=>url.pathname.startsWith('/levels')||url.pathname.startsWith('/level/2/stages'))
+ observations.push({name:'Direct-route prerequisite enforcement',detail:'Level 2 puzzle requested with an incomplete Level 1 now leaves the workspace instead of opening a playable bypass.'})
  await check('sign-out cancellation preserves session and confirmation revokes it',async()=>{
   await page.goto(base+'profile')
   await page.getByRole('button',{name:'Sign out',exact:true}).first().click()
@@ -197,6 +199,8 @@ try{
   await page.getByRole('button',{name:'Sign out',exact:true}).first().click()
   await page.locator('.praxis-modal-panel').filter({has:page.getByRole('heading',{name:'Sign out?',exact:true})}).getByRole('button',{name:'Sign Out',exact:true}).click()
   await page.waitForURL(base)
+  // signOut() is async; the success toast is only fired once the session cleared.
+  await page.getByText('Signed out.').first().waitFor()
   await page.goto(base+'level/1/stage/7');await page.waitForURL('**/login')
  })
  const fresh=await contextFor({fresh:true})
