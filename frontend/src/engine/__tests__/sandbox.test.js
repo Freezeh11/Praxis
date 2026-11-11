@@ -69,6 +69,28 @@ test('buildSandboxPuzzle passes validation messages through unchanged', () => {
   assert.equal(result.error, validateSandboxInput('x ^ y').error)
 })
 
+test('validateSandboxInput refuses an expression beyond the token ceiling', () => {
+  const long = '(A+B)'.repeat(20) // 100 tokens, far past SANDBOX.maxTokens
+  const verdict = validateSandboxInput(long)
+  assert.equal(verdict.valid, false)
+  assert.equal(verdict.errorCode, 'too-complex')
+  assert.match(verdict.error, /too complex/i)
+})
+
+test('buildSandboxPuzzle refuses an oversized expression without searching', () => {
+  const started = Date.now()
+  const result = buildSandboxPuzzle('(A+B)'.repeat(20))
+  assert.equal(result.ok, false)
+  assert.equal(result.errorCode, 'too-complex')
+  // The ceiling is checked before any BFS, so this must return immediately.
+  assert.ok(Date.now() - started < 250, 'oversized input must not start a search')
+})
+
+test('findSimplestForm honours a wall-clock deadline', () => {
+  const result = findSimplestForm(parseExpr('x + xy'), { deadline: Date.now() - 1 })
+  assert.equal(result.found, false, 'an expired deadline must abort the search')
+})
+
 test('every curated pool entry is solvable and reaches a terminal form', () => {
   for (const expression of SANDBOX_POOL) {
     const simplest = findSimplestForm(parseExpr(expression))

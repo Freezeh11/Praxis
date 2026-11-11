@@ -253,6 +253,10 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
 
   const maxDepth = options.maxDepth ?? SOLVER_BUDGET.graded.maxDepth
   const maxStates = options.maxStates ?? SOLVER_BUDGET.graded.maxStates
+  // Optional wall-clock ceiling (epoch ms). State budgets bound work, not time:
+  // per-state cost grows with the expression, so a main-thread caller such as the
+  // sandbox needs a deadline as well, or a pathological input freezes the tab.
+  const deadline = Number.isFinite(options.deadline) ? options.deadline : null
 
   // BFS Queue: [ { tree, canon, depth, path } ]
   const queue = [{
@@ -272,6 +276,8 @@ export function findOptimalPath(startExpr, targetCanon, options = {}) {
   let head = 0
   while (head < queue.length) {
     const current = queue[head++]
+
+    if (deadline !== null && Date.now() > deadline) break
 
     if (current.depth >= maxDepth || statesExplored >= maxStates) {
       continue
@@ -351,6 +357,7 @@ export function findOptimalPathWithLaws(startExpr, targetCanon, requiredLawIds, 
 
   const maxDepth = options.maxDepth ?? SOLVER_BUDGET.graded.maxDepth
   const maxStates = options.maxStates ?? SOLVER_BUDGET.graded.maxStates
+  const deadline = Number.isFinite(options.deadline) ? options.deadline : null
 
   const stateKey = (canon, used) => canon + '|' + used.join(',')
 
@@ -372,6 +379,8 @@ export function findOptimalPathWithLaws(startExpr, targetCanon, requiredLawIds, 
   let head = 0
   while (head < queue.length) {
     const current = queue[head++]
+
+    if (deadline !== null && Date.now() > deadline) break
 
     if (current.depth >= maxDepth || statesExplored >= maxStates) {
       continue
@@ -448,6 +457,7 @@ export function findSimplestForm(startExpr, options = {}) {
 
   const maxDepth = options.maxDepth ?? SOLVER_BUDGET.generator.simplestForm.maxDepth
   const maxStates = options.maxStates ?? SOLVER_BUDGET.generator.simplestForm.maxStates
+  const deadline = Number.isFinite(options.deadline) ? options.deadline : null
 
   const initialCanon = canonText(startExpr)
   const queue = [{
@@ -466,6 +476,8 @@ export function findSimplestForm(startExpr, options = {}) {
   let head = 0
   while (head < queue.length) {
     const current = queue[head++]
+
+    if (deadline !== null && Date.now() > deadline) break
 
     const transitions = getLegalTransitions(current.tree, options)
     statesExplored += transitions.length

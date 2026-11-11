@@ -32,6 +32,12 @@ const MSG_UNBALANCED = 'Unbalanced parentheses. Check your opening and closing b
 const MSG_MISSING_OPERAND = 'Missing a variable or term.'
 const MSG_STRAY_NOT = 'A NOT symbol must attach to a variable, constant, or parenthesized group.'
 
+/**
+ * Shared "cannot be solved within budget" verdict. Exported so the puzzle
+ * builder reuses this exact sentence instead of keeping a second copy.
+ */
+export const MSG_TOO_COMPLEX = 'This expression is too complex for the sandbox engine. Try a simpler one.'
+
 const msgInvalidChars = (chars) =>
   `Invalid character(s) found: ${chars}. Only letters, +, ·, *, ., &, |, ', !, ¬, (), 0, 1 are allowed.`
 const msgDoubleOperator = (position) => `Two operators in a row. Check around position ${position}.`
@@ -191,6 +197,12 @@ export function validateSandboxInput(raw, options = {}) {
   }
   if (vars.length > maxVariables) {
     return failure('too-many-vars', msgTooManyVars(vars.length, maxVariables))
+  }
+
+  /* 4b. token ceiling — checked before any search can start, so an enormous
+        expression is refused instantly instead of freezing the tab. */
+  if (tokens.length > SANDBOX.maxTokens) {
+    return failure('too-complex', MSG_TOO_COMPLEX)
   }
 
   /* 5. two binary operators in a row */

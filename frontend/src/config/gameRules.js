@@ -122,6 +122,24 @@ export const DRAG = {
 export const SANDBOX = {
   /** Distinct variables one learner expression may use. */
   maxVariables: 4,
+  /**
+   * Tokens (letters, constants, operators, parentheses, NOTs) one learner
+   * expression may contain. 64 comfortably covers the hardest reference
+   * four-variable expressions; beyond that the state space grows faster than
+   * the search budget and the tab would freeze before any verdict appeared.
+   */
+  maxTokens: 64,
+  /**
+   * Wall-clock ceiling for building one learner-authored puzzle. The state
+   * budgets alone cannot bound time: per-state cost grows with the expression,
+   * so eight copies of "(A+B)" exhausted 25 s of main thread while staying under
+   * the state cap. The search now aborts at this deadline and reports the
+   * ordinary "too complex" verdict. The worst published reference expression
+   * needs ~7.8 s on this machine (4.6 s simplest-form search + 3.2 s optimal
+   * path), so ten seconds keeps every documented example buildable while
+   * bounding an adversarial input that would otherwise run for minutes.
+   */
+  deadlineMs: 10000,
   /** Default difficulty for generated sandbox problems. */
   difficulty: 'medium',
   /**
