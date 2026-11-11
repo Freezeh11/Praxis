@@ -1,5 +1,5 @@
 /** Instructional decisions use the existing law builders; no duplicate algebra. */
-import { analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst } from './laws/index.js'
+import { analyzeSelection, analyzeNot, analyzeProductConst, analyzeSumConst, analyzeSumInProduct } from './laws/index.js'
 import { getNode } from './tree.js'
 import { nodeText, canonText } from './render.js'
 import { parseExpr } from './parser.js'
@@ -13,6 +13,11 @@ export function selectionLaws(expr, selection, options = {}) {
   const path = selection[0].path
   const node = getNode(expr, path)
   if (node?.type === 'not') return analyzeNot(expr, path)
+  if (node?.type === 'sum' && path.includes('.')) {
+    const parentPath = path.slice(0, path.lastIndexOf('.'))
+    const parent = getNode(expr, parentPath)
+    if (parent?.type === 'prod') return analyzeSumInProduct(expr, path, parentPath)
+  }
   if (node?.type !== 'const' || !path.includes('.')) return []
   const parentPath = path.slice(0, path.lastIndexOf('.'))
   const parent = getNode(expr, parentPath)
@@ -37,7 +42,8 @@ const CONDITIONS = {
   annulment: 'Annulment uses 1 in a sum or 0 in a product. Select the dominant constant or the complete operands.',
   idempotent: 'Idempotent combines identical operands in the same sum or product. Select both complete matching operands.',
   absorption: 'Absorption removes a redundant operand, as in A + AB = A or A(A + B) = A. Select the complete operands; one must make the other redundant.',
-  distributive: 'Factoring needs matching literals in separate terms or clauses. Select the shared literal in each, rather than both whole terms.',
+  distributive: "Distributive expands A(B+C) = AB + AC or factors common literals: AB + AC = A(B+C). Select the terms or factors to expand or factor.",
+  'distributive-expand': "Distributive expands A(B+C) = AB + AC. Select a sum clause and its multiplying factor.",
   'double-neg': 'Double Negation needs two nested negations. Select the outer negation bar of that group.',
   demorgan: "De Morgan's Law needs a negated product (AB)' or negated sum (A+B)'. Select its outer negation bar.",
 }
@@ -49,8 +55,11 @@ export function evaluateLawChoice(expr, selection, lawId, options = {}) {
   if (!selection.length || selection.some(s => !getNode(expr, s.path))) {
     return { ok: false, code: 'selection', message: 'Select the expression parts you want to transform, then press Apply.' }
   }
-  const laws = selectionLaws(expr, selection, options)
-  const law = laws.find(l => l.id === lawId)
+  const evalOptions = (lawId === 'distributive' || lawId === 'distributive-expand')
+    ? { ...options, allowExpand: true }
+    : options
+  const laws = selectionLaws(expr, selection, evalOptions)
+  const law = laws.find(l => l.id === lawId || (lawId === 'distributive' && l.id === 'distributive-expand') || (lawId === 'distributive-expand' && l.id === 'distributive'))
   if (law) return { ok: true, code: 'valid', law }
   const selected = selection.map(s => nodeText(getNode(expr, s.path))).join(' and ')
   return {

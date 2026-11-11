@@ -22,13 +22,19 @@
 import { findCommonProd, findCommonSum, getNode } from '../tree.js'
 import { notLaws } from './notLaws.js'
 import { productConstLaws, sumConstLaws } from './constLaws.js'
-import { productLaws } from './productLaws.js'
+import { productLaws, productExpandLaw } from './productLaws.js'
 import { sumLaws } from './sumLaws.js'
 import { scanHints } from './scanHints.js'
 
 export { getLits, isSubT, termsEq } from './helpers.js'
 export { scanHints }
 export { LAW_DEFINITIONS, LAW_MODE, LAW_FORM, LAW_NAME_TO_ID, defineLaw } from './definitions.js'
+
+export function analyzeSumInProduct(expr, path, parentPath) {
+  const sumIndex = parseInt(path.slice(path.lastIndexOf('.') + 1), 10)
+  const law = productExpandLaw(expr, parentPath, sumIndex)
+  return law ? [law] : []
+}
 
 export function analyzeSelection(expr, sel, options = {}) {
   const { allowExpand = false } = options || {}

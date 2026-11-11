@@ -11,7 +11,7 @@ const references = JSON.parse(readFileSync(new URL('../../../../content/laws.jso
 const pair = (a, b, isTermSel = true) => [{ path: a, isTermSel }, { path: b, isTermSel }]
 
 test('Level 1 progressively adds palette choices; other workspaces show the full set', () => {
-  const expected = [1, 1, 5, 5, 7, 7, 8, 8, 8, 8, 8, 8]
+  const expected = [1, 1, 5, 5, 6, 6, 7, 7, 7, 7, 7, 7]
   expected.forEach((count, stage) => {
     const ids = paletteLawIds(1, stage)
     assert.equal(independentChoices(references, { lawIds: ids }).length, count)
@@ -20,7 +20,7 @@ test('Level 1 progressively adds palette choices; other workspaces show the full
   })
   for (const level of [0, 2, 3]) assert.equal(paletteLawIds(level, 0), null)
   const choices = independentChoices(references)
-  assert.equal(choices.length, 9)
+  assert.equal(choices.length, 8)
   assert.equal(new Set(choices.map(l => l.id)).size, choices.length)
   assert.ok(!choices.some(l => ['associative', 'distributive-expand'].includes(l.id)))
   assert.ok(independentChoices(references, { allowExpand: true }).some(l => l.id === 'distributive-expand'))

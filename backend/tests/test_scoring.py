@@ -11,7 +11,7 @@ class RewardParityTests(unittest.TestCase):
                 with self.subTest(override=override, steps=steps):
                     result = compute_score(
                         level_id=1, stage_idx=10, steps_used=steps,
-                        laws_used=["demorgan-and", "complement", "annulment"],
+                        laws_used=["demorgan", "complement", "annulment"],
                         hints_used=0, guides_used=0, optimal_steps=override,
                     )
                     self.assertEqual(result.breakdown["optimalSteps"], 5)

@@ -59,7 +59,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get("/").status_code, 200)
         levels = self.client.get("/api/levels").json()["data"]
         self.assertEqual([x["puzzleCount"] for x in levels], [4, 12, 12, 12])
-        self.assertEqual(len(self.client.get("/api/laws").json()["data"]), 10)
+        self.assertEqual(len(self.client.get("/api/laws").json()["data"]), 9)
         for route in ("/api/levels/999", "/api/missing"):
             response = self.client.get(route)
             self.assertEqual(response.status_code, 404)

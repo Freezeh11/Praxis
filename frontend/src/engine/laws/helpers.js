@@ -143,29 +143,39 @@ export function findLitPath(node, base, v, n) {
  * Every caller keeps this behind `options.allowExpand`, so graded levels and
  * the random sandbox generator keep their exact current behaviour.
  */
-export function findExpandablePair(prodNode, i, j) {
+export function findExpandablePair(prodNode, i, j, isSolver = false) {
   const a = prodNode?.factors?.[i]
   const b = prodNode?.factors?.[j]
   if (!a || !b) return null
 
-  let litNode
+  let otherNode
   let clauseNode
-  let litIndex
+  let otherIndex
   let sumIndex
-  if (a.type === 'lit' && b.type === 'sum') {
-    litNode = a; clauseNode = b; litIndex = i; sumIndex = j
-  } else if (b.type === 'lit' && a.type === 'sum') {
-    litNode = b; clauseNode = a; litIndex = j; sumIndex = i
+  if (b.type === 'sum' && a.type !== 'sum') {
+    clauseNode = b
+    sumIndex = j
+    otherNode = a
+    otherIndex = i
+  } else if (a.type === 'sum' && b.type !== 'sum') {
+    clauseNode = a
+    sumIndex = i
+    otherNode = b
+    otherIndex = j
   } else {
     return null
   }
 
-  // Complement-guarded: for the productive direction we also need A' inside the
-  // clause. A general expansion (A(B+C) = AB + AC) is deliberately NOT offered:
-  // it turns A(B+C) from "already simplest" into "not simplifiable" and makes
-  // the solver search ~20x slower.
   if (clauseNode.terms.length < 2) return null
-  if (!sumContainsLit(clauseNode, litNode.v, !litNode.n)) return null
 
-  return { litNode, clauseNode, litIndex, sumIndex }
+  // In solver search without allowExpand, only expand if productive to avoid search explosion
+  if (isSolver) {
+    if (otherNode.type !== 'lit') return null
+    if (!sumContainsLit(clauseNode, otherNode.v, !otherNode.n)) return null
+  }
+
+  // Multiplier: all non-sum factors in this product
+  const otherFactors = prodNode.factors.filter((_, idx) => idx !== sumIndex)
+
+  return { litNode: otherNode, clauseNode, litIndex: otherIndex, sumIndex, otherFactors }
 }

@@ -46,12 +46,13 @@
   },
   {
     "id": "distributive",
-    "name": "Distributive (Factoring & Dual)",
+    "name": "Distributive Law",
     "formulas": [
+      "A(B+C) = AB + AC",
       "AB + AC = A(B+C)",
       "(A+B)(A+C) = A + BC"
     ],
-    "desc": "Factor out common variables from terms or maxterm clauses."
+    "desc": "Distribute terms over a sum, or factor out common variables from terms or maxterm clauses."
   },
   {
     "id": "double-neg",
@@ -62,20 +63,13 @@
     "desc": "Negating a value twice returns the original."
   },
   {
-    "id": "demorgan-and",
-    "name": "De Morgan's (AND→OR)",
+    "id": "demorgan",
+    "name": "De Morgan's Law",
     "formulas": [
-      "(AB)' = A' + B'"
-    ],
-    "desc": "The complement of a product equals the sum of complements."
-  },
-  {
-    "id": "demorgan-or",
-    "name": "De Morgan's (OR→AND)",
-    "formulas": [
+      "(AB)' = A' + B'",
       "(A+B)' = A'B'"
     ],
-    "desc": "The complement of a sum equals the product of complements."
+    "desc": "The complement of a product is the sum of complements; the complement of a sum is the product of complements."
   },
   {
     "id": "associative",

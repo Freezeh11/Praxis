@@ -38,11 +38,11 @@
         "expr": "(x + y)' + x'y'",
         "goal": "x'y'",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
-          "Choose De Morgan's (OR→AND), click the overline bar above (x + y)', then press Apply.",
+          "Choose De Morgan's (ORâ†’AND), click the overline bar above (x + y)', then press Apply.",
           "Choose Idempotent Law, select both identical terms, then press Apply."
         ],
         "optimalSteps": 2,
@@ -135,7 +135,7 @@
         "expr": "(x + y')' + x'y",
         "goal": "x'y",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -144,13 +144,13 @@
           "Use Idempotent Law to merge the duplicate terms."
         ],
         "optimalSteps": 2,
-        "optimalHint": "De Morgan's (OR→AND) expands the negated group, then Idempotent merges duplicates."
+        "optimalHint": "De Morgan's (ORâ†’AND) expands the negated group, then Idempotent merges duplicates."
       },
       {
         "expr": "(xy')'(x' + y)",
         "goal": "x' + y",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -159,13 +159,13 @@
           "Use Dual Idempotent to merge the duplicate clauses."
         ],
         "optimalSteps": 2,
-        "optimalHint": "De Morgan's (AND→OR) breaks the product, then Dual Idempotent simplifies the clauses."
+        "optimalHint": "De Morgan's (ANDâ†’OR) breaks the product, then Dual Idempotent simplifies the clauses."
       },
       {
         "expr": "(xy)' + x'y",
         "goal": "x' + y'",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "absorption"
         ],
         "hints": [
@@ -180,11 +180,11 @@
         "expr": "(x + y)'(x' + y)",
         "goal": "x'y'",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "absorption"
         ],
         "hints": [
-          "Click (x + y)' to apply De Morgan's (OR→AND).",
+          "Click (x + y)' to apply De Morgan's (ORâ†’AND).",
           "Notice the resulting product x'y' alongside clause (x' + y).",
           "Apply Dual Absorption to simplify."
         ],
@@ -200,7 +200,7 @@
         ],
         "hints": [
           "Look at the last two terms: x'y + xy. They both share y.",
-          "Factor out y, turn x' + x into 1, and simplify x + y·1.",
+          "Factor out y, turn x' + x into 1, and simplify x + yÂ·1.",
           "Remove the identity element 1 to finish."
         ],
         "optimalSteps": 3,
@@ -225,7 +225,7 @@
         "expr": "(x'y)' + (xy')' + xy",
         "goal": "1",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "complement",
           "annulment"
         ],
@@ -241,14 +241,14 @@
         "expr": "(x' + y)'(x + y')'(x + y)",
         "goal": "0",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "complement",
           "annulment"
         ],
         "hints": [
-          "Expand the negated sum groups using De Morgan's (OR→AND).",
-          "Scan for complementary variable products like x · x'.",
-          "Apply Complement to produce 0, then Annulment (0 · anything = 0)."
+          "Expand the negated sum groups using De Morgan's (ORâ†’AND).",
+          "Scan for complementary variable products like x Â· x'.",
+          "Apply Complement to produce 0, then Annulment (0 Â· anything = 0)."
         ],
         "optimalSteps": 4,
         "optimalHint": "De Morgan's on negated sums, Complement produces 0, then Product Annulment collapses to 0."
@@ -288,7 +288,7 @@
         "hints": [
           "Both sum clauses share literals x and z.",
           "Apply Dual Distributive to extract (x + z), leaving y'y inside.",
-          "Apply Dual Complement (y' · y = 0), then simplify (x + z + 0) with Identity."
+          "Apply Dual Complement (y' Â· y = 0), then simplify (x + z + 0) with Identity."
         ],
         "optimalSteps": 4,
         "optimalHint": "Dual Distributive extracts x and z, y'y collapses to 0, leaving x + z in 4 steps."
@@ -329,7 +329,7 @@
         "expr": "(x + y + z')' + x'y'z",
         "goal": "x'y'z",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -338,13 +338,13 @@
           "Merge the identical x'y'z terms using Idempotent Law."
         ],
         "optimalSteps": 2,
-        "optimalHint": "De Morgan's (OR→AND) expands the negated group into x'y'z, then Idempotent merges duplicates."
+        "optimalHint": "De Morgan's (ORâ†’AND) expands the negated group into x'y'z, then Idempotent merges duplicates."
       },
       {
         "expr": "(xyz')'(x' + y' + z)",
         "goal": "x' + y' + z",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -353,7 +353,7 @@
           "Merge the duplicate sum clauses using Dual Idempotent Law."
         ],
         "optimalSteps": 2,
-        "optimalHint": "De Morgan's (AND→OR) expands to (x' + y' + z), then Dual Idempotent merges identical clauses."
+        "optimalHint": "De Morgan's (ANDâ†’OR) expands to (x' + y' + z), then Dual Idempotent merges identical clauses."
       },
       {
         "expr": "x'y' + x'yz + x'yz'",
@@ -391,7 +391,7 @@
         "expr": "(x + y)' + x'y'z",
         "goal": "x'y'",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "absorption"
         ],
         "hints": [
@@ -406,7 +406,7 @@
         "expr": "(xy)'(x' + y' + z)",
         "goal": "x' + y'",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "absorption"
         ],
         "hints": [
@@ -521,7 +521,7 @@
         "expr": "(w + x' + y + z')' + w'xy'z",
         "goal": "w'xy'z",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -536,7 +536,7 @@
         "expr": "(w'xy'z)'(w + x' + y + z')",
         "goal": "w + x' + y + z'",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "idempotent"
         ],
         "hints": [
@@ -561,7 +561,7 @@
           "After simplifying to wy, notice that wy appears inside wx'yz. Use Absorption!"
         ],
         "optimalSteps": 4,
-        "optimalHint": "Distributive → Complement creates wy, which then directly absorbs wx'yz: 4 steps total."
+        "optimalHint": "Distributive â†’ Complement creates wy, which then directly absorbs wx'yz: 4 steps total."
       },
       {
         "expr": "(w + x' + y)(w + x + y)(w + x' + y + z)",
@@ -577,13 +577,13 @@
           "Clause (w + y) then absorbs the longer clause (w + x' + y + z)."
         ],
         "optimalSteps": 4,
-        "optimalHint": "Dual Distributive → Dual Complement creates (w + y), which absorbs the 4-var clause."
+        "optimalHint": "Dual Distributive â†’ Dual Complement creates (w + y), which absorbs the 4-var clause."
       },
       {
         "expr": "(wx)' + (w'xyz)' + z",
         "goal": "1",
         "targetLaws": [
-          "demorgan-and",
+          "demorgan",
           "complement",
           "annulment"
         ],
@@ -599,17 +599,17 @@
         "expr": "(w + x)'(w' + x + y + z)'z",
         "goal": "0",
         "targetLaws": [
-          "demorgan-or",
+          "demorgan",
           "complement",
           "annulment"
         ],
         "hints": [
-          "Expand the negated sum groups using De Morgan's (OR→AND).",
-          "Scan for complementary literal product pairs like z' · z.",
-          "Once z' · z = 0, use Product Annulment: 0 · anything = 0!"
+          "Expand the negated sum groups using De Morgan's (ORâ†’AND).",
+          "Scan for complementary literal product pairs like z' Â· z.",
+          "Once z' Â· z = 0, use Product Annulment: 0 Â· anything = 0!"
         ],
         "optimalSteps": 3,
-        "optimalHint": "Expanding reveals z', creating z' · z = 0, collapsing the entire product to 0."
+        "optimalHint": "Expanding reveals z', creating z' Â· z = 0, collapsing the entire product to 0."
       },
       {
         "expr": "wx'y'z + wx'yz + wxy'z + wxyz",

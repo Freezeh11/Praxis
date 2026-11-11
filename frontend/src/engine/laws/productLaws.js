@@ -18,14 +18,19 @@ import { absorbsInProduct, findExpandablePair, termsEq } from './helpers.js'
 
 /** Builds the productive Distributive-EXPANSION law for a detected pair. */
 function expandLaw(expr, prodPath, pair) {
-  const { litNode, clauseNode, litIndex, sumIndex } = pair
-  const litText = nodeText(litNode)
+  const { litNode, clauseNode, litIndex, sumIndex, otherFactors } = pair
+  const factorsToDistribute = (otherFactors && otherFactors.length > 0)
+    ? otherFactors
+    : [litNode]
+  const multText = factorsToDistribute.map(nodeText).join('')
   const clauseText = nodeText(clauseNode)
-  const distributed = clauseNode.terms.map(t => nodeText(prod(cloneN(litNode), cloneN(t)))).join(' + ')
+  const distributed = clauseNode.terms.map(t => {
+    return `(${multText}·${nodeText(t)})`
+  }).join(' + ')
 
   return {
     ...defineLaw('Distributive (Expand)', LAW_FORM.PRODUCT),
-    desc: `Distribute ${litText} over ${clauseText} → ${distributed}`,
+    desc: `Distribute ${multText} over (${clauseText}) → ${distributed}`,
     // Deliberately empty. AnimationOverlay has no 'distributive-expand' branch,
     // and measurePaths/factoredVar belong to the *factoring* animation, which
     // would misread this law. Empty animPaths keeps the generic path: the
@@ -38,12 +43,17 @@ function expandLaw(expr, prodPath, pair) {
     apply: () => {
       const tree = cloneN(expr)
       const pn = getNode(tree, prodPath)
-      const nl = pn.factors[litIndex]
       const ns = pn.factors[sumIndex]
-      const rest = pn.factors.filter((_, k) => k !== litIndex && k !== sumIndex)
-      const expanded = normalizeFlat(sum(...ns.terms.map(t => prod(cloneN(nl), cloneN(t)))))
-      pn.factors = [...rest, expanded]
-      return normalizeFlat(tree)
+      const newTerms = ns.terms.map(t => {
+        const tFactors = t.type === 'prod' ? t.factors : [t]
+        return prod(...factorsToDistribute.map(cloneN), ...tFactors.map(cloneN))
+      })
+      const expandedSum = sum(...newTerms)
+      if (prodPath === 'R' || !prodPath.includes('.')) {
+        return normalizeFlat(expandedSum)
+      } else {
+        return normalizeFlat(setNode(tree, prodPath, expandedSum))
+      }
     },
   }
 }
@@ -219,13 +229,20 @@ export function productLaws({ expr, cp, n1, n2, p1, p2, bothTermSel, allowExpand
     })
   }
 
-  // 6. DISTRIBUTIVE (EXPAND) — GATED by options.allowExpand (sandbox only).
-  //    A(B + A') = AB + AA' — a bare literal factor times a sibling sum
-  //    clause that contains its complement.
+  // 6. DISTRIBUTIVE (EXPAND): A(B + C) = AB + AC
   if (allowExpand) {
     const pair = findExpandablePair(cp.prodNode, cp.fi1, cp.fi2)
     if (pair) laws.push(expandLaw(expr, cp.prodPath, pair))
   }
 
   return laws
+}
+
+export function productExpandLaw(expr, prodPath, sumIndex) {
+  const pn = getNode(expr, prodPath)
+  if (!pn || pn.type !== 'prod' || !pn.factors[sumIndex]) return null
+  const otherIndex = sumIndex === 0 ? 1 : 0
+  const pair = findExpandablePair(pn, otherIndex, sumIndex)
+  if (!pair) return null
+  return expandLaw(expr, prodPath, pair)
 }
