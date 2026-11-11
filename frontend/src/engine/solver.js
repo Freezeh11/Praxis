@@ -10,6 +10,45 @@ import {
   getLits
 } from './laws/index.js'
 
+/**
+ * Transition-list cache.
+ *
+ * The list for a given expression and palette is deterministic, and the app asks
+ * for the same list repeatedly: loading a puzzle searches, a hint re-runs the
+ * search, and planGuidance re-derives the first step from the state the search
+ * started at. A bounded LRU keeps the most recent lists so those repeats cost a
+ * lookup instead of a full law sweep.
+ *
+ * Cached arrays are never handed out directly — every caller gets its own — but
+ * the transition objects (and their nextTree) are shared, which is safe because
+ * law application always clones the tree it returns.
+ */
+const TRANSITION_CACHE_MAX = 200
+const transitionCache = new Map()
+
+/**
+ * Structural signature of a tree, used as the cache key.
+ *
+ * nodeText is cheaper but flattens nesting: `a + (b + c)` and `a + b + c` render
+ * the same while exposing different selection paths, and every transition carries
+ * those paths. Keeping the nesting makes equal keys mean equal paths.
+ */
+function signature(n) {
+  if (!n) return '-'
+  if (n.type === 'lit') return n.n ? n.v + "'" : n.v
+  if (n.type === 'const') return '_' + n.val
+  if (n.type === 'prod') return '(' + n.factors.map(signature).join('*') + ')'
+  if (n.type === 'sum') return '(' + n.terms.map(signature).join('+') + ')'
+  if (n.type === 'not') return '(' + signature(n.child) + ")'"
+  return '?'
+}
+
+/** The palette and the expansion gate are the only options the sweep reads. */
+function transitionKey(tree, options) {
+  const palette = options?.allowedLawIds ? options.allowedLawIds.join(',') : '*'
+  return signature(tree) + '#' + (options?.allowExpand ? '1' : '0') + '#' + palette
+}
+
 function findLitPath(node, base, v, n) {
   if (node.type === 'lit' && node.v === v && node.n === n) return base
   if (node.type === 'prod') {
@@ -37,6 +76,24 @@ function findLitPath(node, base, v, n) {
  * @param {string[]|null} [options.allowedLawIds] - visible palette ids; null is unrestricted, [] allows no moves
  */
 export function getLegalTransitions(tree, options = {}) {
+  const key = transitionKey(tree, options)
+  const cached = transitionCache.get(key)
+  if (cached) {
+    // Re-inserting keeps the LRU ordered by last use.
+    transitionCache.delete(key)
+    transitionCache.set(key, cached)
+    return cached.slice()
+  }
+  const transitions = collectTransitions(tree, options)
+  transitionCache.set(key, transitions)
+  if (transitionCache.size > TRANSITION_CACHE_MAX) {
+    transitionCache.delete(transitionCache.keys().next().value)
+  }
+  return transitions.slice()
+}
+
+/** The uncached law sweep behind getLegalTransitions. */
+function collectTransitions(tree, options = {}) {
   const transitions = []
   const seenNextCanons = new Set()
 
