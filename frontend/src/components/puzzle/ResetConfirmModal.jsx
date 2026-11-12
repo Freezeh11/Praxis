@@ -1,3 +1,5 @@
+import useDialogA11y from '../../hooks/useDialogA11y.js'
+
 /**
  * ResetConfirmModal — the confirmation shown when a solved stage is reset,
  * with the per-session opt-out.
@@ -5,26 +7,32 @@
 export default function ResetConfirmModal({
   show, shortViewport, isSandbox, dontAskResetAgain, onToggleDontAsk, onClose, onConfirm,
 }) {
+  const panelRef = useDialogA11y(show, onClose)
   if (!show) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/30 backdrop-blur-[2px] cursor-pointer"
+      className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/30 p-3 backdrop-blur-[2px] dark:bg-black/65"
       onClick={() => onClose()}
     >
       <div
-        className={`bg-bg-card rounded-2xl flex flex-col shadow-2xl max-w-[380px] w-full border border-border cursor-default praxis-modal-panel ${shortViewport ? 'p-4' : 'p-6'}`}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reset-confirm-title"
+        aria-describedby="reset-confirm-description"
+        className={`flex w-full max-w-[380px] cursor-default flex-col rounded-2xl border border-slate-200/90 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-slate-900/95 praxis-modal-panel ${shortViewport ? 'p-4' : 'p-6'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className={`flex items-center gap-3 ${shortViewport ? 'mb-2' : 'mb-3'}`}>
-          <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold shrink-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-lg font-bold text-amber-700 dark:bg-amber-400/10 dark:text-amber-300">
             ↺
           </div>
           <div>
-            <h3 className="text-[16px] font-bold text-text-1">
+            <h3 id="reset-confirm-title" className="text-[16px] font-bold text-text-1">
               {isSandbox ? 'Reset this problem?' : 'Reset this stage?'}
             </h3>
-            <p className="text-xs text-text-3 mt-0.5">
+            <p id="reset-confirm-description" className="text-xs text-text-3 mt-0.5">
               {isSandbox
                 ? 'This clears your current derivation so you can solve the same random problem again.'
                 : 'Are you sure you want to reset the stage? This will clear your current derivation so you can solve it from scratch.'}
@@ -58,7 +66,7 @@ export default function ResetConfirmModal({
             style={{ backgroundColor: '#b91c1c', color: '#ffffff' }}
             onClick={onConfirm}
           >
-            Reset Stage
+            {isSandbox ? 'Reset Problem' : 'Reset Stage'}
           </button>
         </div>
       </div>

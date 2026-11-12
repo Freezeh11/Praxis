@@ -36,6 +36,7 @@ import { findSimplestForm, findOptimalPath, getLegalTransitions } from '../solve
 import { SANDBOX } from '../../config/gameRules.js'
 import {
   canonicalTokenText,
+  MSG_TOO_COMPLEX,
   normalizeSandboxExpr,
   resolveMaxVariables,
   scanTokens,
@@ -51,15 +52,23 @@ export const MAX_SANDBOX_VARS = SANDBOX.maxVariables
 const SANDBOX_ENGINE = { allowExpand: true }
 
 const MSG_ALREADY_SIMPLEST = 'This expression is already in its simplest form. Try a more complex one!'
-const MSG_NOT_SIMPLIFIABLE = 'This expression is too complex for the sandbox engine. Try a simpler one.'
+const MSG_NOT_SIMPLIFIABLE = MSG_TOO_COMPLEX
 
 const puzzleFailure = (errorCode, error) => ({ ok: false, errorCode, error })
 
 /* ── Workspace self-checks (same move set the UI is given) ────────────────── */
 
-/** True when the workspace would offer no further move from `tree`. */
+/**
+ * True when no law can simplify `tree` further.
+ *
+ * Distributive (Expand) is excluded here: it grows an expression, so it can
+ * never be the last step of a simplification. Counting it as a move makes every
+ * factored form non-terminal and forces the goal search to expand first, which
+ * turns a four-variable input into a 19-step, 25-second build. Learners can
+ * still use expansion in the workspace (puzzle.allowExpand).
+ */
 function isUiTerminal(tree) {
-  return getLegalTransitions(tree, SANDBOX_ENGINE).length === 0
+  return getLegalTransitions(tree, { allowExpand: false }).length === 0
 }
 
 /**
@@ -149,8 +158,11 @@ export function buildSandboxPuzzle(raw, options = {}) {
   }
 
   /* 3. fully simplified terminal form — the sandbox opts into the gated
-        Distributive-Expand law, which graded levels never enable */
-  const simplest = findSimplestForm(parsed, { ...budget.simplestForm, allowExpand: true })
+        Distributive-Expand law, which graded levels never enable. One deadline
+        covers both searches, so a pathological input costs the learner at most
+        SANDBOX.deadlineMs of main thread before the "too complex" verdict. */
+  const deadline = Date.now() + SANDBOX.deadlineMs
+  const simplest = findSimplestForm(parsed, { ...budget.simplestForm, allowExpand: false, deadline })
   if (!simplest.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }
@@ -163,7 +175,7 @@ export function buildSandboxPuzzle(raw, options = {}) {
   }
 
   /* 4. guaranteed legal forward path (the step-locking rule needs one) */
-  const solution = findOptimalPath(parsed, simplest.canon, { ...budget.optimalPath, allowExpand: true })
+  const solution = findOptimalPath(parsed, simplest.canon, { ...budget.optimalPath, allowExpand: false, deadline })
   if (!solution.found) {
     return puzzleFailure('not-simplifiable', MSG_NOT_SIMPLIFIABLE)
   }

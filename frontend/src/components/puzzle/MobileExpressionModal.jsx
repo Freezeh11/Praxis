@@ -4,7 +4,7 @@ import Icon from '../ui/Icon'
  * expressions on narrow / mobile viewports where the side panel is collapsed.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { validateSandboxInput } from '../../engine/index.js'
 import { SANDBOX, TIMING } from '../../config/gameRules.js'
 import ExpressionGuideModal from './ExpressionGuideModal'
@@ -123,7 +123,7 @@ export default function MobileExpressionModal({
           className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-[2px]"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -166,6 +166,7 @@ export default function MobileExpressionModal({
                   id="mobile-sandbox-input"
                   ref={inputRef}
                   type="text"
+                  maxLength={160}
                   value={rawExpr}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
@@ -228,7 +229,7 @@ export default function MobileExpressionModal({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </AnimatePresence>
 

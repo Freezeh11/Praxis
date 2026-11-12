@@ -174,8 +174,6 @@ erDiagram
     USER_PROGRESS {
         uuid user_id PK "FK -> auth.users(id) ON DELETE CASCADE"
         integer points "client-authoritative running total"
-        integer streak "current streak, client-computed"
-        integer best_streak "high-water mark of streak"
         timestamptz updated_at "insert time only - no trigger refreshes it"
     }
 
@@ -935,7 +933,7 @@ flowchart TB
     subgraph state["State layer"]
         session["components/puzzle/usePuzzleSession.js<br/>route identity, puzzle load, completion and scoring"]
         game["state/useGameState.js<br/>history, selection, status, hints, animation"]
-        progress["state/progressStore.js<br/>module-level snapshot: points, streak, scores"]
+        progress["state/progressStore.js<br/>module-level snapshot: points, scores"]
         uprogress["state/useProgress.js<br/>useSyncExternalStore binding"]
         authctx["state/AuthProvider.jsx to authContext.js to useSession.js<br/>session: data, isPending, error"]
     end

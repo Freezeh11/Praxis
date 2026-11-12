@@ -1,9 +1,6 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import { useProgress } from '../state/useProgress.js'
 
-/** Where a learner who has not finished the tutorial gets sent. */
-const TUTORIAL_ENTRY = '/level/0/stage/1?tutorial=true'
-
 /** Tutorial lives at level 0 (see content/levels.json). */
 const TUTORIAL_LEVEL_ID = 0
 

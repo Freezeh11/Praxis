@@ -6,7 +6,14 @@ function readTheme() {
 }
 let theme = readTheme()
 const listeners = new Set()
-function apply() { document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme }
+function apply() {
+  const root = document.documentElement
+  // Two signals, one source of truth: the attribute every token selector and
+  // legacy remap keys off, and the class Tailwind's `darkMode: 'class'` reads.
+  root.dataset.theme = theme
+  root.classList.toggle('dark', theme === 'dark')
+  root.style.colorScheme = theme
+}
 apply()
 window.addEventListener('storage', event => {
   if (event.key === KEY || event.key === null) { theme = readTheme(); apply(); listeners.forEach(listener => listener()) }

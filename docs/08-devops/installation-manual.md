@@ -196,7 +196,7 @@ The script is idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running it is saf
 
 | Table | Purpose | Key constraints |
 |---|---|---|
-| `user_progress` | one row per learner: `points`, `streak`, `best_streak` | PK `user_id` → `auth.users(id)` |
+| `user_progress` | one row per learner: `points` | PK `user_id` → `auth.users(id)` |
 | `stage_progress` | one row per completed stage: `best_score`, `completed` | `UNIQUE(user_id, level_id, stage_idx)` |
 | `score_history` | every scored attempt ever submitted | append-only |
 

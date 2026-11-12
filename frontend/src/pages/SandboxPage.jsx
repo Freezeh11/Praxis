@@ -264,6 +264,7 @@ export default function SandboxPage() {
             ref={inputRef}
             data-testid="sandbox-input"
             type="text"
+            maxLength={160}
             value={raw}
             onChange={handleChange}
             onKeyDown={handleKeyDown}

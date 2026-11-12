@@ -388,7 +388,7 @@ total `100.0`.
 **✅ Verify:** the level map marks stage 1 complete, and the points chip increased by **15** — 10 XP
 for completing the stage (`STAGE_COMPLETION_XP`, `frontend/src/config/gameRules.js:32`) plus 5 bonus
 points from the perfect score (`SCORE_BONUS_MAX_POINTS`, `frontend/src/config/gameRules.js:29`;
-awarded at `frontend/src/components/puzzle/usePuzzleSession.js:191`). Your streak goes up by one.
+awarded at `frontend/src/components/puzzle/usePuzzleSession.js:191`). The stage now shows a 3-star rating for the perfect score.
 
 ---
 
@@ -430,7 +430,7 @@ failure would appear only in the backend log
 In the Supabase dashboard, open **SQL Editor** and run:
 
 ```sql
-select u.email, p.points, p.streak, p.best_streak, p.updated_at
+select u.email, p.points, p.updated_at
 from user_progress p
 join auth.users u on u.id = p.user_id
 order by p.updated_at desc;
@@ -440,7 +440,7 @@ from stage_progress
 order by level_id, stage_idx;
 ```
 
-Expected after this walkthrough: one `user_progress` row with `points >= 15`, `streak = 1`, and five
+Expected after this walkthrough: one `user_progress` row with `points >= 15` and five
 `stage_progress` rows — four for the tutorial (`level_id = 0`, stages 0–3) and one for
 `level_id = 1, stage_idx = 0` with `best_score = 100` and `completed = true`.
 

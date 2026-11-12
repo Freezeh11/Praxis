@@ -7,36 +7,94 @@ import Icon from '../ui/Icon'
  *
  * Presentational: the whole game state arrives as props.
  */
-import { motion } from 'framer-motion'
+import { memo, useEffect, useRef, useState } from 'react'
+
+import { m } from 'framer-motion'
 
 import AnimationOverlay from '../AnimationOverlay'
 import ExpressionDisplay from '../ExpressionDisplay'
 import ExprText from '../ExprText'
+import WorkspaceLiveBackdrop from './WorkspaceLiveBackdrop'
+import { useZoom } from './zoomStore'
 
-export default function DerivationCanvas({
+function DerivationCanvas({
   expr, sel, steps, status, statusMsg, isAnimating, animationData,
   inspectedStepIdx, setInspectedStepIdx, activeGuidePaths, onClickLit, onClickNot,
   onClickTerm, swapTerms, touchTargets, isPhoneLandscape, isSandbox, sandboxNonce,
-  isCustomSandbox, customPuzzle, zoom,
+  isCustomSandbox, customPuzzle,
 }) {
+  const { zoom } = useZoom()
+  const scrollRef = useRef(null)
+  const contentRef = useRef(null)
+  const activeLineRef = useRef(null)
+  /* Untransformed size of the canvas block. A CSS transform does not change
+     layout size, so at zoom > 1 the scaled content used to overflow the scroll
+     element without expanding it — the right/bottom of a long derivation was
+     clipped with no way to scroll to it. The wrapper reserves the scaled box. */
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 })
+  /* The hint is an instruction, so it only exists while there is something to
+     scroll to; a permanently visible "scroll to view" line above a canvas that
+     fits on screen is just noise. */
+  const [overflowing, setOverflowing] = useState(false)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return undefined
+    const measure = () => setContentSize({ width: el.offsetWidth, height: el.offsetHeight })
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const scroller = scrollRef.current
+    if (!scroller) return undefined
+    const measure = () => setOverflowing(
+      scroller.scrollWidth > scroller.clientWidth + 1 || scroller.scrollHeight > scroller.clientHeight + 1,
+    )
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(scroller)
+    return () => observer.disconnect()
+  }, [contentSize, zoom])
+
+  /* Keep the line the learner is working on in view. `nearest` is deliberate: a
+     line that is already visible stays exactly where they scrolled it. */
+  useEffect(() => {
+    const line = activeLineRef.current
+    if (!line || typeof line.scrollIntoView !== 'function') return
+    line.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+  }, [steps.length, expr])
+
   return (
-    <div data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`flex-1 min-h-0 flex flex-col overflow-auto bg-bg-card bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-[size:28px_28px] relative ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
+    <div className="relative flex-1 min-h-0 flex flex-col">
+      {/* Live wallpaper layer — one flat canvas behind the equations, clipped
+          to the workspace and never hit-testable. It replaces the old static
+          28px gradient grid, which read flat on large screens. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <WorkspaceLiveBackdrop />
+      </div>
+
+      {/* This stays the ONE scrolling element (same testid/role/aria/tabIndex);
+          its background is transparent so the wallpaper shows through. */}
+      <div ref={scrollRef} data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`relative flex-1 min-h-0 flex flex-col overflow-auto shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
       {isAnimating && <AnimationOverlay data={animationData} />}
 
       {/* Status banner — placed in flow at top with a stable reserved slot so it NEVER overlays equations or causes vertical layout shift */}
       <div className={`w-full flex justify-center items-center px-4 z-20 shrink-0 select-none ${isPhoneLandscape ? 'pt-1 pb-0.5 min-h-[30px]' : 'pt-2.5 pb-1 min-h-[42px]'}`}>
         <div
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-sm border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200 ${
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.1px] shadow-[0_2px_10px_-6px_rgba(15,23,42,0.35)] border-[1.5px] max-w-[95%] sm:max-w-xl text-center transition-all duration-200 ${
             status === 'select'
               ? 'opacity-0 pointer-events-none'
               : status === 'error'
-              ? 'bg-red-100 text-red-700 border-red-300 opacity-100'
+              ? 'border-rose-300 bg-rose-100 text-rose-700 opacity-100 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-300'
               : status === 'laws'
-              ? 'bg-teal-light text-sky-700 border-sky-300 opacity-100'
+              ? 'border-sky-300 bg-sky-50 text-sky-700 opacity-100 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-300'
               : status === 'applying'
-              ? 'bg-teal-light text-sky-800 border-sky-300 opacity-100'
+              ? 'border-sky-300 bg-sky-50 text-sky-800 opacity-100 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200'
               : status === 'success'
-              ? 'bg-green-light text-green-800 border-green-300 opacity-100'
+              ? 'border-emerald-300 bg-emerald-100 text-emerald-800 opacity-100 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300'
               : 'opacity-0 pointer-events-none'
           } ${isPhoneLandscape ? 'py-1 text-[11px]' : ''}`}
         >
@@ -49,21 +107,33 @@ export default function DerivationCanvas({
       </div>
 
       <div className="relative w-max min-w-full shrink-0 flex flex-col items-start py-2 px-3">
-        <span className="text-[11px] text-text-3 mb-2">Scroll to view long expressions and all steps.</span>
+        {overflowing && (
+          <span className="text-[11px] text-text-3 mb-2">Scroll to view long expressions and all steps.</span>
+        )}
 
         {/* Zoom wrapper — scales the entire expression block.
             In sandbox mode the nonce forces a clean remount on randomize so
             no stale selection/animation state can leak into a new problem. */}
-        <div data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.18s ease' }}>
+        {/* Reserves the scaled footprint: without it a zoomed block keeps its
+            unscaled layout size and its overflow cannot be scrolled to. */}
+        <div
+          className="shrink-0"
+          style={{
+            width: contentSize.width ? Math.ceil(contentSize.width * zoom) : undefined,
+            height: contentSize.height ? Math.ceil(contentSize.height * zoom) : undefined,
+            transition: 'width 0.18s ease, height 0.18s ease',
+          }}
+        >
+        <div ref={contentRef} className="w-max" data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.18s ease' }}>
           {/* Custom sandbox: keep the typed expression in view so the
               derivation can always be compared with what was asked for. */}
           {isCustomSandbox && (
             <div
               data-testid="custom-expression-label"
-              className={`mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-1.5 ${isPhoneLandscape ? 'text-[14px]' : 'text-[12px]'}`}
+              className={`mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-1.5 shadow-chip dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:shadow-none ${isPhoneLandscape ? 'text-[14px]' : 'text-[12px]'}`}
             >
-              <span className="font-bold uppercase tracking-wider text-sky-900/70">Your expression</span>
-              <span className={`font-mono font-semibold text-sky-900 whitespace-nowrap ${isPhoneLandscape ? 'text-[16px]' : 'text-[15px]'}`}>
+              <span className="font-bold uppercase tracking-wider text-sky-900/70 dark:text-cyan-300/80">Your expression</span>
+              <span className={`whitespace-nowrap font-mono font-semibold text-sky-900 dark:text-cyan-100 ${isPhoneLandscape ? 'text-[16px]' : 'text-[15px]'}`}>
                 {customPuzzle.expr}
               </span>
             </div>
@@ -116,7 +186,7 @@ export default function DerivationCanvas({
           }
 
           return (
-            <motion.div
+            <m.div
               layout
               className="flex flex-col gap-3 font-mono text-[22px] font-medium items-start select-none"
               onClick={() => setInspectedStepIdx(null)}
@@ -126,10 +196,16 @@ export default function DerivationCanvas({
                 const isToInspected = idx > 0 && inspectedStepIdx === idx - 1
                 const isLineHighlighted = isFromInspected || isToInspected
                 return (
-                  <motion.div
+                  <m.div
                     layout
                     key={line.key}
-                    initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
+                    ref={line.isActive ? activeLineRef : undefined}
+                    /* Opacity starts at 1, never 0: a stalled framer loop (throttled
+                       tab, dropped frame scheduler) would otherwise leave a freshly
+                       committed step line permanently transparent, which reads as
+                       "the answer animation is gone, it is only loading". The rise
+                       still animates through y. */
+                    initial={{ opacity: 1, y: line.isActive && idx > 0 ? 6 : 0 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
                     className="relative flex items-center min-h-[44px] gap-2.5"
@@ -154,8 +230,8 @@ export default function DerivationCanvas({
                           <div
                             className={`h-full rounded-full transition-all duration-200 ${
                               inspectedStepIdx === line.stepIdx
-                                ? 'bg-teal w-[3.5px] shadow-[0_0_8px_rgba(13,148,136,0.4)]'
-                                : 'bg-slate-300 w-[2px] group-hover:bg-teal group-hover:w-[3px]'
+                                ? 'bg-teal w-[3.5px] shadow-[0_0_8px_rgba(13,148,136,0.4)] dark:bg-cyan-400 dark:shadow-[0_0_10px_rgba(34,211,238,0.45)]'
+                                : 'bg-rail w-[2px] group-hover:bg-teal group-hover:w-[3px] dark:group-hover:bg-cyan-400'
                             }`}
                           />
                         </button>
@@ -163,13 +239,13 @@ export default function DerivationCanvas({
 
                       {/* Node Dot */}
                       {isLineHighlighted ? (
-                        <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200" />
+                        <div className="relative z-30 w-3 h-3 rounded-full bg-teal ring-4 ring-teal/20 shadow-xs transition-all duration-200 dark:bg-cyan-400 dark:ring-cyan-400/25" />
                       ) : line.isActive ? (
-                        <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-bg-card shadow-xs transition-all">
-                          <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
+                        <div className="relative z-30 flex items-center justify-center w-4 h-4 rounded-full border-2 border-teal bg-bg-card shadow-xs transition-all dark:border-cyan-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse dark:bg-cyan-400" />
                         </div>
                       ) : (
-                        <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-slate-300 transition-all duration-200" />
+                        <div className="relative z-30 w-2.5 h-2.5 rounded-full bg-rail transition-all duration-200" />
                       )}
 
                       {/* The law-explanation card and the step-inspection tip
@@ -185,10 +261,10 @@ export default function DerivationCanvas({
                         setInspectedStepIdx(prev => (prev === line.stepIdx ? null : line.stepIdx))
                       } : undefined}
                       className={`relative flex items-baseline gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
-                        !line.isActive ? 'cursor-pointer hover:bg-slate-50/70' : ''
+                        !line.isActive ? 'cursor-pointer hover:bg-slate-50/70 hover:shadow-chip' : ''
                       } ${
                         isLineHighlighted
-                          ? 'border-teal/30 bg-teal-50/50 shadow-xs ring-1 ring-teal/20'
+                          ? 'border-teal/30 bg-teal-50/50 shadow-[0_4px_14px_-10px_rgba(13,148,136,0.55)] ring-1 ring-teal/20 dark:border-cyan-400/40 dark:ring-cyan-400/25'
                           : 'border-transparent'
                       }`}
                     >
@@ -215,23 +291,27 @@ export default function DerivationCanvas({
                       ) : (
                         <ExprText
                           text={line.text}
-                          className={isLineHighlighted ? 'text-slate-900 font-semibold' : 'text-text-1'}
+                          className={isLineHighlighted ? 'text-slate-900 font-semibold dark:text-slate-100' : 'text-text-1'}
                         />
                       )}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )
               })}
-            </motion.div>
+            </m.div>
           )
         })()}
-        </div>{/* end zoom wrapper */}
+        </div>{/* end zoom transform */}
+        </div>{/* end scaled-footprint wrapper */}
 
         {/* The hint bubble is no longer an inline flex sibling: in flow it
             pushed the canvas content and was clipped by the scrollable
             canvas on a 320px-tall phone. It renders in the collision layer
             below instead. */}
       </div>
+      </div>{/* end derivation-scroll */}
     </div>
   )
 }
+
+export default memo(DerivationCanvas)

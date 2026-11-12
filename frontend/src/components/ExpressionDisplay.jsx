@@ -21,7 +21,7 @@
  */
 
 import { createContext, useContext } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 import useTermDrag from '../hooks/useTermDrag.js'
 
@@ -46,25 +46,36 @@ function LitNode({ node, path, sel, onClickLit, activeGuidePaths, animationPaths
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   const touchTargets = useContext(TouchTargetsContext)
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       className={`inline-flex items-baseline rounded-[4px] cursor-pointer transition-all border-[1.5px] touch-none select-none
         ${touchTargets ? 'px-2 py-0.5 min-w-[32px] justify-center' : 'px-1 py-[2px]'}
-        ${selected ? 'bg-teal-light border-teal text-teal font-semibold' : 'border-transparent hover:bg-teal-light/60 hover:border-teal/60 hover:text-teal'}
+        ${selected ? 'bg-teal-light border-teal text-teal font-semibold dark:border-cyan-300 dark:text-cyan-100' : 'border-transparent hover:bg-teal-light/60 hover:border-teal/60 hover:text-teal dark:hover:border-cyan-400/50 dark:hover:text-cyan-200'}
         ${node.type === 'const' ? 'text-text-3 font-semibold' : ''}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal shadow-[0_0_0_6px_rgba(46,196,182,0)] animate-[guidePulse_2s_infinite] z-10' : ''}
         ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
       data-path={path}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={node.type === 'lit' ? `Literal ${node.v}${node.n ? ' negated' : ''}` : `Constant ${node.val}`}
       onClick={e => { e.stopPropagation(); onClickLit(path) }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          e.stopPropagation()
+          onClickLit(path)
+        }
+      }}
     >
       {node.type === 'lit' ? (
         node.n
           ? <span style={{ textDecoration: 'overline', textUnderlineOffset: '2px' }}>{node.v}</span>
           : node.v
       ) : node.val}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -75,12 +86,12 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
   const touchTargets = useContext(TouchTargetsContext)
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       className={`inline-flex items-baseline rounded-[5px] cursor-pointer transition-all border-[1.5px] touch-none select-none
         ${touchTargets ? 'px-1 py-0.5' : 'px-0.5 py-[2px]'}
-        ${selected ? 'bg-amber-light border-amber' : 'border-transparent hover:bg-amber-light/60 hover:border-amber/60'}
+        ${selected ? 'bg-amber-light border-amber dark:border-amber-300' : 'border-transparent hover:bg-amber-light/60 hover:border-amber/60 dark:hover:border-amber-400/50'}
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
         ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
       `}
@@ -111,7 +122,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
               touchTargets ? 'h-[3px]' : 'h-[2px]'
             } ${
               selected
-                ? 'bg-amber-600 shadow-[0_0_8px_rgba(245,158,11,0.5)] ring-1 ring-amber-400'
+                ? 'bg-amber-600 shadow-[0_0_8px_rgba(245,158,11,0.5)] ring-1 ring-amber-400 dark:bg-amber-400 dark:ring-amber-300'
                 : isGuide
                   ? 'bg-teal animate-[pulse_1.5s_infinite]'
                   : 'bg-current group-hover/notbar:bg-amber-500 group-active/notbar:bg-amber-600'
@@ -136,7 +147,7 @@ function NotNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         </span>
       </span>
       <span className="text-text-3 select-none self-center">)</span>
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -150,7 +161,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
   const { isDragging, isDragTarget, handlers } = useTermDrag({ group, index, onSwapTerms })
 
   return (
-    <motion.span
+    <m.span
       layout
       transition={transitionConfig}
       data-path={`${group}.${index}`}
@@ -161,8 +172,8 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
         ${isDragTarget ? 'border-amber bg-amber-light scale-[1.04] !border-solid' : ''}
         ${isDragging ? 'opacity-45 border-border-dark !border-solid' : ''}
         ${selected
-          ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid'
-          : 'border-transparent hover:border-slate-300/80 hover:bg-slate-50/80 border-dashed'
+          ? 'border-indigo-500 bg-indigo-50/80 shadow-xs !border-solid dark:border-indigo-400'
+          : 'border-transparent hover:border-slate-300/80 hover:bg-slate-50/80 border-dashed dark:hover:border-cyan-400/40 dark:hover:bg-cyan-400/10'
         }
         ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''}
         ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}
@@ -176,11 +187,13 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
       <button
         type="button"
         className={`touch-none absolute -top-3.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] leading-none font-bold select-none cursor-pointer transition-all duration-150 shadow-xs z-30 flex items-center justify-center ${selected
-          ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100'
+          ? 'opacity-100 bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-200 scale-100 dark:bg-indigo-500 dark:ring-indigo-400/40'
           : touchTargets
-            ? 'opacity-85 bg-slate-700/85 text-white hover:opacity-100 active:bg-indigo-600 active:scale-105'
-            : 'opacity-0 group-hover:opacity-100 bg-slate-700/90 text-white hover:bg-indigo-600 hover:scale-105 pointer-events-none group-hover:pointer-events-auto'}`}
+            ? 'opacity-85 bg-slate-700/85 text-white hover:opacity-100 active:bg-indigo-600 active:scale-105 dark:bg-slate-600'
+            : 'opacity-70 bg-slate-700/90 text-white hover:opacity-100 hover:bg-indigo-600 hover:scale-105 focus-visible:opacity-100 dark:bg-slate-600'}`}
         title={gripTitle}
+        aria-label={gripTitle}
+        aria-pressed={selected}
         onClick={e => {
           e.stopPropagation()
           onSelect()
@@ -190,7 +203,7 @@ function DragCapsule({ group, index, onSwapTerms, onSelect, selected, isGuide, i
       </button>
 
       {children}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -203,7 +216,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
   const hasMultiple = isTopLevel && node.factors.length >= 2
 
   return (
-    <motion.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-baseline gap-0 ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
+    <m.span layout transition={transitionConfig} data-path={path} className={`inline-flex items-baseline gap-0 ${isGuide ? 'relative rounded-md bg-teal/10 border border-dashed border-teal animate-[guidePulse_2s_infinite] z-10' : ''} ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.factors.map((f, i) => {
         const fPath = `${path}.${i}`
         const factorSel = sel.some(s => s.path === fPath)
@@ -214,7 +227,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
         const isSumClause = f?.type === 'sum'
 
         return (
-          <motion.span layout transition={transitionConfig} key={f._id || fPath} className="inline-flex items-baseline">
+          <m.span layout transition={transitionConfig} key={f._id || fPath} className="inline-flex items-baseline">
             {(prevIsConst || currIsConst) && i > 0 && (
               <span className={`text-text-3 mx-0.5 text-[0.9em] self-center ${factorAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}> · </span>
             )}
@@ -263,7 +276,7 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 )}
               </DragCapsule>
             ) : (
-              <motion.span
+              <m.span
                 layout
                 transition={transitionConfig}
                 data-path={fPath}
@@ -279,12 +292,12 @@ function ProdNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwap
                 ) : (
                   <ExprNode node={f} path={fPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
                 )}
-              </motion.span>
+              </m.span>
             )}
-          </motion.span>
+          </m.span>
         )
       })}
-    </motion.span>
+    </m.span>
   )
 }
 
@@ -297,7 +310,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
   const isAnimatingHide = isNodeAnimatingHide(path, animationPaths, animationLaw)
 
   return (
-    <motion.span layout transition={transitionConfig} className={`inline-flex ${isTopLevel ? 'flex-wrap' : 'flex-nowrap whitespace-nowrap'} items-baseline gap-0 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
+    <m.span layout transition={transitionConfig} className={`inline-flex ${isTopLevel ? 'flex-wrap' : 'flex-nowrap whitespace-nowrap'} items-baseline gap-0 ${isAnimatingHide ? 'opacity-0 pointer-events-none' : ''}`}>
       {node.terms.map((t, i) => {
         const tPath = `${path}.${i}`
         const termSel = sel.some(s => s.path === tPath)
@@ -305,7 +318,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
         const termAnimatingHide = isNodeAnimatingHide(tPath, animationPaths, animationLaw)
 
         return (
-          <motion.span layout transition={transitionConfig} key={t._id || tPath} className="inline-flex items-baseline">
+          <m.span layout transition={transitionConfig} key={t._id || tPath} className="inline-flex items-baseline">
             {i > 0 && (
               <span className={`text-text-2 font-normal mx-1.5 select-none self-center ${termAnimatingHide && isNodeAnimatingHide(`${path}.${i - 1}`, animationPaths, animationLaw) ? 'opacity-0 pointer-events-none' : ''}`}>
                 +
@@ -338,7 +351,7 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 />
               </DragCapsule>
             ) : (
-              <motion.span
+              <m.span
                 layout
                 transition={transitionConfig}
                 data-path={tPath}
@@ -346,12 +359,12 @@ function SumNode({ node, path, sel, onClickLit, onClickNot, onClickTerm, onSwapT
                 onClick={(e) => { e.stopPropagation(); onClickTerm(tPath) }}
               >
                 <ExprNode node={t} path={tPath} sel={sel} onClickLit={onClickLit} onClickNot={onClickNot} onClickTerm={onClickTerm} onSwapTerms={onSwapTerms} activeGuidePaths={activeGuidePaths} animationPaths={animationPaths} animationLaw={animationLaw} />
-              </motion.span>
+              </m.span>
             )}
-          </motion.span>
+          </m.span>
         )
       })}
-    </motion.span>
+    </m.span>
   )
 }
 

@@ -5,7 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Praxis — Interactive Boolean Simplifier</title>
     <meta name="description" content="Master Boolean algebra by interactively simplifying expressions — select terms, discover laws, and simplify step by step." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Content Security Policy.
+         Production ships this strict policy; vite.config.js refines connect-src
+         from VITE_SUPABASE_URL and relaxes script-src for the dev server, where
+         React Refresh injects an inline preamble. frame-ancestors is header-only
+         (browsers ignore it in a meta tag) and is sent by the FastAPI backend.
+         style-src allows inline style attributes because framer-motion writes
+         them at runtime; script-src allows no inline code at all. -->
+    <meta data-praxis-csp http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+    <!-- Touch/home-screen surfaces reuse the same artwork, so the app icon can
+         never drift from the favicon. iOS does not parse SVG touch icons, so this
+         is inert there until a 180x180 PNG exists; the vector badge is the single
+         source of truth meanwhile. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />

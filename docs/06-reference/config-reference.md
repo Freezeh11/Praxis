@@ -279,8 +279,6 @@ What the progress snapshot contains (`frontend/src/state/progressStore.js:30-39`
 | Field | Type | Meaning |
 |---|---|---|
 | `points` | number | total points |
-| `streak` | number | current streak |
-| `bestStreak` | number | best streak |
 | `levelsCompleted` | number[] | completed level ids, `0` = tutorial |
 | `stageProgress` | `{ "1": [0,1,2] }` | completed stage indexes by level id |
 | `stageScores` | `{ "1:0": 87.5 }` | best total score per `level:stage` |

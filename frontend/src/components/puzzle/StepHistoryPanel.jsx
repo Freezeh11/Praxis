@@ -1,3 +1,4 @@
+import { memo, useEffect } from 'react'
 import Icon from '../ui/Icon'
 /**
  * StepHistoryPanel — the derivation history. It is the first column on the wide
@@ -10,40 +11,67 @@ import usePanelSound from '../../hooks/usePanelSound'
 import ExprText from '../ExprText'
 import TutorialToggle from './TutorialToggle'
 import ZoomControls from './ZoomControls'
+import { useZoom } from './zoomStore'
 
-export default function StepHistoryPanel({
+function StepHistoryPanel({
   steps, inspectedStepIdx, onToggleInspectStep, useOverlayHistory, isPhoneLandscape,
   stepHistoryOpen, onCloseStepHistory, isSandbox, onBack, touchTargets,
-  zoom, onZoom, isTutorialActive, isTutorialLevel, onToggleTutorial, chromeText, chromeHeight,
+  isTutorialActive, isTutorialLevel, onToggleTutorial, chromeText, chromeHeight,
 }) {
+  const { zoom, setZoom: onZoom } = useZoom()
   // Only the overlay-drawer variant opens and closes — on the wide tiers this
   // panel is a permanent column, so the flag stays false and the cue is unused.
   usePanelSound(stepHistoryOpen)
+
+  // The overlay variant is modal on compact tiers; Escape must dismiss it like
+  // every other dialog in the app (the wide column never sets this flag).
+  useEffect(() => {
+    if (!useOverlayHistory || !stepHistoryOpen) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onCloseStepHistory()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [useOverlayHistory, stepHistoryOpen, onCloseStepHistory])
 
   const stepHistoryPanel = (
     <aside
       data-tutorial="step-history-panel"
       className={useOverlayHistory
         ? 'w-full h-full min-w-0 bg-bg-card flex flex-col overflow-hidden'
-        : 'w-[260px] min-w-[200px] max-w-[300px] bg-bg-card border-r border-border flex flex-col overflow-hidden'}
+        : 'w-[260px] min-w-[200px] max-w-[300px] bg-bg-card border-r border-border flex flex-col overflow-hidden shadow-[inset_-1px_0_0_rgba(15,23,42,0.05)]'}
     >
       <div className={useOverlayHistory
         ? 'px-3 pt-2.5 pb-2 border-b border-border flex items-end justify-between gap-2 shrink-0'
         : 'px-4 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-2'}>
         <div className="flex flex-col gap-2 min-w-0">
+          {/* Back navigation reads as one intentional control in BOTH themes: a
+              compact pill whose chevron sits in its own key-cap, so it can
+              never be mistaken for tinted text. */}
           <button
-            className={`flex items-center gap-1.5 px-2.5 py-1 font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all shadow-2xs w-fit ${useOverlayHistory ? 'text-[13px]' : 'text-xs'}`}
+            type="button"
+            aria-label={isSandbox ? 'Back to Levels' : 'Back to Stages'}
             onClick={() => onBack()}
+            className={`group inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white/85 py-1 pl-1 pr-2.5 text-[13px] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors duration-200 hover:border-indigo-300 hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:shadow-none dark:hover:border-cyan-400/40 dark:hover:bg-slate-800 dark:focus-visible:ring-cyan-400/60 ${useOverlayHistory ? 'min-h-[44px]' : 'min-h-[34px]'}`}
           >
-            <span className="font-extrabold text-teal">←</span> {isSandbox ? 'Back to Levels' : 'Back to Stages'}
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-indigo-600 transition-colors duration-200 group-hover:border-indigo-300 dark:border-white/10 dark:bg-slate-800 dark:text-cyan-300 dark:group-hover:border-cyan-400/40"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                <path d="M14.5 6 8.5 12l6 6" />
+              </svg>
+            </span>
+            {isSandbox ? 'Back to Levels' : 'Back to Stages'}
           </button>
-          <div className={`font-bold text-text-2 tracking-[0.5px] uppercase ${useOverlayHistory ? 'text-[15px]' : 'text-[13px]'}`}>Step History</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Step History</div>
         </div>
         {useOverlayHistory && (
           <button
             type="button"
             data-testid="step-history-close"
-            className="shrink-0 w-11 h-11 rounded-lg border border-border bg-bg text-[16px] font-bold text-text-2 hover:bg-border transition-all flex items-center justify-center"
+            aria-label="Close step history"
+            className="shrink-0 w-11 h-11 rounded-lg border border-slate-200 bg-white/85 text-[16px] text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors duration-200 hover:border-indigo-300 hover:bg-white hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300 dark:shadow-none dark:hover:border-cyan-400/40 dark:hover:bg-slate-800 dark:hover:text-white dark:focus-visible:ring-cyan-400/60 flex items-center justify-center"
             onClick={() => onCloseStepHistory()}
             title="Close step history"
           ><Icon name="close" /></button>
@@ -62,25 +90,25 @@ export default function StepHistoryPanel({
               key={i}
               data-tutorial={`step-history-card-${i}`}
               onClick={() => onToggleInspectStep(prev => (prev === i ? null : i))}
-              className={`border rounded-xl px-3 py-2.5 font-mono cursor-pointer transition-all ${touchTargets ? 'min-h-[44px] text-[14px]' : 'text-[11px]'} ${
+              className={`border rounded-xl px-3 py-2.5 font-mono cursor-pointer shadow-chip transition-all ${touchTargets ? 'min-h-[44px] text-[14px]' : 'text-[11px]'} ${
                 isInspected
-                  ? 'border-teal bg-teal-50/90 shadow-md ring-2 ring-teal/30 -translate-y-px'
+                  ? 'border-teal bg-teal-50/90 shadow-md ring-2 ring-teal/30 -translate-y-px dark:border-cyan-300 dark:ring-cyan-400/25'
                   : isLatest
-                  ? 'border-teal/60 bg-teal-light hover:border-teal hover:shadow-xs'
-                  : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50'
+                  ? 'border-teal/60 bg-teal-light hover:border-teal hover:shadow-sm dark:border-cyan-400/50 dark:hover:border-cyan-300'
+                  : 'border-border bg-bg hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_8px_18px_-14px_rgba(15,23,42,0.40)] dark:hover:border-cyan-400/40 dark:hover:bg-cyan-400/5'
               }`}
             >
               <div className="text-text-2 leading-relaxed">
-                <span className="text-text-3 mr-1">F =</span> <ExprText text={s.from} />
+                <span className="text-text-2 mr-1">F =</span> <ExprText text={s.from} />
               </div>
               <div className="text-text-1 font-semibold leading-relaxed">
-                <span className="text-text-3 mr-1">F =</span> <ExprText text={s.to} />
+                <span className="text-text-2 mr-1">F =</span> <ExprText text={s.to} />
               </div>
               <div
                 className={`mt-1.5 inline-flex items-center font-sans font-semibold rounded px-2 py-0.5 transition-colors ${touchTargets ? 'text-[12px]' : 'text-[10px]'} ${
                   isInspected
-                    ? 'bg-teal text-white shadow-xs'
-                    : 'text-teal bg-bg-card border border-teal'
+                    ? 'bg-teal text-white shadow-xs dark:bg-cyan-400 dark:text-slate-950'
+                    : 'text-teal bg-bg-card border border-teal dark:border-cyan-400 dark:text-cyan-200'
                 }`}
               >
                 {s.law}
@@ -136,3 +164,5 @@ export default function StepHistoryPanel({
     </>
   )
 }
+
+export default memo(StepHistoryPanel)

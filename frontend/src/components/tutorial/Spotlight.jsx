@@ -3,7 +3,7 @@
  * @description The in-situ workspace spotlight: masked backdrop cutout, rigid
  * click blockers outside the hole(s) and the primary/secondary highlight rings.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 export default function Spotlight({
   showWelcomeModal,
@@ -23,8 +23,28 @@ export default function Spotlight({
         
         if (showWelcomeModal || !currentStep || !highlightRect || shouldHideOverlay) return null
 
+        // Measurement settles a frame or two after the overlay mounts. Until
+        // then the rect fields can be undefined, which React writes straight
+        // into SVG attributes and the browser rejects with
+        // 'Expected length, "undefined"'. Coerce once here.
+        const num = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback)
+        const primaryGeometry = {
+          x: num(highlightRect.cutoutLeft ?? highlightRect.left),
+          y: num(highlightRect.cutoutTop ?? highlightRect.top),
+          width: num(highlightRect.cutoutWidth ?? highlightRect.width),
+          height: num(highlightRect.cutoutHeight ?? highlightRect.height),
+          rx: num(highlightRect.cutoutRx, 22),
+        }
+        const secondaryGeometry = secondaryHighlightRect ? {
+          x: num(secondaryHighlightRect.cutoutLeft ?? secondaryHighlightRect.left),
+          y: num(secondaryHighlightRect.cutoutTop ?? secondaryHighlightRect.top),
+          width: num(secondaryHighlightRect.cutoutWidth ?? secondaryHighlightRect.width),
+          height: num(secondaryHighlightRect.cutoutHeight ?? secondaryHighlightRect.height),
+          rx: num(secondaryHighlightRect.cutoutRx, 22),
+        } : null
+
         return (
-          <motion.div
+          <m.div
             key="spotlight-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -38,41 +58,30 @@ export default function Spotlight({
             <defs>
               <mask id="tutorial-spotlight-mask">
                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                <motion.rect
+                {/*
+                  Plain SVG geometry, never animated through framer: framer turns
+                  animated x/y into a CSS translate on top of the x/y attributes,
+                  which moved the hole by its own offset and left the target dimmed.
+                */}
+                <rect
                   key={`cutout-pri-${currentStep?.id || 'target'}`}
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: 1,
-                    x: highlightRect.cutoutLeft ?? highlightRect.left,
-                    y: highlightRect.cutoutTop ?? highlightRect.top,
-                    width: highlightRect.cutoutWidth ?? highlightRect.width,
-                    height: highlightRect.cutoutHeight ?? highlightRect.height,
-                    rx: highlightRect.cutoutRx ?? 22,
-                    ry: highlightRect.cutoutRx ?? 22,
-                  }}
-                  transition={{
-                    duration: 0.3,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
+                  x={primaryGeometry.x}
+                  y={primaryGeometry.y}
+                  width={primaryGeometry.width}
+                  height={primaryGeometry.height}
+                  rx={primaryGeometry.rx}
+                  ry={primaryGeometry.rx}
                   fill="black"
                 />
                 {secondaryHighlightRect && (
-                  <motion.rect
+                  <rect
                     key={`cutout-sec-${currentStep?.id || 'sec'}`}
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      x: secondaryHighlightRect.cutoutLeft ?? secondaryHighlightRect.left,
-                      y: secondaryHighlightRect.cutoutTop ?? secondaryHighlightRect.top,
-                      width: secondaryHighlightRect.cutoutWidth ?? secondaryHighlightRect.width,
-                      height: secondaryHighlightRect.cutoutHeight ?? secondaryHighlightRect.height,
-                      rx: secondaryHighlightRect.cutoutRx ?? 22,
-                      ry: secondaryHighlightRect.cutoutRx ?? 22,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
+                    x={secondaryGeometry.x}
+                    y={secondaryGeometry.y}
+                    width={secondaryGeometry.width}
+                    height={secondaryGeometry.height}
+                    rx={secondaryGeometry.rx}
+                    ry={secondaryGeometry.rx}
                     fill="black"
                   />
                 )}
@@ -83,7 +92,7 @@ export default function Spotlight({
               y="0"
               width="100%"
               height="100%"
-              fill="rgba(15, 23, 42, 0.40)"
+              className="fill-slate-900/35 dark:fill-black/80"
               mask="url(#tutorial-spotlight-mask)"
             />
           </svg>
@@ -157,58 +166,58 @@ export default function Spotlight({
 
           {/* Highlight ring on target element */}
           {highlightRect && (
-            <motion.div
+            <m.div
               key={`ring-pri-${currentStep?.id || 'target'}`}
               initial={{ opacity: 0, scale: 0.98 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
+              // Geometry is static: only opacity and scale animate, so the ring
+              // never animates layout boxes (and never drifts from its target).
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.3,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className={`fixed border-2 border-sky-500 ring-4 ring-sky-400/25 shadow-lg pointer-events-none dark:border-cyan-400 dark:ring-cyan-400/30 dark:shadow-[0_0_35px_rgba(34,211,238,0.45)] ${
+                highlightRect.isScoreModal ? 'border-teal/50 rounded-2xl' : isPreLawHighlight ? 'rounded-xl' : 'rounded-xl animate-pulse'
+              }`}
+              style={{
+                zIndex: 52,
                 top: highlightRect.ringTop ?? highlightRect.top,
                 left: highlightRect.ringLeft ?? highlightRect.left,
                 width: highlightRect.ringWidth ?? highlightRect.width,
                 height: highlightRect.ringHeight ?? highlightRect.height,
                 borderRadius: `${highlightRect.ringRx ?? 10}px`,
               }}
-              transition={{
-                duration: 0.3,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className={`fixed border-2 border-teal pointer-events-none shadow-[0_0_0_4px_rgba(46,196,182,0.25)] ${
-                highlightRect.isScoreModal ? 'border-teal/50 rounded-2xl' : isPreLawHighlight ? 'rounded-xl' : 'rounded-xl animate-pulse'
-              }`}
-              style={{ zIndex: 52 }}
             />
           )}
 
           {/* Secondary highlight ring on drop target element ('z') */}
           {secondaryHighlightRect && !isPreLawHighlight && (
-            <motion.div
+            <m.div
               key={`ring-sec-${currentStep?.id || 'sec'}`}
               initial={{ opacity: 0, scale: 0.98 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.3,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="fixed border-2 border-dashed border-sky-500/70 ring-4 ring-sky-400/15 pointer-events-none rounded-xl flex items-center justify-center dark:border-cyan-400/70 dark:ring-cyan-400/20"
+              style={{
+                zIndex: 52,
                 top: secondaryHighlightRect.ringTop ?? secondaryHighlightRect.top,
                 left: secondaryHighlightRect.ringLeft ?? secondaryHighlightRect.left,
                 width: secondaryHighlightRect.ringWidth ?? secondaryHighlightRect.width,
                 height: secondaryHighlightRect.ringHeight ?? secondaryHighlightRect.height,
                 borderRadius: `${secondaryHighlightRect.ringRx ?? 10}px`,
               }}
-              transition={{
-                duration: 0.3,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="fixed border-2 border-dashed border-teal/70 pointer-events-none shadow-[0_0_0_4px_rgba(46,196,182,0.15)] rounded-xl flex items-center justify-center"
-              style={{ zIndex: 52 }}
             >
               {currentStep.actionType === 'swap' && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider shadow-xs whitespace-nowrap">
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white dark:bg-cyan-400 dark:text-slate-950 text-[9.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider shadow-xs whitespace-nowrap">
                   Target
                 </span>
               )}
-            </motion.div>
+            </m.div>
           )}
-        </motion.div>
+        </m.div>
         )
       })()}
     </AnimatePresence>

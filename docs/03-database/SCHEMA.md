@@ -55,7 +55,7 @@ the whole schema. There is no migrations directory, no ORM and no second DDL fil
 
 | Table | Row means | Row count per learner | Written by |
 |---|---|---|---|
-| `user_progress` | The learner's running totals: points, current streak, best streak. | **At most 1** — the PK *is* the FK to `auth.users`. | `POST /api/progress/save` only (`backend/services/progress_service.py:63`). |
+| `user_progress` | The learner's running total: points. | **At most 1** — the PK *is* the FK to `auth.users`. | `POST /api/progress/save` only (`backend/services/progress_service.py:63`). |
 | `stage_progress` | One stage the learner has finished, with the best score ever earned there. | At most one per (level, stage) — `UNIQUE(user_id, level_id, stage_idx)`. Up to 40 today (4 + 12 + 12 + 12). | `POST /api/progress/save` (`backend/services/progress_service.py:76`) **and** the background score task (`backend/services/progress_service.py:114`). |
 | `score_history` | One scored attempt: an immutable log line per puzzle completion. | Unbounded — every attempt inserts a new row. | The background score task only (`backend/services/progress_service.py:94`). |
 
@@ -75,8 +75,6 @@ substitutes zeros when the row is missing (`backend/services/progress_service.py
 CREATE TABLE IF NOT EXISTS user_progress (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,        -- References Supabase auth.users
   points INTEGER DEFAULT 0,
-  streak INTEGER DEFAULT 0,
-  best_streak INTEGER DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
@@ -87,9 +85,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
 |---|---|---|---|---|---|
 | 1 | `user_id` | `UUID` | NO | — | **PRIMARY KEY**; **FOREIGN KEY** → `auth.users(id)` **ON DELETE CASCADE** (`database/init.sql:8`). A `PRIMARY KEY` column is implicitly `NOT NULL`. |
 | 2 | `points` | `INTEGER` | YES | `0` | none (`database/init.sql:9`) |
-| 3 | `streak` | `INTEGER` | YES | `0` | none (`database/init.sql:10`) |
-| 4 | `best_streak` | `INTEGER` | YES | `0` | none (`database/init.sql:11`) |
-| 5 | `updated_at` | `TIMESTAMPTZ` | YES | `now()` | none (`database/init.sql:12`) |
+| 3 | `updated_at` | `TIMESTAMPTZ` | YES | `now()` | none (`database/init.sql:10`) |
 
 ### What each column actually holds
 
@@ -97,15 +93,13 @@ CREATE TABLE IF NOT EXISTS user_progress (
 |---|---|---|
 | `user_id` | The Supabase Auth user id (`auth.users.id`), passed as `user["id"]` from the bearer token. | `backend/api/routes/progress.py:34`, `backend/core/security.py` (`get_current_user`) |
 | `points` | The learner's **client-computed** running total, in whole points. The server never adds anything up; it stores what the browser sends. | `backend/api/schemas/progress.py:12`, `backend/services/progress_service.py:66` |
-| `streak` | Current streak counter, incremented client-side by `addPoints` on every scored stage. | `frontend/src/state/progressStore.js:170-175` |
-| `best_streak` | High-water mark of `streak`, also computed client-side. | `frontend/src/state/progressStore.js:175` |
 | `updated_at` | **Misleading name.** Nothing updates it. There is no `CREATE TRIGGER` and no `ON UPDATE` anywhere in `database/init.sql`, and no writer sends the column, so it holds the time the row was first inserted — not the last time the row changed. | absence of `TRIGGER`/`UPDATE` in `database/init.sql`; payload at `backend/services/progress_service.py:63-70` omits it |
 
 > **Integrity finding (documented honestly, not fixed):** `points` is client-authoritative. A learner
 > can POST any integer to `/api/progress/save` and it is written verbatim. There is no server-side
 > balance, no `CHECK (points >= 0)` and no reconciliation against `score_history.earned_points`. The
 > API contract that makes this possible is `backend/api/schemas/progress.py:11-18`. Verified by
-> execution: `SaveProgressRequest.model_validate({"progress": {"points": -5, "streak": -1, …}})`
+> execution: `SaveProgressRequest.model_validate({"progress": {"points": -5, …}})`
 > parses without error, so a negative balance is storable even though the browser's own
 > `deductPoints` floors at 0 (`frontend/src/state/progressStore.js:178`).
 
@@ -391,8 +385,8 @@ never read by the application.
 |---|---|---|
 | Levels, puzzles, hints, `optimalSteps`, `targetLaws` | `content/levels.json` | No `levels` table exists, so `stage_progress.level_id` / `stage_idx` cannot be foreign keys. |
 | Law reference cards | `content/laws.json` (10 laws) | `score_history.laws_used` stores bare law-id strings with no lookup table. |
-| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-18`), and Pydantic ignores unknown keys by default. Verified by executing `SaveProgressRequest.model_validate({... "stageSolutions": {...}})` → the parsed model contains only `points, streak, bestStreak, stageProgress, stageScores`. |
-| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageScores` (`backend/services/progress_service.py:44-50`), so they are inferred from stage completion, not stored. |
+| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-18`), and Pydantic ignores unknown keys by default. Verified by executing `SaveProgressRequest.model_validate({... "stageSolutions": {...}})` → the parsed model contains only `points, stageProgress, stageScores`. |
+| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `stageProgress`, `stageScores` (`backend/services/progress_service.py:44-50`), so they are inferred from stage completion, not stored. |
 | Star counts | Computed on the fly from `stage_progress.best_score` | No `stars` column; see `frontend/src/state/progressStore.js:281-285`. |
 | Auth identities (email, password hash, sessions) | Supabase's `auth` schema, managed by Supabase Auth | The `public` tables only ever hold the `auth.users.id` value. |
 

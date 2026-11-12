@@ -122,6 +122,24 @@ export const DRAG = {
 export const SANDBOX = {
   /** Distinct variables one learner expression may use. */
   maxVariables: 4,
+  /**
+   * Tokens (letters, constants, operators, parentheses, NOTs) one learner
+   * expression may contain. 64 comfortably covers the hardest reference
+   * four-variable expressions; beyond that the state space grows faster than
+   * the search budget and the tab would freeze before any verdict appeared.
+   */
+  maxTokens: 64,
+  /**
+   * Wall-clock ceiling for building one learner-authored puzzle. The state
+   * budgets alone cannot bound time: per-state cost grows with the expression,
+   * so eight copies of "(A+B)" exhausted 25 s of main thread while staying under
+   * the state cap. The search now aborts at this deadline and reports the
+   * ordinary "too complex" verdict. The worst published reference expression
+   * needs ~7.8 s on this machine (4.6 s simplest-form search + 3.2 s optimal
+   * path), so ten seconds keeps every documented example buildable while
+   * bounding an adversarial input that would otherwise run for minutes.
+   */
+  deadlineMs: 10000,
   /** Default difficulty for generated sandbox problems. */
   difficulty: 'medium',
   /**
@@ -150,11 +168,45 @@ export const SANDBOX_DIFFICULTY = SANDBOX.difficulty
 /**
  * Sound design — every number services/soundEffects.js turns into audio.
  *
- * Each cue is `{ type, notes, noteMs, gapMs, gain }`: an oscillator per note,
- * with its own attack/decay envelope, spaced by `gapMs`. Adding a cue is one
- * line here; the engine never hardcodes a frequency or a duration.
+ * The palette is built from three materials, so unrelated actions never sound
+ * alike:
+ *   WOOD  — short filtered ticks with a mallet transient: pointing, selecting,
+ *           applying a law.
+ *   GLASS — sine bells and shimmers, detuned in pairs: hints, rewards, stars.
+ *   AIR   — band-passed noise sweeps: movement through the app (panels, reset,
+ *           arriving at a level).
  *
- * `enabled` is the FIRST-RUN default only — the learner's choice lives in
+ * A cue is pure data; the engine owns every waveform, envelope and filter.
+ * Shape:
+ *
+ *   {
+ *     wave,     default oscillator waveform for its notes ('sine' | 'triangle' | …)
+ *     gain,     cue gain, multiplied with SOUND.volume
+ *     noteMs,   default note length in ms
+ *     gapMs,    silence between sequential notes
+ *     attackMs, default fade-in (a note's own attack overrides it)
+ *     stack,    cents between the two oscillators of a voice (0 = single)
+ *     noise,    attack transient for the whole cue (mallet, click, air)
+ *     notes: [ 'E5' | { note, at, gain, glide, detune, duration, wave,
+ *                        attack, hold, stack, noise } ]
+ *   }
+ *
+ * A note with an explicit start offset (at) is placed absolutely in ms from the
+ * cue start and may overlap the others — that is how the completion fanfare
+ * stacks a bass note under its arpeggio. Without it a note begins where the
+ * previous one ended. glide bends the pitch over the note (a number of
+ * semitones, or a target note name); detune offsets one voice in cents; stack
+ * adds the second oscillator that warms a bell or a pluck; hold keeps a pluck
+ * at full level before it decays.
+ *
+ * A noise burst is a short filtered burst of white noise. Without a sweep it is
+ * a knock or a click; with freqTo it sweeps its filter and reads as air.
+ *
+ * Length budget: every cue stays under ~700 ms except complete, the one
+ * fanfare, at ~1.05 s. Cues are summed through a shared limiter, so overlapping
+ * material ducks instead of clipping.
+ *
+ * enabled is the FIRST-RUN default only — the learner's choice lives in
  * localStorage under SOUND_ENABLED_KEY.
  *
  * Cue naming: a cue is what the learner just DID (select, deselect, levelNav,
@@ -164,49 +216,236 @@ export const SANDBOX_DIFFICULTY = SANDBOX.difficulty
 export const SOUND = {
   enabled: true,
   /** Master gain every cue is scaled by, 0..1. */
-  volume: 0.16,
-  /** Envelope length of one note, in ms (attack is the first 15%). */
-  attackMs: 12,
+  volume: 0.18,
+  /** Default envelope fade-in for one note, in ms. Short enough to stay percussive. */
+  attackMs: 8,
   /**
    * Shortest gap between two plays of the SAME cue, in ms.
    *
    * Only the scroll-like cues use it (services/soundEffects playThrottledSound):
    * a carousel index changes many times during one fast burst of arrow taps or
    * a swipe, and a tick per change is unbearable. One-per-action cues (step,
-   * correct, …) keep the unthrottled path — `step` and `correct` deliberately
-   * fire back to back when a law finishes the puzzle.
+   * correct, …) keep the unthrottled path — step and correct deliberately fire
+   * back to back when a law finishes the puzzle.
    */
   throttleMs: 90,
   cues: {
-    /** A law was applied. Short, low, barely-there click. */
-    step: { type: 'triangle', notes: ['E5'], noteMs: 70, gapMs: 0, gain: 0.75 },
-    /** A hint was taken. Soft two-note blip. */
-    hint: { type: 'sine', notes: ['C5', 'G5'], noteMs: 90, gapMs: 45, gain: 0.8 },
-    /** The Guide was activated. Brighter three-note figure. */
-    guide: { type: 'sine', notes: ['E5', 'A5', 'C#6'], noteMs: 85, gapMs: 45, gain: 0.8 },
-    /** The puzzle is solved. Ascending arpeggio. */
-    correct: { type: 'sine', notes: ['C5', 'E5', 'G5', 'C6'], noteMs: 95, gapMs: 55, gain: 0.95 },
-    /** Dead end, or a selection no law applies to. Low descending blip. */
-    wrong: { type: 'sawtooth', notes: ['A3', 'E3'], noteMs: 120, gapMs: 60, gain: 0.7 },
-    /** The problem was reset. Descending sweep. */
-    reset: { type: 'triangle', notes: ['A5', 'F5', 'C5'], noteMs: 85, gapMs: 40, gain: 0.7 },
-    /** Level/stage completed and scored. A fuller arpeggio. */
-    complete: { type: 'sine', notes: ['C5', 'E5', 'G5', 'C6', 'E6'], noteMs: 110, gapMs: 60, gain: 1 },
+    /* ---- wood: pointing, selecting, nudging ---- */
+
+    /** A law was applied. Warm marimba pluck: triangular body, short mallet tick. */
+    step: {
+      wave: 'triangle',
+      gain: 0.8,
+      noteMs: 105,
+      stack: 6,
+      notes: [
+        { note: 'E5', hold: 18, noise: { ms: 16, gain: 0.2, freq: 1100, q: 0.9 } },
+      ],
+    },
+
     /**
-     * A literal, term or negated group joined the selection. Higher, shorter
-     * and quieter than `step` so a click-to-select never reads as a step.
+     * A literal, term or negated group joined the selection. Soft wooden tick:
+     * barely there, but it lands exactly when the click does.
      */
-    select: { type: 'triangle', notes: ['B5'], noteMs: 50, gapMs: 0, gain: 0.5 },
-    /** The same click took the item back out: the lower, quieter mirror of `select`. */
-    deselect: { type: 'triangle', notes: ['F#5'], noteMs: 50, gapMs: 0, gain: 0.34 },
-    /** The level carousel moved to another card. Always via playThrottledSound. */
-    levelNav: { type: 'sine', notes: ['A5'], noteMs: 40, gapMs: 0, gain: 0.32 },
-    /** A level or stage was actually chosen and the app is navigating there. */
-    enter: { type: 'sine', notes: ['G5', 'D6'], noteMs: 75, gapMs: 45, gain: 0.7 },
-    /** A panel, drawer or sheet opened: two quick rising notes. */
-    panelOpen: { type: 'sine', notes: ['D5', 'G5'], noteMs: 55, gapMs: 30, gain: 0.45 },
-    /** A panel, drawer or sheet closed: the same pair, falling and a touch quieter. */
-    panelClose: { type: 'sine', notes: ['G5', 'D5'], noteMs: 55, gapMs: 30, gain: 0.4 },
+    select: {
+      wave: 'triangle',
+      gain: 0.42,
+      noteMs: 34,
+      stack: 5,
+      notes: [
+        { note: 'B5', attack: 4, noise: { ms: 12, gain: 0.3, freq: 2900, q: 0.7 } },
+      ],
+    },
+
+    /** The same click took the item back out: the tick, a step lower and darker. */
+    deselect: {
+      wave: 'triangle',
+      gain: 0.3,
+      noteMs: 40,
+      stack: 5,
+      notes: [
+        { note: 'F#5', attack: 4, glide: -1, noise: { ms: 12, gain: 0.22, freq: 1500, q: 0.9 } },
+      ],
+    },
+
+    /** The level carousel moved to another card. Tiny wooden tick, always throttled. */
+    levelNav: {
+      wave: 'triangle',
+      gain: 0.26,
+      noteMs: 26,
+      notes: [
+        { note: 'A5', attack: 3, noise: { ms: 8, gain: 0.26, freq: 3400, q: 0.8 } },
+      ],
+    },
+
+    /* ---- glass: help and reward ---- */
+
+    /** A hint was taken. Two-note glass bell, a fifth apart, left to ring. */
+    hint: {
+      wave: 'sine',
+      gain: 0.5,
+      noteMs: 200,
+      gapMs: 55,
+      stack: 9,
+      noise: { ms: 10, gain: 0.1, freq: 5200, q: 1.1 },
+      notes: [
+        'C6',
+        { note: 'G6', duration: 240 },
+      ],
+    },
+
+    /** The Guide was activated. Rising three-note glass shimmer. */
+    guide: {
+      wave: 'sine',
+      gain: 0.48,
+      noteMs: 110,
+      gapMs: 35,
+      stack: 8,
+      notes: [
+        { note: 'E5', glide: 1 },
+        { note: 'A5', glide: 1 },
+        { note: 'C#6', duration: 170 },
+      ],
+    },
+
+    /** The puzzle is solved. Bright pentatonic sparkle with a short tail. */
+    correct: {
+      wave: 'triangle',
+      gain: 0.72,
+      noteMs: 70,
+      gapMs: 25,
+      stack: 7,
+      notes: [
+        'C6', 'D6', 'E6', 'G6',
+        { note: 'A6', duration: 190, gain: 0.9 },
+      ],
+    },
+
+    /** A star was earned. One high bell that rings out after the fanfare. */
+    star: {
+      wave: 'sine',
+      gain: 0.46,
+      stack: 11,
+      notes: [
+        { note: 'B6', attack: 5, duration: 330 },
+        { note: 'E7', at: 0, duration: 200, gain: 0.22 },
+      ],
+    },
+
+    /**
+     * Level or stage completed and scored. The one long cue: a soft bass note
+     * under a rising sparkle arpeggio (~1.05 s).
+     */
+    complete: {
+      wave: 'sine',
+      gain: 1,
+      stack: 5,
+      notes: [
+        { note: 'C3', at: 0, duration: 950, gain: 0.5, attack: 14 },
+        { note: 'G4', at: 0, duration: 150, gain: 0.45 },
+        { note: 'C5', at: 110, duration: 150, gain: 0.5 },
+        { note: 'E5', at: 220, duration: 150, gain: 0.55 },
+        { note: 'G5', at: 330, duration: 160, gain: 0.55 },
+        { note: 'C6', at: 440, duration: 200, gain: 0.6 },
+        { note: 'E6', at: 620, duration: 240, gain: 0.4 },
+        { note: 'G6', at: 760, duration: 300, gain: 0.36, noise: { ms: 60, gain: 0.1, freq: 6800, q: 0.8 } },
+      ],
+    },
+
+    /* ---- air: movement ---- */
+
+    /** The problem was reset. Quick downward airy sweep over three falling notes. */
+    reset: {
+      wave: 'sine',
+      gain: 0.38,
+      noteMs: 75,
+      gapMs: 25,
+      stack: 6,
+      noise: { ms: 260, gain: 0.26, freq: 2200, freqTo: 520, q: 0.6 },
+      notes: [
+        { note: 'A5', glide: -2 },
+        { note: 'F5', glide: -2 },
+        { note: 'C5', duration: 130 },
+      ],
+    },
+
+    /** A level or stage was chosen and the app is navigating. Soft rising whoosh. */
+    enter: {
+      wave: 'sine',
+      gain: 0.5,
+      noteMs: 95,
+      gapMs: 40,
+      stack: 6,
+      noise: { ms: 240, gain: 0.16, freq: 600, freqTo: 2400, q: 0.7 },
+      notes: [
+        { note: 'G4', glide: 1 },
+        { note: 'D5', glide: 1, duration: 150 },
+      ],
+    },
+
+    /** A panel, drawer or sheet opened: paper sliding up, with a high tick. */
+    panelOpen: {
+      wave: 'sine',
+      gain: 0.6,
+      noteMs: 26,
+      noise: { ms: 170, gain: 0.24, freq: 700, freqTo: 2600, q: 0.8 },
+      notes: [
+        { note: 'D6', attack: 3, gain: 0.4 },
+      ],
+    },
+
+    /** A panel, drawer or sheet closed: the same paper, sliding down. */
+    panelClose: {
+      wave: 'sine',
+      gain: 0.6,
+      noteMs: 26,
+      noise: { ms: 190, gain: 0.22, freq: 2600, freqTo: 700, q: 0.8 },
+      notes: [
+        { note: 'A5', attack: 3, gain: 0.35 },
+      ],
+    },
+
+    /* ---- failures and milestones ---- */
+
+    /**
+     * Dead end, or a selection no law applies to. Muted low thud with a little
+     * body — a door closing, never a buzz.
+     */
+    wrong: {
+      wave: 'sine',
+      gain: 0.9,
+      stack: 4,
+      noise: { ms: 34, gain: 0.18, freq: 240, q: 1.2, type: 'lowpass' },
+      notes: [
+        { note: 'A2', duration: 180, glide: -3, attack: 5 },
+        { note: 'E2', at: 15, duration: 210, gain: 0.55, attack: 6 },
+      ],
+    },
+
+    /** A level unlocked: low mechanical click, then a rising fifth. */
+    unlock: {
+      wave: 'sine',
+      gain: 0.6,
+      stack: 5,
+      noise: { ms: 20, gain: 0.3, freq: 420, q: 1.1, type: 'lowpass' },
+      notes: [
+        { note: 'C4', duration: 140, attack: 5 },
+        { note: 'G4', at: 110, duration: 190, glide: 0.5, attack: 6 },
+      ],
+    },
+
+    /** The walkthrough is about to demonstrate a step. Soft two-note guide tick. */
+    tutorialStep: {
+      wave: 'sine',
+      gain: 0.34,
+      noteMs: 70,
+      gapMs: 45,
+      stack: 5,
+      notes: [
+        'A4',
+        { note: 'E5', duration: 110 },
+      ],
+    },
   },
 }
 

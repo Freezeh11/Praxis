@@ -58,6 +58,15 @@ sign-in: the SPA talks to Supabase directly to obtain an access token, and the b
 tables, the 2 content JSON documents, the browser-storage contracts, and the quality
 attributes in NFR-1 – NFR-15.
 
+**User-facing terms.** The Terms and Conditions dialog
+(`frontend/src/content/termsContent.js`, rendered by
+`frontend/src/components/ui/TermsDialog.jsx`) is the learner-facing summary of this scope
+and of the LAWS proposal. It quotes the rules in §3.4, §3.6 and §3.9: the 80% average to
+unlock a level, 10 points per stage plus up to 5 bonus, stars at 90 and 75, the 20-point
+Guide, free worded hints, and a sandbox that records nothing. It also lists the data in §6.
+Change that file in the same commit as any rule change here; `.e2e/terms-copy.mjs` fails
+the build when the two drift apart.
+
 **Out of scope:** Supabase's own service behaviour, the `.e2e/` harness internals, and
 anything in the frozen legacy documents ([`context.md`](../context.md),
 [`ARCHITECTURE.md`](../ARCHITECTURE.md)).
@@ -116,7 +125,7 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
-| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181` |
+| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. ⑤ Every card keeps one identical layout width, height and border width in every selection state, including the active card's gate bar. The selected card lifts by a 5.5% transform and carries a pulsing halo and ring, so selection never reflows the row. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181`; `.e2e/level-card-sizing.mjs` |
 | **FR-12** | ① Level 2 is locked while any Level 1 stage is incomplete, even if the average is 100. ② Level 2 is locked while the Level 1 average is below 80, even if all stages are done. ③ Both conditions true ⇒ unlocked. ④ The same rule applies Level 2 → Level 3. ⑤ The threshold is 80, not 70. | `frontend/src/state/progressStore.js:291-313` (`allDone && avgScore >= UNLOCK_AVERAGE_SCORE`); `frontend/src/config/gameRules.js:49`; `backend/config/constants.py:26` |
 | **FR-13** | ① Stage 0 is always playable. ② Stage *N* is `locked` until stage *N−1* is in the completed set. ③ Locked cards are `disabled` and render a lock glyph. | `frontend/src/pages/StageSelectorPage.jsx:56`, `:58-62`, `:294` |
 | **FR-14** | ① A stored score ≥ 90 shows 3 stars, ≥ 75 shows 2, any completion shows 1. ② A completed stage with no stored score still shows 1 star. ③ A stage that is neither completed nor scored shows 0 stars. ④ Levels 1–3 additionally require re-entering the tutorial check only for level 1. | `frontend/src/pages/StageSelectorPage.jsx:68-78`; `frontend/src/state/progressStore.js:281-285` |
@@ -155,9 +164,9 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
 | **FR-29** | ① Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. ② For a signed-in learner with a loaded server snapshot, a mutation schedules a save 500 ms later, coalescing bursts into one request. ③ A guest or a not-yet-hydrated learner schedules nothing. ④ A storage exception (private mode, quota) does not lose in-memory progress. | `frontend/src/state/progressStore.js:60-94`; `frontend/src/config/storageKeys.js:10`; `frontend/src/config/gameRules.js:68` |
-| **FR-30** | ① `points` takes the maximum of local and server. ② `bestStreak` takes the maximum; `streak` prefers the server value. ③ `stageScores` keeps the higher score per key. ④ `stageProgress` unions the stage lists and de-duplicates. ⑤ Local `stageSolutions` win over server ones. ⑥ Hydration never overwrites a local best with a lower server value. ⑦ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
+| **FR-30** | ① `points` takes the maximum of local and server. ② `stageScores` keeps the higher score per key. ③ `stageProgress` unions the stage lists and de-duplicates. ④ Local `stageSolutions` win over server ones. ⑤ Hydration never overwrites a local best with a lower server value. ⑥ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
 | **FR-31** | ① Revisiting a completed stage restores its derivation, marks the stage complete and shows the review message. ② The restored state does **not** auto-open the completion modal. ③ A stored derivation that fails to parse falls back to the initial expression with a warning instead of crashing. ④ Sandbox problems are never loaded from storage. | `frontend/src/state/useGameState.js:119-136`; `frontend/src/components/puzzle/usePuzzleSession.js:134-147`, `:154` |
-| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, streak, bestStreak, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
+| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
 
 ### 3.9 Sandbox (FR-33 – FR-37)
 
@@ -196,7 +205,7 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | **NFR-10** | ① Every response carries `X-Request-ID`, echoing the request header when supplied. ② Exactly one JSON access-log line per request with `ts, level, logger, message, request_id` plus `method, path, status, duration_ms`. ③ An unhandled exception is logged with a stack and answered `500` inside the envelope. | `backend/core/middleware.py:27`, `:48-57`, `:33-45`; `backend/core/logging.py:34-50`. |
 | **NFR-11** | ① `engine/` imports only `config/` and itself. ② `state/` imports `engine/`, `services/`, `config/`. ③ `components/` and `pages/` import all three. ④ Every tunable number lives in `frontend/src/config/gameRules.js` or `backend/config/constants.py`. | Import analysis; one documented exception noted in §9. |
 | **NFR-12** | The tier decision is a pure function testable without a DOM; the responsive matrix is exercised by a browser suite. | `frontend/src/hooks/useDeviceTier.js:57`; `.e2e/responsive-tiers.mjs`. |
-| **NFR-13** | ① Touch tiers apply a ≥ 44 px minimum to interactive elements. ② Popups are placed by a collision solver and clamped to the viewport with an 8 px margin. ③ The sandbox verdict uses live-region roles. | `frontend/src/pages/ProblemPage.jsx:356`; `frontend/src/hooks/useCollisionPlacement.js:38`, `:164`; `.e2e/popup-overlap-verify.mjs`. |
+| **NFR-13** | ① Touch tiers apply a ≥ 44 px minimum to interactive elements. ② Popups are placed by a collision solver and clamped to the viewport with an 8 px margin, never over the workspace header; the one-shot step-inspection tip is instead centred in the viewport, because it is a first-run explainer rather than an annotation of a control. ③ The sandbox verdict uses live-region roles. | `frontend/src/pages/ProblemPage.jsx:356`; `frontend/src/hooks/useCollisionPlacement.js:38`, `:164`; `.e2e/popup-overlap-verify.mjs`. |
 | **NFR-14** | `render.yaml` declares exactly one Render web service, Python, `rootDir: backend`, start command `uvicorn main:app`. The SPA is deployed separately and rewrites `/api/*` to that service. | `render.yaml:1-16`; `frontend/vercel.json:3-6` (the `/api/(.*)` rewrite). |
 | **NFR-15** | Adding a level or puzzle requires editing `content/levels.json` only. Adding a law requires `content/laws.json` **plus** an entry in the engine table. | `docs/ARCHITECTURE.md` §3; `frontend/src/engine/laws/definitions.js:29`. |
 
@@ -215,7 +224,7 @@ All paths are relative to the API origin. Every `/api/*` response uses the envel
 | 3 | GET | `/api/levels/{level_id}` | none | `200` envelope with the full level incl. `puzzles` | `404 not_found` |
 | 4 | GET | `/api/laws` | none | `200` envelope, 10 law cards `{id,name,formulas[],desc}` | — |
 | 5 | POST | `/api/score` | optional bearer | `200` envelope with `{efficiency,targetLaw,hintIndependence,total,earnedPoints,breakdown}` | `404 not_found`, `422 validation_error`, `502 upstream_error` (persistence is backgrounded and never fails the response) |
-| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,streak,bestStreak,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
+| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
 | 7 | POST | `/api/progress/save` | **required** bearer | `200` envelope `{"status":"ok"}` | `401 unauthorized`, `422 validation_error`, `502 upstream_error` |
 
 Plus FastAPI's own `/docs`, `/redoc`, `/openapi.json`, `/docs/oauth2-redirect`.
@@ -307,7 +316,7 @@ to in-memory behaviour rather than a broken screen
 
 | Table | Key | Columns | Cardinality |
 |---|---|---|---|
-| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `streak INTEGER DEFAULT 0`, `best_streak INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
+| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
 | `stage_progress` | `id UUID PK DEFAULT gen_random_uuid()`; `UNIQUE(user_id, level_id, stage_idx)` | `user_id UUID NOT NULL FK`, `level_id INTEGER NOT NULL`, `stage_idx INTEGER NOT NULL`, `best_score REAL DEFAULT 0`, `completed BOOLEAN DEFAULT FALSE`, `completed_at TIMESTAMPTZ DEFAULT now()` | one row per (learner, level, stage) |
 | `score_history` | `id UUID PK DEFAULT gen_random_uuid()` | `user_id UUID NOT NULL FK`, `level_id`, `stage_idx`, `steps_used INTEGER NOT NULL`, `laws_used TEXT[] NOT NULL`, `hints_used INTEGER NOT NULL`, `efficiency REAL NOT NULL`, `target_law REAL NOT NULL`, `hint_independence REAL NOT NULL`, `total REAL NOT NULL`, `earned_points INTEGER NOT NULL`, `created_at TIMESTAMPTZ DEFAULT now()` | one row per completed attempt |
 
@@ -357,8 +366,6 @@ Per-puzzle keys, exactly: `expr` (string), `goal` (string), `targetLaws` (law-id
 ```js
 {
   points: 0,            // integer; +10 per first completion, + bonus, −20 per Guide
-  streak: 0,            // incremented on every points award
-  bestStreak: 0,
   levelsCompleted: [],  // numeric content ids
   stageProgress: {},    // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},      // { "1:0": 87.5 } → best total per stage
@@ -373,7 +380,7 @@ Sibling fields the server may return and the merge accepts: `hasCompletedTutoria
 two fields written back to the server:
 
 ```json
-{ "progress": { "points": 0, "streak": 0, "bestStreak": 0,
+{ "progress": { "points": 0,
                 "stageProgress": { "1": [0,1] }, "stageScores": { "1:0": 87.5 } } }
 ```
 `backend/api/schemas/progress.py:11-22` — field names are a frozen contract with two clients.
@@ -416,7 +423,7 @@ documentation pass — see §9 for why the backend has no automated suite.
 | FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |
 | FR-9 | `backend/api/routes/laws.py:18` | `live` |
 | FR-10 | `backend/repositories/content_repository.py:16`, `frontend/vite.config.js:16` | `.e2e/verify-sandbox.mjs`; `live` |
-| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs` |
+| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs`, `.e2e/level-card-sizing.mjs` (64 checks over four viewports × three selection states) |
 | FR-12 | `frontend/src/state/progressStore.js:291`, `frontend/src/pages/LevelSelectPage.jsx:94` | `.e2e/gameplay.mjs` |
 | FR-13 | `frontend/src/pages/StageSelectorPage.jsx:56` | `.e2e/gameplay.mjs` |
 | FR-14 | `frontend/src/pages/StageSelectorPage.jsx:68`, `frontend/src/state/progressStore.js:281` | `.e2e/gameplay.mjs` |

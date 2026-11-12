@@ -11,7 +11,8 @@ import Icon from '../ui/Icon'
  * `LawsReferenceButton` is the anchor the panel hangs from: the compact tiers
  * put it in the header rail, the wide ones in the side panel.
  */
-import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect } from 'react'
+import { AnimatePresence, m } from 'framer-motion'
 
 import usePanelSound from '../../hooks/usePanelSound'
 import LawCard from '../laws/LawCard'
@@ -38,6 +39,15 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
   // open/close, however it was dismissed (scrim, ✕, tier change).
   usePanelSound(show)
 
+  // Escape closes the reference from either variant. Keyboard users could
+  // previously only leave through the tiny ✕ or the scrim.
+  useEffect(() => {
+    if (!show) return
+    const handleKeyDown = (event) => { if (event.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKeyDown, true)
+    return () => document.removeEventListener('keydown', handleKeyDown, true)
+  }, [show, onClose])
+
   const top = Math.round(band ? band.top : 0)
   const bandHeight = Math.round(band ? band.maxHeight : 0)
   // The sheet is as tall as its content up to the band; the drawer fills the
@@ -50,7 +60,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
     <AnimatePresence>
       {show && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -58,8 +68,11 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
             className="fixed inset-0 z-40 bg-black/25"
             onClick={() => onClose()}
           />
-          <motion.div
+          <m.div
             data-testid={lawsSheet ? 'laws-sheet' : 'laws-drawer'}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Boolean laws reference"
             ref={nodeRef}
             initial={lawsSheet ? { y: '18%' } : { x: '100%' }}
             animate={lawsSheet ? { y: 0 } : { x: 0 }}
@@ -93,7 +106,7 @@ export default function LawsReferenceSheet({ show, lawsSheet, laws, nodeRef, ban
                 <LawCard key={law.id} law={law} />
               ))}
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

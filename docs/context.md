@@ -167,7 +167,7 @@ The entire game runs on an **AST (Abstract Syntax Tree)** representation of Bool
 
 ### Progress Tracking (from `frontend/src/state/progressStore.js`)
 - **Client-side only** — stored in `localStorage`
-- Tracks: points, streak, per-level scores, completed stages
+- Tracks: points, per-level scores, stars, completed stages
 
 ---
 

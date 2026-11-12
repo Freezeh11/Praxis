@@ -212,7 +212,7 @@ export function subscribe(listener)   // :134
 export function getSnapshot()         // :139
 export function setUser(nextUserId)   // :147 — re-points the store at a learner
 export const addPoints / deductPoints / completeStage / completeLevel /
-             saveScore / saveSolution / resetStreak / markTutorialSeen / resetLevelProgress
+             saveScore / saveSolution / markTutorialSeen / resetLevelProgress
 export function getLevelProgress / isStageCompleted / hasSeenTutorial / …   // pure selectors
 ```
 
@@ -265,8 +265,8 @@ signed-out visitor.
 2. **Durable path** — for a signed-in, already-hydrated learner, one save is scheduled 500 ms
    after the last change (`:87-94`), coalescing bursts into a single `POST /api/progress/save`.
 3. **Hydration** — `setUser(id)` reads local, publishes immediately (so screens paint), then
-   loads the server snapshot and **merges** it (`:97-130`, `:158-165`): max for points, best
-   streak and best scores; union for completed stages; local wins for solutions.
+   loads the server snapshot and **merges** it (`:97-130`, `:158-165`): max for points and best
+   scores; union for completed stages; local wins for solutions.
 
 **Alternatives considered.**
 

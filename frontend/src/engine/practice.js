@@ -71,6 +71,10 @@ export function evaluateLawChoice(expr, selection, lawId, options = {}) {
 /** A bounded search failure is inconclusive, never proof of impossibility. */
 export function planGuidance(expr, goalCanon, requiredLaws = [], usedLaws = [], options = {}) {
   if (canonText(expr) === goalCanon) return { status: 'complete' }
+  // The search expands the starting state first, so this sweep is work it would
+  // do anyway; asking now keeps the list for the lookup below, after the search
+  // has pushed that state out of the bounded transition cache.
+  const rootTransitions = expr ? getLegalTransitions(expr, options) : []
   const remaining = requiredLaws.filter(id => !usedLaws.includes(id))
   let route = findOptimalPathWithLaws(expr, goalCanon, remaining, options)
   let objective = true
@@ -80,8 +84,11 @@ export function planGuidance(expr, goalCanon, requiredLaws = [], usedLaws = [], 
   }
   if (!route.found || !route.path.length) return { status: 'unverified' }
   const first = route.path[0]
-  const transition = getLegalTransitions(expr, options).find(t =>
-    t.law === first.law && t.nextCanon === canonText(parseExpr(first.to)))
+  // Canonicalising the route's step once beats parsing it again for every
+  // candidate the sweep produced.
+  const firstCanon = canonText(parseExpr(first.to))
+  const transition = rootTransitions.find(t =>
+    t.law === first.law && t.nextCanon === firstCanon)
   if (!transition?.selection) return { status: 'unverified' }
   return { status: 'verified', objective, stepsRemaining: route.path.length, transition }
 }

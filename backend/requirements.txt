@@ -1,5 +1,6 @@
-fastapi
-uvicorn[standard]
-python-multipart
-python-dotenv
-httpx
+# Pinned so a Render build is reproducible and an upstream release cannot
+# silently change behaviour. Bump deliberately and re-run backend/tests.
+fastapi==0.162.4
+uvicorn[standard]==0.54.0
+python-dotenv==1.2.4
+httpx==0.28.1
