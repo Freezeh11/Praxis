@@ -7,7 +7,7 @@ import Icon from '../ui/Icon'
  *
  * Presentational: the whole game state arrives as props.
  */
-import { memo } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 
 import { m } from 'framer-motion'
 
@@ -24,6 +24,49 @@ function DerivationCanvas({
   isCustomSandbox, customPuzzle,
 }) {
   const { zoom } = useZoom()
+  const scrollRef = useRef(null)
+  const contentRef = useRef(null)
+  const activeLineRef = useRef(null)
+  /* Untransformed size of the canvas block. A CSS transform does not change
+     layout size, so at zoom > 1 the scaled content used to overflow the scroll
+     element without expanding it — the right/bottom of a long derivation was
+     clipped with no way to scroll to it. The wrapper reserves the scaled box. */
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 })
+  /* The hint is an instruction, so it only exists while there is something to
+     scroll to; a permanently visible "scroll to view" line above a canvas that
+     fits on screen is just noise. */
+  const [overflowing, setOverflowing] = useState(false)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return undefined
+    const measure = () => setContentSize({ width: el.offsetWidth, height: el.offsetHeight })
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const scroller = scrollRef.current
+    if (!scroller) return undefined
+    const measure = () => setOverflowing(
+      scroller.scrollWidth > scroller.clientWidth + 1 || scroller.scrollHeight > scroller.clientHeight + 1,
+    )
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(scroller)
+    return () => observer.disconnect()
+  }, [contentSize, zoom])
+
+  /* Keep the line the learner is working on in view. `nearest` is deliberate: a
+     line that is already visible stays exactly where they scrolled it. */
+  useEffect(() => {
+    const line = activeLineRef.current
+    if (!line || typeof line.scrollIntoView !== 'function') return
+    line.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+  }, [steps.length, expr])
+
   return (
     <div className="relative flex-1 min-h-0 flex flex-col">
       {/* Live wallpaper layer — one flat canvas behind the equations, clipped
@@ -35,7 +78,7 @@ function DerivationCanvas({
 
       {/* This stays the ONE scrolling element (same testid/role/aria/tabIndex);
           its background is transparent so the wallpaper shows through. */}
-      <div data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`relative flex-1 min-h-0 flex flex-col overflow-auto shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
+      <div ref={scrollRef} data-testid="derivation-scroll" role="region" aria-label="Derivation workspace. Scroll to reach long expressions and earlier steps." tabIndex={0} className={`relative flex-1 min-h-0 flex flex-col overflow-auto shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] ${isAnimating ? 'pointer-events-none opacity-90' : ''}`} style={{ scrollbarGutter: 'stable' }}>
       {isAnimating && <AnimationOverlay data={animationData} />}
 
       {/* Status banner — placed in flow at top with a stable reserved slot so it NEVER overlays equations or causes vertical layout shift */}
@@ -64,12 +107,24 @@ function DerivationCanvas({
       </div>
 
       <div className="relative w-max min-w-full shrink-0 flex flex-col items-start py-2 px-3">
-        <span className="text-[11px] text-text-3 mb-2">Scroll to view long expressions and all steps.</span>
+        {overflowing && (
+          <span className="text-[11px] text-text-3 mb-2">Scroll to view long expressions and all steps.</span>
+        )}
 
         {/* Zoom wrapper — scales the entire expression block.
             In sandbox mode the nonce forces a clean remount on randomize so
             no stale selection/animation state can leak into a new problem. */}
-        <div data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.18s ease' }}>
+        {/* Reserves the scaled footprint: without it a zoomed block keeps its
+            unscaled layout size and its overflow cannot be scrolled to. */}
+        <div
+          className="shrink-0"
+          style={{
+            width: contentSize.width ? Math.ceil(contentSize.width * zoom) : undefined,
+            height: contentSize.height ? Math.ceil(contentSize.height * zoom) : undefined,
+            transition: 'width 0.18s ease, height 0.18s ease',
+          }}
+        >
+        <div ref={contentRef} className="w-max" data-tutorial="canvas" key={isSandbox ? sandboxNonce : undefined} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform 0.18s ease' }}>
           {/* Custom sandbox: keep the typed expression in view so the
               derivation can always be compared with what was asked for. */}
           {isCustomSandbox && (
@@ -144,6 +199,7 @@ function DerivationCanvas({
                   <m.div
                     layout
                     key={line.key}
+                    ref={line.isActive ? activeLineRef : undefined}
                     /* Opacity starts at 1, never 0: a stalled framer loop (throttled
                        tab, dropped frame scheduler) would otherwise leave a freshly
                        committed step line permanently transparent, which reads as
@@ -245,7 +301,8 @@ function DerivationCanvas({
             </m.div>
           )
         })()}
-        </div>{/* end zoom wrapper */}
+        </div>{/* end zoom transform */}
+        </div>{/* end scaled-footprint wrapper */}
 
         {/* The hint bubble is no longer an inline flex sibling: in flow it
             pushed the canvas content and was clipped by the scrollable
