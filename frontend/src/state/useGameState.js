@@ -8,6 +8,7 @@ import {
 } from '../engine/index.js'
 import { STAGE_COMPLETION_XP, TIMING, SANDBOX } from '../config/gameRules.js'
 import { playSound, primeAudio } from '../services/soundEffects.js'
+import { hasLawAnimation } from '../components/animations/index.js'
 import { DEAD_END_MSG, buildHintText } from './hintText.js'
 
 export function useGameState(options = {}) {
@@ -501,8 +502,55 @@ export function useGameState(options = {}) {
       animationTimerRef.current = null
     }
 
+    // The commit body, shared by the animated path (fired by a timer) and the
+    // instant path used for laws that have no animation module.
+    const commitStep = () => {
+      animationTimerRef.current = null
+      interactionLockedRef.current = false
+      guidanceCacheRef.current = null
+      setHistory(h => [...h, { expr: newExpr, step: {
+        law: law.name, lawId: law.id, from: before, to: after,
+        selection: sel.map(s => ({ ...s })), explanation: law.desc,
+      } }])
+      setSel([])
+      setSelectedLaw(null)
+      setApplicableLaws([])
+      setActiveGuidePaths([])
+      setIsAnimating(false)
+      setAnimationData(null)
+
+      // The step landed: one short click, then either the solve fanfare or the
+      // dead-end check for the expression the law produced.
+      playSound('step')
+
+      // Check completion
+      if (canonText(newExpr) === goalCanonRef.current) {
+        interactionLockedRef.current = true
+        markDeadEnd(false)
+        setEarnedXp(STAGE_COMPLETION_XP)
+        setIsComplete(true)
+        setStatus('success')
+        setStatusMsg('Expression simplified!')
+        playSound('correct')
+      } else {
+        syncDeadEndStatus(newExpr, 'Step applied. Choose a law for your next move.')
+      }
+    }
+
     const startAnimation = () => {
       setIsPreLawHighlight(false)
+
+      // Some laws animate nothing: Distributive (Expand) is sandbox-only and the
+      // AnimationOverlay registry deliberately has no module for it (its
+      // animPaths are empty). Holding the canvas in 'applying' for the whole
+      // animation window with no motion on screen reads as a stuck loading
+      // state, which is exactly the reported "animation is gone, it just
+      // loads" symptom. Commit those laws at once instead.
+      if (!hasLawAnimation(law.id)) {
+        commitStep()
+        return
+      }
+
       setIsAnimating(true)
       setAnimationData({
         lawId: law.id,
@@ -540,38 +588,7 @@ export function useGameState(options = {}) {
       setStatus('applying')
       setStatusMsg(`Applying ${law.name}...`)
 
-      animationTimerRef.current = setTimeout(() => {
-        animationTimerRef.current = null
-        interactionLockedRef.current = false
-        guidanceCacheRef.current = null
-        setHistory(h => [...h, { expr: newExpr, step: {
-          law: law.name, lawId: law.id, from: before, to: after,
-          selection: sel.map(s => ({ ...s })), explanation: law.desc,
-        } }])
-        setSel([])
-        setSelectedLaw(null)
-        setApplicableLaws([])
-        setActiveGuidePaths([])
-        setIsAnimating(false)
-        setAnimationData(null)
-
-        // The step landed: one short click, then either the solve fanfare or the
-        // dead-end check for the expression the law produced.
-        playSound('step')
-
-        // Check completion
-        if (canonText(newExpr) === goalCanonRef.current) {
-          interactionLockedRef.current = true
-          markDeadEnd(false)
-          setEarnedXp(STAGE_COMPLETION_XP)
-          setIsComplete(true)
-          setStatus('success')
-          setStatusMsg('Expression simplified!')
-          playSound('correct')
-        } else {
-          syncDeadEndStatus(newExpr, 'Step applied. Choose a law for your next move.')
-        }
-      }, TIMING.lawAnimationMs)
+      animationTimerRef.current = setTimeout(commitStep, TIMING.lawAnimationMs)
     }
 
     if (isTutorial) {

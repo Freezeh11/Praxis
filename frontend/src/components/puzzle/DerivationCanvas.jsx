@@ -144,7 +144,12 @@ function DerivationCanvas({
                   <m.div
                     layout
                     key={line.key}
-                    initial={{ opacity: 0, y: line.isActive && idx > 0 ? 6 : 0 }}
+                    /* Opacity starts at 1, never 0: a stalled framer loop (throttled
+                       tab, dropped frame scheduler) would otherwise leave a freshly
+                       committed step line permanently transparent, which reads as
+                       "the answer animation is gone, it is only loading". The rise
+                       still animates through y. */
+                    initial={{ opacity: 1, y: line.isActive && idx > 0 ? 6 : 0 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
                     className="relative flex items-center min-h-[44px] gap-2.5"
