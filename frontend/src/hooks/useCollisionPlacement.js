@@ -117,7 +117,12 @@ export const popupLayerStyle = (placement) => ({
   maxHeight: placement.maxHeight ? `${Math.round(placement.maxHeight)}px` : undefined,
   overflowY: 'auto',
   overscrollBehavior: 'contain',
-  zIndex: 45,
+  // The card is opened FROM the step-history drawer on the tiers that render it
+  // as a slide-over (z-50) and from the canvas on the rest. It must outrank the
+  // drawer, otherwise the card — and its close button — paint underneath the
+  // panel and taps on the X land on the drawer instead. Blocking modals sit at
+  // z-100 and above, so this stays below them.
+  zIndex: 56,
   pointerEvents: 'auto',
 })
 

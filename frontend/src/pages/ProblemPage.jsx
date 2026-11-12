@@ -143,6 +143,18 @@ export default function ProblemPage() {
   const handleDismissReviewReminder = useCallback(() => setDismissReviewReminder(true), [])
   const closeHint = useCallback(() => setShowHint(false), [])
   const closeInspect = useCallback(() => setInspectedStepIdx(null), [])
+  /**
+   * Inspecting a past step from the history list. On the tiers where that list
+   * is a slide-over it covers the step it was triggered from, so leaving it open
+   * would open the explanation underneath it (the drawer is z-50, the popup
+   * layer z-56) — the card would be partially hidden and its close button
+   * unreadable/unreachable. Closing the drawer first also gives the card the
+   * derivation line as its anchor instead of a step card that is sliding away.
+   */
+  const inspectStep = useCallback((next) => {
+    if (useOverlayHistory) setShowStepHistory(false)
+    setInspectedStepIdx(next)
+  }, [useOverlayHistory])
   const dismissInspectionTip = useCallback(() => setShowStepInspectionTip(false), [])
 
   /**
@@ -468,7 +480,7 @@ export default function ProblemPage() {
     <ZoomProvider>
     <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-transparent' : 'flex h-screen overflow-hidden bg-transparent'}>
       <StepHistoryPanel
-        steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={setInspectedStepIdx}
+        steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={inspectStep}
         useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
         onCloseStepHistory={closeStepHistory} isSandbox={isSandbox} onBack={navToStages}
         touchTargets={touchTargets}
