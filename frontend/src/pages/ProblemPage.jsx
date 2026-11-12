@@ -577,13 +577,23 @@ export default function ProblemPage() {
         <div ref={inspectPopupNode}>
           <AnimatePresence>
             {/* Law explanation — opened by clicking a past step / its connector. */}
-            {inspectedStepIdx !== null && (
-              <LawExplanationCard
-                lawName={steps[inspectedStepIdx]?.law}
-                explanation={steps[inspectedStepIdx]?.explanation}
-                ready={inspectPopupReady} onClose={closeInspect}
-              />
-            )}
+            {inspectedStepIdx !== null && (() => {
+              const step = steps[inspectedStepIdx]
+              // The step records only the law's display name; matching it back to
+              // the law table is what lets the card print the identities the law
+              // stands for instead of only its title.
+              const law = (laws || []).find(l => (step?.lawId && l.id === step.lawId) || l.name === step?.law)
+              return (
+                <LawExplanationCard
+                  lawName={step?.law}
+                  explanation={step?.explanation}
+                  formulas={law?.formulas}
+                  from={step?.from}
+                  to={step?.to}
+                  ready={inspectPopupReady} onClose={closeInspect}
+                />
+              )
+            })()}
 
           </AnimatePresence>
         </div>
