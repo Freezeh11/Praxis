@@ -342,8 +342,12 @@ export default function LevelSelectPage() {
                   <div className="font-bold text-[18px] text-text-1 tracking-[-0.3px] [@media(max-height:480px)]:text-[16px]">{lv.name}</div>
                   <div className="text-[13px] [@media(max-height:480px)]:text-[12px] [@media(max-height:359px)]:hidden text-text-3 text-center">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2/3 */}
-                {isScoreGated && isActive && lockState.progress && (
+                {/* Score gate progress for Level 2/3.
+                    Rendered on every gated card, selected or not: this block is
+                    the tallest content a card carries, so letting it appear and
+                    disappear with the selection resized the whole row every time
+                    the carousel moved onto a gated level. */}
+                {isScoreGated && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
                       <span>{lockState.progress.completed}/{lockState.totalStages} stages</span>
@@ -357,8 +361,9 @@ export default function LevelSelectPage() {
                   </div>
                 )}
 
-                {/* Tutorial gate progress for Level 1 and Sandbox */}
-                {isTutorialGated && isActive && (
+                {/* Tutorial gate progress for Level 1 and Sandbox — same rule:
+                    it holds its height whether or not the card is selected. */}
+                {isTutorialGated && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
                       <span>{lockState.completedStages}/{lockState.totalStages} stages</span>
@@ -419,40 +424,44 @@ export default function LevelSelectPage() {
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">Coming Soon</div>
                 )}
-                {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> 80% avg required</div>
-                )}
-                {isTutorialGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> Tutorial required</div>
-                )}
+                {/* No "80% avg required" / "Tutorial required" chips: the gate
+                    block on every locked card already states the requirement, so
+                    repeating it here only made the card say it twice. */}
 
                 </div>
 
-                {/* Direct action button on active card */}
-                {isActive && !locked && (
-                  <button
-                    id="start-level-btn"
-                    type="button"
-                    className="w-full mt-2 flex min-h-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-accent px-3 py-2.5 text-xs font-bold text-on-accent shadow-md shadow-indigo-600/20 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-px hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-600/25 active:translate-y-0 active:scale-[0.99]"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStart()
-                    }}
-                  >
-                    <span>{isSandbox ? 'ENTER SANDBOX' : 'VIEW STAGES'}</span>
-                    <span>→</span>
-                  </button>
-                )}
-                {isActive && locked && (
-                  <button
-                    id="start-level-btn"
-                    type="button"
-                    disabled
-                    className="w-full mt-2 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
-                  >
-                    <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
-                  </button>
-                )}
+                {/* Action slot.
+                    The button is the last thing a card carries, so it renders on
+                    every card and only paints on the selected one. Left to appear
+                    and disappear, it made the row taller or shorter by its own
+                    height alone, which is the size change this screen kept
+                    showing when the carousel moved. visibility (not unmounting)
+                    keeps the box; hidden buttons stay out of the tab order. */}
+                <div className={`mt-2 w-full ${isActive ? '' : 'invisible'}`} aria-hidden={isActive ? undefined : 'true'}>
+                  {locked ? (
+                    <button
+                      id={isActive ? 'start-level-btn' : undefined}
+                      type="button"
+                      disabled
+                      className="w-full py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
+                    >
+                      <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      id={isActive ? 'start-level-btn' : undefined}
+                      type="button"
+                      className="w-full flex min-h-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-accent px-3 py-2.5 text-xs font-bold text-on-accent shadow-md shadow-indigo-600/20 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-px hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-600/25 active:translate-y-0 active:scale-[0.99]"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (isActive) handleStart()
+                      }}
+                    >
+                      <span>{isSandbox ? 'ENTER SANDBOX' : 'VIEW STAGES'}</span>
+                      <span>→</span>
+                    </button>
+                  )}
+                </div>
                 </div>
                 </div>
             )
