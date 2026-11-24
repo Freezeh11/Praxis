@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.gzip import GZipMiddleware
 
-from api.routes import health, laws, levels, progress, score
+from api.routes import feedback, health, laws, levels, progress, score
 from config.settings import settings
 from core.errors import AppError, ErrorCode
 from core.logging import configure_logging, get_logger, log_fields
@@ -140,3 +140,4 @@ app.include_router(levels.router, prefix="/api")
 app.include_router(laws.router, prefix="/api")
 app.include_router(score.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
+app.include_router(feedback.router, prefix="/api")
