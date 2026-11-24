@@ -12,6 +12,7 @@ import AuthTextField from '../components/ui/AuthTextField.jsx'
 import PasswordField from '../components/ui/PasswordField.jsx'
 import SubmitButton from '../components/ui/SubmitButton.jsx'
 import PasswordChecklist from '../components/ui/PasswordChecklist.jsx'
+import ResendVerificationForm from '../components/auth/ResendVerificationForm.jsx'
 
 // Auth pages paint their own faint blueprint grid and never mount
 // LogicCircuitBackdrop, so the page root is opaque and blur-free.
@@ -38,6 +39,10 @@ export default function RegisterPage() {
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
   const [errors, setErrors] = useState({})
+  // Set when Supabase withheld the session because the address must be confirmed
+  // first. It swaps the form for a "check your inbox" panel instead of letting a
+  // pending account look like a completed signup.
+  const [sentTo, setSentTo] = useState('')
 
   // Wait for session state to update before navigating
   useEffect(() => {
@@ -76,6 +81,10 @@ export default function RegisterPage() {
 
       if (result.error) {
         toast.error(result.error.message || 'Registration failed. Please try again.')
+      } else if (result.needsEmailConfirmation) {
+        // No session exists yet: stay on the page and show where the link went.
+        setSentTo(email.trim())
+        toast.success('Confirmation link sent. Check your inbox.')
       } else {
         toast.success('Account created successfully! Welcome to Praxis.')
         // useEffect will handle the navigation once the session state updates globally
@@ -128,9 +137,13 @@ export default function RegisterPage() {
         >
           <div className="w-full max-w-[440px]">
             <AuthCard
-              eyebrow="Create account"
-              title="Start your Praxis account"
-              subtitle="One account unlocks every level, stage and sandbox drill."
+              eyebrow={sentTo ? 'Check your inbox' : 'Create account'}
+              title={sentTo ? 'Confirm your email' : 'Start your Praxis account'}
+              subtitle={
+                sentTo
+                  ? `We sent a confirmation link to ${sentTo}. Open it on this device to activate your account, then sign in.`
+                  : 'One account unlocks every level, stage and sandbox drill.'
+              }
               footer={
                 <div className="mt-6 border-t border-slate-200/90 pt-5 dark:border-white/10">
                   <Link to="/login" className={secondaryActionClassName}>
@@ -151,86 +164,104 @@ export default function RegisterPage() {
                 </div>
               }
             >
-              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-                <AuthTextField
-                  id="register-name"
-                  label="Full Name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
-                  }}
-                  placeholder="John Doe"
-                  required
-                  autoComplete="name"
-                  icon="user"
-                  error={errors.name}
-                />
+              {sentTo ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    The link is valid for about an hour. It can take a minute to arrive, so check your spam folder
+                    before resending. You can close this tab and open the link from your inbox.
+                  </p>
+                  <ResendVerificationForm
+                    idPrefix="register-resend"
+                    initialEmail={sentTo}
+                    lockEmail
+                    variant="primary"
+                  />
+                  <button type="button" onClick={() => setSentTo('')} className={secondaryActionClassName}>
+                    Use a Different Email
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+                  <AuthTextField
+                    id="register-name"
+                    label="Full Name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
+                    }}
+                    placeholder="John Doe"
+                    required
+                    autoComplete="name"
+                    icon="user"
+                    error={errors.name}
+                  />
 
-                <AuthTextField
-                  id="register-email"
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
-                  }}
-                  onBlur={() => {
-                    const value = email.trim()
-                    if (value && !/^\S+@\S+\.\S+$/.test(value)) {
-                      setErrors((prev) => ({ ...prev, email: 'Enter a valid email address.' }))
-                    }
-                  }}
-                  placeholder="you@example.com"
-                  required
-                  autoComplete="email"
-                  icon="mail"
-                  error={errors.email}
-                />
+                  <AuthTextField
+                    id="register-email"
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+                    }}
+                    onBlur={() => {
+                      const value = email.trim()
+                      if (value && !/^\S+@\S+\.\S+$/.test(value)) {
+                        setErrors((prev) => ({ ...prev, email: 'Enter a valid email address.' }))
+                      }
+                    }}
+                    placeholder="you@example.com"
+                    required
+                    autoComplete="email"
+                    icon="mail"
+                    error={errors.email}
+                  />
 
-                <PasswordField
-                  id="register-password"
-                  label="Password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
-                  }}
-                  placeholder="At least 8 characters"
-                  required
-                  autoComplete="new-password"
-                  onBlur={() => setPasswordTouched(true)}
-                  invalid={passwordInvalid || Boolean(errors.password)}
-                  error={errors.password}
-                  describedBy={errors.password ? undefined : 'register-password-requirements'}
-                >
-                  <PasswordChecklist id="register-password-requirements" password={password} />
-                </PasswordField>
+                  <PasswordField
+                    id="register-password"
+                    label="Password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
+                    }}
+                    placeholder="At least 8 characters"
+                    required
+                    autoComplete="new-password"
+                    onBlur={() => setPasswordTouched(true)}
+                    invalid={passwordInvalid || Boolean(errors.password)}
+                    error={errors.password}
+                    describedBy={errors.password ? undefined : 'register-password-requirements'}
+                  >
+                    <PasswordChecklist id="register-password-requirements" password={password} />
+                  </PasswordField>
 
-                <PasswordField
-                  id="register-confirm"
-                  label="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value)
-                    if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
-                  }}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                  error={errors.confirm || (!passwordsMatch ? 'Passwords do not match.' : '')}
-                  hintLive
-                />
+                  <PasswordField
+                    id="register-confirm"
+                    label="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
+                    }}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="new-password"
+                    error={errors.confirm || (!passwordsMatch ? 'Passwords do not match.' : '')}
+                    hintLive
+                  />
 
-                {/* Only a pending request disables the button: a disabled button
-                    with no explanation is a dead end for keyboard and screen-reader
-                    users, so validation reports through the fields instead. */}
-                <SubmitButton loading={loading} disabled={loading} busyLabel="Creating account...">
-                  Create Account
-                </SubmitButton>
-              </form>
+                  {/* Only a pending request disables the button: a disabled button
+                      with no explanation is a dead end for keyboard and screen-reader
+                      users, so validation reports through the fields instead. */}
+                  <SubmitButton loading={loading} disabled={loading} busyLabel="Creating account...">
+                    Create Account
+                  </SubmitButton>
+                </form>
+              )}
             </AuthCard>
           </div>
         </m.div>

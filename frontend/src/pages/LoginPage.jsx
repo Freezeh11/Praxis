@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { signIn } from '../services/authActions.js'
+import { isEmailNotConfirmedError } from '../services/emailConfirmation.js'
 import { useSession } from '../state/useSession.js'
 import { m, useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -10,6 +11,7 @@ import TermsDialog, { TERMS_LINK_CLASS } from '../components/ui/TermsDialog.jsx'
 import AuthTextField from '../components/ui/AuthTextField.jsx'
 import PasswordField from '../components/ui/PasswordField.jsx'
 import SubmitButton from '../components/ui/SubmitButton.jsx'
+import ResendVerificationForm from '../components/auth/ResendVerificationForm.jsx'
 
 // Auth pages paint their own faint blueprint grid and never mount
 // LogicCircuitBackdrop, so the page root is opaque and blur-free.
@@ -37,6 +39,10 @@ export default function LoginPage() {
   // Inline validation replaces native bubbles (form is noValidate) so the message
   // is announced and styled consistently with the rest of the auth pages.
   const [errors, setErrors] = useState({})
+  // Set when Supabase rejects the password only because the address is unverified.
+  // The screen offers a resend instead of the generic "invalid credentials" toast.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
+  const unconfirmedRef = useRef(null)
 
   // Wait for session state to update before navigating
   useEffect(() => {
@@ -44,6 +50,12 @@ export default function LoginPage() {
       navigate(redirectTo, { replace: true })
     }
   }, [session, navigate, redirectTo])
+
+  // The notice is an alert already; moving focus there makes the recovery action
+  // reachable without hunting back up the form.
+  useEffect(() => {
+    if (unconfirmedEmail) unconfirmedRef.current?.focus()
+  }, [unconfirmedEmail])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -66,6 +78,14 @@ export default function LoginPage() {
       })
 
       if (result.error) {
+        if (isEmailNotConfirmedError(result.error)) {
+          // Not a credential problem: keep the password field clean and point at
+          // the inbox + resend flow instead.
+          setErrors({})
+          setUnconfirmedEmail(email.trim())
+          toast.error('Confirm your email before signing in.')
+          return
+        }
         // Bind the server verdict to the password field so a screen reader hears
         // it as the field's error, not only as a transient toast.
         const message = result.error.message || 'Invalid email or password'
@@ -73,6 +93,7 @@ export default function LoginPage() {
         toast.error(message)
         document.getElementById('login-password')?.focus()
       } else {
+        setUnconfirmedEmail('')
         toast.success('Welcome back!')
         // useEffect will handle the navigation once the session state updates globally
       }
@@ -156,6 +177,7 @@ export default function LoginPage() {
                   onChange={(e) => {
                     setEmail(e.target.value)
                     if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+                    if (unconfirmedEmail) setUnconfirmedEmail('')
                   }}
                   placeholder="you@example.com"
                   required
@@ -177,6 +199,29 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   error={errors.password}
                 />
+
+                {unconfirmedEmail ? (
+                  <div
+                    ref={unconfirmedRef}
+                    tabIndex={-1}
+                    className="rounded-xl border border-amber-300/80 bg-amber-50 p-3.5 outline-none dark:border-amber-400/25 dark:bg-amber-500/10"
+                  >
+                    <p role="alert" className="text-[13px] font-semibold text-amber-900 dark:text-amber-200">
+                      Confirm your email to continue
+                    </p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-amber-800 dark:text-amber-200/80">
+                      This address hasn't been confirmed yet. Open the link we emailed you, or send a new one.
+                    </p>
+                    <div className="mt-3">
+                      <ResendVerificationForm
+                        idPrefix="login-resend"
+                        initialEmail={unconfirmedEmail}
+                        lockEmail
+                        variant="secondary"
+                      />
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="-mt-1 flex justify-end">
                   <Link
