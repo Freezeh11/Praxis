@@ -136,10 +136,19 @@ export const SANDBOX = {
    * the state cap. The search now aborts at this deadline and reports the
    * ordinary "too complex" verdict. The worst published reference expression
    * needs ~7.8 s on this machine (4.6 s simplest-form search + 3.2 s optimal
-   * path), so ten seconds keeps every documented example buildable while
-   * bounding an adversarial input that would otherwise run for minutes.
+   * path), and the slowest published four-variable drill measures 13-14 s on a
+   * slower CPU, so twenty seconds keeps every documented example buildable while
+   * still bounding an adversarial input that would otherwise run for minutes.
    */
-  deadlineMs: 10000,
+  deadlineMs: 20000,
+  /**
+   * Extra clock for the one-expansion retry that runs when the reduction search
+   * finds nothing to do. It exists only to rescue inputs like A(B + A') whose
+   * simplification is reachable through Distributive (Expand); an input that has
+   * no such route must not pay a second full deadline to learn that, so the
+   * retry is capped well below the main search.
+   */
+  retryDeadlineMs: 3000,
   /** Default difficulty for generated sandbox problems. */
   difficulty: 'medium',
   /**
