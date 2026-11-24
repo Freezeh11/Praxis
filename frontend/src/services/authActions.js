@@ -6,14 +6,20 @@
  */
 import { notifyAuthChanged } from '../state/authEvents.js'
 import { getSupabase } from './supabaseClient.js'
+import { needsEmailConfirmation } from './emailConfirmation.js'
 import { passwordError } from './passwordPolicy.js'
+
+/** Where Supabase sends the learner after they open a confirmation link. */
+const emailRedirectTo = () => `${window.location.origin}/auth/confirm`
 
 export const signIn = {
   email: async ({ email, password }) => {
     const supabase = await getSupabase()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      return { data: null, error: { message: error.message } }
+      // `code` lets the screen tell an unconfirmed address apart from a bad
+      // password without matching on prose alone.
+      return { data: null, error: { message: error.message, code: error.code ?? null } }
     }
     notifyAuthChanged()
     return { data, error: null }
@@ -28,19 +34,53 @@ export const signUp = {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name }, emailRedirectTo: emailRedirectTo() },
     })
     if (error) {
-      return { data: null, error: { message: error.message } }
+      return { data: null, error: { message: error.message, code: error.code ?? null } }
+    }
+    // Confirmation required: Supabase withheld the session until the link is
+    // opened, so publishing an auth change here would sign nobody in and could
+    // still bounce an unverified learner into the app.
+    if (needsEmailConfirmation({ data, error })) {
+      return { data, error: null, needsEmailConfirmation: true }
     }
     notifyAuthChanged()
-    return { data, error: null }
+    return { data, error: null, needsEmailConfirmation: false }
   },
 }
 
 export const signOut = async () => {
   const supabase = await getSupabase()
   return supabase.auth.signOut()
+}
+
+/**
+ * Signup confirmation, step 2: email a fresh confirmation link.
+ *
+ * Shares the redirect origin used at signup so the link always lands on
+ * `/auth/confirm` in whichever environment sent it. The friendly rate-limit
+ * copy mirrors `requestPasswordReset` because Supabase answers the same way.
+ */
+export const resendVerificationEmail = async (email) => {
+  const address = String(email || '').trim()
+  if (!address) return { error: { message: 'Enter the email address you signed up with.' } }
+  const supabase = await getSupabase()
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: address,
+    options: { emailRedirectTo: emailRedirectTo() },
+  })
+  if (error) {
+    let message = error.message
+    if (/rate limit|too many|seconds/i.test(message)) {
+      message = 'Too many confirmation emails. Wait a minute and try again.'
+    } else if (/already confirmed/i.test(message)) {
+      message = 'That address is already confirmed. Sign in instead.'
+    }
+    return { error: { message } }
+  }
+  return { error: null }
 }
 
 /**
