@@ -1,5 +1,7 @@
 // Shared, font-independent icons. Visible labels belong to the surrounding UI.
 const paths = {
+  mail: 'M3 6h18v12H3Zm0 0 9 7 9-7',
+  send: 'm3 11 18-8-8 18-2-7Z',
   book: 'M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15',
   clipboard: 'M9 4H5v18h14V4h-4M9 2h6v4H9ZM8 11h8M8 15h8M8 19h5',
   trophy: 'M8 3h8v6a4 4 0 0 1-8 0ZM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 2v6m-4 2h8',

@@ -51,6 +51,7 @@ const RegisterPage = withMotion(() => import('./pages/RegisterPage'))
 const ForgotPasswordPage = withMotion(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage = withMotion(() => import('./pages/ResetPasswordPage'))
 const ConfirmEmailPage = withMotion(() => import('./pages/ConfirmEmailPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
 const LevelSelectPage = withMotion(() => import('./pages/LevelSelectPage'))
 const StageSelectorPage = withMotion(() => import('./pages/StageSelectorPage'))
 const ProblemPage = withMotion(() => import('./pages/ProblemPage'))
@@ -129,6 +130,9 @@ export default function App() {
                     the learner opens the link emailed at signup; the page swaps the
                     returned code/token for a session and explains failures. */}
                 <Route path="/auth/confirm" element={<ConfirmEmailPage />} />
+                {/* Contact form: public on purpose. A learner locked out of their
+                    account is exactly who needs to write in, so it is not gated. */}
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
                 {/* Protected AND tutorial-gated: a new learner must finish the

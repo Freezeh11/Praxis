@@ -3,9 +3,9 @@ import Icon from './Icon'
  * SurveyBillboard — High-visibility "ad billboard" banner inviting learners
  * to share feedback through the external survey.
  *
- * Clean presentational component linking directly to SURVEY_URL.
+ * Clean presentational component linking into the in-app feedback form.
  */
-import { SURVEY_URL } from '../../config/appLinks.js'
+import { Link } from 'react-router-dom'
 
 export default function SurveyBillboard({ className = '' }) {
   return (
@@ -31,20 +31,18 @@ export default function SurveyBillboard({ className = '' }) {
               Help Shape the Future of Praxis!
             </h3>
             <p className="mt-0.5 text-xs text-text-2 leading-relaxed max-w-xl">
-              Tell us how you learn Boolean algebra, what was tricky, and what you’d like to see next. Your feedback directly guides new levels and features.
+              Tell us what broke, what was tricky, and what you would like to see next. Your report goes straight to the person building Praxis.
             </p>
           </div>
         </div>
 
-        <a
-          href={SURVEY_URL}
-          target="_blank"
-          rel="noreferrer noopener"
+        <Link
+          to="/contact"
           className="shrink-0 self-start sm:self-center inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 px-4 py-2.5 font-sans text-xs sm:text-sm font-bold text-amber-900 shadow-sm hover:brightness-95 hover:shadow active:scale-[0.98] transition-all cursor-pointer ring-1 ring-amber-400/50"
         >
-          <span>Take the Survey</span>
+          <span>Open the form</span>
           <span aria-hidden="true" className="text-sm">→</span>
-        </a>
+        </Link>
       </div>
     </aside>
   )

@@ -390,6 +390,18 @@ export default function ProfilePage() {
                 </div>
                 <p className={'mt-2 ' + captionText}>Saved on this device.</p>
               </section>
+
+              <section className={panelClass + ' p-5 sm:p-6'} aria-labelledby="profile-feedback-title">
+                <h2 id="profile-feedback-title" className={sectionTitle}>Help &amp; feedback</h2>
+                <p className={'mt-1 ' + mutedText}>Found a bug, or a puzzle that could be clearer? Tell us directly, without leaving the app.</p>
+                <Link
+                  to="/contact"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-bold text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:focus-visible:ring-cyan-400/40"
+                >
+                  <Icon name="mail" className="text-base" />
+                  Contact &amp; feedback
+                </Link>
+              </section>
             </div>
           </div>
 
