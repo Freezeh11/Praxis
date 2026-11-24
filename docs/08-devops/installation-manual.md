@@ -225,17 +225,35 @@ Open **Project Settings → API** and note, without sharing them:
 
 ### 1.4 Optional but recommended: decide the email-confirmation policy
 
-`frontend/src/pages/RegisterPage.jsx:44-55` calls `supabase.auth.signUp`, then waits for a session
-before routing to `/levels`. Supabase's **Confirm email** setting decides what happens next:
+`frontend/src/services/authActions.js` calls `supabase.auth.signUp` with `emailRedirectTo` set to
+`` window.location.origin + '/auth/confirm' ``, so the emailed link comes back to this app.
+Supabase's **Confirm email** setting decides what happens next:
 
-- **Confirm email OFF** (fastest for local development): `signUp` returns a session immediately and
-  the new learner lands on `/levels`.
-- **Confirm email ON** (the Supabase default for new projects): `signUp` returns no session. The
-  page shows "Account created successfully! Welcome to Praxis." but the learner stays on
-  `/register` until they click the confirmation link in their inbox.
+- **Confirm email OFF** (fastest for local development): `signUp` returns a session immediately,
+  `authActions.js` broadcasts the auth change and the new learner lands on `/levels`.
+- **Confirm email ON** (the Supabase default for new projects): `signUp` returns a user but no
+  session. `RegisterPage` swaps its form for a **Check your inbox** panel that names the address and
+  offers *Resend confirmation link* (30 s cooldown) plus *Use a Different Email*; the learner is
+  **never** routed to `/levels` in this state. The emailed link opens `/auth/confirm`
+  (`ConfirmEmailPage`), which exchanges the token, shows **Email confirmed** and offers
+  *Continue to Levels*. An expired, reused or malformed link renders the reason and a resend form on
+  that same page, and `/login` does the same when Supabase answers `email_not_confirmed`.
 
-Either is valid. For a demo machine, turning confirmation off removes a step from every test
+Either policy is valid. For a demo machine, turning confirmation off removes a step from every test
 signup; for anything public, leave it on.
+
+**If confirmation is ON, three dashboard fields must match the app** (Supabase dashboard →
+**Authentication**):
+
+| Setting | Where | Value |
+|---|---|---|
+| **Confirm email** | Providers → Email | enabled |
+| **Site URL** | URL Configuration | the app origin, e.g. `http://localhost:5173` |
+| **Redirect URLs** | URL Configuration | `<app origin>/auth/confirm` and `<app origin>/reset-password` (e.g. `http://localhost:5173/auth/confirm`) |
+
+A redirect target missing from **Redirect URLs** is the usual cause of a link that lands on the
+wrong page: Supabase falls back to **Site URL** and the token never arrives, so `/auth/confirm`
+reports "Open the link from your email" (recoverable with its resend form).
 
 **✅ Verify Stage 1:** in the Supabase **Table Editor** you should see `user_progress`,
 `stage_progress` and `score_history` under schema `public`. Then run this in the SQL editor:

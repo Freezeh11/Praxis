@@ -304,10 +304,13 @@ renders with **Start Learning Free** and **Log In** in the header.
 2. Fill in Full Name, Email, Password (at least 6 characters, confirmed twice) and submit.
 3. What happens next depends on your Supabase project's **Confirm email** setting:
    - **Confirmation disabled:** Supabase returns a session immediately and the app routes you to
-     `/levels` (`frontend/src/pages/RegisterPage.jsx:22-26` watches for the session).
-   - **Confirmation enabled (Supabase's default):** you see the toast
-     "Account created successfully! Welcome to Praxis." but stay on the register page. Open the
-     confirmation email, click the link, then sign in at `/login`.
+     `/levels` (`frontend/src/pages/RegisterPage.jsx:47-52` watches for the session).
+   - **Confirmation enabled (Supabase's default):** the form is replaced by a **Check your inbox**
+     panel naming your address, with a *Resend confirmation link* button and a *Use a Different
+     Email* escape. You are not routed to `/levels` until the address is confirmed. Open the email
+     and click the link: `/auth/confirm` confirms the address and offers **Continue to Levels**.
+     If the link has expired, that page — and `/login` when Supabase answers
+     `email_not_confirmed` — explains it and lets you send a fresh one.
 
 **✅ Verify:** after signing in, the header shows your account and the route is `/levels`.
 

@@ -506,7 +506,7 @@ Stated rather than guessed, as the conventions require.
 | Item | Why unverified |
 |---|---|
 | **Whether any learner has actually hit the D21 rounding divergence in production** | Requires telemetry that does not exist. The divergence is proven reachable (three of nineteen totals, enumerated) but not observed. |
-| **Supabase project configuration** | The project's own dashboard settings (email confirmation on/off, password policy, JWT expiry) are not in the repository. `RegisterPage` navigates on session creation, which implies email confirmation is **off** in the deployed project, but that is an inference from behaviour, not a verified setting. |
+| **Supabase project configuration** | The project's own dashboard settings (email confirmation on/off, password policy, JWT expiry) are not in the repository. Both policies are now handled explicitly (session → `/levels`; no session → the register page's "Check your inbox" panel and the `/auth/confirm` landing page), so behaviour no longer implies which one the deployed project uses. |
 | **The live deployed API's behaviour** | All API verification was against `backend/main.py` in-process with `fastapi.testclient`. The Render URL in `frontend/vercel.json:5` was read, not called. |
 | **Whether Supabase enforces the `UNIQUE(user_id, level_id, stage_idx)` constraint as the upsert conflict target expects** | The schema declares it (`init.sql:24`) and `STAGE_CONFLICT_COLUMNS` names it (`progress_repository.py:18`), but no live upsert was performed during documentation (deliberately — this pass wrote nothing to the database). |
 | **PostgREST behaviour for an invalid `laws_used` array element** | `laws_used TEXT[] NOT NULL` accepts any strings; no constraint narrows it. Not exercised. |

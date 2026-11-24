@@ -448,9 +448,11 @@ the field. Contrast audit: every surface clean in both themes.
 | `{"stageProgress":null}` in storage | full-screen error boundary | the field is dropped |
 | `{"stageProgress":{"1":5}}` | unhandled TypeError, hydration never completes | the field is dropped |
 | 2000-character sandbox expression | >100 s frozen renderer | refused instantly by the 64-token ceiling |
-| `(A+B)`×8 | >25 s frozen | the 10 s search deadline returns "too complex" |
+| `(A+B)`×8 | >25 s frozen | the 20 s search deadline returns "too complex" |
 
-The published six-term reference needs ~7.8 s, so the deadline sits above it.
+The published six-term reference needs ~7.8 s and the slowest published
+four-variable drill measures 13-14 s on a slower CPU, so the 20 s deadline sits
+above both.
 Kept as documented limitations: no autosave of an in-progress derivation, the
 portrait rotate gate, and the seconds-long worst-case sandbox build.
 
