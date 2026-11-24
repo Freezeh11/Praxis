@@ -291,9 +291,12 @@ What the progress snapshot contains (`frontend/src/state/progressStore.js:30-39`
 
 | Export | Value | Line | Used by |
 |---|---|---|---|
-| `SURVEY_URL` | `https://docs.google.com/forms/d/1P4O0MdbQUAUGz-xNL-neMHX5ukDuLTjCq-nXpEaFdb8/viewform?edit_requested=true` | `frontend/src/config/appLinks.js:9` | `SurveyButton` — opens the learner feedback form in a new tab |
+| `CONTACT_EMAIL` | `''` (empty by default) | `frontend/src/config/appLinks.js:15` | `ContactPage` — when non-empty, `/contact` renders an extra `mailto:` row under the form |
 
-Renaming or replacing the survey is a one-line change here (`appLinks.js:4-6`).
+The in-app form is the primary feedback route and needs no address, so an empty value is a
+supported state rather than a misconfiguration. Setting one is a one-line change here
+(`appLinks.js:15`). The old `SURVEY_URL` Google Forms link was deleted when feedback moved to
+`/contact` and into `public.feedback`.
 
 ---
 

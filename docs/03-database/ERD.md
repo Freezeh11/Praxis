@@ -1,6 +1,6 @@
 # ERD — the Praxis entity-relationship diagram
 
-**What this is:** the whole Praxis database in one picture — three PostgreSQL tables in Supabase,
+**What this is:** the whole Praxis database in one picture — four PostgreSQL tables in Supabase,
 plus the `auth.users` table they hang off — with the cardinalities, a per-table narrative, and the
 index convention (`level_id` / `stage_idx`) that trips up almost every newcomer.
 **Who it's for:** anyone who needs to know *where a learner's progress actually lives* before
@@ -11,7 +11,7 @@ touching the score endpoint, the lock gates or the progress store. The column-by
 
 - [The diagram](#the-diagram)
 - [Cardinalities in plain language](#cardinalities-in-plain-language)
-- [The four entities](#the-four-entities)
+- [The five entities](#the-five-entities)
 - [The index convention: level_id and stage_idx](#the-index-convention-level_id-and-stage_idx)
 - [Game content is NOT in the database](#game-content-is-not-in-the-database)
 - [Life of a row](#life-of-a-row)
@@ -22,16 +22,19 @@ touching the score endpoint, the lock gates or the progress store. The column-by
 
 ## The diagram
 
-The whole schema is 58 lines of SQL: `database/init.sql`. Three tables, all in the `public` schema,
-all hanging off Supabase Auth's `auth.users`.
+The schema is two scripts: `database/init.sql` (58 lines) for the progress tables and
+`database/feedback.sql` for the feedback inbox. Four tables, all in the `public` schema, all
+hanging off Supabase Auth's `auth.users`.
 
 ```mermaid
 erDiagram
     %% auth.users is created and owned by Supabase Auth (auth schema).
-    %% The other three entities are the only tables this repository creates.
+    %% USER_PROGRESS / STAGE_PROGRESS / SCORE_HISTORY / FEEDBACK are the only tables this
+    %% repository creates.
     AUTH_USERS ||--o| USER_PROGRESS : "has at most one totals row"
     AUTH_USERS ||--o{ STAGE_PROGRESS : "completes stages"
     AUTH_USERS ||--o{ SCORE_HISTORY : "logs every attempt"
+    AUTH_USERS ||--o{ FEEDBACK : "sends reports (or none, when signed out)"
 
     AUTH_USERS {
         uuid id PK "Supabase Auth identity - not created by this repo"
@@ -68,9 +71,24 @@ erDiagram
         integer earned_points "bonus for non-negative inputs - scales with total"
         timestamptz created_at "time the attempt was logged"
     }
+
+    FEEDBACK {
+        uuid id PK "surrogate key, never read by the app"
+        uuid user_id FK "nullable -> auth.users(id) ON DELETE SET NULL"
+        text email "account address, or the one typed when signed out"
+        text category "bug | idea | other"
+        text message "10..2000 characters"
+        text page "route the report came from"
+        text app_version "VITE_APP_VERSION, else MODE, else unknown"
+        jsonb context "levelId / stageIdx when the report came from a stage"
+        text user_agent "browser UA, first 400 characters"
+        text status "new | read | done - the operator's triage"
+        timestamptz created_at "submission time"
+    }
 ```
 
-*(Every attribute, key and default in the diagram is read from `database/init.sql:7-42`. Attribute
+*(Every attribute, key and default in the diagram is read from `database/init.sql:7-42` and
+`database/feedback.sql:8-24`. Attribute
 types are written as single tokens for Mermaid — `text_array` is PostgreSQL `TEXT[]`, `integer` is
 `INTEGER`, `bool` is `BOOLEAN`.)*
 
@@ -83,8 +101,9 @@ Mermaid's crow's-foot notation reads as `left-cardinality -- right-cardinality`:
 | `\|\|--o\|` | exactly one → | zero or one | A learner has **at most one** `user_progress` row, because `user_id` is both the primary key and the foreign key (`database/init.sql:8`). |
 | `\|\|--o{` | exactly one → | zero or more | A learner owns **any number** of `stage_progress` rows, but at most one per `(level_id, stage_idx)` thanks to `UNIQUE(user_id, level_id, stage_idx)` (`database/init.sql:24`). Today's ceiling is 40 rows (Tutorial 4 + Levels 1–3 × 12). |
 | `\|\|--o{` | exactly one → | zero or more | A learner accumulates **any number** of `score_history` rows — one per scored attempt, replays included. There is no unique constraint on this table. |
+| `\|\|--o{` | exactly one → | zero or more | A learner can send **any number** of feedback reports. `feedback.user_id` is nullable and `ON DELETE SET NULL`, so a signed-out report has no learner at all, and a deleted account leaves its reports behind (`database/feedback.sql:11`). |
 
-Two absences are as important as the three relationships:
+Two absences are as important as the four relationships:
 
 1. **There is no relationship between `stage_progress` and `score_history`.** They share the columns
    `(user_id, level_id, stage_idx)` and they are written by the same function
@@ -94,17 +113,18 @@ Two absences are as important as the three relationships:
    `level_id` and `stage_idx` are unvalidated integers. See
    [The index convention](#the-index-convention-level_id-and-stage_idx).
 
-## The four entities
+## The five entities
 
 ### `AUTH_USERS` — Supabase Auth's table, not ours
 
 - Created and managed by Supabase Auth; the `public` tables only reference it
   (`database/init.sql:8,18,30`).
-- Verified fact: all three foreign keys are `REFERENCES auth.users(id) ON DELETE CASCADE`, so
-  deleting a Supabase user erases that learner's totals, stage rows and score history in one
-  statement.
-- The repo never creates it: `grep -rn "CREATE TABLE" --include=*.sql .` returns exactly three
-  matches, all in `database/init.sql:7,16,28`.
+- Verified fact: the three progress foreign keys are `REFERENCES auth.users(id) ON DELETE CASCADE`,
+  so deleting a Supabase user erases that learner's totals, stage rows and score history in one
+  statement. `feedback.user_id` is the exception — `ON DELETE SET NULL`, so reports survive the
+  account (`database/feedback.sql:11`).
+- The repo never creates it: `grep -rn "CREATE TABLE" --include=*.sql .` returns exactly four
+  matches — `database/init.sql:7,16,28` and `database/feedback.sql:8`.
 - The backend resolves the id from the bearer token, not from a local users table:
   `backend/api/routes/progress.py:21-23` passes `user["id"]` into the service, and
   `backend/supabase_client.py:87-98` validates the JWT against Supabase's `/auth/v1/user`.
@@ -156,6 +176,22 @@ code path updates or deletes a row.
   finds only the insert (`backend/repositories/progress_repository.py:57-59`). It exists for history
   and analytics.
 
+### `FEEDBACK` — the contact-form inbox
+
+One row per accepted `POST /api/feedback`. It is the only table this repository creates that the
+application **never reads back**: there is no `GET` route, and the operator triages rows in the
+Supabase dashboard (`database/feedback.sql:1-6`).
+
+- `user_id` is nullable by design. A signed-in report carries the learner's id; a signed-out report
+  leaves it `NULL` and has to supply an `email` instead, or the API refuses it with `422`
+  (`backend/services/feedback_service.py`).
+- When both addresses exist, the account address wins over anything typed.
+- `ON DELETE SET NULL`, not `CASCADE`: deleting a learner's account must not erase reports that are
+  still waiting to be answered.
+- RLS is enabled with **no policy**, so `anon` and `authenticated` can neither read nor write the
+  table; only the backend's service-role client inserts (`database/feedback.sql:33-37`). See
+  [SCHEMA.md](SCHEMA.md#feedback--rls-enabled-no-policy).
+
 ## The index convention: level_id and stage_idx
 
 This is the single most misread part of the schema. There are **two different numbering schemes** in
@@ -197,7 +233,7 @@ The most important structural fact about this schema: **the game itself is not i
 | Where do levels and puzzles live? | `content/levels.json` — 4 levels, 40 puzzles total: the Tutorial (id 0) has 4 stages and Levels 1–3 have 12 each. | `content/levels.json`; counted by execution (`sum(len(l["puzzles"]) for l in levels)` → 40) |
 | Where do the law reference cards live? | `content/laws.json` — 10 laws. | `content/laws.json` |
 | Who serves them? | The FastAPI backend, straight off disk, cached in memory with `functools.lru_cache`. | `backend/repositories/content_repository.py:16,34-43` |
-| Is there a `levels` table? | No. Three tables exist and none of them is content. | `database/init.sql` (58 lines) |
+| Is there a `levels` table? | No. Four tables exist and none of them is content. | `database/init.sql` (58 lines) + `database/feedback.sql` |
 | Why does that matter? | `stage_progress.level_id` and `.stage_idx` cannot be foreign keys, so the database cannot tell a real stage from `level_id = 99, stage_idx = -4`. | `database/init.sql:19-20` — bare `INTEGER NOT NULL` |
 
 The backend therefore **scores submitted numbers against JSON content it read from disk**
@@ -240,13 +276,15 @@ flowchart TD
 | Stars, level completion, `hasSeenTutorial`, saved derivations | Derived or browser-only; no columns exist. Stars are computed from `best_score` (`frontend/src/state/progressStore.js:281-285`), and `stageSolutions` is dropped by the save API's schema (`backend/api/schemas/progress.py:11-18`). |
 | Auth sessions, refresh tokens, passwords | Supabase Auth's own tables in the `auth` schema, never touched by this repo. |
 | Row-level ownership edges | The RLS policies do **not** enforce ownership (`FOR ALL USING (true)`), so drawing a "learner owns their rows" constraint would be a lie. See [SCHEMA.md](SCHEMA.md). |
+| How a feedback row is read | It is not: the table is write-only from the application's side, and RLS has no policy at all. The operator reads the dashboard. See [SCHEMA.md](SCHEMA.md#feedback--rls-enabled-no-policy). |
 
 ## Cross-references
 
 - [SCHEMA.md](SCHEMA.md) — every column, constraint, index and policy, quoted verbatim.
 - [scoring-and-rewards.md](../06-reference/scoring-and-rewards.md) — what the numbers stored in
   `score_history` mean, and how they are computed.
-- `database/init.sql` — the entire schema, 58 lines.
+- `database/init.sql` — the progress schema, 58 lines; `database/feedback.sql` — the feedback inbox
+  and its no-policy RLS block.
 - `docs/context.md` — the historical proposal; `docs/context.md:29-30` still claims the database is
   not integrated and auth does not exist. The code contradicts it (register rows D2 and D7 in
   `docs/_staging/GROUND-TRUTH.md`).

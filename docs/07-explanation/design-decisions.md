@@ -25,6 +25,7 @@ here look like mistakes until you see the alternative they replaced.
 - [ADR-011 — Two mirrored tuning surfaces instead of one shared one](#adr-011--two-mirrored-tuning-surfaces-instead-of-one-shared-one)
 - [ADR-012 — The tutorial is a real level, gated by a route guard](#adr-012--the-tutorial-is-a-real-level-gated-by-a-route-guard)
 - [ADR-013 — Verification without a backend test suite](#adr-013--verification-without-a-backend-test-suite)
+- [ADR-014 — Feedback is collected in-app, into a write-only table](#adr-014--feedback-is-collected-in-app-into-a-write-only-table)
 - [How to add an ADR](#how-to-add-an-adr)
 
 ---
@@ -728,6 +729,104 @@ bug reaches a learner, or the backend grows past a size where manual verificatio
 The first fix is small and high-value — a pytest suite covering the envelope, the 404/422/401
 paths, and the scoring boundary cases, including a test asserting that the client mirror and the
 server agree on all reachable totals.
+
+---
+
+## ADR-014 — Feedback is collected in-app, into a write-only table
+
+| | |
+|---|---|
+| **Date** | 2026-11-24 |
+| **Status** | **Accepted** — replaces the outbound Google Form |
+| **Supersedes** | The single `SURVEY_URL` link that every survey entry point used to open |
+
+**Context.** Feedback reached the team through one Google Form, opened by a link that lived in
+exactly one module (`frontend/src/config/appLinks.js`). That link had four costs, none of them
+large on its own:
+
+- **The learner left the product.** The form opened in a new tab, with no route back and no memory
+  of where they were — the page that broke, the level, the stage.
+- **Context had to be typed by hand.** "Which stage?" was a free-text field the learner filled in,
+  or skipped.
+- **Every report began with a copy-paste.** The form had no way to attach the route or the app
+  version, so triage started by asking for both.
+- **A failed submit discarded the text.** A dead connection or a closed tab lost the message the
+  learner had just written.
+
+**Decision.** Collect feedback inside Praxis, at the public route `/contact`
+(`frontend/src/pages/ContactPage.jsx`), and store it in `public.feedback`. Concretely:
+
+1. **Every former survey entry point links to `/contact`** — `SurveyButton.jsx` (label
+   "Feedback"), `SurveyBanner.jsx`, and a new "Help & feedback" section on `ProfilePage.jsx`.
+   `SURVEY_URL` was deleted; `appLinks.js` now holds only `CONTACT_EMAIL`, empty by default, which
+   adds a mailto row to the page when set.
+2. **The form is three fields.** Category (bug / idea / other, as three radio cards), message
+   (10–2000 characters, live counter), and email. Email appears **only when signed out** — a
+   signed-in learner's account address is shown read-only and used instead.
+3. **Context is attached, not asked for.** The page path always goes with the report; when the URL
+   matches `/level/:levelId/stage/:stageIdx` the ids go too, alongside the app version
+   (`VITE_APP_VERSION || MODE || 'unknown'`) and the browser user-agent
+   (`frontend/src/services/feedbackContext.js`, `frontend/src/services/feedbackApi.js`).
+4. **Failure never costs the message.** The request keeps the typed text in place and shows a
+   `role="alert"` banner; success replaces the card with "Message sent" and the address a reply
+   will go to.
+5. **The server decides the reply address.** `POST /api/feedback` accepts optional bearer auth
+   (`backend/api/routes/feedback.py`). When the caller is signed in, the account email wins over
+   anything typed (`backend/services/feedback_service.py`); a signed-out request with no email is
+   refused with `422` rather than stored.
+6. **The table is write-only and RLS-locked.** `database/feedback.sql` enables row level security
+   with **no policies**. The backend inserts through the Supabase service-role client
+   (`backend/repositories/feedback_repository.py`); no client-side code can read a message back,
+   and the operator triages rows in the Supabase dashboard.
+
+**Alternatives considered.**
+
+| Alternative | Rejected because |
+|---|---|
+| Keep the Google Form and add a "which stage?" question | Keeps the learner out of the product, keeps context typed by hand, and keeps the lost-text failure mode. Every reason for the move survives this option. |
+| A `mailto:` link only | Works with no storage at all, but most browsers hand the message to a mail client that may not exist, the text is not captured anywhere, and there is no inbox — exactly the property that made the form unusable. |
+| Embed the third-party form in a modal | Still a third-party surface, still no route context, and adds an iframe to a game that otherwise ships no third-party runtime. |
+| Store reports anonymously when no email is given | The report becomes unattributable: the operator can read it and can never reply. A bug report nobody can follow up on is a write into a void, so the API refuses it (`422`, "Add an email address so we can reply."). |
+
+**Consequences — good.**
+
+- **Context arrives with the report**, so triage starts from the stage and version rather than from
+  a question. The endpoint validates the same bounds it stores (10–2000 characters, ≤254-character
+  email, ≤200-character page), so a malformed report fails at the boundary.
+- **The learner stays in the product.** The page is one route, linked from the four places the old
+  link appeared, with a back link to `/levels` (signed in) or `/` (signed out).
+- **One inbox.** Every report is a row in `public.feedback`, with `status` (`new` / `read` /
+  `done`) as the only triage field — no second account, no export step.
+- **The message survives a failure.** The text stays in the form; retrying is one click.
+- **Nothing is logged that should not be.** `feedback_service` logs the category, whether the
+  caller was authenticated and whether a location was attached — never the message.
+
+**Consequences — bad.**
+
+- **There is no read path in the product.** No admin screen, no `GET /api/feedback`; the team reads
+  the Supabase dashboard. That is the direct price of the no-policy RLS design, and it is the
+  correct price until a real admin surface exists.
+- **A signed-out learner who will not give an address cannot report anything.** That is a
+  deliberate trade: attribution over volume.
+- **Screenshots and attachments are not supported.** The report is text plus context; a visual bug
+  still needs a follow-up.
+- **The table is a second migration surface.** `database/feedback.sql` must be run after
+  `database/init.sql`; until it is, the endpoint returns `502 upstream_error`
+  ("Feedback storage is unavailable") and the dashboard shows nothing.
+- **The service-role key is the only writer.** A leaked key is a write path into the inbox, and a
+  missing key is the 502 above; there is no queue or local fallback that would hold a report.
+
+**Revisit if.** A second operator needs a UI, or the inbox outgrows reading rows in a dashboard —
+then add a backend read route that returns only the caller's own reports, and give the table a
+per-user policy to match. Do **not** solve it by copying the progress tables'
+`FOR ALL USING (true)` policy: that would make every learner's message readable with the
+publishable key that ships in the browser bundle.
+
+**Evidence.** `backend/tests/test_feedback.py` (8 tests: account email wins, signed-out 422 with
+zero rows, lowercasing, message trimming and both length bounds, unknown category and malformed
+email refused); backend suite 33 passed; frontend suite 105 passed; `.e2e/_contact-verify.mjs`
+44/44 checks in a real browser — both themes, desktop/laptop/narrow/phone-landscape, validation,
+success, transport failure, the signed-out path, and the profile and levels entry points.
 
 ---
 

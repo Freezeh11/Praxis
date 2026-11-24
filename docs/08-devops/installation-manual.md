@@ -191,8 +191,11 @@ Postgres tables that store progress.
 
 1. In the Supabase dashboard open **SQL Editor → New query**.
 2. Paste the **entire** contents of [`database/init.sql`](../../database/init.sql) and press **Run**.
+3. Repeat with [`database/feedback.sql`](../../database/feedback.sql) — the script that creates the
+   feedback inbox. Do not skip it; without it every `/contact` submission returns `502` (see below).
 
-The script is idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running it is safe. It creates:
+Both scripts are idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running them is safe. `init.sql`
+creates:
 
 | Table | Purpose | Key constraints |
 |---|---|---|
@@ -200,12 +203,20 @@ The script is idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running it is saf
 | `stage_progress` | one row per completed stage: `best_score`, `completed` | `UNIQUE(user_id, level_id, stage_idx)` |
 | `score_history` | every scored attempt ever submitted | append-only |
 
-It also enables Row Level Security on all three tables with a single policy each, literally named
+It also enables Row Level Security on its three tables with a single policy each, literally named
 `"Service role full access"`, defined `FOR ALL USING (true)`
 (`database/init.sql:50-58`). Read the honest interpretation in
 [configuration-guide.md](configuration-guide.md#7-security-notes): the policy is **not** restricted to
 `service_role`, there is no `auth.uid() = user_id` predicate, and the frontend never queries these
 tables directly — all access goes through the backend's service key.
+
+> **The feedback inbox needs one more script.** `database/feedback.sql` (37 lines) is applied
+> separately: **SQL Editor → New query**, paste the whole file, **Run**. It creates `public.feedback`
+> with its two indexes, its bounds `CHECK`s and a `GRANT` to `service_role`. RLS is enabled there
+> with **no policies** on purpose — only the backend's service-role client may insert, and no
+> client-side code can read a report back. Skipping it leaves the app otherwise healthy but makes
+> every submission from `/contact` answer `502` `"Feedback storage is unavailable"`, with nothing
+> in the dashboard. Run it after `init.sql`; it is idempotent too.
 
 ### 1.3 Copy the three credentials
 

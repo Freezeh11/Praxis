@@ -300,7 +300,7 @@ IDs are stable and are reused verbatim in
 | **FR-40** | Sound cues exist for step, hint, guide, correct, wrong, reset and completion, with a persisted on/off preference defaulting to on. | `frontend/src/config/gameRules.js:148`, `frontend/src/services/soundEffects.js:43` |
 | **FR-41** | Phones in portrait see a blocking rotate overlay; small tablets in portrait see a dismissible banner; pointer-fine windows are never reclassified as phones. | `frontend/src/hooks/useDeviceTier.js:57-94`, `frontend/src/components/OrientationGate.jsx:16` |
 | **FR-42** | The workspace re-homes its panels per device tier so the canvas keeps usable width and every control stays reachable, while the desktop three-column layout is unchanged. | `frontend/src/pages/ProblemPage.jsx:64-99`, `:363-424` |
-| **FR-43** | A feedback survey link is reachable from the landing page, the level carousel, the stage matrix and the workspace header. | `frontend/src/config/appLinks.js:9`, `frontend/src/components/layout/SurveyButton.jsx:13` |
+| **FR-43** | Feedback is collected **inside the product**: every former survey entry point (landing page, level screens, workspace header, and a new *Help & feedback* section on the profile page) opens the public `/contact` page, where a category, a 10–2000-character message and — when signed out — an email address are posted to `/api/feedback` and stored in `public.feedback`. The page path, level/stage ids, app version and user-agent ride along automatically, and a failed send keeps the typed text. No external form is used. | `frontend/src/pages/ContactPage.jsx:93`, `frontend/src/components/layout/SurveyButton.jsx:20`, `backend/api/routes/feedback.py:22` |
 
 ## 6. Non-functional requirements
 

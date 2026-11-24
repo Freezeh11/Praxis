@@ -14,6 +14,12 @@ rules that turned out to be unenforced, and claims that could not be verified.
 
 ## Contents
 
+- [2026-11-24: In-app feedback replaces the Google Form — `/contact` and `public.feedback`](#2026-11-24-in-app-feedback-replaces-the-google-form--contact-and-publicfeedback)
+  - [The feature, as verified](#the-feature-as-verified)
+  - [Documents changed by this pass](#documents-changed-by-this-pass)
+  - [Findings: stale claims and drift found on the way](#findings-stale-claims-and-drift-found-on-the-way)
+  - [Deliberately left as written](#deliberately-left-as-written)
+  - [Verification run for this entry](#verification-run-for-this-entry)
 - [2026-09-28: Structure-preserving normalization — the Module 4 absorption guard](#2026-09-28-structure-preserving-normalization--the-module-4-absorption-guard)
   - [What changed in the code (not made by this pass)](#what-changed-in-the-code-not-made-by-this-pass)
   - [Content re-baseline, re-derived here](#content-re-baseline-re-derived-here)
@@ -47,6 +53,87 @@ rules that turned out to be unenforced, and claims that could not be verified.
   - [How to run the checks](#how-to-run-the-checks)
 
 ---
+
+## 2026-11-24: In-app feedback replaces the Google Form — `/contact` and `public.feedback`
+
+**Verified against** the working tree on `feature/dual-theme-ux-overhaul`, where the feedback
+feature is green: `backend/tests/test_feedback.py` (8 tests), backend suite **33 passed**,
+frontend suite **105 passed**, and `.e2e/_contact-verify.mjs` **44/44** checks in a real browser.
+**Docs only** — no file under `frontend/`, `backend/`, `database/` or `.e2e/` was touched by this
+pass, and nothing was committed.
+
+**What happened.** The external Google Form is gone. Every former survey entry point — the header
+button, the level-screen banner and a new *Help & feedback* section on the profile page — now opens
+a **public in-app page at `/contact`**, and a submission is stored in a new `public.feedback`
+table through `POST /api/feedback`. The learner never leaves the product, the report carries its
+own context, and the typed text survives a failed send. The client-side `SURVEY_URL` constant was
+deleted; `frontend/src/config/appLinks.js` now holds one optional `CONTACT_EMAIL` (empty by
+default, which renders an extra `mailto:` row on `/contact` when set).
+
+### The feature, as verified
+
+| Layer | Where | What it does |
+|---|---|---|
+| Page | `frontend/src/pages/ContactPage.jsx` (393 lines) | `/contact`, signed in or out: three category radio cards (`bug` / `idea` / `other`), a message of 10–2000 characters with a live counter, an email field **only when signed out** (a signed-in caller sees their account address read-only). Success replaces the card with *Message sent* and *We will reply to <address>*; failure keeps the typed text and shows a `role="alert"` message |
+| Entry points | `components/layout/SurveyButton.jsx` (label **Feedback**), `components/SurveyBanner.jsx`, `pages/ProfilePage.jsx` (*Help & feedback*), `App.jsx:135` (public route, outside `ProtectedRoute`) | Every one of them is now a router link to `/contact`. `components/ui/SurveyBillboard.jsx` was updated to link there too but is **imported by nobody** — dead code |
+| Client | `services/feedbackApi.js` (`sendFeedback` → `POST /api/feedback` via the shared `apiRequest`), `services/feedbackContext.js` (`describeLocation`, `APP_VERSION`) | Attaches the page path, the `levelId`/`stageIdx` pair when the URL matches `/level/:levelId/stage/:stageIdx`, the app version (`VITE_APP_VERSION \|\| MODE \|\| 'unknown'`) and the user-agent |
+| API | `backend/api/routes/feedback.py:22-38` | Optional bearer auth (`Depends(optional_user)`); answers **202** `{"data":{"status":"received"}}`. A signed-out report with no address is **422** `"Add an email address so we can reply."`; unavailable storage is **502** `"Feedback storage is unavailable"`. Rate-limited by the generic `/api` bucket (240/min) |
+| Layers | `api/schemas/feedback.py` (bounds), `services/feedback_service.py` (reply-address rule), `repositories/feedback_repository.py` (insert) | The **account email wins over a typed one**; logs carry `category`, `authenticated` and `located` only — never the message |
+| Storage | `database/feedback.sql` (37 lines, run after `init.sql`) | One table, RLS **enabled with no policies** and a `GRANT` to `service_role`: the backend can write, nothing client-side can read a message back, and the operator triages rows in the Supabase dashboard |
+
+### Documents changed by this pass
+
+| Document | What changed |
+|---|---|
+| [API-REFERENCE.md](../04-api/API-REFERENCE.md) | New **§3.8 `POST /api/feedback`** in the house shape (path, optional auth, body table, 202 envelope, 422/502 errors, curl + PowerShell, the `sendFeedback` frontend equivalent, notes). Counts moved 7 → 8 endpoints; §6.2 now lists **five** real `apiRequest` call sites |
+| [SCHEMA.md](../03-database/SCHEMA.md) | New `feedback` table section with the verbatim DDL and all 11 columns, constraint/index coverage, and an explicit "RLS enabled, no policy" subsection. Verification queries now expect **4** tables and **0** policies on `feedback` |
+| [ERD.md](../03-database/ERD.md) | `FEEDBACK` entity and the `AUTH_USERS ‖--o{ FEEDBACK` relationship (`user_id` nullable, `ON DELETE SET NULL` so reports outlive the account). Five entities, four relationships |
+| [design-decisions.md](../07-explanation/design-decisions.md) | **ADR-014** — why in-app feedback replaced the Google Form, why RLS has no policies, and why an unattributable report is refused rather than stored |
+| [runbooks.md](../08-devops/runbooks.md) | RB-05 now diagnoses `"Feedback storage is unavailable"` — a PostgREST rejection usually caused by the missing table, not a dead network — with a fix and a verify step |
+| [run-locally-with-docker.md](../05-guides/how-to/run-locally-with-docker.md) | New **§3.2.1** one-time step: run `database/init.sql` and `database/feedback.sql` in the Supabase SQL editor; skip the second and every submission is a 502 with no dashboard row |
+| [installation-manual.md](../08-devops/installation-manual.md) | §1.2 gained the same one-time `database/feedback.sql` step and a callout on what its absence breaks |
+| [SRS.md](../01-product/SRS.md) | FR-43 rewritten as five acceptance criteria for the in-app form; scope now says 8 endpoints / 10 client routes / 4 tables; §5.1 table gained row 8 |
+| [PRD.md](../01-product/PRD.md) | FR-43 restated as an in-product feedback requirement, with the storage location named |
+| [SAD.md](../02-architecture/SAD.md) | The context diagram no longer draws an outbound Google Forms node; the reading note explains the `/contact` → `/api/feedback` → `public.feedback` path and the no-policy RLS |
+| [SDD.md](../02-architecture/SDD.md) | `feedback_service.py` paragraph in §3.6; `feedbackApi.js` / `feedbackContext.js` in §5.3; `ContactPage.jsx` and an eighth route screen in §5.6; inventory counts corrected |
+| [config-reference.md](../06-reference/config-reference.md) | §5 now documents `CONTACT_EMAIL` (empty default) instead of a live Google Forms URL |
+| [DIAGRAMS.md](../09-diagrams/DIAGRAMS.md) | D1 context diagram: the Forms node is gone, Supabase carries the feedback inbox, and the source list cites `ContactPage.jsx`, `feedback.py` and `feedback.sql` |
+| [ARCHITECTURE.md](../ARCHITECTURE.md) | The "where do I change X" row points at `CONTACT_EMAIL` and at the page + client module |
+| [file-map.md](file-map.md) | All 10 new files added with responsibilities and symbols; survey rows rewritten; `.e2e` suite count 18 → 19; dated delta noted in §2 |
+
+### Findings: stale claims and drift found on the way
+
+| Claim (where) | Reality |
+|---|---|
+| "**No rate limiting exists.**" (`docs/06-reference/error-codes.md:953`) | False. `backend/core/rate_limit.py` defines the `RATE_LIMIT_API` bucket (240/min by default) and `backend/main.py:66-70` wires `RateLimitMiddleware`; `POST /api/feedback` is covered by it. **Left unfixed** — outside this pass's scope, flagged here |
+| "**211** tracked files", verified at commit `3838343` (file-map §2) | `git ls-files` filtered now reports **374** paths. Only this release's +10 was applied (221), with a dated note; the rest of the map still describes the old baseline |
+| "the **7** application endpoints / the **9** client routes / the **3** database tables" (SRS §1) | 8 / 10 / 4 after this release. The client-route count was already low (forgot-password, reset-password and auth-confirm exist too); only `/contact` was added here, to stay inside this feature's delta |
+| `SURVEY_URL` = the full `docs.google.com/forms/...` URL, "renaming the survey is a one-line change" (config-reference §5) | The constant no longer exists. `appLinks.js` (15 lines) exports `CONTACT_EMAIL` only, and nothing in the client opens an external form |
+| `appLinks.js` (9) "holds the single survey URL"; `services/` 7 files / 426 lines; `pages/` 7 / 2,103 (SDD) | 15 lines and one address; 9 files / 511 lines; 8 files / 2,496 lines |
+| `SurveyButton.jsx` (36) and `SurveyBillboard.jsx` (57) line counts (SDD §5.2/§5.3) | 32 and 48 — both components shrank when the anchor became a router link |
+| "the survey is an outbound link only — the app never reads anything back" (SAD, DIAGRAMS) | True of the old design and now replaced rather than deleted: nothing reads a report back *through the API*, but the app is no longer outbound-only — it collects the report itself |
+
+### Deliberately left as written
+
+`docs/02-architecture/REFACTOR-NOTES.md` and `docs/REFACTOR_REPORT.md` still describe the survey
+link they refactored, and `docs/10-project/TEST-REPORT-2026-11-09.md` records a run made when the
+Google Form was live. Those are dated records of past work, not current claims, so they were not
+rewritten; `docs/_staging/**` was out of scope entirely.
+
+### Verification run for this entry
+
+- `backend/tests/test_feedback.py` — 8 tests: signed-in attribution, signed-out refusal without an
+  address, address lowercasing, account-email precedence, message trimming and both length bounds,
+  unknown category, malformed email. The suite patches `feedback_repository.insert_feedback` and
+  asserts no API test touches `supabase.table` directly.
+- Backend suite **33 passed**; frontend suite **105 passed**.
+- `.e2e/_contact-verify.mjs` — **44/44** checks in a real browser across both themes and
+  desktop / laptop / narrow / phone-landscape: the three validation paths, the success state, a
+  simulated transport failure (typed text preserved, `role="alert"` present), the signed-out
+  submission, and the profile + level-screen entry points.
+- Documentation pass: re-read every file before editing, then `grep -rn "Google Form\|SURVEY_URL"
+  docs/` — remaining hits are the two refactor records, the dated test report and this changelog
+  entry itself.
 
 ## 2026-09-28: Structure-preserving normalization — the Module 4 absorption guard
 
