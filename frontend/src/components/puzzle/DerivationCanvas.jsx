@@ -69,9 +69,10 @@ function DerivationCanvas({
 
   return (
     <div className="relative flex-1 min-h-0 flex flex-col">
-      {/* Live wallpaper layer — one flat canvas behind the equations, clipped
-          to the workspace and never hit-testable. It replaces the old static
-          28px gradient grid, which read flat on large screens. */}
+      {/* Blueprint sheet layer — one flat canvas behind the equations, clipped
+          to the workspace and never hit-testable. The grid is the only
+          ornament: it replaces the old static 28px gradient grid and the
+          travelling circuit traces that used to float over empty space. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <WorkspaceLiveBackdrop />
       </div>
