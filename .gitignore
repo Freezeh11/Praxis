@@ -29,3 +29,10 @@ dist/
 .e2e/shots-*/
 .e2e/ux/
 .sdd-work/
+
+# Local documentation build scratch (PDF -> DOCX reconstruction pipeline)
+.tmp-*/
+
+# Page images extracted from the capstone template PDFs (regenerable)
+docs/docs-capstone/*-[0-9]*_[0-9]*.png
+docs/docs-capstone/*-[0-9]*_[0-9]*.jpg
