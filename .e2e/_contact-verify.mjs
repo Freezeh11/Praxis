@@ -197,14 +197,32 @@ for (const [preset, theme, file] of [
   const profileLink = await page.evaluate(() => {
     const h = document.querySelector('#profile-feedback-title')
     const sec = h.closest('section')
-    const a = sec ? sec.querySelector('a[href="/contact"]') : null
-    return { href: a ? a.getAttribute('href') : null, text: a ? a.textContent.trim().slice(0, 40) : null }
+    const a = sec ? sec.querySelector('a[href*="docs.google.com/forms"]') : null
+    return {
+      href: a ? a.getAttribute('href') : null,
+      text: a ? a.textContent.trim().slice(0, 40) : null,
+      blank: a ? a.getAttribute('target') === '_blank' : false,
+      rel: a ? a.getAttribute('rel') : null,
+    }
   })
-  log('profile help section links to /contact', profileLink.href === '/contact', JSON.stringify(profileLink))
+  log(
+    'profile help section opens the learner survey in a new tab',
+    Boolean(profileLink.href && profileLink.href.startsWith('https://docs.google.com/forms/') && profileLink.blank && profileLink.rel === 'noopener noreferrer'),
+    JSON.stringify(profileLink),
+  )
   await page.goto(BASE + '/levels', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(2500)
-  const entry = await page.evaluate(() => [...document.querySelectorAll('a[href="/contact"]')].map(a => a.textContent.trim().replace(/\s+/g, ' ').slice(0, 40)))
-  log('levels page has a /contact entry point', entry.length > 0, JSON.stringify(entry))
+  const entry = await page.evaluate(() => {
+    const a = document.querySelector('[data-testid="survey-button"]')
+    return a
+      ? { href: a.getAttribute('href'), target: a.getAttribute('target'), text: a.textContent.trim().replace(/\s+/g, ' ').slice(0, 40) }
+      : null
+  })
+  log(
+    'levels page feedback button opens the learner survey',
+    Boolean(entry && entry.href && entry.href.startsWith('https://docs.google.com/forms/') && entry.target === '_blank'),
+    JSON.stringify(entry),
+  )
   await shot(page, 'contact-entry-levels-desktop-dark')
   await ctx.close()
 }
