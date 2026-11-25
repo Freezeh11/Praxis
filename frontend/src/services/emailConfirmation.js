@@ -25,7 +25,18 @@ const LINK_ERROR_COPY = {
  * @returns {boolean}
  */
 export function needsEmailConfirmation(result) {
-  return Boolean(result?.data?.user) && result?.data?.session == null && !result?.error
+  if (!result || result.error) return false
+  const data = result.data
+  if (!data || data.session != null) return false
+  // A signup that still owes us a confirmation answers with a pending account and
+  // no session. The pending user can arrive as `data.user`, but the live GoTrue
+  // endpoint returns it at the top level of the body (`id`, `email`,
+  // `confirmation_sent_at`, no `user` key), which the SDK then drops — leaving
+  // `{ user: null, session: null }`. Requiring `data.user` therefore read every
+  // real signup as an immediate success and never showed the inbox panel
+  // (measured against the project on 2026-11-25), so the rule is "a body with no
+  // error and no session means the link is in the inbox".
+  return true
 }
 
 /**
