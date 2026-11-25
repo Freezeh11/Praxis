@@ -7,6 +7,7 @@ import { NameForm, PasswordForm } from '../components/profile/AccountForms.jsx'
 import UserAvatar from '../components/profile/UserAvatar.jsx'
 import SignOutConfirmModal from '../components/ui/SignOutConfirmModal.jsx'
 import { LEVELS } from '../content/gameContent.js'
+import { SURVEY_URL } from '../config/appLinks.js'
 import { UNLOCK_AVERAGE_SCORE } from '../config/gameRules.js'
 import useSoundEnabled from '../hooks/useSoundEnabled.js'
 import { signOut } from '../services/authActions.js'
@@ -393,14 +394,16 @@ export default function ProfilePage() {
 
               <section className={panelClass + ' p-5 sm:p-6'} aria-labelledby="profile-feedback-title">
                 <h2 id="profile-feedback-title" className={sectionTitle}>Help &amp; feedback</h2>
-                <p className={'mt-1 ' + mutedText}>Found a bug, or a puzzle that could be clearer? Tell us directly, without leaving the app.</p>
-                <Link
-                  to="/contact"
+                <p className={'mt-1 ' + mutedText}>Found a bug, or a puzzle that could be clearer? The learner survey takes a minute and is read by the person building Praxis.</p>
+                <a
+                  href={SURVEY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-bold text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:focus-visible:ring-cyan-400/40"
                 >
-                  <Icon name="mail" className="text-base" />
-                  Contact &amp; feedback
-                </Link>
+                  <Icon name="clipboard" className="text-base" />
+                  Open the learner survey
+                </a>
               </section>
             </div>
           </div>

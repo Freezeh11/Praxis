@@ -1,12 +1,13 @@
 import Icon from './Icon'
+import { SURVEY_URL } from '../../config/appLinks.js'
+
 /**
  * SurveyBillboard — High-visibility "ad billboard" banner inviting learners
- * to share feedback through the external survey.
+ * to answer the learner survey.
  *
- * Clean presentational component linking into the in-app feedback form.
+ * Clean presentational component: one outbound anchor into the Google Docs
+ * form, opened in a new tab so the level grid behind it is left untouched.
  */
-import { Link } from 'react-router-dom'
-
 export default function SurveyBillboard({ className = '' }) {
   return (
     <aside
@@ -31,18 +32,20 @@ export default function SurveyBillboard({ className = '' }) {
               Help Shape the Future of Praxis!
             </h3>
             <p className="mt-0.5 text-xs text-text-2 leading-relaxed max-w-xl">
-              Tell us what broke, what was tricky, and what you would like to see next. Your report goes straight to the person building Praxis.
+              Tell us what broke, what was tricky, and what you would like to see next. The survey is read by the person building Praxis.
             </p>
           </div>
         </div>
 
-        <Link
-          to="/contact"
+        <a
+          href={SURVEY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="shrink-0 self-start sm:self-center inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 px-4 py-2.5 font-sans text-xs sm:text-sm font-bold text-amber-900 shadow-sm hover:brightness-95 hover:shadow active:scale-[0.98] transition-all cursor-pointer ring-1 ring-amber-400/50"
         >
-          <span>Open the form</span>
+          <span>Open the survey</span>
           <span aria-hidden="true" className="text-sm">→</span>
-        </Link>
+        </a>
       </div>
     </aside>
   )
