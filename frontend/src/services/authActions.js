@@ -6,6 +6,7 @@
  */
 import { notifyAuthChanged } from '../state/authEvents.js'
 import { getSupabase } from './supabaseClient.js'
+import { describeResetError, describeResendError, describeSignupError } from './authErrors.js'
 import { needsEmailConfirmation } from './emailConfirmation.js'
 import { passwordError } from './passwordPolicy.js'
 
@@ -37,7 +38,10 @@ export const signUp = {
       options: { data: { name }, emailRedirectTo: emailRedirectTo() },
     })
     if (error) {
-      return { data: null, error: { message: error.message, code: error.code ?? null } }
+      // A spent mail quota and a duplicate address need different advice than
+      // the provider's raw text, and the rate-limit answer means no account was
+      // created at all — see services/authErrors.js.
+      return { data: null, error: describeSignupError(error) }
     }
     // Confirmation required: Supabase withheld the session until the link is
     // opened, so publishing an auth change here would sign nobody in and could
@@ -71,15 +75,7 @@ export const resendVerificationEmail = async (email) => {
     email: address,
     options: { emailRedirectTo: emailRedirectTo() },
   })
-  if (error) {
-    let message = error.message
-    if (/rate limit|too many|seconds/i.test(message)) {
-      message = 'Too many confirmation emails. Wait a minute and try again.'
-    } else if (/already confirmed/i.test(message)) {
-      message = 'That address is already confirmed. Sign in instead.'
-    }
-    return { error: { message } }
-  }
+  if (error) return { error: describeResendError(error) }
   return { error: null }
 }
 
@@ -96,12 +92,7 @@ export const requestPasswordReset = async (email) => {
   const redirectTo = `${window.location.origin}/reset-password`
   const supabase = await getSupabase()
   const { error } = await supabase.auth.resetPasswordForEmail(address, { redirectTo })
-  if (error) {
-    const message = /rate limit|too many|seconds/i.test(error.message)
-      ? 'Too many reset requests. Wait a minute and try again.'
-      : error.message
-    return { error: { message } }
-  }
+  if (error) return { error: describeResetError(error) }
   return { error: null }
 }
 

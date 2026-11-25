@@ -43,6 +43,10 @@ export default function RegisterPage() {
   // first. It swaps the form for a "check your inbox" panel instead of letting a
   // pending account look like a completed signup.
   const [sentTo, setSentTo] = useState('')
+  // Signup refusals that need an explanation the learner can read twice — above
+  // all a spent mail quota, where retrying immediately cannot work and the
+  // account was never created. A toast alone disappears before that lands.
+  const [submitNotice, setSubmitNotice] = useState('')
 
   // Wait for session state to update before navigating
   useEffect(() => {
@@ -69,6 +73,7 @@ export default function RegisterPage() {
       return
     }
     setErrors({})
+    setSubmitNotice('')
 
     setLoading(true)
 
@@ -80,7 +85,10 @@ export default function RegisterPage() {
       })
 
       if (result.error) {
-        toast.error(result.error.message || 'Registration failed. Please try again.')
+        // Rendered inline (role="alert") rather than only toasted: the mail-quota
+        // refusal tells the learner to come back later, and a disappearing toast
+        // cannot be re-read or found again by a screen reader.
+        setSubmitNotice(result.error.message || 'Registration failed. Please try again.')
       } else if (result.needsEmailConfirmation) {
         // No session exists yet: stay on the page and show where the link went.
         setSentTo(email.trim())
@@ -90,7 +98,7 @@ export default function RegisterPage() {
         // useEffect will handle the navigation once the session state updates globally
       }
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      setSubmitNotice('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -176,7 +184,14 @@ export default function RegisterPage() {
                     lockEmail
                     variant="primary"
                   />
-                  <button type="button" onClick={() => setSentTo('')} className={secondaryActionClassName}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSentTo('')
+                      setSubmitNotice('')
+                    }}
+                    className={secondaryActionClassName}
+                  >
                     Use a Different Email
                   </button>
                 </div>
@@ -253,6 +268,16 @@ export default function RegisterPage() {
                     error={errors.confirm || (!passwordsMatch ? 'Passwords do not match.' : '')}
                     hintLive
                   />
+
+                  {submitNotice ? (
+                    <p
+                      id="register-submit-error"
+                      role="alert"
+                      className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-rose-700 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-300"
+                    >
+                      {submitNotice}
+                    </p>
+                  ) : null}
 
                   {/* Only a pending request disables the button: a disabled button
                       with no explanation is a dead end for keyboard and screen-reader

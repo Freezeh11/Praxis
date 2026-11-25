@@ -84,6 +84,41 @@ async function bodyText(page) {
   await context.close()
 }
 
+// B2. Signup refused because the hourly mail quota is spent -> an inline, re-readable
+// explanation. Measured 2026-11-25: that answer creates no account at all, so the
+// copy must not tell the learner to check an inbox.
+{
+  const { context, page } = await fresh()
+  let signupCalls = 0
+  await page.route('**/auth/v1/signup**', async (route) => {
+    signupCalls += 1
+    await route.fulfill({
+      status: 429,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 429, error_code: 'over_email_send_rate_limit', msg: 'email rate limit exceeded' }),
+    })
+  })
+  await page.goto(BASE + '/register', { waitUntil: 'networkidle' })
+  await page.fill('#register-name', 'Learner')
+  await page.fill('#register-email', EMAIL)
+  await page.fill('#register-password', 'Sup3rSecret!23')
+  await page.fill('#register-confirm', 'Sup3rSecret!23')
+  await page.click('button[type="submit"]')
+  await page.waitForTimeout(1200)
+  const text = await bodyText(page)
+  const alert = page.locator('#register-submit-error')
+  check('rate-limited signup posts once', signupCalls === 1, 'calls=' + signupCalls)
+  check('rate-limited signup shows an inline alert', (await alert.count()) === 1)
+  check('alert says the account was not created', /not created/i.test(await alert.innerText()))
+  check('alert tells the learner to come back later', /hour/i.test(await alert.innerText()))
+  check('no inbox panel is promised for a mail never sent', !text.includes('Confirm your email'))
+  check('no success is claimed', !/welcome to praxis/i.test(text))
+  check('the typed address survives the refusal', (await page.inputValue('#register-email')) === EMAIL)
+  check('app stayed on the register screen', page.url().includes('/register'), page.url())
+  await page.screenshot({ path: SHOTS + '/email-register-rate-limited.png', fullPage: true })
+  await context.close()
+}
+
 // C. Sign-in of an unconfirmed account -> amber notice, not a credentials error.
 {
   const { context, page } = await fresh()
