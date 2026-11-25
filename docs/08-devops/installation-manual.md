@@ -242,10 +242,18 @@ Supabase's **Confirm email** setting decides what happens next:
 
 - **Confirm email OFF** (fastest for local development): `signUp` returns a session immediately,
   `authActions.js` broadcasts the auth change and the new learner lands on `/levels`.
-- **Confirm email ON** (the Supabase default for new projects): `signUp` returns a user but no
-  session. `RegisterPage` swaps its form for a **Check your inbox** panel that names the address and
+- **Confirm email ON** (the Supabase default for new projects): `signUp` returns no session.
+  `RegisterPage` swaps its form for a **Check your inbox** panel that names the address and
   offers *Resend confirmation link* (30 s cooldown) plus *Use a Different Email*; the learner is
-  **never** routed to `/levels` in this state. The emailed link opens `/auth/confirm`
+  **never** routed to `/levels` in this state.
+
+  The panel's trigger is "no error and no session", not "a user with no session": GoTrue answers a
+  confirmation-pending signup with the pending account at the **top level** of the response body
+  (`id`, `email`, `confirmation_sent_at`, and no `user` key), and supabase-js reads `data.user`,
+  so what reaches the app is `{ user: null, session: null }` with `error: null`. Keying the panel
+  off `data.user` therefore reported every real signup as an immediate success and never showed
+  the panel — measured against the project on 2026-11-25. The rule now lives in
+  `frontend/src/services/emailConfirmation.js:27`. The emailed link opens `/auth/confirm`
   (`ConfirmEmailPage`), which exchanges the token, shows **Email confirmed** and offers
   *Continue to Levels*. An expired, reused or malformed link renders the reason and a resend form on
   that same page, and `/login` does the same when Supabase answers `email_not_confirmed`.
@@ -265,6 +273,16 @@ signup; for anything public, leave it on.
 A redirect target missing from **Redirect URLs** is the usual cause of a link that lands on the
 wrong page: Supabase falls back to **Site URL** and the token never arrives, so `/auth/confirm`
 reports "Open the link from your email" (recoverable with its resend form).
+
+The deployment behind **Site URL** must also be built from a commit that **contains** the
+`/auth/confirm` route. A site whose bundle predates it answers that path with the SPA shell but
+cannot finish the exchange, and the learner sees the home page while the link silently expires. To
+check a live bundle:
+
+```bash
+curl -s https://<site>/ | grep -o '/assets/index-[A-Za-z0-9_-]*\.js' | head -1
+curl -s https://<site>/assets/index-<hash>.js | grep -c 'auth/confirm'   # 0 = stale build
+```
 
 **✅ Verify Stage 1:** in the Supabase **Table Editor** you should see `user_progress`,
 `stage_progress` and `score_history` under schema `public`. Then run this in the SQL editor:
