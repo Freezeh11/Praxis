@@ -31,3 +31,13 @@ export function resolveLawAnimation(lawId) {
   const entry = LAW_ANIMATIONS.find(({ matches }) => matches(lawId))
   return entry ? entry.animation : null
 }
+
+/**
+ * True when this lawId has a real animation. Callers use it to skip the
+ * 'applying' wait for laws that would animate nothing (see startAnimation in
+ * state/useGameState.js): a law with no module and no visible motion must not
+ * hold the canvas in a loading state for the length of the animation window.
+ */
+export function hasLawAnimation(lawId) {
+  return Boolean(resolveLawAnimation(lawId))
+}

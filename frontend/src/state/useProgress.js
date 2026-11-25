@@ -52,7 +52,6 @@ export function useProgress() {
     deductPoints: store.deductPoints,
     completeStage: store.completeStage,
     completeLevel: store.completeLevel,
-    resetStreak: store.resetStreak,
     saveScore: store.saveScore,
     saveSolution: store.saveSolution,
     resetLevelProgress: store.resetLevelProgress,

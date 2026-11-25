@@ -62,11 +62,56 @@ test('buildSandboxPuzzle refuses an expression that is already simplest', () => 
   assert.ok(result.error.length > 0)
 })
 
+test('buildSandboxPuzzle rescues an expression only expansion can simplify', () => {
+  // A(B + A') has no reducing move at all, yet the workspace offers Distributive
+  // (Expand) and expanding exposes the complement: A(B + A') -> AB + AA' -> AB.
+  // The reduction-only search called this "already in its simplest form", which
+  // dead-ended the accepted sandbox chip.
+  const result = buildSandboxPuzzle("A(B + A')")
+  assert.equal(result.ok, true, result.error)
+  assert.equal(canonText(parseExpr(result.puzzle.goal)), canonText(parseExpr('AB')))
+  assert.ok(result.puzzle.optimalSteps >= 1, 'an expansion-derived goal needs at least one step')
+  assert.equal(result.puzzle.allowExpand, true)
+  // The shipped goal must be terminal under the reducing move set, or the learner
+  // could simplify past the target.
+  assert.equal(getLegalTransitions(parseExpr(result.puzzle.goal), { allowExpand: false }).length, 0)
+})
+
+test('buildSandboxPuzzle still refuses a factored form with nothing to simplify', () => {
+  // Expand and Factor cycle here (A(B + C) <-> AB + AC), so no terminal state
+  // exists in the expanding move set and the refusal must stand.
+  const result = buildSandboxPuzzle('A(B + C)')
+  assert.equal(result.ok, false)
+  assert.equal(result.errorCode, 'already-simplest')
+})
+
 test('buildSandboxPuzzle passes validation messages through unchanged', () => {
   const result = buildSandboxPuzzle('x ^ y')
   assert.equal(result.ok, false)
   assert.equal(result.errorCode, 'invalid-chars')
   assert.equal(result.error, validateSandboxInput('x ^ y').error)
+})
+
+test('validateSandboxInput refuses an expression beyond the token ceiling', () => {
+  const long = '(A+B)'.repeat(20) // 100 tokens, far past SANDBOX.maxTokens
+  const verdict = validateSandboxInput(long)
+  assert.equal(verdict.valid, false)
+  assert.equal(verdict.errorCode, 'too-complex')
+  assert.match(verdict.error, /too complex/i)
+})
+
+test('buildSandboxPuzzle refuses an oversized expression without searching', () => {
+  const started = Date.now()
+  const result = buildSandboxPuzzle('(A+B)'.repeat(20))
+  assert.equal(result.ok, false)
+  assert.equal(result.errorCode, 'too-complex')
+  // The ceiling is checked before any BFS, so this must return immediately.
+  assert.ok(Date.now() - started < 250, 'oversized input must not start a search')
+})
+
+test('findSimplestForm honours a wall-clock deadline', () => {
+  const result = findSimplestForm(parseExpr('x + xy'), { deadline: Date.now() - 1 })
+  assert.equal(result.found, false, 'an expired deadline must abort the search')
 })
 
 test('every curated pool entry is solvable and reaches a terminal form', () => {

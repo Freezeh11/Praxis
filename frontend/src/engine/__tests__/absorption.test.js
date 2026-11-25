@@ -27,7 +27,9 @@ const term = (path) => ({ path, isTermSel: true })
 const literal = (path) => ({ path, isTermSel: false })
 
 /** The solver budgets the reproduction was reported with (sandbox settings). */
-const SOLVER_OPTIONS = { maxDepth: 14, maxStates: 24000, allowExpand: true }
+// Expansion is a sandbox-only exploration move; these regression cases describe
+// the simplification law set, so the goal search runs without it.
+const SOLVER_OPTIONS = { maxDepth: 14, maxStates: 24000 }
 
 /**
  * Independent irredundancy oracle: `survivor` absorbs `absorbed` in a SUM when

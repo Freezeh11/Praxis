@@ -5,7 +5,7 @@ import Icon from '../ui/Icon'
  * title/description, exit control, manual action button, and its own
  * pre-measurement placement style helper.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { getTooltipStyle } from './coachCardFallbackStyle'
 
 export default function CoachCard({
@@ -24,9 +24,17 @@ export default function CoachCard({
   onActionButton,
 }) {
   return (
-    <AnimatePresence mode="wait">
+    <>
+      {/* A polite live region outside the keyed card: the card itself remounts on
+          every step, so a screen reader needs a stable node to announce into. */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {currentStep
+          ? `Step ${currentStepIdx + 1} of ${stepsForStage.length}: ${currentStep.title}`
+          : ''}
+      </div>
+      <AnimatePresence mode="wait">
       {!showWelcomeModal && !isPreLawHighlight && !isAnimating && currentStep && (
-        <motion.div
+        <m.div
           ref={cardRef}
           data-tutorial-card="true"
           key={currentStep.id}
@@ -34,7 +42,7 @@ export default function CoachCard({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -6 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="praxis-modal-panel fixed bg-bg-card rounded-2xl p-5 [@media(max-height:480px)]:p-4 shadow-2xl border border-border w-[330px] [@media(max-height:480px)]:w-auto flex flex-col gap-3 [@media(max-height:480px)]:gap-2.5 pointer-events-auto"
+          className="praxis-modal-panel fixed bg-white rounded-2xl p-5 [@media(max-height:480px)]:p-4 shadow-xl border border-slate-200 dark:bg-slate-800/95 dark:border-cyan-400/50 dark:text-slate-100 dark:shadow-[0_16px_48px_rgba(0,0,0,0.8),0_0_24px_rgba(34,211,238,0.18)] w-[330px] [@media(max-height:480px)]:w-auto flex flex-col gap-3 [@media(max-height:480px)]:gap-2.5 pointer-events-auto"
           style={{
             zIndex: 55,
             ...getTooltipStyle(currentStep, highlightRect),
@@ -42,14 +50,14 @@ export default function CoachCard({
         >
         {/* Card Header: Subtle minimalist step tracker without pill badges */}
         <div className="flex items-center justify-between pb-1 border-b border-border/50 [@media(max-height:480px)]:sticky [@media(max-height:480px)]:top-0 [@media(max-height:480px)]:z-[2] [@media(max-height:480px)]:bg-bg-card">
-          <span className="text-[11px] font-bold text-teal tracking-wider uppercase">
+          <span className="text-[11px] font-bold text-sky-700 dark:text-cyan-300 tracking-wider uppercase">
             Step {currentStepIdx + 1} of {stepsForStage.length}
           </span>
           <button
             data-tutorial-exit="true"
             type="button"
             onClick={onSkip}
-            className="text-[11px] [@media(max-height:480px)]:min-h-11 [@media(max-height:480px)]:px-2 [@media(max-height:480px)]:inline-flex [@media(max-height:480px)]:items-center font-semibold text-text-3 hover:text-text-1 hover:underline transition-colors"
+            className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700/80 dark:hover:bg-slate-600 dark:text-slate-200 transition-colors [@media(max-height:480px)]:min-h-11 [@media(max-height:480px)]:inline-flex [@media(max-height:480px)]:items-center"
           >
             Exit Tutorial
           </button>
@@ -57,7 +65,7 @@ export default function CoachCard({
 
         {/* Title & Description */}
         <div className="py-0.5">
-          <h4 className="text-[14.5px] font-extrabold text-text-1 mb-1 tracking-tight">
+          <h4 className="text-[14.5px] font-extrabold text-slate-900 dark:text-white mb-1 tracking-tight">
             {(() => {
               if (stageIdx === 3 && currentStep.id === 'challenge-solve') {
                 const lastLaw = steps.length > 0 ? steps[steps.length - 1]?.law : null
@@ -69,12 +77,12 @@ export default function CoachCard({
               return currentStep.title
             })()}
           </h4>
-          <p className="text-[12.5px] text-text-2 leading-relaxed">
+          <p className="text-[12.5px] text-slate-600 dark:text-slate-300 leading-relaxed">
             {(() => {
               if (stageIdx === 3 && currentStep.id === 'challenge-solve') {
                 const lastLaw = steps.length > 0 ? steps[steps.length - 1]?.law : null
                 if (lastLaw?.includes('Absorption') && !isComplete) {
-                  return 'Absorbing "xy" into "x" left "x + x\'y", which cannot be simplified further. Use "↶ Undo" or "↺ Reset" at the top to retrace your move and try a different approach (like factoring common variables)!'
+                  return 'Absorbing "xy" into "x" left "x + x\'y", which is not the simplest form yet. Use "↶ Undo" or "↺ Reset" at the top to retrace your move and try a different approach (like factoring common variables)!'
                 }
                 return currentStep.desc
               }
@@ -95,8 +103,9 @@ export default function CoachCard({
             </button>
           </div>
         )}
-      </motion.div>
+      </m.div>
     )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   )
 }

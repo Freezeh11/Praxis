@@ -59,20 +59,18 @@ are **Supabase** (database + identity) and two hosting platforms.
 flowchart TB
     learner["Tutor / learner<br/>(browser: desktop, tablet, phone)"]
     praxis["<b>Praxis</b><br/>Interactive Boolean-algebra trainer<br/>derive · score · practice"]
-    supa["<b>Supabase</b><br/>PostgreSQL + Auth<br/>(identity, progress, score history)"]
+    supa["<b>Supabase</b><br/>PostgreSQL + Auth<br/>(identity, progress, score history, feedback inbox)"]
     render["<b>Render</b><br/>Python web service<br/>uvicorn main:app"]
     vercel["<b>Vercel</b><br/>Static SPA hosting<br/>+ /api rewrite"]
-    forms["<b>Google Forms</b><br/>learner feedback survey<br/>(external link only)"]
 
     learner -->|"uses HTTPS"| praxis
     praxis -->|"signs in, reads session<br/>@supabase/supabase-js"| supa
     praxis -->|"bearer token on /api/progress*"| render
     praxis -.->|"static assets served from"| vercel
-    praxis -.->|"opens in a new tab"| forms
     render -->|"verifies JWT · PostgREST reads/writes"| supa
 
     classDef ext fill:#f8fafc,stroke:#94a3b8,color:#0f172a
-    class supa,render,vercel,forms ext
+    class supa,render,vercel ext
 ```
 
 **Reading the lines.**
@@ -84,8 +82,13 @@ flowchart TB
   (`frontend/vite.config.js:30`); in production Vercel rewrites `/api/*` to the Render host
   (`frontend/vercel.json:3-6`). The SPA always calls **relative** paths
   (`frontend/src/services/apiClient.js:63`), which is why the same build works in both.
-- The survey is an outbound link only — the app never reads anything back
-  (`frontend/src/config/appLinks.js:9`).
+- Feedback is collected **inside** the product. The **Feedback** button routes to
+  `/contact` (`frontend/src/pages/ContactPage.jsx:93`), which posts a report to `/api/feedback`;
+  the backend writes one row into `public.feedback` through its service-role client. That table
+  has RLS enabled and **no policies**, so nothing client-side can read a message back — the
+  operator triages rows in the Supabase dashboard
+  ([ADR-014](../07-explanation/design-decisions.md#adr-014--feedback-is-collected-in-app-into-a-write-only-table)).
+  No external form is opened, and no survey URL remains in the client.
 
 **Trust boundaries.** The learner's browser is untrusted: it may fabricate a score, a
 progress snapshot or a sandbox expression. The API trusts a valid Supabase JWT for *identity*

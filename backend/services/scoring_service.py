@@ -80,16 +80,15 @@ def compute_score(
 
 
 def _resolve_optimal(optimal_steps: int | None, puzzle: dict[str, Any], steps_used: int) -> int:
-    """Pick the optimal step count: explicit override, else the puzzle's own."""
-    optimal = (
-        optimal_steps
-        if (optimal_steps is not None and optimal_steps > 0)
-        else puzzle.get("optimalSteps", steps_used)
-    )
-    # The benchmark belongs to the puzzle, not the submitted derivation. Shorter
-    # routes already receive full efficiency in _efficiency; changing this value
-    # made the displayed optimum follow the learner's step count.
-    return optimal
+    """The benchmark comes from the puzzle only.
+
+    optimal_steps is accepted by the schema for backwards compatibility with
+    older clients, but a caller-supplied benchmark would let anyone post
+    stepsUsed=1 with optimalSteps=1 and collect a perfect score for any stage.
+    It is deliberately ignored.
+    """
+    del optimal_steps  # untrusted client claim; never affects scoring
+    return puzzle.get("optimalSteps", steps_used)
 
 
 def _efficiency(steps_used: int, optimal: int) -> float:

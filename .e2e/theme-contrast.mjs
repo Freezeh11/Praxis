@@ -17,6 +17,9 @@ const {chromium}=require(process.env.PRAXIS_PLAYWRIGHT_MODULE || 'playwright')
 const root=fileURLToPath(new URL('../frontend',import.meta.url))
 const resultDir=fileURLToPath(new URL('./_results',import.meta.url))
 process.chdir(root)
+// The dev CSP narrows connect-src to the configured Supabase origin; tests mock that origin.
+process.env.VITE_SUPABASE_URL='https://praxis-test.invalid'
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY='isolated-test-key'
 const server=await createServer({root,configFile:path.join(root,'vite.config.js'),
   define:{'import.meta.env.VITE_SUPABASE_URL':JSON.stringify('https://praxis-test.invalid'),'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY':JSON.stringify('isolated-test-key')},
   server:{host:'127.0.0.1',port:5191,strictPort:true,open:false}})
@@ -112,10 +115,11 @@ try{
   await page.evaluate(theme=>{localStorage.setItem('praxis-theme',theme)},theme)
   for(const route of ['','levels','level/0/stages','level/1/stages','profile','level/1/stage/1','sandbox']){
    await page.goto(base+route)
-   await page.locator('header, [data-testid="header-back-button"]').first().waitFor()
+   await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0)
    await page.evaluate(()=>document.fonts.ready)
-   // Let route hydration and color transitions settle before sampling colors.
-   await page.waitForTimeout(400)
+   // Let route hydration, the stagger-in and color transitions settle before
+   // sampling colors or taking the reference screenshot.
+   await page.waitForTimeout(900)
    await audit(theme+':'+(route||'home'))
    for(const button of await page.locator('button[title*="Tutorial"], [data-popup-anchor="tutorial"]').all()){
     if(await button.isVisible()){await button.hover();await page.waitForTimeout(250);await audit(theme+':'+route+':tutorial-hover')}
@@ -130,7 +134,7 @@ try{
     await audit(theme+':hint')
     await page.locator('[data-testid="hint-bubble-close"]').click()
    }
-   if(theme==='dark'&&['levels','level/0/stages','level/1/stage/1','profile'].includes(route))await page.screenshot({path:path.join(resultDir,'contrast-'+route.replaceAll('/','-')+'.png'),fullPage:true})
+   if(['','levels','level/0/stages','level/1/stage/1','profile','sandbox'].includes(route))await page.screenshot({path:path.join(resultDir,'contrast-'+theme+'-'+route.replaceAll('/','-')+'.png'),fullPage:true})
   }
  }
  for(const theme of ['light','dark']){
@@ -148,6 +152,10 @@ try{
   await page.getByRole('button',{name:/start|begin|let/i}).last().hover()
   await page.waitForTimeout(250);await audit(theme+':tutorial-final-hover')
   await page.screenshot({path:path.join(resultDir,'contrast-'+theme+'-tutorial-welcome.png'),fullPage:true})
+  await page.getByRole('button',{name:/start|begin|let/i}).last().click()
+  await page.locator('[data-tutorial-card="true"]').waitFor()
+  await page.waitForTimeout(600);await audit(theme+':tutorial-spotlight')
+  await page.screenshot({path:path.join(resultDir,'contrast-'+theme+'-tutorial-spotlight.png'),fullPage:false})
   await page.goto(base+'level/1/stage/1');await page.locator('[data-tutorial="active-equation"]').waitFor()
   if(await page.locator('[data-tutorial="reopen-score-btn"]').count()){
    await page.getByTitle('Reset problem to start',{exact:true}).click()

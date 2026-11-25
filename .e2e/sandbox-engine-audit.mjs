@@ -166,7 +166,16 @@ function playableProblems(raw, r) {
   if (!(r.puzzle.optimalSteps >= 1 && r.puzzle.optimalSteps === r.puzzle.solutionPath.length)) {
     problems.push(`optimalSteps ${r.puzzle.optimalSteps} vs path ${r.puzzle.solutionPath.length}`)
   }
-  if (getLegalTransitions(goal, SANDBOX_ENGINE).length !== 0) problems.push(`goal "${r.puzzle.goal}" is not terminal`)
+  /* Terminality is judged on the REDUCTION move set, matching isUiTerminal in
+     input.js. Judging it on SANDBOX_ENGINE (expand + factor) makes every factored
+     goal non-terminal, because those two laws cycle:
+     A(B + C) --Expand--> AB + AC --Factor--> A(B + C). No fixed point exists for
+     a factored form in that set, so this assertion was unsatisfiable for every
+     "goal" that arrived factored. Expansion is still exercised where it matters:
+     the start-must-have-a-move check and the path replay both offer it. */
+  if (getLegalTransitions(goal, { allowExpand: false }).length !== 0) {
+    problems.push(`goal "${r.puzzle.goal}" is not terminal`)
+  }
   if (!isEquivalent(start, goal)) problems.push('goal is not equivalent to the start')
   if (canonText(start) === canonText(goal)) problems.push('goal equals the start')
   if (getLegalTransitions(start, SANDBOX_ENGINE).length === 0) problems.push('start offers no legal move')

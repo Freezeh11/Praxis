@@ -97,7 +97,7 @@ Praxis/
 
 | Module | Owns |
 |---|---|
-| `progressStore.js` | points, streak, per-stage scores/solutions, tutorial gates. Module-level store: `subscribe`, `getSnapshot`, `setUser`, actions, pure selectors. localStorage is the fast path, `/api/progress/save` the durable one. |
+| `progressStore.js` | points, per-stage scores/stars/solutions, tutorial gates. Module-level store: `subscribe`, `getSnapshot`, `setUser`, actions, pure selectors. localStorage is the fast path, `/api/progress/save` the durable one. |
 | `useProgress.js` | React binding (`useSyncExternalStore`) |
 | `useGameState.js` | the current puzzle session: tree, selection, step history, hints, animations, optimal path |
 | `hintText.js` | hint/guide wording built from an engine suggestion (pure) |
@@ -198,12 +198,13 @@ Key properties:
 | Generated (random) puzzles | `frontend/src/engine/sandbox/generator.js` |
 | Scoring weights, star thresholds, unlock rule, timings, guide cost | `frontend/src/config/gameRules.js` **and** `backend/config/constants.py` |
 | A storage key | `frontend/src/config/storageKeys.js` |
-| The learner survey link | `frontend/src/config/appLinks.js` |
+| The contact address shown on `/contact` (optional; the form needs none) | `frontend/src/config/appLinks.js` (`CONTACT_EMAIL`) |
+| The feedback form's fields, or where a report is posted | `frontend/src/pages/ContactPage.jsx` + `frontend/src/services/feedbackApi.js` |
 | A sound cue, its notes or the master volume | `frontend/src/config/gameRules.js` (`SOUND`) + `frontend/src/services/soundEffects.js` |
 | When a cue fires | `frontend/src/state/useGameState.js` (step/hint/guide/reset/wrong) and `components/puzzle/usePuzzleSession.js` (complete) |
 | Dragging a term or factor | `frontend/src/hooks/useTermDrag.js` |
 | The laws reference panel geometry | `frontend/src/components/puzzle/LawsReferenceSheet.jsx` + `.praxis-sheet-panel` / `.praxis-drawer-panel` in `styles/utilities.css` |
-| Points/streak/stage completion behaviour | `frontend/src/state/progressStore.js` |
+| Points/stars/stage completion behaviour | `frontend/src/state/progressStore.js` |
 | Selection, undo, hint, animation sequencing | `frontend/src/state/useGameState.js` |
 | An API call or an error message | `frontend/src/services/apiClient.js` + the matching `*Api.js` |
 | A score or progress endpoint | `backend/api/routes/*.py` (thin) → `backend/services/*.py` |

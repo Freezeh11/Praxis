@@ -927,10 +927,21 @@ for (const testCase of (wantsSection(1) ? WORKSPACE_CASES : [])) {
   tipPage.on('dialog', d => d.dismiss().catch(() => {}))
   const reached = SKIP_TIP ? false : await reachStepInspectionTip(tipPage)
   if (reached) {
+    // A one-shot explanation card rather than an anchored annotation: it sits
+    // in the centre of the viewport on both axes (the user report was that the
+    // pop message was not centred), so it may overlay the canvas area.
     await assertPopup(tipPage, {
       name: `1.8 step-inspection tip ${name}`,
       popupSel: '[data-testid="step-inspection-tip"]',
+      coverControls: false,
     })
+    log(`1.8a the step-inspection tip is centred ${name}`, await tipPage.evaluate(() => {
+      const el = document.querySelector('[data-testid="step-inspection-tip"]')
+      if (!el) return false
+      const r = el.getBoundingClientRect()
+      return Math.abs(r.left + r.width / 2 - innerWidth / 2) <= 2 &&
+        Math.abs(r.top + r.height / 2 - innerHeight / 2) <= 2
+    }))
     await shot(tipPage, `popup-fixed-${name}-step-inspection-tip`)
     const dismissed = await tipPage.evaluate(() => {
       const tip = document.querySelector('[data-testid="step-inspection-tip"]')
@@ -1771,10 +1782,21 @@ for (const testCase of (wantsSection(1) ? WORKSPACE_CASES : [])) {
   tipPage.on('dialog', d => d.dismiss().catch(() => {}))
   const reached = SKIP_TIP ? false : await reachStepInspectionTip(tipPage)
   if (reached) {
+    // A one-shot explanation card rather than an anchored annotation: it sits
+    // in the centre of the viewport on both axes (the user report was that the
+    // pop message was not centred), so it may overlay the canvas area.
     await assertPopup(tipPage, {
       name: `1.8 step-inspection tip ${name}`,
       popupSel: '[data-testid="step-inspection-tip"]',
+      coverControls: false,
     })
+    log(`1.8a the step-inspection tip is centred ${name}`, await tipPage.evaluate(() => {
+      const el = document.querySelector('[data-testid="step-inspection-tip"]')
+      if (!el) return false
+      const r = el.getBoundingClientRect()
+      return Math.abs(r.left + r.width / 2 - innerWidth / 2) <= 2 &&
+        Math.abs(r.top + r.height / 2 - innerHeight / 2) <= 2
+    }))
     await shot(tipPage, `popup-fixed-${name}-step-inspection-tip`)
     const dismissed = await tipPage.evaluate(() => {
       const tip = document.querySelector('[data-testid="step-inspection-tip"]')
@@ -2294,10 +2316,21 @@ for (const testCase of (wantsSection(1) ? WORKSPACE_CASES : [])) {
   tipPage.on('dialog', d => d.dismiss().catch(() => {}))
   const reached = SKIP_TIP ? false : await reachStepInspectionTip(tipPage)
   if (reached) {
+    // A one-shot explanation card rather than an anchored annotation: it sits
+    // in the centre of the viewport on both axes (the user report was that the
+    // pop message was not centred), so it may overlay the canvas area.
     await assertPopup(tipPage, {
       name: `1.8 step-inspection tip ${name}`,
       popupSel: '[data-testid="step-inspection-tip"]',
+      coverControls: false,
     })
+    log(`1.8a the step-inspection tip is centred ${name}`, await tipPage.evaluate(() => {
+      const el = document.querySelector('[data-testid="step-inspection-tip"]')
+      if (!el) return false
+      const r = el.getBoundingClientRect()
+      return Math.abs(r.left + r.width / 2 - innerWidth / 2) <= 2 &&
+        Math.abs(r.top + r.height / 2 - innerHeight / 2) <= 2
+    }))
     await shot(tipPage, `popup-fixed-${name}-step-inspection-tip`)
     const dismissed = await tipPage.evaluate(() => {
       const tip = document.querySelector('[data-testid="step-inspection-tip"]')

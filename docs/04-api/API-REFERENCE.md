@@ -2,7 +2,7 @@
 
 **What this is.** The complete reference for the Praxis HTTP API — a small FastAPI service
 that serves the static game content (levels and Boolean law cards) and scores submitted
-puzzle derivations. It is **7 application endpoints**, plus the documentation routes FastAPI
+puzzle derivations. It is **8 application endpoints**, plus the documentation routes FastAPI
 adds for free.
 
 **Who it is for.** Anyone integrating with the API (frontend developer, QA, third-party
@@ -39,6 +39,7 @@ with the code, the code wins and the disagreement is flagged.
   - [3.5 `POST /api/score`](#35-post-apiscore)
   - [3.6 `GET /api/progress`](#36-get-apiprogress)
   - [3.7 `POST /api/progress/save`](#37-post-apiprogresssave)
+  - [3.8 `POST /api/feedback`](#38-post-apifeedback)
 - [4. Data shapes](#4-data-shapes)
 - [5. Request lifecycle](#5-request-lifecycle)
 - [6. Frontend client reference](#6-frontend-client-reference)
@@ -65,7 +66,7 @@ Swagger UI, and local development (see [§2.6](#26-cors)).
 The service is started with `uvicorn main:app` from the `backend/` directory
 (`render.yaml:7-8`); there is no `backend/app/` package.
 
-### 1.2 The 7 endpoints
+### 1.2 The 8 endpoints
 
 | # | Method | Path | Auth | Purpose | Success |
 |---|---|---|---|---|---|
@@ -76,13 +77,14 @@ The service is started with `uvicorn main:app` from the `backend/` directory
 | 5 | `POST` | `/api/score` | **optional** | Score a completed puzzle | `200` envelope |
 | 6 | `GET` | `/api/progress` | **required** | The learner's saved progress snapshot | `200` envelope |
 | 7 | `POST` | `/api/progress/save` | **required** | Overwrite the learner's progress snapshot | `200` envelope |
+| 8 | `POST` | `/api/feedback` | **optional** | Store one contact-form submission | `202` envelope |
 
 "Optional" auth means the route works signed-out and does extra work when a valid bearer
 token is present. "Required" means a missing or unusable token is a `401` before any
 business logic runs.
 
-Router wiring is four lines in `backend/main.py:79-83`; the OpenAPI document exposes exactly
-these seven paths and nothing else (verified — see [§2.9](#29-fastapis-built-in-routes)).
+Router wiring is six lines in `backend/main.py:138-143`; the OpenAPI document exposes exactly
+these eight paths and nothing else (verified — see [§2.9](#29-fastapis-built-in-routes)).
 
 ### 1.3 What this API deliberately is not
 
@@ -1188,20 +1190,18 @@ The learner's full progress snapshot, assembled from two Supabase tables.
 > and serialization below are the real route output; only the row data was substituted.
 
 ```json
-{"success":true,"data":{"points":42,"streak":3,"bestStreak":5,"stageProgress":{"1":[0],"0":[0]},"stageScores":{"1:0":87.5,"0:0":100.0}},"error":null}
+{"success":true,"data":{"points":42,"stageProgress":{"1":[0],"0":[0]},"stageScores":{"1:0":87.5,"0:0":100.0}},"error":null}
 ```
 
 A brand-new user with no rows yet (also observed):
 
 ```json
-{"success":true,"data":{"points":0,"streak":0,"bestStreak":0,"stageProgress":{},"stageScores":{}},"error":null}
+{"success":true,"data":{"points":0,"stageProgress":{},"stageScores":{}},"error":null}
 ```
 
 | Field | Type | Meaning |
 |---|---|---|
 | `points` | integer | lifetime points; `0` when no `user_progress` row exists |
-| `streak` | integer | current streak; `0` when no row exists |
-| `bestStreak` | integer | best streak ever; `0` when no row exists |
 | `stageProgress` | object | `{ "<levelId>": [stageIdx, …] }` — only stages whose row has `completed: true` |
 | `stageScores` | object | `{ "<levelId>:<stageIdx>": bestScore }` — only stages whose `best_score` is `> 0` |
 
@@ -1273,17 +1273,17 @@ const snapshot = await progressApi.loadProgress()   // unwrapped data, or null
 attaches the Supabase access token (`frontend/src/services/apiClient.js:27-31`). The single
 caller is `progressStore.setUser` (`frontend/src/state/progressStore.js:158`), which merges
 the snapshot into local state instead of overwriting it —
-`mergeServerProgress` (`:97-134`) takes `max` for points/bestStreak and per-stage scores, and
+`mergeServerProgress` (`:97-134`) takes `max` for points and per-stage scores, and
 unions the completed-stage lists. Local solutions win, so a device that played offline is not
 wiped by the server snapshot.
 
 > **Known gap: three fields the client merges are never returned.** `mergeServerProgress`
 > reads `server.stageSolutions` (`frontend/src/state/progressStore.js:119`),
 > `server.levelsCompleted` (`:121`) and `server.hasCompletedTutorial` (`:125`), but this
-> endpoint's payload contains only `points`, `streak`, `bestStreak`, `stageProgress` and
+> endpoint's payload contains only `points`, `stageProgress` and
 > `stageScores` (`backend/services/progress_service.py:44-50`). Those three therefore always
 > fall back to the local values (`|| {}` / `|| []` / `false`). Progress restore across devices
-> works for points, streaks, completed stages and best scores only; saved derivations
+> works for points, completed stages and best scores only; saved derivations
 > (`stageSolutions`) are never restored from the server. There is no error — the fields are
 > simply absent.
 
@@ -1328,8 +1328,6 @@ The body has exactly one required key, `progress`, which is a `ProgressData` obj
 |---|---|---|---|---|
 | `progress` | object | **yes** | — | the snapshot |
 | `progress.points` | integer | no | `0` | lifetime points |
-| `progress.streak` | integer | no | `0` | current streak |
-| `progress.bestStreak` | integer | no | `0` | best streak |
 | `progress.stageProgress` | object | no | `{}` | `{ "<levelId>": [stageIdx, …] }` — stages considered **completed** |
 | `progress.stageScores` | object | no | `{}` | `{ "<levelId>:<stageIdx>": score }` — each value an integer or a float |
 
@@ -1353,14 +1351,14 @@ Nothing about what was written is echoed back.
 Request body used:
 
 ```json
-{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0,1],"0":[0]},"stageScores":{"1:0":87.5,"1:1":60}}}
+{"progress":{"points":10,"stageProgress":{"1":[0,1],"0":[0]},"stageScores":{"1:0":87.5,"1:1":60}}}
 ```
 
 Repository calls the route made (captured by stubbing the two repository functions):
 
 ```json
 [
-  ["user_progress", {"user_id": "<uuid>", "points": 10, "streak": 1, "best_streak": 2}],
+  ["user_progress", {"user_id": "<uuid>", "points": 10}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 1, "stage_idx": 0, "best_score": 87.5, "completed": true}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 1, "stage_idx": 1, "best_score": 60, "completed": true}],
   ["stage_progress", {"user_id": "<uuid>", "level_id": 0, "stage_idx": 0, "best_score": 0, "completed": true}]
@@ -1406,12 +1404,12 @@ Not authenticated`). With a valid token the same bad body returns `422`.
 curl -s -X POST http://127.0.0.1:8000/api/progress/save \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-  -d '{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}' \
+  -d '{"progress":{"points":10,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}' \
   | python -m json.tool
 ```
 
 ```powershell
-$body = @{ progress = @{ points = 10; streak = 1; bestStreak = 2; stageProgress = @{ '1' = @(0) }; stageScores = @{ '1:0' = 87.5 } } } | ConvertTo-Json -Depth 5
+$body = @{ progress = @{ points = 10; stageProgress = @{ '1' = @(0) }; stageScores = @{ '1:0' = 87.5 } } } | ConvertTo-Json -Depth 5
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/progress/save -ContentType 'application/json' -Headers @{ Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN" } -Body $body
 ```
 
@@ -1440,6 +1438,127 @@ written at most once per debounce window, not once per point change.
   partial update, no delete, and no conflict resolution beyond the upsert key.
 - The tutorial is level `0`: a `stageProgress` entry of `{"0":[…]}` writes
   `stage_progress.level_id = 0`.
+
+---
+
+### 3.8 `POST /api/feedback`
+
+Accept one contact-form submission and store it in `public.feedback`. The response only
+acknowledges receipt — the message is read by the maintainer in the Supabase dashboard, never
+returned to the caller.
+
+| | |
+|---|---|
+| **Path** | `/api/feedback` (`backend/api/routes/feedback.py:22-38`) |
+| **Auth** | **optional** — `Depends(optional_user)` (`backend/api/routes/feedback.py:26`) |
+| **Request body** | `FeedbackRequest` (JSON) |
+| **Success** | `202` envelope, `data` = `{"status":"received"}` |
+
+**Request headers**
+
+| Header | Required | Value |
+|---|---|---|
+| `Authorization` | no | `Bearer <supabase-access-token>` when the learner is signed in; the account email and id are then stored with the report |
+| `Content-Type` | yes | `application/json` |
+
+An unusable token is treated as anonymous (`optional_user` catches `UnauthorizedError` and
+returns `None`), so a signed-out report must carry its own `email`.
+
+**Request body — `FeedbackRequest` (`backend/api/schemas/feedback.py:31-39`)**
+
+| Field | Type | Required | Default | Meaning |
+|---|---|---|---|---|
+| `category` | string enum | no | `"other"` | one of `bug`, `idea`, `other`; anything else is `422` |
+| `message` | string | **yes** | — | 10–2000 characters **after trimming** — whitespace does not count towards the minimum, and the stored value is the trimmed text |
+| `email` | string \| null | no | `null` | ≤254 characters, normalised to lowercase; required in practice for a signed-out report (see the `422` below) |
+| `page` | string \| null | no | `null` | the pathname the form was opened from, ≤200 |
+| `appVersion` | string \| null | no | `null` | build label, ≤40 |
+| `context` | object \| null | no | `null` | optional puzzle coordinates |
+| `context.levelId` | integer \| null | no | `null` | 0–99 |
+| `context.stageIdx` | integer \| null | no | `null` | 0–99 |
+| `context.expression` | string \| null | no | `null` | ≤200; accepted by the schema but not sent by the web client |
+
+**Success response — observed with a stubbed repository**
+
+```json
+{"success":true,"data":{"status":"received"},"error":null}
+```
+
+`data` has exactly one key, `status`, always the string `"received"`
+(`backend/api/routes/feedback.py:38`). Nothing about the stored row is echoed back.
+
+**Errors**
+
+| Status | Code | Message | When |
+|---|---|---|---|
+| `422` | `validation_error` | `Request validation failed` | a bound above is violated: missing/blank/too-short/too-long message, unknown category, unusable email, out-of-range context (`detail` carries the pydantic errors) |
+| `422` | `validation_error` | `Add an email address so we can reply.` | signed-out request with no `email` — raised by `backend/services/feedback_service.py:39-44` **before** any insert |
+| `502` | `upstream_error` | `Feedback storage is unavailable` | the Supabase insert failed (`backend/repositories/feedback_repository.py:23-33`) |
+| `502` | `upstream_error` | `Authentication service is unavailable` | a bearer token was sent but Supabase Auth could not be reached |
+| `500` | `internal_error` | `Internal server error` | unhandled exception |
+
+The signed-out rule is the deliberate one: an unattributable report is refused rather than
+stored, because a learner who believes they were heard is worse off than one who is asked
+for an address. A signed-in learner's account address wins over anything typed
+(`backend/services/feedback_service.py:37-38`).
+
+**curl**
+
+```bash
+# signed out — an address is required
+curl -s -X POST http://127.0.0.1:8000/api/feedback \
+  -H 'Content-Type: application/json' \
+  -d '{"category":"bug","message":"The last step of stage 2 dropped my expression.","email":"you@example.com","page":"/level/1/stage/2","appVersion":"1.0.0"}' \
+  | python -m json.tool
+
+# signed in — the account address and id are attached, no email needed
+curl -s -X POST http://127.0.0.1:8000/api/feedback \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -d '{"category":"idea","message":"A wider hint panel would help on the boss level.","page":"/level/3/stage/11"}'
+```
+
+```powershell
+$body = @{ category = 'bug'; message = 'The last step of stage 2 dropped my expression.'; email = 'you@example.com' } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/feedback -ContentType 'application/json' -Body $body
+```
+
+**Frontend equivalent**
+
+```js
+import { sendFeedback } from '../services/feedbackApi.js'
+
+await sendFeedback({
+  category: 'bug',
+  message,                 // already trimmed by the page
+  email,                   // '' when signed in
+  pathname: '/level/1/stage/2',
+})
+```
+
+`sendFeedback` (`frontend/src/services/feedbackApi.js:40-52`) fills `page` and `context` from
+`describeLocation(pathname)` and `appVersion` from `APP_VERSION`
+(`frontend/src/services/feedbackContext.js:17-32`). The single caller is
+`ContactPage` (`frontend/src/pages/ContactPage.jsx:157-169`); the call is **not** `silent`, so
+the `ApiError` reaches the page, which keeps the typed text and shows the message in a
+`role="alert"` block.
+
+**Notes**
+
+- The table is write-only from the application: there is no `GET /api/feedback`, and the
+  repository exposes only `insert_feedback`. Messages are read by an operator in the Supabase
+  dashboard.
+- Nothing about the message is logged. The success line carries only `category`,
+  `authenticated` and `located` (`backend/services/feedback_service.py:58-61`); the failure line
+  adds the error type and category, never the row (`backend/repositories/feedback_repository.py:28-32`).
+- The route truncates the `User-Agent` header to 400 characters (`MAX_USER_AGENT`,
+  `backend/api/routes/feedback.py:19`), matching the table's `CHECK` so a stored row can never
+  violate the DDL.
+- Throttled with every other `/api` route by the generic token bucket
+  (`RATE_LIMIT_API`, 240 requests/minute per client by default). There is no
+  feedback-specific limit.
+- The client sends `context` only for a `/level/:levelId/stage/:stageIdx` path; the
+  `expression` member exists for other clients and is not used by `ContactPage`.
 
 ---
 
@@ -1516,8 +1635,6 @@ by pydantic's `extra="ignore"` and never read by `save_progress`).
 | Field | Type | Direction | Notes |
 |---|---|---|---|
 | `points` | integer | both | default `0` |
-| `streak` | integer | both | default `0` |
-| `bestStreak` | integer | both | default `0` |
 | `stageProgress` | object of integer arrays | both | `{ "1": [0,1,2] }`, keys are level ids as strings |
 | `stageScores` | object of numbers | both | `{ "1:0": 87.5 }` |
 | `stageSolutions` | object | client-only | never sent by the server, never stored (`frontend/src/state/progressStore.js:37,119`) |
@@ -1600,7 +1717,7 @@ Behaviour worth knowing:
 - `ApiError` fields: `message` (safe to show), `status`, `code`, `detail`
   (`frontend/src/services/apiClient.js:16-24`).
 
-### 6.2 The four real call sites
+### 6.2 The five real call sites
 
 | Endpoint | Frontend function | File:line | `auth` | `silent` |
 |---|---|---|---|---|
@@ -1610,10 +1727,11 @@ Behaviour worth knowing:
 | `POST /api/score` | `submitScore(submission)` | `frontend/src/services/scoreApi.js:22-36` | `true` (default) | **`true`** |
 | `GET /api/progress` | `loadProgress()` | `frontend/src/services/progressApi.js:11-13` | `true` (default) | **`true`** |
 | `POST /api/progress/save` | `saveProgress(progress)` | `frontend/src/services/progressApi.js:19-25` | `true` (default) | **`true`** |
+| `POST /api/feedback` | `sendFeedback(report)` | `frontend/src/services/feedbackApi.js:40-52` | `true` (default) | `false` |
 
-`grep -rn "apiRequest" frontend/src` returns exactly four call sites — `contentApi.js:49`,
-`progressApi.js:12`, `progressApi.js:20`, `scoreApi.js:31` — which is the complete list of
-places the browser talks to this API.
+`grep -rn "apiRequest" frontend/src` returns exactly five call sites — `contentApi.js:49`,
+`feedbackApi.js:42`, `progressApi.js:12`, `progressApi.js:20`, `scoreApi.js:31` — which is the
+complete list of places the browser talks to this API.
 
 ### 6.3 Consumer wiring
 
@@ -1634,9 +1752,11 @@ failure reaches the learner as a message** on the gameplay path. The failure sur
 - the server's own JSON log lines, joinable by `X-Request-ID` if the caller sent one (the
   client does not).
 
-The one path that *does* throw is `fetchLevel`'s network fallback (`silent` defaults to
-`false`), which is only reached for an id that is not bundled — impossible with the shipped
-four levels.
+The one gameplay path that *does* throw is `fetchLevel`'s network fallback (`silent` defaults
+to `false`), which is only reached for an id that is not bundled — impossible with the shipped
+four levels. `sendFeedback` is deliberately not silent either: `ContactPage` catches the
+`ApiError`, keeps the typed text and renders the message in a `role="alert"` block, because a
+feedback form that swallows a delivery failure is worse than no form.
 
 See [error-codes.md](../06-reference/error-codes.md) for the full client-code catalogue
 (`network_error`, `invalid_response`, `http_<status>`).
@@ -1801,7 +1921,9 @@ curl -s -X POST $BASE/api/score -H 'Content-Type: application/json' \
 curl -s $BASE/api/progress -H "Authorization: Bearer $TOKEN"
 curl -s -X POST $BASE/api/progress/save -H 'Content-Type: application/json' \
      -H "Authorization: Bearer $TOKEN" \
-     -d '{"progress":{"points":10,"streak":1,"bestStreak":2,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}'
+     -d '{"progress":{"points":10,"stageProgress":{"1":[0]},"stageScores":{"1:0":87.5}}}'
+curl -s -X POST $BASE/api/feedback -H 'Content-Type: application/json' \
+     -d '{"category":"bug","message":"The last step dropped my expression.","email":"you@example.com"}'
 
 curl -s $BASE/openapi.json | python -m json.tool | head -40
 ```
@@ -1810,10 +1932,10 @@ curl -s $BASE/openapi.json | python -m json.tool | head -40
 |---|---|
 | Response shape? | `{"success":bool,"data":any,"error":null\|{code,message,detail}}` — except `GET /` |
 | Trace id? | response header `X-Request-ID` (not on CORS preflights, not readable cross-origin) |
-| How do I authenticate? | `Authorization: Bearer <supabase-access-token>` — required on both `/api/progress*`, optional on `/api/score` |
+| How do I authenticate? | `Authorization: Bearer <supabase-access-token>` — required on both `/api/progress*`, optional on `/api/score` and `/api/feedback` |
 | Which endpoints need auth? | only `GET /api/progress` and `POST /api/progress/save` |
 | Does scoring save my score? | yes, if you send a valid bearer token; it happens after the response |
-| How many endpoints? | 7 application routes + 4 FastAPI built-ins |
+| How many endpoints? | 8 application routes + 4 FastAPI built-ins |
 | Where are the error codes? | [error-codes.md](../06-reference/error-codes.md) |
 | Where is the Boolean maths? | in the browser — `frontend/src/engine/` |
 
@@ -1824,7 +1946,7 @@ curl -s $BASE/openapi.json | python -m json.tool | head -40
 | Document | Why |
 |---|---|
 | [error-codes.md](../06-reference/error-codes.md) | every machine code, trigger, status and first thing to check |
-| [SCHEMA.md](../03-database/SCHEMA.md) | the three Supabase tables these routes read and write |
+| [SCHEMA.md](../03-database/SCHEMA.md) | the four Supabase tables these routes read and write |
 | [scoring-and-rewards.md](../06-reference/scoring-and-rewards.md) | the full scoring algorithm and star/unlock rules |
 | [SAD.md](../02-architecture/SAD.md) | how the backend, frontend and Supabase fit together |
 | [known-limitations.md](../07-explanation/known-limitations.md) | the canonical discrepancy register |

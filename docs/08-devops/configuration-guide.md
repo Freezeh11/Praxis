@@ -343,7 +343,7 @@ Two mitigating facts, both verified:
 
 1. The frontend **never** queries those tables directly — every Supabase call in `frontend/src` is
    `supabase.auth.*` (session, sign-in, sign-up, sign-out). Progress goes through the backend.
-2. Progress data is low-stakes game state: points, streaks, per-stage best scores.
+2. Progress data is low-stakes game state: points, stars, per-stage best scores.
 
 Neither fact makes the policy correct. Tightening it means replacing
 `USING (true)` with `USING (auth.uid() = user_id)` (and `WITH CHECK` equivalents) and confirming the

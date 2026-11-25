@@ -10,6 +10,7 @@
  * Pure module: no React/DOM/network.
  */
 import { cloneN, con } from './node.js'
+import { forgetRendering } from './render.js'
 
 export function getNode(root, path) {
   if (!root) return null
@@ -30,11 +31,16 @@ export function setNode(root, path, newNode) {
   if (path === 'R') return newNode
   const parts = path.slice(2).split('.').map(Number)
   let n = root
+  // Rendering is memoised per node (render.js). Swapping a child changes the
+  // parent's text and every ancestor's above it, so drop exactly those entries
+  // while walking down; the unchanged siblings keep theirs.
+  forgetRendering(n)
   for (let i = 0; i < parts.length - 1; i++) {
     const idx = parts[i]
     if (n.type === 'sum') n = n.terms[idx]
     else if (n.type === 'prod') n = n.factors[idx]
     else if (n.type === 'not') n = n.child
+    forgetRendering(n)
   }
   const last = parts[parts.length - 1]
   if (n.type === 'sum') n.terms[last] = newNode

@@ -111,6 +111,19 @@ Two files, both gitignored, both required for a working app:
 Use placeholders until you paste your own values: `https://<project-ref>.supabase.co`,
 `<service-role-key>`, `<anon-key>`.
 
+### 3.2.1 The one-time database step
+
+Two SQL scripts must be run once against your Supabase project, in this order. Without the second
+one the app runs, but the contact form is permanently broken.
+
+| Script | Creates | Skip it and… |
+|---|---|---|
+| `database/init.sql` | `user_progress`, `stage_progress`, `score_history` and their RLS policies | progress saves and score history fail with `502` "Progress storage is unavailable" |
+| `database/feedback.sql` | `public.feedback`, with RLS enabled and **no** policies | `POST /api/feedback` returns `502` "Feedback storage is unavailable", and the Supabase dashboard shows no rows — there is no fallback, by design |
+
+Both are idempotent, so running them again is safe. In the dashboard: **SQL Editor → New Query →
+paste the file → Run**, once per script.
+
 ### 3.3 Why native is the right answer here
 
 1. **It has zero setup cost.** Two processes, two env files, no images to build.

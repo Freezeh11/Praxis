@@ -7,7 +7,6 @@ import { usePageOverlays } from '../hooks/usePageOverlays'
 import { TUTORIAL } from '../config/gameRules.js'
 import { playSound, playThrottledSound, primeAudio } from '../services/soundEffects.js'
 import AppHeader from '../components/layout/AppHeader'
-import BackNav from '../components/layout/BackNav'
 import PageOverlays from '../components/layout/PageOverlays'
 import SurveyButton from '../components/layout/SurveyButton'
 import PointsChip from '../components/ui/PointsChip'
@@ -214,23 +213,28 @@ export default function LevelSelectPage() {
   }, [recenterRow])
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-bg flex flex-col relative overflow-x-hidden overflow-y-auto bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
+    <main className="min-h-screen min-h-[100dvh] bg-transparent flex flex-col relative overflow-x-hidden overflow-y-auto">
       <AppHeader
-        left={<BackNav variant="home" to="/" label="Home" title="Back to Home" />}
+        crumbs={[{ label: 'Levels' }]}
         right={(
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               data-popup-anchor="tutorial"
               onClick={handleTutorialClick}
-              className="h-9 [@media(max-height:480px)]:h-11 px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal hover:text-white transition-all shadow-xs cursor-pointer"
+              className="hidden h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 text-[13px] font-bold text-indigo-700 sm:inline-flex transition-colors hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 sm:px-3 dark:border-indigo-400/25 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11"
               title="Interactive Tutorial"
+              aria-label="Interactive Tutorial"
             >
-              <span>Tutorial</span>
+              {/* Narrow phones cannot fit seven labelled controls beside the
+                  wordmark, so the label collapses and the icon carries the
+                  button while the accessible name stays whole. */}
+              <Icon name="sparkle" />
+              <span className="hidden sm:inline">Tutorial</span>
             </button>
-            <button data-popup-anchor="laws" className="min-h-9 px-3 rounded-lg border border-border flex items-center justify-center gap-1.5 text-xs font-bold text-text-2 bg-bg hover:bg-border transition-all" title="Law Reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}><Icon name="book" /> Law reference</button>
+            <button data-popup-anchor="laws" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white/80 px-2.5 text-[13px] font-bold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 sm:px-3 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus-visible:ring-cyan-400/60 [@media(max-height:480px)]:h-11" title="Law Reference" aria-label="Law reference" onClick={() => { primeAudio(); setShowLawsDrawer(true) }}><Icon name="book" /><span className="hidden sm:inline">Law reference</span></button>
             {/* Both keep the 36px desktop height of the rail and grow to 44px on
                 a landscape phone, where the compact variant is used. */}
-            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact />
+            <span className="hidden sm:block"><SoundToggle enabled={soundEnabled} onToggle={toggleSound} compact /></span>
             <SurveyButton compact />
             <ProfileLink />
           </div>
@@ -238,16 +242,16 @@ export default function LevelSelectPage() {
       />
 
       {/* Title */}
-      <div className="mt-10 [@media(max-height:480px)]:mt-1.5 max-sm:mt-6 flex flex-col items-center gap-1.5">
-        <h1 className="font-bold text-[32px] [@media(max-height:480px)]:text-[22px] tracking-tight text-accent">Choose Your Level</h1>
-        <p className="praxis-hide-short text-[15px] text-text-3 font-medium">Each level introduces more variables and complexity</p>
+      <div className="mt-8 flex flex-col items-center gap-2.5 text-center [@media(max-height:480px)]:mt-1.5 max-sm:mt-6">
+        <h1 className="text-[32px] font-bold tracking-tight text-slate-900 [@media(max-height:480px)]:text-[22px] dark:text-white">Choose Your Level</h1>
+        <p className="praxis-hide-short max-w-xl text-[15px] font-medium text-slate-600 dark:text-slate-300">Each level introduces more variables and complexity</p>
       </div>
 
       {/* Carousel — the track clips the row; the row is translated so the
           selected card is centred (see recenterRow). */}
       <div className="flex items-center justify-center gap-3 sm:gap-8 mt-10 [@media(max-height:480px)]:mt-2 flex-1 min-h-0">
         <button
-          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 bg-bg-card flex items-center justify-center text-2xl font-black text-slate-700 shadow-md transition-all shrink-0 hover:not:disabled:border-accent hover:not:disabled:bg-slate-50 hover:not:disabled:text-accent hover:not:disabled:scale-105 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200/80 bg-white text-2xl font-black text-slate-600 shadow-card transition-[transform,color,border-color,background-color,box-shadow] duration-200 hover:not:disabled:border-indigo-300 hover:not:disabled:text-indigo-600 hover:not:disabled:scale-105 hover:not:disabled:shadow-card-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:not:disabled:border-cyan-400/60 dark:hover:not:disabled:bg-slate-800/80 dark:hover:not:disabled:text-cyan-300 sm:h-12 sm:w-12"
           onClick={prev}
           disabled={selected === 0}
           aria-label="Previous level"
@@ -258,11 +262,11 @@ export default function LevelSelectPage() {
         <div
           ref={trackRef}
           data-carousel-track="true"
-          className="relative flex min-w-0 shrink items-center justify-center overflow-hidden"
+          className="relative flex min-w-0 shrink items-center justify-center overflow-hidden px-2 py-3 [@media(max-height:480px)]:py-1.5"
         >
           <div
             ref={rowRef}
-            className="relative flex shrink-0 items-center justify-center gap-5 [perspective:1000px] transition-transform duration-300 ease-out"
+            className="relative flex shrink-0 items-stretch justify-center gap-5 transition-transform duration-300 ease-out"
             style={{ transform: `translateX(${rowShift}px)` }}
           >
             {loading && <div className="text-text-2 font-medium">Loading levels…</div>}
@@ -279,16 +283,32 @@ export default function LevelSelectPage() {
               const isTutorialGated = lockState.reason === 'tutorial-gate'
 
               return (
+                <div key={lv.id} className="relative flex">
+                  {/* Halo behind the chosen card. It is a sibling painted before
+                      the card, so it can never tint the card's text, and opacity
+                      is the only animated property - the scale below is a
+                      transform, so the row's layout box never changes. */}
+                  <div
+                    aria-hidden="true"
+                    className={`level-glow pointer-events-none absolute -inset-4 rounded-[30px] blur-xl transition-opacity duration-500 ${isActive ? 'level-glow-pulse opacity-90' : 'opacity-0'}`}
+                  />
+                  <div
+                    aria-hidden="true"
+                    className={`level-ring pointer-events-none absolute -inset-[3px] rounded-[23px] transition-opacity duration-500 ${isActive ? 'level-glow-pulse opacity-100' : 'opacity-0'}`}
+                  />
                 <div
-                  key={lv.id}
                   ref={el => { cardRefs.current[i] = el }}
                   data-level-card={lv.id}
                   data-active={isActive ? 'true' : 'false'}
-                  className={`w-[240px] [@media(max-width:379px)]:w-[200px] bg-bg-card rounded-[20px] px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-all duration-250 ease-out select-none
-                    ${isActive ? 'border-[2.5px] border-text-1 scale-100 translate-y-0 opacity-100 shadow-md' : 'border-[1.5px] border-border scale-[0.92] translate-y-1 opacity-100 shadow-sm'}
+                  className={`relative w-[240px] [@media(max-width:379px)]:w-[200px] origin-center rounded-[20px] bg-white dark:bg-slate-900/70 px-7 [@media(max-height:480px)]:px-4 py-9 [@media(max-height:480px)]:py-4 [@media(max-height:359px)]:py-3 flex flex-col items-center gap-2.5 [@media(max-height:480px)]:gap-1.5 transition-[border-color,background-color,box-shadow,transform] duration-250 ease-out select-none
+                    ${isActive ? 'scale-[1.055] border-2 border-indigo-500 ring-2 ring-inset ring-indigo-500/20 shadow-lift' : 'border-2 border-slate-200/80 dark:border-white/10 shadow-card'}
                     ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}
-                    ${!locked && !isActive ? 'hover:scale-95 hover:translate-y-0.5' : ''}
+                    ${!locked && !isActive ? 'hover:-translate-y-1 hover:border-indigo-300 hover:shadow-card-hover' : ''}
                   `}
+                  role={isActive ? undefined : 'button'}
+                  tabIndex={isActive ? undefined : 0}
+                  aria-label={isActive ? undefined : `${lv.name}. ${lv.desc}${locked ? '. Locked.' : ''} Select to view.`}
+                  aria-current={isActive ? 'true' : undefined}
                   onClick={() => {
                     if (isActive) {
                       if (!locked) handleStart()
@@ -299,21 +319,35 @@ export default function LevelSelectPage() {
                       setSelected(i)
                     }
                   }}
+                  onKeyDown={(event) => {
+                    // The active card already holds real buttons; only the
+                    // off-centre cards need a keyboard path to be selected.
+                    if (isActive) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      primeAudio()
+                      setSelected(i)
+                    }
+                  }}
                 >
                   {/* Icon */}
                   <div className={`w-16 h-16 [@media(max-height:480px)]:w-12 [@media(max-height:480px)]:h-12 rounded-[14px] border-[1.5px] flex items-center justify-center font-extrabold transition-all
-                    ${isActive ? 'bg-accent text-on-accent border-accent text-[28px] [@media(max-height:480px)]:text-[22px]' : 'border-border text-[26px] [@media(max-height:480px)]:text-[20px]'}
-                    ${done && !isActive ? 'bg-green-light text-green' : ''}
-                    ${locked ? 'bg-bg text-text-3' : (!isActive && !done ? 'bg-bg text-text-2' : '')}
+                    ${isActive ? 'border-transparent bg-gradient-to-br from-indigo-600 to-cyan-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-inset ring-white/25 dark:from-indigo-500 dark:to-cyan-500 dark:text-white text-[27px] [@media(max-height:480px)]:text-[21px]' : 'border-slate-200/80 bg-gradient-to-b from-white to-slate-50 text-slate-600 shadow-chip dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-300 text-[27px] [@media(max-height:480px)]:text-[21px]'}
+                    ${done && !isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300' : ''}
+                    ${locked ? 'border-slate-200 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-slate-900 dark:text-slate-600' : ''}
                   `}>
                     {locked ? <Icon name="lock" /> : isSandbox ? <Icon name="flask" /> : isComingSoon ? <Icon name="lock" /> : done ? <Icon name="check" /> : lv.id}
                   </div>
 
-                  <div className={`font-bold text-text-1 tracking-[-0.3px] ${isActive ? 'text-[19px]' : 'text-[17px]'} [@media(max-height:480px)]:text-[16px]`}>{lv.name}</div>
+                  <div className="font-bold text-[18px] text-text-1 tracking-[-0.3px] [@media(max-height:480px)]:text-[16px]">{lv.name}</div>
                   <div className="text-[13px] [@media(max-height:480px)]:text-[12px] [@media(max-height:359px)]:hidden text-text-3 text-center">{lv.desc}</div>
 
-                {/* Score gate progress for Level 2/3 */}
-                {isScoreGated && isActive && lockState.progress && (
+                {/* Score gate progress for Level 2/3.
+                    Rendered on every gated card, selected or not: this block is
+                    the tallest content a card carries, so letting it appear and
+                    disappear with the selection resized the whole row every time
+                    the carousel moved onto a gated level. */}
+                {isScoreGated && lockState.progress && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
                       <span>{lockState.progress.completed}/{lockState.totalStages} stages</span>
@@ -327,8 +361,9 @@ export default function LevelSelectPage() {
                   </div>
                 )}
 
-                {/* Tutorial gate progress for Level 1 and Sandbox */}
-                {isTutorialGated && isActive && (
+                {/* Tutorial gate progress for Level 1 and Sandbox — same rule:
+                    it holds its height whether or not the card is selected. */}
+                {isTutorialGated && (
                   <div className="w-full mt-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[11px] font-semibold text-text-2">
                       <span>{lockState.completedStages}/{lockState.totalStages} stages</span>
@@ -389,48 +424,53 @@ export default function LevelSelectPage() {
                 {isComingSoon && (
                   <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium">Coming Soon</div>
                 )}
-                {isScoreGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> 80% avg required</div>
-                )}
-                {isTutorialGated && !isActive && (
-                  <div className="text-[11px] text-text-3 bg-bg px-2.5 py-[3px] rounded-full border border-border font-medium"><Icon name="lock" /> Tutorial required</div>
-                )}
+                {/* No "80% avg required" / "Tutorial required" chips: the gate
+                    block on every locked card already states the requirement, so
+                    repeating it here only made the card say it twice. */}
 
                 </div>
 
-                {/* Direct action button on active card */}
-                {isActive && !locked && (
-                  <button
-                    id="start-level-btn"
-                    type="button"
-                    className="w-full mt-2 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-accent text-on-accent shadow-xs hover:bg-accent-hover transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStart()
-                    }}
-                  >
-                    <span>{isSandbox ? 'ENTER SANDBOX' : 'VIEW STAGES'}</span>
-                    <span>→</span>
-                  </button>
-                )}
-                {isActive && locked && (
-                  <button
-                    id="start-level-btn"
-                    type="button"
-                    disabled
-                    className="w-full mt-2 py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
-                  >
-                    <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
-                  </button>
-                )}
-              </div>
+                {/* Action slot.
+                    The button is the last thing a card carries, so it renders on
+                    every card and only paints on the selected one. Left to appear
+                    and disappear, it made the row taller or shorter by its own
+                    height alone, which is the size change this screen kept
+                    showing when the carousel moved. visibility (not unmounting)
+                    keeps the box; hidden buttons stay out of the tab order. */}
+                <div className={`mt-2 w-full ${isActive ? '' : 'invisible'}`} aria-hidden={isActive ? undefined : 'true'}>
+                  {locked ? (
+                    <button
+                      id={isActive ? 'start-level-btn' : undefined}
+                      type="button"
+                      disabled
+                      className="w-full py-2.5 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
+                    >
+                      <span><Icon name="lock" /> {isTutorialGated ? 'Complete Tutorial' : 'Locked'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      id={isActive ? 'start-level-btn' : undefined}
+                      type="button"
+                      className="w-full flex min-h-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-accent px-3 py-2.5 text-xs font-bold text-on-accent shadow-md shadow-indigo-600/20 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-px hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-600/25 active:translate-y-0 active:scale-[0.99]"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (isActive) handleStart()
+                      }}
+                    >
+                      <span>{isSandbox ? 'ENTER SANDBOX' : 'VIEW STAGES'}</span>
+                      <span>→</span>
+                    </button>
+                  )}
+                </div>
+                </div>
+                </div>
             )
           })}
           </div>
         </div>
 
         <button
-          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 bg-bg-card flex items-center justify-center text-2xl font-black text-slate-700 shadow-md transition-all shrink-0 hover:not:disabled:border-accent hover:not:disabled:bg-slate-50 hover:not:disabled:text-accent hover:not:disabled:scale-105 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200/80 bg-white text-2xl font-black text-slate-600 shadow-card transition-[transform,color,border-color,background-color,box-shadow] duration-200 hover:not:disabled:border-indigo-300 hover:not:disabled:text-indigo-600 hover:not:disabled:scale-105 hover:not:disabled:shadow-card-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:not:disabled:border-cyan-400/60 dark:hover:not:disabled:bg-slate-800/80 dark:hover:not:disabled:text-cyan-300 sm:h-12 sm:w-12"
           onClick={next}
           disabled={selected === entries.length - 1}
           aria-label="Next level"
@@ -452,6 +492,6 @@ export default function LevelSelectPage() {
         placement={popupPlacement} showLawsDrawer={showLawsDrawer}
         onCloseLawsDrawer={() => setShowLawsDrawer(false)} laws={laws}
       />
-    </div>
+    </main>
   )
 }

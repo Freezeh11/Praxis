@@ -1,10 +1,10 @@
 # Error Codes and Failure Handling
 
 **What this is.** The complete catalogue of every machine-readable error code Praxis can
-produce — the 7 codes the backend emits from `ErrorCode` (`backend/core/errors.py:11-20`) and
-the 3 codes that exist only in the browser client
-(`frontend/src/services/apiClient.js`) — plus what each one means, how to trigger it, what the
-learner experiences, and the first thing to check when you see it in a log.
+produce — the 9 codes declared in `ErrorCode` (`backend/core/errors.py:11-22`), of which seven
+are raised by handlers and two are emitted by middleware, plus the 3 codes that exist only in the
+browser client (`frontend/src/services/apiClient.js`) — what each one means, how to trigger it,
+what the learner experiences, and the first thing to check when you see it in a log.
 
 **Who it is for.** A developer or QA engineer staring at a failed request, a `502` from
 production, or a `console` entry that says `network_error`. Every example body below was
@@ -27,6 +27,7 @@ produced by executing the code, not by reading a design document.
   - [3.5 `validation_error` — 422](#35-validation_error--422)
   - [3.6 `http_error` — 404 / 405 / any framework status](#36-http_error--404--405--any-framework-status)
   - [3.7 `internal_error` — 500](#37-internal_error--500)
+  - [3.8 `rate_limited` — 429 and `payload_too_large` — 413](#38-rate_limited--429-and-payload_too_large--413)
 - [4. Frontend-only codes](#4-frontend-only-codes)
   - [4.1 `network_error`](#41-network_error)
   - [4.2 `invalid_response`](#42-invalid_response)
@@ -85,7 +86,8 @@ The full envelope and header contract is in
 
 ## 2. The complete code table
 
-Eleven values in total: 7 from the backend, 3 client-only, 1 constructor fallback.
+Thirteen values in total: 9 from the backend (7 raised by handlers, 2 emitted by middleware),
+3 client-only, 1 constructor fallback.
 
 | `code` | Producer | HTTP status | One-line meaning | Full entry |
 |---|---|---|---|---|
@@ -96,14 +98,18 @@ Eleven values in total: 7 from the backend, 3 client-only, 1 constructor fallbac
 | `validation_error` | backend | `422` | the request body or a path parameter did not match the schema | [§3.5](#35-validation_error--422) |
 | `http_error` | backend | `404`, `405`, … | the framework rejected the request before any handler ran | [§3.6](#36-http_error--404--405--any-framework-status) |
 | `internal_error` | backend | `500` | an unhandled exception escaped a route | [§3.7](#37-internal_error--500) |
+| `rate_limited` | backend middleware | `429` | the caller exceeded its per-window request budget | [§3.8](#38-rate_limited--429-and-payload_too_large--413) |
+| `payload_too_large` | backend middleware | `413` | the request body exceeded `MAX_BODY_BYTES` (256 KiB default) | [§3.8](#38-rate_limited--429-and-payload_too_large--413) |
 | `network_error` | frontend only | `0` (no response) | `fetch` never got a response | [§4.1](#41-network_error) |
 | `invalid_response` | frontend only | the real status | the response was not JSON, or the envelope was unreadable | [§4.2](#42-invalid_response) |
 | `http_<status>` | frontend only | the real status | non-2xx **and** the body carried no `error.code` | [§4.3](#43-http_status) |
 | `api_error` | frontend only | whatever was passed | constructor default; effectively unreachable from the API | [§4.4](#44-api_error) |
 
-Every one of the seven backend codes maps to exactly one `AppError` subclass, and every
-application error in the codebase is one of **seven literal `raise` statements** (verified by
-grepping `raise (NotFoundError|ContentUnavailableError|UpstreamError|UnauthorizedError|AppError)`):
+Every one of the seven *handler-raised* backend codes maps to exactly one `AppError` subclass, and
+every application error raised in the codebase is one of **seven literal `raise` statements** (verified
+by grepping `raise (NotFoundError|ContentUnavailableError|UpstreamError|UnauthorizedError|AppError)`).
+`rate_limited` and `payload_too_large` are the two exceptions: they are built by `failure()` inside
+`backend/core/rate_limit.py` and have no `AppError` subclass, because no handler ever raises them:
 
 | Raise site | Code | Message |
 |---|---|---|
@@ -619,6 +625,58 @@ curl -s -X POST http://127.0.0.1:8000/api/score -H 'Content-Type: application/js
 
 ---
 
+### 3.8 `rate_limited` — 429 and `payload_too_large` — 413
+
+**Means:** the request never reached a handler. Two ASGI middlewares reject it first, so these are
+the only two error codes in the API that no route can produce.
+
+| | `rate_limited` | `payload_too_large` |
+|---|---|---|
+| **Class** | none — built by `failure()` in `backend/core/rate_limit.py:154-166` | none — built by `failure()` in `backend/core/rate_limit.py:183-192` |
+| **Status** | `429` | `413` |
+| **Message** | `Too many requests. Please slow down and try again shortly.` | `Request body is too large.` |
+| **Extra headers** | `Retry-After: <seconds>`, `Cache-Control: no-store` | none |
+
+**Exact observed envelopes** (executed against the local API on 2026-11-24):
+
+```json
+{"success":false,"data":null,"error":{"code":"rate_limited","message":"Too many requests. Please slow down and try again shortly.","detail":null}}
+{"success":false,"data":null,"error":{"code":"payload_too_large","message":"Request body is too large.","detail":null}}
+```
+
+The `429` arrived on the 247th request to `GET /api/levels` inside one minute — 240 is the
+`/api/` budget — with `retry-after: 2`.
+
+**The four buckets** (`backend/core/rate_limit.py:44-55`, each overridable by env):
+
+| Route class | Requests / 60 s | Env var |
+|---|---|---|
+| `/api/score` | 30 | `RATE_LIMIT_SCORE` |
+| `/api/progress/save` | 60 | `RATE_LIMIT_SAVE` |
+| every other `/api/*` (including `/api/feedback`) | 240 | `RATE_LIMIT_API` |
+| everything else | 600 | `RATE_LIMIT_GENERAL` |
+
+Buckets are keyed by (client, route class); the client is the socket peer, or the **last**
+`X-Forwarded-For` hop when `TRUST_PROXY_HEADERS` is on (`_client`, `rate_limit.py:90-108`) — the
+first hop is whatever the caller typed. `OPTIONS` is never limited, and `/docs`, `/redoc` and
+`/openapi.json` bypass the limiter so the OpenAPI page stays usable.
+
+**Body cap.** `BodySizeLimitMiddleware` refuses declared and chunked bodies over
+`settings.max_body_bytes` (256 KiB default). A rejection on the body path also reports
+`payload_too_large`; any other status it passes falls back to `validation_error`
+(`rate_limit.py:187`).
+
+**Caveat worth knowing.** Both limits are per-process and in memory: with more than one replica
+each process counts alone, and a restart resets every bucket
+(`backend/core/rate_limit.py:1-8`). CORS is added *outside* both so a `429` or `413` still carries
+`Access-Control-Allow-Origin` and the SPA can read `Retry-After` (`backend/main.py:72-77`).
+
+**What the learner sees.** The client turns any non-2xx without a readable envelope into
+`http_<status>`; here the envelope *is* readable, so `frontend/src/services/apiClient.js` surfaces
+`rate_limited` with the server message.
+
+---
+
 ## 4. Frontend-only codes
 
 These live entirely in `frontend/src/services/apiClient.js` and are never returned by the
@@ -950,7 +1008,7 @@ layer immediately.
 
 | Trap / non-existent code | Reality |
 |---|---|
-| `rate_limited` / `429` | **No rate limiting exists.** No limiter middleware, no `429` anywhere. A busy client will simply saturate the single Render instance. |
+| "there is no rate limiting" | **False — this claim was in this file and was wrong.** `RateLimitMiddleware` and `BodySizeLimitMiddleware` are wired at `backend/main.py:66-71` and answer `429 rate_limited` / `413 payload_too_large`; see [§3.8](#38-rate_limited--429-and-payload_too_large--413). The limits are per-process, so they are best-effort across replicas, but they do exist. |
 | `out_of_range` / any bound-violation code | **None exists, and no field is bounded.** `ScoreRequest` has no `ge=`/`le=` constraint (`backend/api/schemas/score.py:13-20`), so a negative `hintsUsed`/`guidesUsed` is accepted and inflates the score instead of erroring — verified: `hintsUsed:-99` → `200`, `total 1060.0`, `earnedPoints 53`. There is no `422` for it because the pydantic schema has no bounds to violate. See [API-REFERENCE.md §8.11](../04-api/API-REFERENCE.md#811-score-fields-have-no-lower-bound-so-the-documented-ranges-are-conditional). |
 | `forbidden` / `403` | **No authorization beyond authentication.** Any valid token can read and write only *its own* rows, by `user_id` filter — but no code path returns `403`. |
 | `conflict` / `409` | PostgREST conflicts are converted to `502 upstream_error` by `raise_for_status()` inside `_execute` (`backend/repositories/progress_repository.py:21-26`). |

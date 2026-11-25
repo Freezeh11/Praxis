@@ -30,14 +30,16 @@ or accidental?". A requirement here is a promise; a missing row is not a promise
 ## 1. Scope and system boundary
 
 Praxis is a **client-heavy** system. The SPA performs every algebraic operation, every
-selection, every animation and every progression decision. The backend performs three
-jobs only:
+selection, every animation and every progression decision. The backend performs these
+jobs, and only these:
 
 1. serve static game content (`GET /api/{levels,levels/{id},laws}`),
 2. compute the authoritative score for one finished puzzle (`POST /api/score`),
 3. store and return a learner's progress snapshot (`GET /api/progress`,
    `POST /api/progress/save`),
-4. answer a plain liveness probe (`GET /`).
+4. accept one contact-form report (`POST /api/feedback`), which it stores in `public.feedback`
+   and never reads back over the API,
+5. answer a plain liveness probe (`GET /`).
 
 Authentication is **delegated to Supabase Auth** and never passes through the backend during
 sign-in: the SPA talks to Supabase directly to obtain an access token, and the backend only
@@ -47,16 +49,25 @@ sign-in: the SPA talks to Supabase directly to obtain an access token, and the b
    browser (SPA)                     backend (FastAPI)                Supabase
    ─────────────                     ─────────────────                ────────
    engine/  all algebra              api/routes  thin transport       Auth  (JWT issue/verify)
-   state/   all game state           services    scoring + progress    PostgREST (3 tables)
+   state/   all game state           services    scoring + progress    PostgREST (4 tables)
    services/ the only network hop →  repositories the only data hop →
    services/supabaseClient.js ──────────── auth + session ────────────────►
    services/apiClient.js ─────────────► /api/*  bearer token ──────────► /auth/v1/user
                                                                         /rest/v1/{table}
 ```
 
-**In scope for this SRS:** the 7 application endpoints, the 9 client routes, the 3 database
+**In scope for this SRS:** the 8 application endpoints, the 10 client routes, the 4 database
 tables, the 2 content JSON documents, the browser-storage contracts, and the quality
 attributes in NFR-1 – NFR-15.
+
+**User-facing terms.** The Terms and Conditions dialog
+(`frontend/src/content/termsContent.js`, rendered by
+`frontend/src/components/ui/TermsDialog.jsx`) is the learner-facing summary of this scope
+and of the LAWS proposal. It quotes the rules in §3.4, §3.6 and §3.9: the 80% average to
+unlock a level, 10 points per stage plus up to 5 bonus, stars at 90 and 75, the 20-point
+Guide, free worded hints, and a sandbox that records nothing. It also lists the data in §6.
+Change that file in the same commit as any rule change here; `.e2e/terms-copy.mjs` fails
+the build when the two drift apart.
 
 **Out of scope:** Supabase's own service behaviour, the `.e2e/` harness internals, and
 anything in the frozen legacy documents ([`context.md`](../context.md),
@@ -116,7 +127,7 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
-| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181` |
+| **FR-11** | ① The carousel renders 5 entries: Tutorial, Level 1, Level 2, Level 3 — Boss, Sandbox. ② A locked card is not clickable and shows the reason: "Complete Tutorial", "🔒 80% avg required" or "Coming Soon". ③ The active locked card shows a gate bar with completed/total stages. ④ The row is translated so the selected card is centred on a narrow viewport, and does not move when the row fits. ⑤ Every card keeps one identical layout width, height and border width in every selection state, including the active card's gate bar. The selected card lifts by a 5.5% transform and carries a pulsing halo and ring, so selection never reflows the row. | `frontend/src/pages/LevelSelectPage.jsx:51`, `:60-123`, `:293-390`, `:172-181`; `.e2e/level-card-sizing.mjs` |
 | **FR-12** | ① Level 2 is locked while any Level 1 stage is incomplete, even if the average is 100. ② Level 2 is locked while the Level 1 average is below 80, even if all stages are done. ③ Both conditions true ⇒ unlocked. ④ The same rule applies Level 2 → Level 3. ⑤ The threshold is 80, not 70. | `frontend/src/state/progressStore.js:291-313` (`allDone && avgScore >= UNLOCK_AVERAGE_SCORE`); `frontend/src/config/gameRules.js:49`; `backend/config/constants.py:26` |
 | **FR-13** | ① Stage 0 is always playable. ② Stage *N* is `locked` until stage *N−1* is in the completed set. ③ Locked cards are `disabled` and render a lock glyph. | `frontend/src/pages/StageSelectorPage.jsx:56`, `:58-62`, `:294` |
 | **FR-14** | ① A stored score ≥ 90 shows 3 stars, ≥ 75 shows 2, any completion shows 1. ② A completed stage with no stored score still shows 1 star. ③ A stage that is neither completed nor scored shows 0 stars. ④ Levels 1–3 additionally require re-entering the tutorial check only for level 1. | `frontend/src/pages/StageSelectorPage.jsx:68-78`; `frontend/src/state/progressStore.js:281-285` |
@@ -155,9 +166,9 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | ID | Acceptance criteria | Implementation |
 |---|---|---|
 | **FR-29** | ① Every store mutation writes `localStorage` synchronously under `praxis_v1_<userId>`. ② For a signed-in learner with a loaded server snapshot, a mutation schedules a save 500 ms later, coalescing bursts into one request. ③ A guest or a not-yet-hydrated learner schedules nothing. ④ A storage exception (private mode, quota) does not lose in-memory progress. | `frontend/src/state/progressStore.js:60-94`; `frontend/src/config/storageKeys.js:10`; `frontend/src/config/gameRules.js:68` |
-| **FR-30** | ① `points` takes the maximum of local and server. ② `bestStreak` takes the maximum; `streak` prefers the server value. ③ `stageScores` keeps the higher score per key. ④ `stageProgress` unions the stage lists and de-duplicates. ⑤ Local `stageSolutions` win over server ones. ⑥ Hydration never overwrites a local best with a lower server value. ⑦ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
+| **FR-30** | ① `points` takes the maximum of local and server. ② `stageScores` keeps the higher score per key. ③ `stageProgress` unions the stage lists and de-duplicates. ④ Local `stageSolutions` win over server ones. ⑤ Hydration never overwrites a local best with a lower server value. ⑥ A `setUser` that loses a race discards its stale response. | `frontend/src/state/progressStore.js:97-130`, `:158-165` |
 | **FR-31** | ① Revisiting a completed stage restores its derivation, marks the stage complete and shows the review message. ② The restored state does **not** auto-open the completion modal. ③ A stored derivation that fails to parse falls back to the initial expression with a warning instead of crashing. ④ Sandbox problems are never loaded from storage. | `frontend/src/state/useGameState.js:119-136`; `frontend/src/components/puzzle/usePuzzleSession.js:134-147`, `:154` |
-| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, streak, bestStreak, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
+| **FR-32** | ① `GET /api/progress` with a valid bearer returns `{points, stageProgress, stageScores}`. ② Without a bearer it returns `401 unauthorized`. ③ `POST /api/progress/save` writes one totals row and one row per completed stage, each upserted on `(user_id, level_id, stage_idx)`. ④ A body that is not a valid snapshot is rejected `422 validation_error` inside the envelope. ⑤ Stage scores round-trip without type coercion (a whole score stays an integer). | `backend/api/routes/progress.py:20`, `:26`; `backend/api/schemas/progress.py:11`; `backend/services/progress_service.py:53-84` |
 
 ### 3.9 Sandbox (FR-33 – FR-37)
 
@@ -178,7 +189,7 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | **FR-40** | ① Cues exist for `step, hint, guide, correct, wrong, reset, complete`. ② The preference persists in `localStorage` and defaults to on. ③ Audio is primed by the learner's first gesture so a cue is not silently dropped by autoplay policy. ④ With sound off, no `AudioContext` is created and no cue plays. | `frontend/src/services/soundEffects.js:43`, `:80`, `:132`; `frontend/src/state/useGameState.js:244`, `:401`; `frontend/src/config/storageKeys.js:28` |
 | **FR-41** | ① A touch device ≤ 767 px wide in portrait shows the blocking rotate overlay and nothing else interactive. ② A touch device 768–1023 px in portrait shows a dismissible banner and remains usable. ③ A pointer-fine window of any width is classed desktop and shows neither. ④ Dismissing the banner persists for the browser session. ⑤ No User-Agent string is read anywhere in the decision. | `frontend/src/hooks/useDeviceTier.js:57-94`, `:97-108`; `frontend/src/components/OrientationGate.jsx:16-24` |
 | **FR-42** | ① Width ≥ 1024 px on a pointer-fine device renders the three-column desktop layout. ② A phone landscape, tablet portrait or narrow window moves step history into an overlay drawer, assistance into the header and laws into a bottom dock, without changing desktop markup. ③ Touch tiers get ≥ 44 px targets. ④ No tier ever renders two copies of the same panel. | `frontend/src/pages/ProblemPage.jsx:69-99`, `:363-424`; `frontend/src/config/gameRules.js` (`TIMING`) |
-| **FR-43** | The survey link opens the configured form in a new tab and is reachable from the landing page, carousel, stage matrix and workspace header; the URL exists in exactly one module. | `frontend/src/config/appLinks.js:9`; `frontend/src/components/layout/SurveyButton.jsx:13` |
+| **FR-43** | ① The **Feedback** entry point opens the in-app `/contact` page — no external form and no new tab — from the landing page, the level screens, the workspace header and the profile page. ② The form takes a category (`bug` / `idea` / `other`), a message of 10–2000 characters and, **only when signed out**, an email address; a signed-in caller's account email is used and shown read-only. ③ The page path, the level/stage ids when the URL matches, the app version and the user-agent are attached automatically. ④ A failed send keeps the typed text and announces the failure with `role="alert"`; success replaces the card with "Message sent" and the reply address. ⑤ The report is stored in `public.feedback` through `POST /api/feedback`; there is no external survey URL left in the client. | `frontend/src/pages/ContactPage.jsx:93`; `frontend/src/components/layout/SurveyButton.jsx:19-21`; `frontend/src/services/feedbackApi.js:40-52`; `backend/api/routes/feedback.py:22-38` |
 
 ## 4. Non-functional requirements and acceptance criteria
 
@@ -196,13 +207,13 @@ Each requirement below states **the promise**, then **how a tester can falsify i
 | **NFR-10** | ① Every response carries `X-Request-ID`, echoing the request header when supplied. ② Exactly one JSON access-log line per request with `ts, level, logger, message, request_id` plus `method, path, status, duration_ms`. ③ An unhandled exception is logged with a stack and answered `500` inside the envelope. | `backend/core/middleware.py:27`, `:48-57`, `:33-45`; `backend/core/logging.py:34-50`. |
 | **NFR-11** | ① `engine/` imports only `config/` and itself. ② `state/` imports `engine/`, `services/`, `config/`. ③ `components/` and `pages/` import all three. ④ Every tunable number lives in `frontend/src/config/gameRules.js` or `backend/config/constants.py`. | Import analysis; one documented exception noted in §9. |
 | **NFR-12** | The tier decision is a pure function testable without a DOM; the responsive matrix is exercised by a browser suite. | `frontend/src/hooks/useDeviceTier.js:57`; `.e2e/responsive-tiers.mjs`. |
-| **NFR-13** | ① Touch tiers apply a ≥ 44 px minimum to interactive elements. ② Popups are placed by a collision solver and clamped to the viewport with an 8 px margin. ③ The sandbox verdict uses live-region roles. | `frontend/src/pages/ProblemPage.jsx:356`; `frontend/src/hooks/useCollisionPlacement.js:38`, `:164`; `.e2e/popup-overlap-verify.mjs`. |
+| **NFR-13** | ① Touch tiers apply a ≥ 44 px minimum to interactive elements. ② Popups are placed by a collision solver and clamped to the viewport with an 8 px margin, never over the workspace header; the one-shot step-inspection tip is instead centred in the viewport, because it is a first-run explainer rather than an annotation of a control. ③ The sandbox verdict uses live-region roles. | `frontend/src/pages/ProblemPage.jsx:356`; `frontend/src/hooks/useCollisionPlacement.js:38`, `:164`; `.e2e/popup-overlap-verify.mjs`. |
 | **NFR-14** | `render.yaml` declares exactly one Render web service, Python, `rootDir: backend`, start command `uvicorn main:app`. The SPA is deployed separately and rewrites `/api/*` to that service. | `render.yaml:1-16`; `frontend/vercel.json:3-6` (the `/api/(.*)` rewrite). |
 | **NFR-15** | Adding a level or puzzle requires editing `content/levels.json` only. Adding a law requires `content/laws.json` **plus** an entry in the engine table. | `docs/ARCHITECTURE.md` §3; `frontend/src/engine/laws/definitions.js:29`. |
 
 ## 5. External interface requirements
 
-### 5.1 REST interface — the 7 application endpoints
+### 5.1 REST interface — the 8 application endpoints
 
 All paths are relative to the API origin. Every `/api/*` response uses the envelope;
 `GET /` deliberately does not. Live-verified against `backend/main.py` with
@@ -215,8 +226,9 @@ All paths are relative to the API origin. Every `/api/*` response uses the envel
 | 3 | GET | `/api/levels/{level_id}` | none | `200` envelope with the full level incl. `puzzles` | `404 not_found` |
 | 4 | GET | `/api/laws` | none | `200` envelope, 10 law cards `{id,name,formulas[],desc}` | — |
 | 5 | POST | `/api/score` | optional bearer | `200` envelope with `{efficiency,targetLaw,hintIndependence,total,earnedPoints,breakdown}` | `404 not_found`, `422 validation_error`, `502 upstream_error` (persistence is backgrounded and never fails the response) |
-| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,streak,bestStreak,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
+| 6 | GET | `/api/progress` | **required** bearer | `200` envelope with `{points,stageProgress,stageScores}` | `401 unauthorized`, `502 upstream_error` |
 | 7 | POST | `/api/progress/save` | **required** bearer | `200` envelope `{"status":"ok"}` | `401 unauthorized`, `422 validation_error`, `502 upstream_error` |
+| 8 | POST | `/api/feedback` | optional bearer | `202` envelope `{"data":{"status":"received"}}` | `422 validation_error` (including a signed-out report with no address), `502 upstream_error` (feedback storage or the auth service) |
 
 Plus FastAPI's own `/docs`, `/redoc`, `/openapi.json`, `/docs/oauth2-redirect`.
 
@@ -303,16 +315,19 @@ to in-memory behaviour rather than a broken screen
 
 ## 6. Data requirements
 
-### 6.1 Persistent data — 3 tables in `public`
+### 6.1 Persistent data — 4 tables in `public`
 
 | Table | Key | Columns | Cardinality |
 |---|---|---|---|
-| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `streak INTEGER DEFAULT 0`, `best_streak INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
+| `user_progress` | `user_id UUID PK → auth.users(id) ON DELETE CASCADE` | `points INTEGER DEFAULT 0`, `updated_at TIMESTAMPTZ DEFAULT now()` | one row per learner |
 | `stage_progress` | `id UUID PK DEFAULT gen_random_uuid()`; `UNIQUE(user_id, level_id, stage_idx)` | `user_id UUID NOT NULL FK`, `level_id INTEGER NOT NULL`, `stage_idx INTEGER NOT NULL`, `best_score REAL DEFAULT 0`, `completed BOOLEAN DEFAULT FALSE`, `completed_at TIMESTAMPTZ DEFAULT now()` | one row per (learner, level, stage) |
 | `score_history` | `id UUID PK DEFAULT gen_random_uuid()` | `user_id UUID NOT NULL FK`, `level_id`, `stage_idx`, `steps_used INTEGER NOT NULL`, `laws_used TEXT[] NOT NULL`, `hints_used INTEGER NOT NULL`, `efficiency REAL NOT NULL`, `target_law REAL NOT NULL`, `hint_independence REAL NOT NULL`, `total REAL NOT NULL`, `earned_points INTEGER NOT NULL`, `created_at TIMESTAMPTZ DEFAULT now()` | one row per completed attempt |
+| `feedback` | `id UUID PK DEFAULT gen_random_uuid()` | `user_id UUID NULL → auth.users(id) ON DELETE SET NULL`, `email TEXT`, `category TEXT CHECK IN ('bug','idea','other')`, `message TEXT CHECK char_length BETWEEN 10 AND 2000`, `page TEXT`, `app_version TEXT`, `context JSONB`, `user_agent TEXT`, `status TEXT DEFAULT 'new' CHECK IN ('new','read','done')`, `created_at TIMESTAMPTZ DEFAULT now()` | one row per contact-form report; never read back over the API |
 
 Indexes: `idx_stage_progress_user(user_id)`, `idx_score_history_user(user_id)`,
 `idx_score_history_level(user_id, level_id, stage_idx)`. `database/init.sql:45-47`
+`database/feedback.sql` adds `feedback_created_at_idx` and `feedback_status_idx` (`:30-31`) and
+creates the table itself (`:8-24`); `init.sql` does not contain it, so both scripts must run.
 
 **Requirements on this data.**
 
@@ -321,8 +336,9 @@ Indexes: `idx_stage_progress_user(user_id)`, `idx_score_history_user(user_id)`,
 | DR-1 | `stage_progress.level_id` stores the **content id**, which is 0-based; Tutorial rows therefore carry `level_id = 0`. Mixing this with the UI's "Level 1/2/3" labels is the most likely defect in any new query. |
 | DR-2 | `score_history.hints_used` stores **hints + guides** as one figure, because guide usage was folded into the existing column rather than adding one. `backend/services/progress_service.py:101` writes the summed figure; `backend/services/scoring_service.py:51` computes it. |
 | DR-3 | There is **no schema-migration tooling**: `database/init.sql` is a hand-run script whose `CREATE TABLE IF NOT EXISTS` statements are safe to re-run but which cannot evolve an existing schema. |
-| DR-4 | RLS is enabled on all three tables with one policy each named `"Service role full access"`, defined `FOR ALL USING (true)`. This is **fully permissive for every role, including `anon`**, and there is no `auth.uid() = user_id` predicate anywhere [D20]. |
+| DR-4 | RLS is enabled on all four tables. The three progress tables each have one policy named `"Service role full access"`, defined `FOR ALL USING (true)` — **fully permissive for every role, including `anon`**, with no `auth.uid() = user_id` predicate anywhere [D20]. `public.feedback` is the exception and has **no policy at all**. |
 | DR-5 | The `init.sql` header comment references Better Auth tables created by `npx auth migrate`. **No Better Auth installation exists in this repository** [D3]. |
+| DR-6 | `public.feedback` is **write-only by design**: RLS is enabled with no policies, so `anon` and `authenticated` are refused outright and only the backend's service-role client can insert (`database/feedback.sql:33-37`). No endpoint reads a report back; the operator triages rows in the Supabase dashboard. Do not "harmonise" it by copying the permissive `FOR ALL USING (true)` policy. |
 
 ### 6.2 Content data — 2 JSON documents
 
@@ -357,8 +373,6 @@ Per-puzzle keys, exactly: `expr` (string), `goal` (string), `targetLaws` (law-id
 ```js
 {
   points: 0,            // integer; +10 per first completion, + bonus, −20 per Guide
-  streak: 0,            // incremented on every points award
-  bestStreak: 0,
   levelsCompleted: [],  // numeric content ids
   stageProgress: {},    // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},      // { "1:0": 87.5 } → best total per stage
@@ -373,7 +387,7 @@ Sibling fields the server may return and the merge accepts: `hasCompletedTutoria
 two fields written back to the server:
 
 ```json
-{ "progress": { "points": 0, "streak": 0, "bestStreak": 0,
+{ "progress": { "points": 0,
                 "stageProgress": { "1": [0,1] }, "stageScores": { "1:0": 87.5 } } }
 ```
 `backend/api/schemas/progress.py:11-22` — field names are a frozen contract with two clients.
@@ -416,7 +430,7 @@ documentation pass — see §9 for why the backend has no automated suite.
 | FR-8 | `backend/api/routes/levels.py:18`, `backend/services/content_service.py:24` | `live` |
 | FR-9 | `backend/api/routes/laws.py:18` | `live` |
 | FR-10 | `backend/repositories/content_repository.py:16`, `frontend/vite.config.js:16` | `.e2e/verify-sandbox.mjs`; `live` |
-| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs` |
+| FR-11 | `frontend/src/pages/LevelSelectPage.jsx:60` | `.e2e/gameplay.mjs`, `.e2e/acceptance-features.mjs`, `.e2e/level-card-sizing.mjs` (64 checks over four viewports × three selection states) |
 | FR-12 | `frontend/src/state/progressStore.js:291`, `frontend/src/pages/LevelSelectPage.jsx:94` | `.e2e/gameplay.mjs` |
 | FR-13 | `frontend/src/pages/StageSelectorPage.jsx:56` | `.e2e/gameplay.mjs` |
 | FR-14 | `frontend/src/pages/StageSelectorPage.jsx:68`, `frontend/src/state/progressStore.js:281` | `.e2e/gameplay.mjs` |
@@ -526,10 +540,10 @@ resolution. The full register is D0–D23 in
 | ID | This SRS requires | Proposal claims | Resolution |
 |---|---|---|---|
 | D0 | Everything here is derived from the tree. | `context.md` is the project context. | It is stale in §2, §5, §10, §11, §12. |
-| D1 / D23 | Sandbox validation is client-side only; **no `POST /sandbox/validate` exists** and §5.1 lists 7 endpoints. | The brief implies such an endpoint. | Implemented in `frontend/src/engine/sandbox/validate.js:155` and `frontend/src/engine/sandbox/input.js:109`. |
-| D2 | Supabase is integrated: 3 tables, bearer auth, 2 progress endpoints (FR-29 – FR-32, §5.2). | "NOT integrated yet"; "Auth: None". | `backend/supabase_client.py`, `backend/api/routes/progress.py`, `frontend/src/services/supabaseClient.js`. |
+| D1 / D23 | Sandbox validation is client-side only; **no `POST /sandbox/validate` exists** and §5.1 lists 8 endpoints. | The brief implies such an endpoint. | Implemented in `frontend/src/engine/sandbox/validate.js:155` and `frontend/src/engine/sandbox/input.js:109`. |
+| D2 | Supabase is integrated: 4 tables, bearer auth, 2 progress endpoints (FR-29 – FR-32, §5.2). | "NOT integrated yet"; "Auth: None". | `backend/supabase_client.py`, `backend/api/routes/progress.py`, `frontend/src/services/supabaseClient.js`. |
 | D3 | Auth is Supabase Auth. | Better Auth tables via `npx auth migrate`. | Four dead Better Auth remnants remain: the `init.sql:4` header, `vite.config.js:24-28`, `LandingPage.jsx:21`, `LevelSelectPage.jsx:142`. |
-| D6 | **7** application endpoints. | 5 endpoints. | §5.1 is the live-verified list. |
+| D6 | **8** application endpoints. | 5 endpoints. | §5.1 is the live-verified list. |
 | D7 | `POST /api/score` **does** persist for a signed-in learner (FR-28). | "does NOT save to DB". | `backend/api/routes/score.py:38-39`. |
 | D8 | The scoring formula as specified in FR-24, including `min(declared, stepsUsed)`, the hints+guides assistance total, 1-dp rounding, and full 30 for a puzzle with no target laws. | A simpler formula. | `backend/services/scoring_service.py:80-115`. |
 | D10 | 4 levels, Tutorial 4 + 12 + 12 + 12 = **40** puzzles. | 3 levels × 6 puzzles. | Counted from `content/levels.json`; `GET /api/levels` returns `puzzleCount [4,12,12,12]`. |

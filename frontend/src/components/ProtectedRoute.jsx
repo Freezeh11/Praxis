@@ -1,8 +1,9 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useSession } from '../state/useSession.js'
 
 export default function ProtectedRoute({ children }) {
   const { data: session, isPending } = useSession()
+  const location = useLocation()
 
   // Loading state — show a minimal spinner (same shell as TutorialGate's hold
   // screen: full viewport, centred, notch-safe gutters, no layout shift).
@@ -25,7 +26,10 @@ export default function ProtectedRoute({ children }) {
 
   // Not authenticated — redirect to login
   if (!session) {
-    return <Navigate to="/login" replace />
+    // Remember where the learner was headed so a sign-in returns them there
+    // instead of dropping them on the landing page.
+    const from = location.pathname + location.search
+    return <Navigate to="/login" replace state={from === '/' ? undefined : { from }} />
   }
 
   // Authenticated — render children

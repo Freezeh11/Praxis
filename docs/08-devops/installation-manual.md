@@ -191,21 +191,32 @@ Postgres tables that store progress.
 
 1. In the Supabase dashboard open **SQL Editor → New query**.
 2. Paste the **entire** contents of [`database/init.sql`](../../database/init.sql) and press **Run**.
+3. Repeat with [`database/feedback.sql`](../../database/feedback.sql) — the script that creates the
+   feedback inbox. Do not skip it; without it every `/contact` submission returns `502` (see below).
 
-The script is idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running it is safe. It creates:
+Both scripts are idempotent (`CREATE TABLE IF NOT EXISTS`), so re-running them is safe. `init.sql`
+creates:
 
 | Table | Purpose | Key constraints |
 |---|---|---|
-| `user_progress` | one row per learner: `points`, `streak`, `best_streak` | PK `user_id` → `auth.users(id)` |
+| `user_progress` | one row per learner: `points` | PK `user_id` → `auth.users(id)` |
 | `stage_progress` | one row per completed stage: `best_score`, `completed` | `UNIQUE(user_id, level_id, stage_idx)` |
 | `score_history` | every scored attempt ever submitted | append-only |
 
-It also enables Row Level Security on all three tables with a single policy each, literally named
+It also enables Row Level Security on its three tables with a single policy each, literally named
 `"Service role full access"`, defined `FOR ALL USING (true)`
 (`database/init.sql:50-58`). Read the honest interpretation in
 [configuration-guide.md](configuration-guide.md#7-security-notes): the policy is **not** restricted to
 `service_role`, there is no `auth.uid() = user_id` predicate, and the frontend never queries these
 tables directly — all access goes through the backend's service key.
+
+> **The feedback inbox needs one more script.** `database/feedback.sql` (37 lines) is applied
+> separately: **SQL Editor → New query**, paste the whole file, **Run**. It creates `public.feedback`
+> with its two indexes, its bounds `CHECK`s and a `GRANT` to `service_role`. RLS is enabled there
+> with **no policies** on purpose — only the backend's service-role client may insert, and no
+> client-side code can read a report back. Skipping it leaves the app otherwise healthy but makes
+> every submission from `/contact` answer `502` `"Feedback storage is unavailable"`, with nothing
+> in the dashboard. Run it after `init.sql`; it is idempotent too.
 
 ### 1.3 Copy the three credentials
 
@@ -225,17 +236,53 @@ Open **Project Settings → API** and note, without sharing them:
 
 ### 1.4 Optional but recommended: decide the email-confirmation policy
 
-`frontend/src/pages/RegisterPage.jsx:44-55` calls `supabase.auth.signUp`, then waits for a session
-before routing to `/levels`. Supabase's **Confirm email** setting decides what happens next:
+`frontend/src/services/authActions.js` calls `supabase.auth.signUp` with `emailRedirectTo` set to
+`` window.location.origin + '/auth/confirm' ``, so the emailed link comes back to this app.
+Supabase's **Confirm email** setting decides what happens next:
 
-- **Confirm email OFF** (fastest for local development): `signUp` returns a session immediately and
-  the new learner lands on `/levels`.
-- **Confirm email ON** (the Supabase default for new projects): `signUp` returns no session. The
-  page shows "Account created successfully! Welcome to Praxis." but the learner stays on
-  `/register` until they click the confirmation link in their inbox.
+- **Confirm email OFF** (fastest for local development): `signUp` returns a session immediately,
+  `authActions.js` broadcasts the auth change and the new learner lands on `/levels`.
+- **Confirm email ON** (the Supabase default for new projects): `signUp` returns no session.
+  `RegisterPage` swaps its form for a **Check your inbox** panel that names the address and
+  offers *Resend confirmation link* (30 s cooldown) plus *Use a Different Email*; the learner is
+  **never** routed to `/levels` in this state.
 
-Either is valid. For a demo machine, turning confirmation off removes a step from every test
+  The panel's trigger is "no error and no session", not "a user with no session": GoTrue answers a
+  confirmation-pending signup with the pending account at the **top level** of the response body
+  (`id`, `email`, `confirmation_sent_at`, and no `user` key), and supabase-js reads `data.user`,
+  so what reaches the app is `{ user: null, session: null }` with `error: null`. Keying the panel
+  off `data.user` therefore reported every real signup as an immediate success and never showed
+  the panel — measured against the project on 2026-11-25. The rule now lives in
+  `frontend/src/services/emailConfirmation.js:27`. The emailed link opens `/auth/confirm`
+  (`ConfirmEmailPage`), which exchanges the token, shows **Email confirmed** and offers
+  *Continue to Levels*. An expired, reused or malformed link renders the reason and a resend form on
+  that same page, and `/login` does the same when Supabase answers `email_not_confirmed`.
+
+Either policy is valid. For a demo machine, turning confirmation off removes a step from every test
 signup; for anything public, leave it on.
+
+**If confirmation is ON, three dashboard fields must match the app** (Supabase dashboard →
+**Authentication**):
+
+| Setting | Where | Value |
+|---|---|---|
+| **Confirm email** | Providers → Email | enabled |
+| **Site URL** | URL Configuration | the app origin, e.g. `http://localhost:5173` |
+| **Redirect URLs** | URL Configuration | `<app origin>/auth/confirm` and `<app origin>/reset-password` (e.g. `http://localhost:5173/auth/confirm`) |
+
+A redirect target missing from **Redirect URLs** is the usual cause of a link that lands on the
+wrong page: Supabase falls back to **Site URL** and the token never arrives, so `/auth/confirm`
+reports "Open the link from your email" (recoverable with its resend form).
+
+The deployment behind **Site URL** must also be built from a commit that **contains** the
+`/auth/confirm` route. A site whose bundle predates it answers that path with the SPA shell but
+cannot finish the exchange, and the learner sees the home page while the link silently expires. To
+check a live bundle:
+
+```bash
+curl -s https://<site>/ | grep -o '/assets/index-[A-Za-z0-9_-]*\.js' | head -1
+curl -s https://<site>/assets/index-<hash>.js | grep -c 'auth/confirm'   # 0 = stale build
+```
 
 **✅ Verify Stage 1:** in the Supabase **Table Editor** you should see `user_progress`,
 `stage_progress` and `score_history` under schema `public`. Then run this in the SQL editor:

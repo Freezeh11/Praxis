@@ -1,8 +1,8 @@
 # SCHEMA — the Praxis data dictionary
 
-**What this is:** the exhaustive, column-by-column reference for the three PostgreSQL tables Praxis
-stores in Supabase — `user_progress`, `stage_progress` and `score_history` — including every
-constraint, every index and every Row Level Security policy, quoted verbatim from the DDL.
+**What this is:** the exhaustive, column-by-column reference for the four PostgreSQL tables Praxis
+stores in Supabase — `user_progress`, `stage_progress`, `score_history` and `feedback` — including
+every constraint, every index and every Row Level Security policy, quoted verbatim from the DDL.
 **Who it's for:** a new teammate who has to change the schema, debug a missing row, or explain to a
 reviewer what the database does and does not guarantee. Read [ERD.md](ERD.md) first for the picture;
 this file is the detail.
@@ -15,6 +15,7 @@ this file is the detail.
 - [user_progress](#user_progress)
 - [stage_progress](#stage_progress)
 - [score_history](#score_history)
+- [feedback](#feedback)
 - [Constraints in full](#constraints-in-full)
 - [Indexes in full](#indexes-in-full)
 - [Row Level Security](#row-level-security)
@@ -33,31 +34,38 @@ this file is the detail.
 | **Type** | The declared PostgreSQL type. `REAL` is `float4` (4-byte floating point), not `NUMERIC`. |
 | **Null?** | `NO` only where the DDL says `NOT NULL` or the column is part of a `PRIMARY KEY`. Everything else accepts `NULL` **even when it has a default** — a default applies only when the column is omitted from an `INSERT`, it does not stop an explicit `NULL`. |
 | **Default** | Taken verbatim from the DDL. |
-| **Constraints** | Primary key, foreign key, unique — plus the honest note that there are no `CHECK` constraints anywhere in `database/init.sql`. |
+| **Constraints** | Primary key, foreign key, unique — plus the honest note that `database/init.sql` has no `CHECK` constraints at all, while `database/feedback.sql` uses them for every bound. |
 
-Every quoted DDL fragment in this file comes from the 58-line script `database/init.sql`, which is
-the whole schema. There is no migrations directory, no ORM and no second DDL file: verified with
-`grep -rn "CREATE TABLE" --include=*.sql .` → three matches, all in `database/init.sql:7,16,28`.
+Every quoted DDL fragment in this file comes from one of two hand-written scripts: the 58-line
+`database/init.sql` (the three learner tables) and `database/feedback.sql` (the feedback inbox).
+There is no migrations directory and no ORM: `grep -rn "CREATE TABLE" --include=*.sql .` → four
+matches, at `database/init.sql:7,16,28` and `database/feedback.sql:8`.
 
 ## Where the schema lives
 
-- The DDL is one file: `database/init.sql` (58 lines). Its header says to run it in the Supabase SQL
-  Editor (`database/init.sql:2`).
-- All three tables are created in the **`public`** schema (no `CREATE SCHEMA` statement exists), and
+- The learner tables are one file: `database/init.sql` (58 lines). Its header says to run it in the
+  Supabase SQL Editor (`database/init.sql:2`).
+- The feedback table is a second, separate script: `database/feedback.sql`, whose header says to run
+  it once in the SQL Editor **after** `init.sql` (`database/feedback.sql:1-6`). The two are separate
+  on purpose: the inbox exists only for the contact form, and a deployment that never enables
+  feedback need not create it.
+- All four tables are created in the **`public`** schema (no `CREATE SCHEMA` statement exists), and
   they reference **`auth.users(id)`**, a table owned by Supabase Auth and created by Supabase, not by
-  this repo (`database/init.sql:8,18,30`).
+  this repo (`database/init.sql:8,18,30`; `database/feedback.sql:11`).
 - The application never runs DDL. The backend only speaks PostgREST over HTTP
   (`backend/supabase_client.py:24`, `base_url = f"{self.url}/rest/v1"`).
-- The schema is therefore applied **by hand, out of band**. That is why the three tables can be
-  out of step with the repository: nothing in the code checks that `init.sql` was ever executed.
+- The schema is therefore applied **by hand, out of band**. That is why the four tables can be
+  out of step with the repository: nothing in the code checks that either DDL file was ever
+  executed — the feedback insert fails with `502 upstream_error` instead.
 
 ## Tables at a glance
 
 | Table | Row means | Row count per learner | Written by |
 |---|---|---|---|
-| `user_progress` | The learner's running totals: points, current streak, best streak. | **At most 1** — the PK *is* the FK to `auth.users`. | `POST /api/progress/save` only (`backend/services/progress_service.py:63`). |
+| `user_progress` | The learner's running total: points. | **At most 1** — the PK *is* the FK to `auth.users`. | `POST /api/progress/save` only (`backend/services/progress_service.py:63`). |
 | `stage_progress` | One stage the learner has finished, with the best score ever earned there. | At most one per (level, stage) — `UNIQUE(user_id, level_id, stage_idx)`. Up to 40 today (4 + 12 + 12 + 12). | `POST /api/progress/save` (`backend/services/progress_service.py:76`) **and** the background score task (`backend/services/progress_service.py:114`). |
 | `score_history` | One scored attempt: an immutable log line per puzzle completion. | Unbounded — every attempt inserts a new row. | The background score task only (`backend/services/progress_service.py:94`). |
+| `feedback` | One contact-form submission: a category, the message, and the address to reply to. | Unbounded — every accepted report inserts a new row. | `POST /api/feedback` only (`backend/repositories/feedback_repository.py:23-33`). Never read back by the application. |
 
 There are **no other tables**. In particular there is no `levels`, `laws`, `puzzles` or `solutions`
 table: all game content is static JSON under `content/` (see
@@ -75,8 +83,6 @@ substitutes zeros when the row is missing (`backend/services/progress_service.py
 CREATE TABLE IF NOT EXISTS user_progress (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,        -- References Supabase auth.users
   points INTEGER DEFAULT 0,
-  streak INTEGER DEFAULT 0,
-  best_streak INTEGER DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
@@ -87,9 +93,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
 |---|---|---|---|---|---|
 | 1 | `user_id` | `UUID` | NO | — | **PRIMARY KEY**; **FOREIGN KEY** → `auth.users(id)` **ON DELETE CASCADE** (`database/init.sql:8`). A `PRIMARY KEY` column is implicitly `NOT NULL`. |
 | 2 | `points` | `INTEGER` | YES | `0` | none (`database/init.sql:9`) |
-| 3 | `streak` | `INTEGER` | YES | `0` | none (`database/init.sql:10`) |
-| 4 | `best_streak` | `INTEGER` | YES | `0` | none (`database/init.sql:11`) |
-| 5 | `updated_at` | `TIMESTAMPTZ` | YES | `now()` | none (`database/init.sql:12`) |
+| 3 | `updated_at` | `TIMESTAMPTZ` | YES | `now()` | none (`database/init.sql:10`) |
 
 ### What each column actually holds
 
@@ -97,15 +101,13 @@ CREATE TABLE IF NOT EXISTS user_progress (
 |---|---|---|
 | `user_id` | The Supabase Auth user id (`auth.users.id`), passed as `user["id"]` from the bearer token. | `backend/api/routes/progress.py:34`, `backend/core/security.py` (`get_current_user`) |
 | `points` | The learner's **client-computed** running total, in whole points. The server never adds anything up; it stores what the browser sends. | `backend/api/schemas/progress.py:12`, `backend/services/progress_service.py:66` |
-| `streak` | Current streak counter, incremented client-side by `addPoints` on every scored stage. | `frontend/src/state/progressStore.js:170-175` |
-| `best_streak` | High-water mark of `streak`, also computed client-side. | `frontend/src/state/progressStore.js:175` |
 | `updated_at` | **Misleading name.** Nothing updates it. There is no `CREATE TRIGGER` and no `ON UPDATE` anywhere in `database/init.sql`, and no writer sends the column, so it holds the time the row was first inserted — not the last time the row changed. | absence of `TRIGGER`/`UPDATE` in `database/init.sql`; payload at `backend/services/progress_service.py:63-70` omits it |
 
 > **Integrity finding (documented honestly, not fixed):** `points` is client-authoritative. A learner
 > can POST any integer to `/api/progress/save` and it is written verbatim. There is no server-side
 > balance, no `CHECK (points >= 0)` and no reconciliation against `score_history.earned_points`. The
 > API contract that makes this possible is `backend/api/schemas/progress.py:11-18`. Verified by
-> execution: `SaveProgressRequest.model_validate({"progress": {"points": -5, "streak": -1, …}})`
+> execution: `SaveProgressRequest.model_validate({"progress": {"points": -5, …}})`
 > parses without error, so a negative balance is storable even though the browser's own
 > `deductPoints` floors at 0 (`frontend/src/state/progressStore.js:178`).
 
@@ -258,25 +260,96 @@ column names is:
 
 ---
 
+## feedback
+
+One row per accepted contact-form submission. Written only by `POST /api/feedback`
+(`backend/repositories/feedback_repository.py:23-33`); the application never reads it back —
+there is no list route and no repository read function. The maintainer reads rows in the Supabase
+dashboard, which is why this table is documented here but has no API consumer.
+
+A signed-out report stores `user_id = NULL` and the address the learner typed; a signed-in report
+stores the account id and the account address, whatever the form sent.
+
+```sql
+create table if not exists public.feedback (
+    id          uuid primary key default gen_random_uuid(),
+    -- Null for a report sent while signed out.
+    user_id     uuid references auth.users (id) on delete set null,
+    -- The address to reply to: the account address when signed in, else what was typed.
+    email       text,
+    category    text not null default 'other' check (category in ('bug', 'idea', 'other')),
+    message     text not null check (char_length(message) between 10 and 2000),
+    -- Where the learner was when they opened the form.
+    page        text check (page is null or char_length(page) <= 200),
+    app_version text check (app_version is null or char_length(app_version) <= 40),
+    -- Optional puzzle coordinates that caused the report.
+    context     jsonb,
+    user_agent  text check (user_agent is null or char_length(user_agent) <= 400),
+    status      text not null default 'new' check (status in ('new', 'read', 'done')),
+    created_at  timestamptz not null default now()
+);
+```
+
+*(`database/feedback.sql:8-24`, reproduced verbatim.)*
+
+| # | Column | Type | Null? | Default | Constraints |
+|---|---|---|---|---|---|
+| 1 | `id` | `UUID` | NO | `gen_random_uuid()` | **PRIMARY KEY** (`database/feedback.sql:9`). Surrogate key; nothing reads it. |
+| 2 | `user_id` | `UUID` | YES | — | **FOREIGN KEY** → `auth.users(id)` **ON DELETE SET NULL** (`database/feedback.sql:11`). `NULL` for a report sent while signed out. |
+| 3 | `email` | `TEXT` | YES | — | none (`database/feedback.sql:13`). The service refuses a report with no reply address, but the column itself permits `NULL` for a service-role insert. |
+| 4 | `category` | `TEXT` | NO | `'other'` | `CHECK (category in ('bug', 'idea', 'other'))` (`database/feedback.sql:14`) |
+| 5 | `message` | `TEXT` | NO | — | `CHECK (char_length(message) between 10 and 2000)` (`database/feedback.sql:15`) |
+| 6 | `page` | `TEXT` | YES | — | `CHECK (page is null or char_length(page) <= 200)` (`database/feedback.sql:17`) |
+| 7 | `app_version` | `TEXT` | YES | — | `CHECK (app_version is null or char_length(app_version) <= 40)` (`database/feedback.sql:18`) |
+| 8 | `context` | `JSONB` | YES | — | none (`database/feedback.sql:20`). The shape (`levelId`, `stageIdx`, `expression`) is enforced by the API schema, not the table. |
+| 9 | `user_agent` | `TEXT` | YES | — | `CHECK (user_agent is null or char_length(user_agent) <= 400)` (`database/feedback.sql:21`) |
+| 10 | `status` | `TEXT` | NO | `'new'` | `CHECK (status in ('new', 'read', 'done'))` (`database/feedback.sql:22`) |
+| 11 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | none (`database/feedback.sql:23`) |
+
+### What each column actually holds
+
+| Column | In practice | Evidence |
+|---|---|---|
+| `user_id` | The Supabase Auth id from the bearer token; `NULL` when the report was sent signed out. | `backend/services/feedback_service.py:46-47` |
+| `email` | The reply address: the account email when signed in, the typed address otherwise. Lowercased by the request schema before it reaches here. | `backend/services/feedback_service.py:37-38`; `backend/api/schemas/feedback.py:50-62` |
+| `category` | `bug`, `idea` or `other`. The form always sends one; the column default only applies to a direct insert. | `database/feedback.sql:14`; `frontend/src/services/feedbackApi.js:14-33` |
+| `message` | The trimmed report text. Together with `email` it is the only personally identifying content, so the application never logs it. | `backend/services/feedback_service.py:58-61` |
+| `page` | The pathname the form was opened from, e.g. `/level/1/stage/2`. | payload at `backend/services/feedback_service.py:51` |
+| `app_version` | `VITE_APP_VERSION` → `MODE` → `'unknown'`, whichever the client resolved. | `frontend/src/services/feedbackContext.js:17` |
+| `context` | Optional `{"levelId": 1, "stageIdx": 2}`; the web client sends it only for a level/stage path, and never sends `expression`. | `frontend/src/services/feedbackContext.js:24-32` |
+| `user_agent` | The request's `User-Agent`, truncated to 400 characters by the route so the `CHECK` cannot fail. | `backend/api/routes/feedback.py:19,36` |
+| `status` | Always `'new'` on insert. An operator moves it to `read` or `done` in the Supabase dashboard; no API path updates it. | `database/feedback.sql:22`; no update in `backend/repositories/feedback_repository.py` |
+| `created_at` | Insert time. `feedback_created_at_idx` orders the operator's listing newest-first. | `database/feedback.sql:23,30` |
+
+> **The table is write-only by design.** The repository exposes one function,
+> `insert_feedback`; there is no `get`, `list` or `delete`. The API returns only an
+> acknowledgement, and RLS (below) gives the anon/authenticated roles no policy at all. An
+> unattributable report never reaches this table: the service refuses it with `422` before the
+> insert, because a report we cannot answer is worse than one we never accepted.
+
+---
+
 ## Constraints in full
 
 Everything the DDL constrains, and everything it deliberately does not.
 
 | Kind | Where | Detail |
 |---|---|---|
-| `PRIMARY KEY` | `database/init.sql:8,17,29` | `user_progress(user_id)`; `stage_progress(id)`; `score_history(id)`. The two surrogate `id` columns are never read by application code. |
-| `FOREIGN KEY` | `database/init.sql:8,18,30` | All three reference `auth.users(id)`. All three are `ON DELETE CASCADE`, so deleting the Supabase Auth user removes every trace of their progress. |
+| `PRIMARY KEY` | `database/init.sql:8,17,29`; `database/feedback.sql:9` | `user_progress(user_id)`; `stage_progress(id)`; `score_history(id)`; `feedback(id)`. The three surrogate `id` columns are never read by application code. |
+| `FOREIGN KEY` | `database/init.sql:8,18,30`; `database/feedback.sql:11` | All four reference `auth.users(id)`. The three progress tables are `ON DELETE CASCADE`, so deleting the Supabase Auth user removes every trace of their progress. `feedback.user_id` is `ON DELETE SET NULL`, so a report outlives the account it came from — the operator can still reply to the address stored on the row. |
 | `UNIQUE` | `database/init.sql:24` | `stage_progress(user_id, level_id, stage_idx)` — the upsert conflict target. |
-| `NOT NULL` | `database/init.sql:18,19,20,30-40` | `stage_progress.user_id/level_id/stage_idx`; every `score_history` column except `created_at`. |
-| Implicit `NOT NULL` | `database/init.sql:8,17,29` | Primary-key columns. |
-| `CHECK` | **nowhere** | Zero `CHECK` constraints: no `points >= 0`, no `stage_idx >= 0`, no `0 <= total <= 100`, no `cardinality(laws_used) >= 0`. Verified with `grep -n "CHECK" database/init.sql` → no match. |
-| `DEFAULT` | `database/init.sql:9-12,17,21-23,29,41` | See the per-table tables. `gen_random_uuid()` requires PostgreSQL ≥ 13, where it is built in; the script creates **no extension** (`grep -n "EXTENSION" database/init.sql` → no match), so on an older Postgres this DDL fails. |
+| `NOT NULL` | `database/init.sql:18,19,20,30-40`; `database/feedback.sql:14,15,22,23` | `stage_progress.user_id/level_id/stage_idx`; every `score_history` column except `created_at`; `feedback.category/message/status/created_at`. |
+| Implicit `NOT NULL` | `database/init.sql:8,17,29`; `database/feedback.sql:9` | Primary-key columns. |
+| `CHECK` | `database/feedback.sql:14-22` | Six bounds on the inbox: `category in ('bug','idea','other')`, `char_length(message) between 10 and 2000`, `status in ('new','read','done')`, `page` ≤200, `app_version` ≤40, `user_agent` ≤400. `database/init.sql` still has **none** — no `points >= 0`, no `stage_idx >= 0`, no `0 <= total <= 100`, no `cardinality(laws_used) >= 0` — verified with `grep -n "CHECK" database/init.sql` → no match. |
+| `DEFAULT` | `database/init.sql:9-12,17,21-23,29,41`; `database/feedback.sql:9,14,22,23` | See the per-table tables. `gen_random_uuid()` requires PostgreSQL ≥ 13, where it is built in; neither script creates an **extension** (`grep -n "EXTENSION" database/*.sql` → no match), so on an older Postgres both DDL files fail. |
 | `TRIGGER` | **nowhere** | No audit trigger, no `updated_at` refresher, no user-creation hook. Verified with `grep -n "TRIGGER" database/init.sql` → no match. |
-| `GRANT` / `REVOKE` | **nowhere** | Table privileges are left at Supabase defaults; access control is entirely RLS (next section). |
+| `GRANT` / `REVOKE` | `database/feedback.sql:37` | One explicit grant: `grant all on table public.feedback to service_role`, which is what lets the backend's service-role client write. The three progress tables have no table grants; their access control is RLS alone. |
 
-Because there are no `CHECK` constraints, every range rule in this system lives in application code —
-`backend/services/scoring_service.py` for scores and `frontend/src/state/progressStore.js:178` for the
-points floor (`Math.max(0, p.points - amount)`).
+The progress tables have **no `CHECK` constraints at all**, so every range rule there lives in
+application code — `backend/services/scoring_service.py` for scores and
+`frontend/src/state/progressStore.js:178` for the points floor (`Math.max(0, p.points - amount)`).
+The feedback table is the counter-example: its bounds are in the DDL, because a report arrives
+from an untrusted endpoint and outlives the deploy that accepted it.
 
 ## Indexes in full
 
@@ -288,11 +361,22 @@ CREATE INDEX IF NOT EXISTS idx_score_history_level ON score_history(user_id, lev
 
 *(`database/init.sql:45-47`, reproduced verbatim.)*
 
+The inbox has its own two indexes:
+
+```sql
+create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
+create index if not exists feedback_status_idx on public.feedback (status, created_at desc);
+```
+
+*(`database/feedback.sql:30-31`, reproduced verbatim.)*
+
 | Index | Table | Columns | Query it serves | Evidence |
 |---|---|---|---|---|
 | `idx_stage_progress_user` | `stage_progress` | `(user_id)` | `GET /api/progress` listing every stage row for one learner. | `backend/repositories/progress_repository.py:37-42` |
 | `idx_score_history_user` | `score_history` | `(user_id)` | Per-learner history retrieval. **No application query reads `score_history` today** — the column exists for future analytics and for manual inspection. | `grep -rn "score_history" backend --include=*.py` shows only the insert path (`backend/repositories/progress_repository.py:57-59`) |
 | `idx_score_history_level` | `score_history` | `(user_id, level_id, stage_idx)` | "Every attempt on this stage by this learner" — filtered history. Also unused by current application code. | same as above |
+| `feedback_created_at_idx` | `feedback` | `(created_at DESC)` | The operator's "newest first" inbox listing. | `database/feedback.sql:30` |
+| `feedback_status_idx` | `feedback` | `(status, created_at DESC)` | Triage: everything still `new`, newest first within a status. | `database/feedback.sql:31` |
 
 Implicit indexes created by the DDL itself:
 
@@ -302,6 +386,7 @@ Implicit indexes created by the DDL itself:
 | `stage_progress_pkey` | `stage_progress` | `PRIMARY KEY (id)`. |
 | `stage_progress_user_id_level_id_stage_idx_key` | `stage_progress` | The `UNIQUE` constraint — this is the index PostgREST uses for `on_conflict`. |
 | `score_history_pkey` | `score_history` | `PRIMARY KEY (id)`. |
+| `feedback_pkey` | `feedback` | `PRIMARY KEY (id)`. |
 | FK indexes | all three | **Not created by PostgreSQL automatically.** `user_progress.user_id` is covered by its PK; `stage_progress.user_id` has `idx_stage_progress_user`; `score_history.user_id` has `idx_score_history_user`. Nothing indexes `auth.users` deletes beyond that, so a cascade delete of a learner scans each table once. |
 
 > There is **no index on `stage_progress(user_id, level_id, stage_idx)` other than the UNIQUE
@@ -310,8 +395,8 @@ Implicit indexes created by the DDL itself:
 
 ## Row Level Security
 
-RLS is **enabled** on all three tables, and each gets exactly one policy. Here is the entire block,
-verbatim:
+RLS is **enabled** on all four tables. The three progress tables each get exactly one (permissive)
+policy; `feedback` gets none, on purpose (see below). Here is the entire progress block, verbatim:
 
 ```sql
 -- Enable Row Level Security (permissive for now — tighten when auth RLS is set up)
@@ -368,22 +453,47 @@ call is `supabase.auth.*` (`frontend/src/services/authActions.js:11,21,33`,
 > WITH CHECK (auth.uid() = user_id)` at that point. This is the security finding the register calls
 > **D20**; see `docs/_staging/GROUND-TRUTH.md`.
 
+### `feedback` — RLS enabled, no policy
+
+```sql
+alter table public.feedback enable row level security;
+
+-- No policies on purpose. Do not add a permissive one: submissions carry an
+-- email address, and nothing in the client should ever read them back.
+grant all on table public.feedback to service_role;
+```
+
+*(`database/feedback.sql:33-37`, reproduced verbatim.)*
+
+With RLS on and no policy, the `anon` and `authenticated` roles match no rows and are refused
+every write: no `SELECT`, `INSERT`, `UPDATE` or `DELETE` policy exists to allow them. The backend
+is unaffected because it connects with the service-role key, which bypasses RLS; the explicit
+`GRANT` is what lets that role insert.
+
+This is the opposite of the progress tables, and it is deliberate. A feedback row holds a
+learner's words and email address, and no client feature needs to read it back — the API exposes
+only an insert and a bare acknowledgement. Do not "harmonise" it by copying the
+`FOR ALL USING (true)` policy: that would make every message readable with the publishable key
+that ships in the browser bundle. If a read path is ever needed, it belongs in a backend route
+that returns only the caller's own rows.
+
 ## Who writes these tables
 
-Three write paths exist. Nothing else in the repository writes to Supabase except the read-only
+Four write paths exist. Nothing else in the repository writes to Supabase except the read-only
 content path (JSON files) and the auth lookup.
 
 | Trigger | Function | Tables touched | When it runs | Evidence |
 |---|---|---|---|---|
 | `POST /api/progress/save` | `progress_service.save_progress` | `user_progress` upsert + one `stage_progress` upsert per completed stage | On the learner's debounced client push (500 ms after any progress change). | `backend/api/routes/progress.py:26-41`; `backend/services/progress_service.py:53-84`; debounce at `frontend/src/config/gameRules.js:68` |
 | `POST /api/score` with a valid bearer token | `progress_service.persist_score` (FastAPI `BackgroundTasks`) | `score_history` insert, then `stage_progress` upsert when the total beats the stored best | After the HTTP response has already been sent. Failures are logged and swallowed. | `backend/api/routes/score.py:37-39`; `backend/services/progress_service.py:87-127` |
-| Manual / test tooling | direct PostgREST `DELETE`/`POST` with the service key | all three | Out of band; used to reset the shared e2e learner between runs. | `.e2e/_harness.mjs:97-115`; `.e2e/tutorial-gate.mjs:40-58` |
+| `POST /api/feedback` | `feedback_service.submit_feedback` | `feedback` insert | On each accepted contact-form submission; the only writer. | `backend/api/routes/feedback.py:29-38`; `backend/services/feedback_service.py:19-61`; `backend/repositories/feedback_repository.py:23-33` |
+| Manual / test tooling | direct PostgREST `DELETE`/`POST` with the service key | all four | Out of band; used to reset the shared e2e learner between runs. | `.e2e/_harness.mjs:97-115`; `.e2e/tutorial-gate.mjs:40-58` |
 
 Reads: `GET /api/progress` calls `progress_repository.get_user_progress_row`
 (`backend/repositories/progress_repository.py:29-34`) and `list_stage_progress_rows`
 (`backend/repositories/progress_repository.py:37-42`), then merges them in
-`progress_service.build_progress` (`backend/services/progress_service.py:25-50`). `score_history` is
-never read by the application.
+`progress_service.build_progress` (`backend/services/progress_service.py:25-50`). `score_history` and
+`feedback` are never read by the application.
 
 ## What is NOT in the database
 
@@ -391,20 +501,21 @@ never read by the application.
 |---|---|---|
 | Levels, puzzles, hints, `optimalSteps`, `targetLaws` | `content/levels.json` | No `levels` table exists, so `stage_progress.level_id` / `stage_idx` cannot be foreign keys. |
 | Law reference cards | `content/laws.json` (10 laws) | `score_history.laws_used` stores bare law-id strings with no lookup table. |
-| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-18`), and Pydantic ignores unknown keys by default. Verified by executing `SaveProgressRequest.model_validate({... "stageSolutions": {...}})` → the parsed model contains only `points, streak, bestStreak, stageProgress, stageScores`. |
-| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `streak`, `bestStreak`, `stageProgress`, `stageScores` (`backend/services/progress_service.py:44-50`), so they are inferred from stage completion, not stored. |
+| Saved derivations (`stageSolutions`) | Browser `localStorage` only | `POST /api/progress/save` structurally **drops** them: the payload model has no such field (`backend/api/schemas/progress.py:11-18`), and Pydantic ignores unknown keys by default. Verified by executing `SaveProgressRequest.model_validate({... "stageSolutions": {...}})` → the parsed model contains only `points, stageProgress, stageScores`. |
+| `levelsCompleted` and `hasSeenTutorial` flags | Browser `localStorage`; re-derived on the server-merge path | `build_progress` returns only `points`, `stageProgress`, `stageScores` (`backend/services/progress_service.py:44-50`), so they are inferred from stage completion, not stored. |
 | Star counts | Computed on the fly from `stage_progress.best_score` | No `stars` column; see `frontend/src/state/progressStore.js:281-285`. |
 | Auth identities (email, password hash, sessions) | Supabase's `auth` schema, managed by Supabase Auth | The `public` tables only ever hold the `auth.users.id` value. |
+| A read path for feedback messages | Nowhere — `public.feedback` is write-only from the application | No `GET /api/feedback`; the operator reads the Supabase dashboard. See [feedback](#feedback). |
 
-That is the whole storage story: 3 tables for a learner's numbers, plus JSON files for the game
-itself. The backend is 1,241 lines of Python; it deliberately does not model the game in the
+That is the whole storage story: four tables — three for a learner's numbers, one for the feedback
+inbox — plus JSON files for the game itself. The backend is 1,241 lines of Python; it deliberately does not model the game in the
 database.
 
 ## Known discrepancies
 
 | ID | A document says | The code says | Where this file handles it |
 |---|---|---|---|
-| **D2** | `docs/context.md:29` — "**Database** … credentials provided, **NOT integrated yet**"; `docs/context.md:30` — "**Auth: None**"; `docs/context.md:220,222` — "Database integration ❌ MISSING", "Supabase client ❌ MISSING" | Fully integrated: three tables written through `backend/repositories/progress_repository.py`, bearer-authenticated routes, Supabase Auth on the frontend. | The whole of this document describes the integrated schema. |
+| **D2** | `docs/context.md:29` — "**Database** … credentials provided, **NOT integrated yet**"; `docs/context.md:30` — "**Auth: None**"; `docs/context.md:220,222` — "Database integration ❌ MISSING", "Supabase client ❌ MISSING" | Fully integrated: four tables written through `backend/repositories/`, bearer-authenticated routes, Supabase Auth on the frontend. | The whole of this document describes the integrated schema. |
 | **D7** | `docs/context.md:85` — `POST /api/score` "**does NOT save to DB**" | It does persist, in a background task, whenever a bearer token is present: `backend/api/routes/score.py:37-39`. | [score_history](#score_history), [Who writes these tables](#who-writes-these-tables) |
 | **D20** | the repo-root `README.md:44` tells the newcomer that running `init.sql` will "configure Row Level Security" | RLS is *enabled*, but the only policies are `FOR ALL USING (true)`. That is permissive, not protective. | [Row Level Security](#row-level-security) |
 | **D3** | `database/init.sql:4` — "Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`" | There is no Better Auth in this repository. The FK target is Supabase's `auth.users` (`database/init.sql:8`), and auth runs through `@supabase/supabase-js` (`frontend/src/services/authActions.js:11`). The header comment is a dead remnant. | [Where the schema lives](#where-the-schema-lives) |
@@ -417,34 +528,39 @@ The schema is applied manually, once per Supabase project:
 1. Supabase dashboard → SQL Editor → New Query
 2. Paste the contents of database/init.sql
 3. Run.  Re-running is safe: every statement is IF NOT EXISTS / CREATE OR REPLACE-free idempotent DDL.
+4. New Query → paste the contents of database/feedback.sql → Run. Also idempotent.
+   Skip this and POST /api/feedback returns 502 "Feedback storage is unavailable",
+   while the operator's dashboard shows no rows at all.
 ```
 
-*(Instruction taken from `database/init.sql:1-3` and the repo-root `README.md:44`.)*
+*(Instructions taken from `database/init.sql:1-3`, `database/feedback.sql:1-6` and the repo-root
+`README.md:44`.)*
 
 Verification queries a reviewer can run in the same SQL Editor:
 
 ```sql
--- 1. Exactly 3 application tables, all RLS-enabled.
+-- 1. Exactly 4 application tables, all RLS-enabled.
 select relname, relrowsecurity
 from pg_class
-where relname in ('user_progress','stage_progress','score_history');
+where relname in ('user_progress','stage_progress','score_history','feedback');
 
--- 2. Every policy on them: expect one "Service role full access" row per table,
---    with cmd = ALL, roles = {public}, and a USING expression of "true".
+-- 2. Every policy on them: expect one "Service role full access" row per progress
+--    table, with cmd = ALL, roles = {public}, and a USING expression of "true".
+--    feedback must appear zero times: RLS is on, but it has no policy at all.
 select tablename, policyname, cmd, roles, qual, with_check
 from pg_policies
-where tablename in ('user_progress','stage_progress','score_history');
+where tablename in ('user_progress','stage_progress','score_history','feedback');
 
--- 3. Every index: expect the 3 explicit ones plus 3 primary keys and 1 unique.
+-- 3. Every index: expect the 5 explicit ones plus 4 primary keys and 1 unique.
 select tablename, indexname, indexdef
 from pg_indexes
-where tablename in ('user_progress','stage_progress','score_history')
+where tablename in ('user_progress','stage_progress','score_history','feedback')
 order by tablename, indexname;
 
 -- 4. Confirm there is no trigger that could refresh updated_at / completed_at.
 select event_object_table, trigger_name
 from information_schema.triggers
-where event_object_table in ('user_progress','stage_progress','score_history');
+where event_object_table in ('user_progress','stage_progress','score_history','feedback');
 -- Expected: 0 rows.
 ```
 

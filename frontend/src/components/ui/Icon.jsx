@@ -1,5 +1,7 @@
 // Shared, font-independent icons. Visible labels belong to the surrounding UI.
 const paths = {
+  mail: 'M3 6h18v12H3Zm0 0 9 7 9-7',
+  send: 'm3 11 18-8-8 18-2-7Z',
   book: 'M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15',
   clipboard: 'M9 4H5v18h14V4h-4M9 2h6v4H9ZM8 11h8M8 15h8M8 19h5',
   trophy: 'M8 3h8v6a4 4 0 0 1-8 0ZM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 2v6m-4 2h8',
@@ -24,6 +26,9 @@ const paths = {
   star: 'm12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z',
   info: 'M12 11v6m0-10h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
   menu: 'M4 6h16M4 12h16M4 18h16',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z',
+  sparkle: 'm12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9ZM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9Z',
 }
 
 export default function Icon({ name, className = '', ...props }) {

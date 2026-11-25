@@ -374,7 +374,7 @@ management for this product.
 
 **The reasoning.** The bug that motivated it was not "state is hard to manage" — it was
 "state exists in four places at once". `progressStore.js` records it: "the level screen, the
-stage screen, the puzzle screen and the tutorial gate each had a private copy of points, streak,
+stage screen, the puzzle screen and the tutorial gate each had a private copy of points,
 scores and completed stages. They only agreed with each other by accident … which meant earning
 points on the puzzle screen did not update the points chip behind it until a reload"
 (`:1-23`).
@@ -396,7 +396,7 @@ ceremony but the same category of dependency.
 - **Identity changes are explicit.** `setUser(id)` re-reads `localStorage` per learner and
   hydrates from the server once (`:147-166`), with a race guard: a response from a previous
   user is discarded (`:159`).
-- **Hydration merges, never overwrites.** Max for points and best streak and best scores, union
+- **Hydration merges, never overwrites.** Max for points and best scores, union
   for completed stages, local-wins for solutions (`:97-130`). A learner who played offline does
   not lose progress, and a learner on a new device does not get bounced to the tutorial
   (`frontend/src/components/TutorialGate.jsx:26-29`).

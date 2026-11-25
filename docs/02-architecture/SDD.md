@@ -190,7 +190,7 @@ backend uses camelCase; these do, because renaming a field breaks the client.
 |---|---|
 | `ScoreRequest` | `levelId:int`, `stageIdx:int`, `stepsUsed:int`, `lawsUsed:list[str]`, `hintsUsed:int`, `guidesUsed:int|None=0`, `optimalSteps:int|None=None` |
 | `ScoreResponse` | `efficiency:float`, `targetLaw:float`, `hintIndependence:float`, `total:float`, `earnedPoints:int`, `breakdown:dict[str,Any]` |
-| `ProgressData` | `points:int=0`, `streak:int=0`, `bestStreak:int=0`, `stageProgress:dict[str,list[int]]={}`, `stageScores:dict[str,int|float]={}` |
+| `ProgressData` | `points:int=0`, `stageProgress:dict[str,list[int]]={}`, `stageScores:dict[str,int|float]={}` |
 | `SaveProgressRequest` | `progress: ProgressData` |
 
 `stageScores` uses `int | float` deliberately: "the `int \| float` union keeps whole scores as
@@ -273,7 +273,7 @@ JS `Math.round` (half-up) — they disagree at exact `.5` totals [D21].
 ```python
 def load_progress(user_id: str) -> dict[str, Any]                 # :18
 def build_progress(user_progress, stages) -> dict[str, Any]       # :25
-def save_progress(*, user_id, points, streak, best_streak,
+def save_progress(*, user_id, points,
                   stage_progress, stage_scores) -> None           # :53
 def persist_score(user_id: str, outcome: ScoreOutcome) -> None    # :87
 ```
@@ -291,6 +291,14 @@ score from `stageScores` with a default of `0` (`:72-84`).
 read the current best, and raise `stage_progress.best_score` only when the new total is
 strictly greater (`:93-122`). The whole body is wrapped in `except Exception` that logs and
 returns (`:123-127`) — hence "best-effort persistence".
+
+**`feedback_service.py`** — the contact form's rules, and the one place that decides who gets
+the reply. A signed-in caller's account email wins over anything typed; a signed-out caller
+without an address is refused `422` rather than stored, because a report nobody can answer is a
+dead end (`backend/services/feedback_service.py:19`). It logs `category`, `authenticated` and
+`located` only — never the message — and writes through `feedback_repository.insert_feedback`,
+an insert-only adapter over a table with RLS enabled and no policies
+([ADR-014](../07-explanation/design-decisions.md#adr-014--feedback-is-collected-in-app-into-a-write-only-table)).
 
 ### 3.7 `repositories/`
 
@@ -359,11 +367,11 @@ build tools)" (`:17-20`). Design consequences:
 |---|---|---|---|
 | `engine/` | 23 modules + 7 test files (30 total) | 3,303 + 1,361 = 4,664 | Pure Boolean algebra |
 | `state/` | 8 | 1,217 | Single source of truth: progress store, puzzle session, auth context |
-| `services/` | 7 | 426 | The only network boundary |
+| `services/` | 9 | 511 | The only network boundary |
 | `hooks/` | 8 | 1,276 | UI mechanics: device tier, popup placement, drag, overlays |
 | `components/` | 10 top-level + 46 in 6 folders | 1,134 + 5,288 | Presentation, grouped by feature |
-| `pages/` | 7 | 2,103 | One file per route screen |
-| `config/` | 3 | 218 | Every tunable, every storage key, every outbound link |
+| `pages/` | 8 | 2,496 | One file per route screen |
+| `config/` | 3 | 224 | Every tunable, every storage key, every contact address |
 | `content/` | 2 | 400 | Bundled-content loader + tutorial copy |
 | `styles/` | 5 | 450 | Tailwind entry, tokens, utilities, orientation, keyframes |
 | `assets/` | 1 | — | `logo-full.png` |
@@ -484,7 +492,7 @@ Ran: **81 tests, 81 pass, 0 fail** (`cd frontend && npm test`).
 `progressStore` is the single most consequential module in the frontend. Its header comment
 records the defect it was built to fix: "Before this module `useProgress()` was a hook holding
 its own `useState`, so the level screen, the stage screen, the puzzle screen and the tutorial
-gate each had a private copy of points, streak, scores and completed stages. They only agreed
+gate each had a private copy of points, scores and completed stages. They only agreed
 with each other by accident … which meant earning points on the puzzle screen did not update
 the points chip behind it until a reload" (`:1-23`).
 
@@ -549,6 +557,8 @@ Two timing details live here, both from `config/gameRules.js`:
 | `authActions.js` | 33 | `signIn.email`, `signUp.email`, `signOut` | The only module that calls `supabase.auth` mutations; normalises both providers' errors to `{message}` so screens stay provider-agnostic (`:1-6`) |
 | `apiClient.js` | 106 | `ApiError`, `apiRequest(path, {method, body, auth, silent})` (`:56`) | The only `fetch` in the app. Attaches the bearer via `supabase.auth.getSession()` (`:27`), unwraps the envelope (`:33`), tolerates the legacy plain shape, returns `null` instead of throwing when `silent` |
 | `contentApi.js` | 61 | `getLevelSummaries`, `getLaws`, `fetchLevel` | Prefers the bundled JSON; falls back to `GET /api/levels/{id}` for an unbundled id; de-duplicates concurrent requests with `pendingLevelRequests` (`:47-58`) |
+| `feedbackApi.js` | 53 | `MIN_MESSAGE`, `MAX_MESSAGE`, `FEEDBACK_CATEGORIES`, `sendFeedback({category, message, email, pathname})` (`:40`) | The contact form's one call: `POST /api/feedback` through `apiRequest`. Builds the body from `describeLocation`, so the form and the Pydantic schema cannot drift |
+| `feedbackContext.js` | 32 | `APP_VERSION` (`:17`), `describeLocation(pathname)` (`:24`) | Pure: a pathname in, `{page, context}` out. Adds `levelId`/`stageIdx` only for `/level/:levelId/stage/:stageIdx`, never for a sandbox route |
 | `scoreApi.js` | 36 | `submitScore({levelId, stageIdx, stepsUsed, lawsUsed, hintsUsed, guidesUsed, optimalSteps})` | `POST /api/score` with `silent: true` — a solve must never break on a network error |
 | `progressApi.js` | 25 | `loadProgress`, `saveProgress` | `GET /api/progress` and `POST /api/progress/save`, both silent |
 | `soundEffects.js` | 155 | `isSoundEnabled` (`:43`), `setSoundEnabled` (`:47`), `primeAudio` (`:80`), `playSound` (`:132`) | Web Audio only: one oscillator per note, no assets, no network. Every frequency and duration comes from `gameRules.SOUND` |
@@ -626,17 +636,17 @@ Ten top-level modules (1,134 lines) and six feature folders (5,288 lines).
 `animationStyles.js` (45) and `index.js` (33), whose `resolveLawAnimation(lawId)` (`:30`) is
 the dispatcher that maps a law id to its component.
 
-**`components/ui/`** — 11 files / 304 lines: `SurveyBillboard.jsx` (57), `PasswordField.jsx`
+**`components/ui/`** — 11 files / 295 lines: `SurveyBillboard.jsx` (48), `PasswordField.jsx`
 (39), `AuthCard.jsx` (38), `ScoreGateBar.jsx` (38), `SoundToggle.jsx` (28), `AuthTextField.jsx`
 (25), `PointsChip.jsx` (22), `StarRating.jsx` (19), `SubmitButton.jsx` (18),
 `authInputStyles.js` (11), `LoadingSpinner.jsx` (9).
 
-**`components/layout/`** — 4 files / 154 lines: `BackNav.jsx` (61), `PageOverlays.jsx` (41),
-`SurveyButton.jsx` (36), `AppHeader.jsx` (16).
+**`components/layout/`** — 4 files / 150 lines: `BackNav.jsx` (61), `PageOverlays.jsx` (41),
+`SurveyButton.jsx` (32), `AppHeader.jsx` (16).
 
 **`components/laws/`** — 2 files / 96 lines: `LawsDrawer.jsx` (79), `LawCard.jsx` (17).
 
-### 5.6 `pages/` — seven route screens
+### 5.6 `pages/` — eight route screens
 
 | Page | Lines | Design |
 |---|---|---|
@@ -644,6 +654,7 @@ the dispatcher that maps a law id to its component.
 | `LevelSelectPage.jsx` | 440 | Carousel over `[...levels, SANDBOX_LEVEL]` (`:51`) with `getLockState` (`:60`) and row recentring measured with `offsetLeft` (`:172`) |
 | `StageSelectorPage.jsx` | 387 | Stage grid, sequential availability (`:56`), star derivation (`:68`), 80 % gate bar and mastery badge (`:87-90`) |
 | `SandboxPage.jsx` | 359 | The sandbox entry screen: debounced live verdict, build-on-submit, example chips |
+| `ContactPage.jsx` | 393 | The public contact/feedback form: three category cards, a counted 10–2000-character message, an email field only when signed out, and the success/failure swap that keeps the typed text |
 | `RegisterPage.jsx` | 155 | Client-side validation and Supabase signup |
 | `LandingPage.jsx` | 126 | Public hero; session-aware CTAs |
 | `LoginPage.jsx` | 115 | Sign-in form; navigates on session |
@@ -665,7 +676,9 @@ below it in `usePuzzleSession` and `useGameState`.
 | Interaction | `DRAG` (`:88`), `SANDBOX` (`:110`), `SOLVER_BUDGET` (`:173`) |
 | Audio | `SOUND` (`:148`) |
 
-`storageKeys.js` (28) centralises six keys; `appLinks.js` (9) holds the single survey URL.
+`storageKeys.js` (28) centralises six keys; `appLinks.js` (15) now holds only the optional
+`CONTACT_EMAIL` — the old survey URL was deleted when feedback moved to `/contact` and into
+`public.feedback`.
 Header comments record the motivation: "Before this module the same figures were repeated
 across the scoring endpoint, the puzzle screen, the progress store and the level screens
 (40/30/30 in two files, 90/75 in two, 80% in three, 10/20/5 points in four)"
@@ -772,8 +785,6 @@ Transport (`backend/api/schemas/progress.py:11-22`), camelCase:
 ```python
 class ProgressData(BaseModel):
     points: int = 0
-    streak: int = 0
-    bestStreak: int = 0
     stageProgress: dict[str, list[int]] = {}    # { "1": [0, 1, 2] }
     stageScores: dict[str, int | float] = {}    # { "1:0": 87.5 }
 ```
@@ -782,7 +793,7 @@ Client snapshot (`frontend/src/state/progressStore.js:30-39`) — a superset, be
 also remembers derivations and tutorial flags that never go to the server:
 
 ```js
-{ points, streak, bestStreak,
+{ points,
   levelsCompleted: [],   // numeric content ids, 0 = Tutorial
   stageProgress: {},     // { "1": [0,1,2] }
   stageScores: {},       // { "1:0": 87.5 }  ← best total per stage
@@ -790,8 +801,8 @@ also remembers derivations and tutorial flags that never go to the server:
   hasSeenTutorial: false }
 ```
 
-`build_progress` (server) produces the first five; `mergeServerProgress` (client, `:97-130`)
-folds the server's five into the local eight with max/union semantics and keeps local
+`build_progress` (server) produces the first three; `mergeServerProgress` (client, `:97-130`)
+folds the server's three into the local six with max/union semantics and keeps local
 `stageSolutions` as the winner (`:118-119`).
 
 ### 6.5 The law definition and a law instance

@@ -7,17 +7,22 @@ import Icon from '../ui/Icon'
  *
  * Presentational: the law list, the layout flags and the callbacks come in.
  */
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { independentChoices } from '../../engine/index.js'
 
-export default function LawPanel({
+function LawPanel({
   isComplete, isSandbox, isCustomSandbox, steps, optimalSteps,
   sel, lawsAsStrip, lawsAsGrid, touchTargets, onApplyLaw,
   level, stageNum, onOpenScoreSummary, onNextStage, onBackToStages,
   onRandomize, onNewExpression, referenceLaws = [], busy = false,
   selectedLaw, onChooseLaw, lawIds = null, allowExpand = false,
 }) {
-  const choices = independentChoices(referenceLaws, { lawIds, allowExpand })
+  // independentChoices walks the law list and filters it; without this memo the
+  // palette re-derived on every workspace render, including pure UI toggles.
+  const choices = useMemo(
+    () => independentChoices(referenceLaws, { lawIds, allowExpand }),
+    [referenceLaws, lawIds, allowExpand],
+  )
   /** Re-anchor the strip only when the available palette changes. */
   const applicableLawKey = choices.map(l => l.id).join('|')
   const lawsStripRef = useRef(null)
@@ -33,10 +38,10 @@ export default function LawPanel({
     <div
       data-tutorial="laws-dock"
       className={lawsAsStrip
-        ? 'border-t-[1.5px] border-border bg-bg-card shrink-0 px-2 py-1.5'
+        ? 'border-t-[1.5px] border-border bg-bg-card shrink-0 px-2 py-1.5 shadow-[0_-1px_0_0_rgba(15,23,42,0.04)]'
         : lawsAsGrid
-          ? 'border-t-[1.5px] border-border p-3 bg-bg-card shrink-0 max-h-[46vh] overflow-y-auto'
-          : 'border-t-[1.5px] border-border p-3 px-5 pb-4 bg-bg-card shrink-0 max-h-[35vh] overflow-y-auto'}
+          ? 'border-t-[1.5px] border-border p-3 bg-bg-card shrink-0 max-h-[46vh] overflow-y-auto shadow-[0_-1px_0_0_rgba(15,23,42,0.04)]'
+          : 'border-t-[1.5px] border-border p-3 px-5 pb-4 bg-bg-card shrink-0 max-h-[35vh] overflow-y-auto shadow-[0_-1px_0_0_rgba(15,23,42,0.04)]'}
     >
       {isComplete ? (
         <div className={`flex items-center justify-between gap-4 flex-wrap ${lawsAsStrip ? 'gap-2 py-0' : 'py-1'}`}>
@@ -81,7 +86,7 @@ export default function LawPanel({
               <>
             <button
               data-tutorial="reopen-score-btn"
-              className={`px-3.5 py-2 border border-slate-200 text-text-2 font-semibold rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-text-1 transition-all cursor-pointer ${lawsAsStrip ? 'text-[14px]' : 'text-xs'}`}
+              className={`cursor-pointer rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 shadow-chip transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:shadow-none dark:hover:bg-slate-700 dark:hover:text-white ${lawsAsStrip ? 'text-[14px]' : 'text-xs'}`}
               onClick={onOpenScoreSummary}
             >
               <Icon name="chart" /> Score Summary
@@ -89,7 +94,7 @@ export default function LawPanel({
             {level && stageNum + 1 < level.puzzles.length ? (
               <button
                 data-tutorial="next-stage-btn"
-                className={`px-5 py-2 bg-accent text-on-accent rounded-lg font-semibold transition-all shadow-sm hover:bg-accent-hover hover:shadow-md hover:-translate-y-px ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
+                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                 onClick={onNextStage}
               >
                 Next Stage →
@@ -97,7 +102,7 @@ export default function LawPanel({
             ) : (
               <button
                 data-tutorial="next-stage-btn"
-                className={`px-5 py-2 bg-accent text-on-accent rounded-lg font-semibold transition-all shadow-sm hover:bg-accent-hover hover:shadow-md hover:-translate-y-px ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
+                className={`px-5 py-2 rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:shadow-lg dark:shadow-indigo-500/25 dark:focus-visible:ring-cyan-400/60 ${lawsAsStrip ? 'text-[14px]' : 'text-sm'}`}
                 onClick={() => onBackToStages()}
               >
                 Back to Stages
@@ -119,7 +124,7 @@ export default function LawPanel({
               type="button" data-tutorial="apply-law" data-testid="apply-selected-law"
               disabled={busy || !selectedLaw || sel.length === 0}
               onClick={() => onApplyLaw(selectedLaw)}
-              className="min-h-[44px] px-4 py-2 bg-accent text-on-accent font-semibold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[44px] rounded-lg bg-indigo-600 bg-gradient-to-r from-indigo-600 to-cyan-700 px-4 py-2 font-semibold text-white shadow-lg shadow-indigo-600/25 ring-1 ring-inset ring-white/20 transition-[filter,box-shadow] hover:brightness-105 hover:shadow-xl hover:shadow-indigo-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:bg-indigo-600 dark:from-indigo-600 dark:to-cyan-700 dark:focus-visible:ring-cyan-400/60"
             >Apply{selectedLaw ? ` ${selectedLaw.name}` : ''}</button>
           </div>
           {lawIds && <p className="text-xs text-text-3 mb-2">Level 1: more laws join your palette as you advance through the stages.</p>}
@@ -132,11 +137,11 @@ export default function LawPanel({
               <button
                 type="button" key={law.id} data-tutorial={`law-card-${i}`} data-law-id={law.id}
                 aria-pressed={selectedLaw?.id === law.id} disabled={busy}
-                className={`shrink-0 min-h-[44px] border-[1.5px] rounded-md px-3 py-2 text-left transition-all disabled:opacity-50 ${lawsAsGrid ? 'w-full' : 'min-w-[160px] max-w-[260px]'} ${selectedLaw?.id === law.id ? 'border-accent bg-accent/10 ring-1 ring-accent' : 'bg-bg-card border-border hover:border-text-1 hover:bg-bg'}`}
+                className={`shrink-0 min-h-[44px] border-[1.5px] rounded-md px-3 py-2 text-left transition-all disabled:opacity-50 ${lawsAsGrid ? 'w-full' : 'min-w-[160px] max-w-[260px]'} ${selectedLaw?.id === law.id ? 'border-indigo-500 bg-indigo-500/10 ring-2 ring-indigo-500/30 shadow-[0_10px_22px_-16px_rgba(79,70,229,0.60)] dark:border-cyan-400 dark:bg-cyan-400/10 dark:ring-cyan-400' : 'bg-white border-slate-200/80 shadow-chip hover:-translate-y-px hover:border-indigo-300 hover:bg-white hover:shadow-[0_10px_20px_-14px_rgba(79,70,229,0.45)] dark:bg-slate-800/90 dark:shadow-none dark:border-white/10 dark:hover:border-indigo-400/40 dark:hover:bg-slate-800'}`}
                 onClick={() => onChooseLaw(law)}
               >
                 <div className={`font-semibold text-text-1 ${touchTargets ? 'text-[14px]' : 'text-[13px]'}`}>{law.name}</div>
-                <div className="font-mono text-xs text-teal">{law.formula}</div>
+                <div className="font-mono text-xs text-indigo-700 dark:text-cyan-300">{law.formula}</div>
               </button>
             ))}
           </div>
@@ -145,3 +150,5 @@ export default function LawPanel({
     </div>
   )
 }
+
+export default memo(LawPanel)

@@ -663,7 +663,6 @@ Per **first** completion of a stage, on a graded level:
 |---|---|---|
 | Base XP | `+10` (`STAGE_COMPLETION_XP`) | `frontend/src/config/gameRules.js:32`; set at completion in `frontend/src/state/useGameState.js:483` |
 | Score bonus | `+0 … +5` (`earnedPoints`, rounded) | `frontend/src/config/gameRules.js:29`; `backend/services/scoring_service.py:55` |
-| Streak | `+1` on `streak`, and `best_streak` raised to the new high-water mark | `frontend/src/state/progressStore.js:170-175` |
 | Guide spend | `−20` per Guide activated, floored at 0 | `frontend/src/pages/ProblemPage.jsx:261-270`; `frontend/src/state/progressStore.js:178` |
 | Hints | no point cost | the only `deductPoints` call site in the app is the Guide activation (`frontend/src/pages/ProblemPage.jsx:268`); the hint path at `frontend/src/state/useGameState.js:545-564` never spends points |
 

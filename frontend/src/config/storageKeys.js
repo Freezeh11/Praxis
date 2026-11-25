@@ -12,6 +12,16 @@ export const progressKey = (userId) => `praxis_v1_${userId}`
 /** Namespace prefix of the per-user progress key (used to find it generically). */
 export const PROGRESS_KEY_PREFIX = 'praxis_v1_'
 
+/**
+ * Per-user cache of the last *server* snapshot, stamped with the read time.
+ *
+ * The local key above is the offline copy; this one remembers what the server
+ * last confirmed, so a reload can paint the learner's real progress before the
+ * network answers (stale-while-revalidate) instead of holding a spinner.
+ */
+export const serverProgressKey = (userId) => `praxis_server_v1_${userId}`
+export const SERVER_PROGRESS_KEY_PREFIX = 'praxis_server_v1_'
+
 /** sessionStorage: learner chose "don't ask again" for the tutorial replay prompt. */
 export const SKIP_TUTORIAL_REPLAY_PROMPT = 'praxis_skip_tutorial_replay_prompt'
 

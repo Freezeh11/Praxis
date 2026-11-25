@@ -284,7 +284,7 @@ Steps:
 curl -s -H 'Authorization: Bearer <token>' http://127.0.0.1:8000/api/progress
 ```
 
-Expected: `200` with a `data` object containing `points`, `streak`, `bestStreak`, `stageProgress`,
+Expected: `200` with a `data` object containing `points`, `stageProgress`,
 `stageScores` (`backend/services/progress_service.py:44-50`).
 
 Then, in the browser: complete one stage and confirm `POST /api/progress/save` returns
@@ -375,7 +375,7 @@ Expected: the envelope starting `{"success":true,"data":[{"id":0,…` and `200`.
 
 ## RB-05: `502 upstream_error` from Supabase
 
-**Severity:** auth and progress broken; content and scoring still work.
+**Severity:** auth, progress or the feedback inbox broken; content and scoring still work.
 
 ### Symptom
 
@@ -383,16 +383,18 @@ Expected: the envelope starting `{"success":true,"data":[{"id":0,…` and `200`.
 {"success":false,"data":null,"error":{"code":"upstream_error","message":"Authentication service is unavailable","detail":"…"}}
 ```
 
-or `"Progress storage is unavailable"`, always with HTTP `502`.
+or `"Progress storage is unavailable"`, or `"Feedback storage is unavailable"` — always with HTTP `502`.
 
 ### Diagnosis
 
-`upstream_error` is raised in exactly two places, both from an `httpx` transport failure:
+`upstream_error` is raised in three places. The first two come from an `httpx` transport failure; the
+third is a PostgREST rejection, and its usual cause is a missing table rather than a dead network:
 
 | Message | Raised at | Called from |
 |---|---|---|
 | `Authentication service is unavailable` | `backend/core/security.py:28-29` | `GET/POST /api/progress*`, and `POST /api/score` when a token is present |
 | `Progress storage is unavailable` | `backend/repositories/progress_repository.py:25-26` | every Supabase PostgREST call |
+| `Feedback storage is unavailable` | `backend/repositories/feedback_repository.py` | `POST /api/feedback` |
 
 The `detail` field carries the httpx exception text (`str(exc)`), which tells you whether it was DNS,
 a connect timeout, or TLS.
@@ -416,6 +418,10 @@ Check, in order:
    against `backend/.env`.
 4. **Is it a DNS/IPv6 issue?** Classic on some hosts: the URL resolves over IPv6 that the container
    cannot route. Compare `curl -4` and `curl -6` against the project host.
+5. **For `Feedback storage is unavailable` only — does the `feedback` table exist?** Check Supabase
+   dashboard → Table Editor for `public.feedback`. A project where `database/init.sql` was run but
+   `database/feedback.sql` was not answers `404` on the insert, and the repository maps that to this
+   message. This is the single most common cause and it is not a network fault at all.
 
 ### Fix
 
@@ -425,6 +431,7 @@ Check, in order:
 | Key revoked/rotated | update `SUPABASE_SERVICE_KEY` (`backend/.env`, Render dashboard) and restart/redeploy — [RB-12](#rb-12-rotate-a-leaked-supabase-key) |
 | Supabase outage | check Supabase status; nothing to fix locally — the backend is behaving correctly by returning 502 |
 | Network/DNS | fix egress (firewall, IPv6); for a self-hosted environment allow `https://<project-ref>.supabase.co:443` |
+| `feedback` table missing | run `database/feedback.sql` once in the Supabase SQL Editor (after `database/init.sql`). Until it is run, every submission is this 502 and the dashboard shows no rows at all. |
 
 ### Verify
 
@@ -434,6 +441,9 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/api/progress
 
 Expected `401` (not `502`) — that proves the backend reached Supabase and rejected the missing token
 for the right reason. Then repeat RB-03's token check for a full pass.
+
+For the feedback path, submit one report from `/contact` and expect `202` with
+`{"data":{"status":"received"}}`; the row then appears in Table Editor → `feedback`.
 
 ---
 
@@ -574,7 +584,7 @@ Only three tables hold learner state (`database/init.sql`):
 
 | Table | Holds | Loss impact |
 |---|---|---|
-| `user_progress` | points, streak, best streak | learner sees points reset to 0 |
+| `user_progress` | points | learner sees points reset to 0 |
 | `stage_progress` | per-stage completion and best score | level gates re-lock; stars disappear |
 | `score_history` | the append-only score log | history lost; current best scores survive in `stage_progress` |
 
@@ -624,7 +634,7 @@ Then delete and re-play their stages (see
 important warning about the frontend's merge rule).
 
 > ⚠️ **The client merges, it does not overwrite.** `mergeServerProgress` takes the **maximum** of
-> local and server `points`/`bestStreak` and unions completed stages
+> local and server `points` and unions completed stages
 > (`frontend/src/state/progressStore.js:96-130`). Clearing the database alone will therefore *not*
 > reset a learner whose browser still holds the local snapshot — and clearing the browser alone will
 > not reset them either, because the next hydration pulls the server values back. Reset both layers,

@@ -9,7 +9,7 @@
  * the screen. This file owns the device tier, the transient UI state and the
  * wiring between them.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -20,11 +20,13 @@ import LawExplanationCard from '../components/puzzle/LawExplanationCard'
 import LawPanel from '../components/puzzle/LawPanel'
 import LawsReferenceSheet from '../components/puzzle/LawsReferenceSheet'
 import ResetConfirmModal from '../components/puzzle/ResetConfirmModal'
+import ExitTutorialConfirm from '../components/tutorial/ExitTutorialConfirm'
 import ScoreModal from '../components/puzzle/ScoreModal'
 import SidePanel from '../components/puzzle/SidePanel'
 import StepHistoryPanel from '../components/puzzle/StepHistoryPanel'
 import StepInspectionTip from '../components/puzzle/StepInspectionTip'
 import WorkspaceHeader from '../components/puzzle/WorkspaceHeader'
+import ZoomProvider from '../components/puzzle/ZoomProvider'
 import MobileExpressionModal from '../components/puzzle/MobileExpressionModal'
 import usePuzzleSession from '../components/puzzle/usePuzzleSession'
 import InteractiveTutorial from '../components/InteractiveTutorial'
@@ -79,9 +81,11 @@ export default function ProblemPage() {
   // right panel folds into the header (assistance) or the bottom dock (laws).
   const useOverlayHistory = isPhoneLandscape || isTabletPortrait || isNarrowViewport
   const showRightPanel = !useOverlayHistory
-  const lawsAsStrip = isPhoneLandscape || isNarrowViewport
+  const lawsAsStrip = isPhoneLandscape || isNarrowViewport || isTabletLandscape
   const lawsAsGrid = isTabletPortrait && !isNarrowViewport
-  const lawsInRightColumn = isTabletLandscape
+  // The law palette always lives in the bottom dock. It used to replace the
+  // stage list in the right rail on tablet landscape, which hid the stages and
+  // squeezed the palette into a 300px column.
   const compactHeader = useOverlayHistory || isTabletLandscape
   /** Compact tiers re-home the workspace controls into a second header row. */
   const headerControlRail = useOverlayHistory
@@ -101,7 +105,6 @@ export default function ProblemPage() {
   const [hintExpression, setHintExpression] = useState(null)
   const hintDismissTimerRef = useRef(null)
   useEffect(() => () => clearTimeout(hintDismissTimerRef.current), [])
-  const [zoom, setZoom] = useState(1.0)
   const [inspectedStepIdx, setInspectedStepIdx] = useState(null)
   const [showLawsDrawer, setShowLawsDrawer] = useState(false)
   const [showStepHistory, setShowStepHistory] = useState(false)
@@ -109,6 +112,7 @@ export default function ProblemPage() {
   // leaving phone landscape/tablet portrait closes it without an effect.
   const stepHistoryOpen = showStepHistory && useOverlayHistory
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showExitTutorialConfirm, setShowExitTutorialConfirm] = useState(false)
   const [dontAskResetAgain, setDontAskResetAgain] = useState(false)
   const [dismissReviewReminder, setDismissReviewReminder] = useState(false)
   const [showStepInspectionTip, setShowStepInspectionTip] = useState(false)
@@ -119,17 +123,39 @@ export default function ProblemPage() {
   // this page only hands it to the header toggle.
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundEnabled()
 
-  const handlePuzzleChange = () => {
+  const handlePuzzleChange = useCallback(() => {
     clearTimeout(hintDismissTimerRef.current)
     setShowHint(false)
-  }
+  }, [])
   /** A randomize swaps the problem: every transient overlay goes with it. */
-  const handleWorkspaceReset = () => {
+  const handleWorkspaceReset = useCallback(() => {
     clearTimeout(hintDismissTimerRef.current)
     setShowHint(false)
     setInspectedStepIdx(null)
     setShowResetConfirm(false)
-  }
+  }, [])
+
+  const closeLaws = useCallback(() => setShowLawsDrawer(false), [])
+  const closeStepHistory = useCallback(() => setShowStepHistory(false), [])
+  const closeResetConfirm = useCallback(() => setShowResetConfirm(false), [])
+  const closeExitTutorialConfirm = useCallback(() => setShowExitTutorialConfirm(false), [])
+  const closeMobileExpression = useCallback(() => setShowMobileExpressionCreator(false), [])
+  const handleDismissReviewReminder = useCallback(() => setDismissReviewReminder(true), [])
+  const closeHint = useCallback(() => setShowHint(false), [])
+  const closeInspect = useCallback(() => setInspectedStepIdx(null), [])
+  /**
+   * Inspecting a past step from the history list. On the tiers where that list
+   * is a slide-over it covers the step it was triggered from, so leaving it open
+   * would open the explanation underneath it (the drawer is z-50, the popup
+   * layer z-56) — the card would be partially hidden and its close button
+   * unreadable/unreachable. Closing the drawer first also gives the card the
+   * derivation line as its anchor instead of a step card that is sliding away.
+   */
+  const inspectStep = useCallback((next) => {
+    if (useOverlayHistory) setShowStepHistory(false)
+    setInspectedStepIdx(next)
+  }, [useOverlayHistory])
+  const dismissInspectionTip = useCallback(() => setShowStepInspectionTip(false), [])
 
   /**
    * The panels cue their own open/close (hooks/usePanelSound), so these only
@@ -137,18 +163,18 @@ export default function ProblemPage() {
    * the step history has not clicked a term yet, and an unprimed AudioContext
    * would swallow the cue.
    */
-  const openLaws = () => {
+  const openLaws = useCallback(() => {
     primeAudio()
     setShowLawsDrawer(true)
-  }
-  const toggleStepHistory = () => {
+  }, [])
+  const toggleStepHistory = useCallback(() => {
     primeAudio()
     setShowStepHistory(prev => !prev)
-  }
-  const openStepHistory = () => {
+  }, [])
+  const openStepHistory = useCallback(() => {
     primeAudio()
     setShowStepHistory(true)
-  }
+  }, [])
 
   const {
     levelId, stageIdx, isSandbox, isCustomSandbox, customPuzzle, level, puzzle, sandboxNonce,
@@ -161,7 +187,28 @@ export default function ProblemPage() {
     hintsUsed, guidesUsed, optimalSteps,
   } = usePuzzleSession({ onPuzzleChange: handlePuzzleChange, onWorkspaceReset: handleWorkspaceReset })
 
-  const handleNewExpression = () => {
+  /** Stable navigation + dismiss callbacks: the memoised panels compare props by
+   * identity, so an arrow rebuilt on every render would defeat the memo. They
+   * live below the session hook because they read its route identity. */
+  const navToStages = useCallback(
+    () => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`),
+    [navigate, isSandbox, levelId],
+  )
+  const closeSuccess = useCallback(() => setShowSuccess(false), [setShowSuccess])
+
+  // An accidental refresh used to wipe an in-progress derivation with no
+  // warning (only completed stages are persisted). Ask before discarding it.
+  useEffect(() => {
+    if (steps.length === 0 || isComplete) return undefined
+    const guard = (event) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', guard)
+    return () => window.removeEventListener('beforeunload', guard)
+  }, [steps.length, isComplete])
+
+  const handleNewExpression = useCallback(() => {
     setShowSuccess(false)
     if (showRightPanel) {
       expressionInputRef.current?.focus()
@@ -169,7 +216,7 @@ export default function ProblemPage() {
     } else {
       setShowMobileExpressionCreator(true)
     }
-  }
+  }, [showRightPanel, setShowSuccess])
 
   const isTutorialLevel = !isSandbox && Number(levelId) === TUTORIAL.levelId
 
@@ -191,7 +238,13 @@ export default function ProblemPage() {
     anchorSelector: inspectAnchorSelector,
     candidates: INSPECT_POPUP_CANDIDATES,
     fullWidthOnNarrow: 480,
-    enabled: inspectedStepIdx !== null || showStepInspectionTip,
+    // The law-explanation card hangs off a derivation line; when no candidate
+    // fits it is clamped into the viewport, and this keeps that clamp below the
+    // workspace header instead of painting over the page title.
+    minTop: 60,
+    // Only a real inspection drives the layer: the first-run tip is centred
+    // below, in its own container, rather than anchored to the expression.
+    enabled: inspectedStepIdx !== null,
   })
 
   const {
@@ -252,7 +305,7 @@ export default function ProblemPage() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [inspectedStepIdx])
 
-  const handleHint = () => {
+  const handleHint = useCallback(() => {
     if (!puzzle || isComplete) return
     const hint = requestHint(puzzle)
     if (hint) {
@@ -262,9 +315,9 @@ export default function ProblemPage() {
       setShowHint(true)
       hintDismissTimerRef.current = setTimeout(() => setShowHint(false), TIMING.hintAutoDismissMs)
     }
-  }
+  }, [puzzle, isComplete, requestHint, expr])
 
-  const handleNextStage = () => {
+  const handleNextStage = useCallback(() => {
     const nextIdx = stageNum + 1
     if (level && nextIdx < level.puzzles.length) {
       const isTutLevel = Number(levelId) === TUTORIAL.levelId
@@ -276,20 +329,20 @@ export default function ProblemPage() {
       }
       navigate(`/level/${levelId}/stages`)
     }
-  }
+  }, [stageNum, level, levelId, navigate])
 
-  const handleSelectStage = (idx) => {
+  const handleSelectStage = useCallback((idx) => {
     if (!levelId) return
     const isTutLevel = Number(levelId) === TUTORIAL.levelId
     const tutParam = isTutLevel ? '?tutorial=true' : ''
     navigate(`/level/${levelId}/stage/${idx + 1}${tutParam}`)
-  }
+  }, [levelId, navigate])
 
   // The Guide is a graded-level aid: 20 points there, free in the unscored
   // sandbox (the spec requires Hint/Guide to stay available while practicing).
   const guideCost = isSandbox ? 0 : GUIDE_COST_POINTS
 
-  const handleGuide = () => {
+  const handleGuide = useCallback(() => {
     if (isComplete) return
     if (guideCost === 0 || (progress.points ?? 0) >= guideCost) {
       const activated = activateGuide()
@@ -299,20 +352,9 @@ export default function ProblemPage() {
     } else {
       toast.error(`Not enough points! You need ${guideCost} points to use the Guide.`)
     }
-  }
+  }, [isComplete, guideCost, progress.points, activateGuide, deductPoints])
 
-  const handleResetClick = () => {
-    // If the stage is completed and user hasn't opted out in this session
-    const skipPrompt = sessionStorage.getItem(SKIP_RESET_CONFIRM) === 'true'
-    if (isComplete && !skipPrompt) {
-      setDontAskResetAgain(false)
-      setShowResetConfirm(true)
-    } else {
-      executeReset()
-    }
-  }
-
-  const executeReset = () => {
+  const executeReset = useCallback(() => {
     if (dontAskResetAgain) {
       sessionStorage.setItem(SKIP_RESET_CONFIRM, 'true')
     }
@@ -322,35 +364,66 @@ export default function ProblemPage() {
     setShowSuccess(false)
     setShowHint(false)
     resetPuzzle(puzzle)
-  }
+  }, [dontAskResetAgain, clearLoadedAsSaved, resetPuzzle, puzzle, setShowSuccess])
 
-  const handleUndo = () => {
+  const handleResetClick = useCallback(() => {
+    // Confirm whenever reset would destroy something: a solved stage OR an
+    // in-progress derivation. Previously only the solved case asked, so the
+    // commonest destructive reset - mid-derivation - was silent.
+    const skipPrompt = sessionStorage.getItem(SKIP_RESET_CONFIRM) === 'true'
+    if ((isComplete || steps.length > 0) && !skipPrompt) {
+      setDontAskResetAgain(false)
+      setShowResetConfirm(true)
+    } else {
+      executeReset()
+    }
+  }, [isComplete, steps.length, executeReset])
+
+  /** Leaves the tutorial; the only path that is allowed to discard the derivation. */
+  const exitTutorial = useCallback(() => {
+    setShowExitTutorialConfirm(false)
+    setIsTutorialActive(false)
+    setShowStepHistory(false)
+    navigate('/level/0/stages')
+  }, [navigate])
+
+  const handleTutorialExit = useCallback(() => {
+    // Exiting with moves on the board would silently throw the work away, so ask
+    // exactly like Reset does. A freshly started stage exits straight away.
+    if (steps.length > 0 && !isComplete) {
+      setShowExitTutorialConfirm(true)
+      return
+    }
+    exitTutorial()
+  }, [steps.length, isComplete, exitTutorial])
+
+  const handleUndo = useCallback(() => {
     setInspectedStepIdx(null)
     clearLoadedAsSaved()
     undoAction()
-  }
+  }, [clearLoadedAsSaved, undoAction])
 
   /* Wrapper functions to pass current expr snapshot to handlers */
-  const onClickLit = (path) => {
+  const onClickLit = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickLit(path, expr)
-  }
-  const onClickNot = (path) => {
+  }, [expr, handleClickLit])
+  const onClickNot = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickNot(path, expr)
-  }
-  const onClickTerm = (path) => {
+  }, [expr, handleClickNot])
+  const onClickTerm = useCallback((path) => {
     setInspectedStepIdx(null)
     if (expr) handleClickTerm(path, expr)
-  }
-  const onApplyLaw = (law) => {
+  }, [expr, handleClickTerm])
+  const onApplyLaw = useCallback((law) => {
     setInspectedStepIdx(null)
     clearLoadedAsSaved()
     const enableTutorialPause = isTutorialActive && stageNum < 3
     if (expr) applyLaw(law, expr, steps, hintsUsed, enableTutorialPause)
-  }
+  }, [expr, applyLaw, steps, hintsUsed, isTutorialActive, stageNum, clearLoadedAsSaved])
 
-  const handleTutorialToggle = () => {
+  const handleTutorialToggle = useCallback(() => {
     if (!isTutorialLevel) return
     setIsTutorialActive(prev => {
       const next = !prev
@@ -363,7 +436,7 @@ export default function ProblemPage() {
       }
       return next
     })
-  }
+  }, [isTutorialLevel, puzzle, clearLoadedAsSaved, resetPuzzle, setShowSuccess, setScoreResult])
 
   if (!level || !puzzle) {
     return (
@@ -398,29 +471,37 @@ export default function ProblemPage() {
       sel={sel} lawsAsStrip={lawsAsStrip} lawsAsGrid={lawsAsGrid}
       touchTargets={touchTargets} onApplyLaw={onApplyLaw} onOpenLaws={openLaws}
       level={level} stageNum={stageNum} onOpenScoreSummary={handleOpenScoreSummary}
-      onNextStage={handleNextStage} onBackToStages={() => navigate(`/level/${levelId}/stages`)} onRandomize={handleRandomize}
+      onNextStage={handleNextStage} onBackToStages={navToStages} onRandomize={handleRandomize}
       onNewExpression={handleNewExpression}
     />
   )
 
   return (
-    <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-bg' : 'flex h-screen overflow-hidden bg-bg'}>
+    <ZoomProvider>
+    <div className={isPhoneLandscape ? 'flex h-[100dvh] overflow-hidden bg-transparent' : 'flex h-screen overflow-hidden bg-transparent'}>
       <StepHistoryPanel
-        steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={setInspectedStepIdx}
+        steps={steps} inspectedStepIdx={inspectedStepIdx} onToggleInspectStep={inspectStep}
         useOverlayHistory={useOverlayHistory} isPhoneLandscape={isPhoneLandscape} stepHistoryOpen={stepHistoryOpen}
-        onCloseStepHistory={() => setShowStepHistory(false)} isSandbox={isSandbox} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)}
-        touchTargets={touchTargets} zoom={zoom} onZoom={setZoom}
+        onCloseStepHistory={closeStepHistory} isSandbox={isSandbox} onBack={navToStages}
+        touchTargets={touchTargets}
         isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} chromeText={chromeText}
         chromeHeight={chromeHeight}
       />
 
       {/* ── CENTER PANEL: Expression Workspace ── */}
-      <main className={`flex-1 flex flex-col bg-bg-card border border-border rounded-xl shadow-sm overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
+      <main className={`flex-1 flex flex-col bg-bg-card border border-border rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.05),0_24px_48px_-32px_rgba(15,23,42,0.42)] overflow-hidden ${isPhoneLandscape ? 'm-1.5' : 'm-3'}`}>
+        {/* The workspace has no visual page title, but every page needs one for
+            the document outline and for screen-reader orientation. */}
+        <h1 className="sr-only">
+          {isSandbox
+            ? 'Sandbox workspace'
+            : `${level?.name || `Level ${levelId}`}, stage ${stageNum}${isTutorialLevel ? ' (tutorial)' : ''}`}
+        </h1>
         <WorkspaceHeader
           isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} compactHeader={compactHeader}
           headerControlRail={headerControlRail} showStepHistoryToggle={useOverlayHistory} chromeText={chromeText}
           chromeHeight={chromeHeight} steps={steps} optimalSteps={optimalSteps}
-          points={progress.points} zoom={zoom} onZoom={setZoom}
+          points={progress.points}
           isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onToggleTutorial={handleTutorialToggle} isComplete={isComplete}
           guideCost={guideCost} onHint={handleHint} onGuide={handleGuide}
           onOpenLaws={openLaws} onBack={() => navigate(isSandbox ? '/levels' : `/level/${levelId}/stages`)} stepHistoryOpen={stepHistoryOpen}
@@ -436,19 +517,19 @@ export default function ProblemPage() {
           activeGuidePaths={activeGuidePaths} onClickLit={onClickLit} onClickNot={onClickNot}
           onClickTerm={onClickTerm} swapTerms={swapTerms} touchTargets={touchTargets}
           isPhoneLandscape={isPhoneLandscape} isSandbox={isSandbox} sandboxNonce={sandboxNonce}
-          isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle} zoom={zoom}
+          isCustomSandbox={isCustomSandbox} customPuzzle={customPuzzle}
         />
 
-        {!lawsInRightColumn && lawsPanel}
+        {lawsPanel}
       </main>
 
       <SidePanel
-        showRightPanel={showRightPanel} lawsInRightColumn={lawsInRightColumn} lawsPanel={lawsPanel}
+        showRightPanel={showRightPanel}
         isSandbox={isSandbox} isCustomSandbox={isCustomSandbox} level={level}
         stageNum={stageNum} completedSet={completedSet} points={progress.points}
         steps={steps} optimalSteps={optimalSteps} isComplete={isComplete}
-        showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={() => setDismissReviewReminder(true)}
-        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onSelectStage={handleSelectStage} onNavigateStages={() => navigate(`/level/${levelId}/stages`)}
+        showSuccess={showSuccess} dismissReviewReminder={dismissReviewReminder} onDismissReviewReminder={handleDismissReviewReminder}
+        isTutorialActive={isTutorialActive} isTutorialLevel={isTutorialLevel} onSelectStage={handleSelectStage} onNavigateStages={navToStages}
         assistanceInHeader={assistanceInHeader} guideCost={guideCost} onHint={handleHint}
         onGuide={handleGuide} onOpenLaws={openLaws} onRandomize={handleRandomize}
         onLoadCustomExpression={handleLoadCustomExpression} expressionInputRef={expressionInputRef}
@@ -458,11 +539,11 @@ export default function ProblemPage() {
       <LawsReferenceSheet
         show={showLawsDrawer} lawsSheet={lawsSheet} laws={laws}
         nodeRef={lawsPanelNode} band={lawsPanelBand} ready={lawsPanelReady}
-        onClose={() => setShowLawsDrawer(false)}
+        onClose={closeLaws}
       />
 
       <ScoreModal
-        showSuccess={showSuccess} onClose={() => setShowSuccess(false)} isTutorialActive={isTutorialActive}
+        showSuccess={showSuccess} onClose={closeSuccess} isTutorialActive={isTutorialActive}
         shortViewport={shortViewport} isSandbox={isSandbox} isCustomSandbox={isCustomSandbox}
         steps={steps} optimalSteps={optimalSteps} hintsUsed={hintsUsed}
         guidesUsed={guidesUsed} scoreResult={scoreResult} earnedXp={earnedXp}
@@ -474,7 +555,7 @@ export default function ProblemPage() {
       {isSandbox && (
         <MobileExpressionModal
           show={showMobileExpressionCreator}
-          onClose={() => setShowMobileExpressionCreator(false)}
+          onClose={closeMobileExpression}
           onLoadCustomExpression={handleLoadCustomExpression}
           onRandomize={handleRandomize}
         />
@@ -482,8 +563,13 @@ export default function ProblemPage() {
 
       <ResetConfirmModal
         show={showResetConfirm} shortViewport={shortViewport} isSandbox={isSandbox}
-        dontAskResetAgain={dontAskResetAgain} onToggleDontAsk={setDontAskResetAgain} onClose={() => setShowResetConfirm(false)}
+        dontAskResetAgain={dontAskResetAgain} onToggleDontAsk={setDontAskResetAgain} onClose={closeResetConfirm}
         onConfirm={executeReset}
+      />
+
+      <ExitTutorialConfirm
+        show={showExitTutorialConfirm} shortViewport={shortViewport}
+        onClose={closeExitTutorialConfirm} onConfirm={exitTutorial}
       />
 
       {/* ── NON-BLOCKING POPUP LAYER ──
@@ -491,36 +577,56 @@ export default function ProblemPage() {
            collision placement to stay within the viewport. */}
       <HintBubble
         show={showHint && hintExpression === expr && !isComplete && !isAnimating && !isPreLawHighlight} hint={currentHint} isPhoneLandscape={isPhoneLandscape}
-        isNarrowViewport={isNarrowViewport} onClose={() => setShowHint(false)}
+        isNarrowViewport={isNarrowViewport} onClose={closeHint}
       />
 
       <div
         data-testid="inspect-popup-layer"
         style={{ ...inspectPopupStyle, pointerEvents: 'none' }}
-        aria-hidden={!showStepInspectionTip && inspectedStepIdx === null}
+        aria-hidden={inspectedStepIdx === null}
         onClick={e => e.stopPropagation()}
       >
         <div ref={inspectPopupNode}>
           <AnimatePresence>
             {/* Law explanation — opened by clicking a past step / its connector. */}
-            {inspectedStepIdx !== null && (
-              <LawExplanationCard
-                lawName={steps[inspectedStepIdx]?.law}
-                explanation={steps[inspectedStepIdx]?.explanation}
-                ready={inspectPopupReady} onClose={() => setInspectedStepIdx(null)}
-              />
-            )}
+            {inspectedStepIdx !== null && (() => {
+              const step = steps[inspectedStepIdx]
+              // The step records only the law's display name; matching it back to
+              // the law table is what lets the card print the identities the law
+              // stands for instead of only its title.
+              const law = (laws || []).find(l => (step?.lawId && l.id === step.lawId) || l.name === step?.law)
+              return (
+                <LawExplanationCard
+                  lawName={step?.law}
+                  explanation={step?.explanation}
+                  formulas={law?.formulas}
+                  from={step?.from}
+                  to={step?.to}
+                  ready={inspectPopupReady} onClose={closeInspect}
+                />
+              )
+            })()}
 
-            {/* First-run hint that a past step can be inspected. */}
-            {showStepInspectionTip && inspectedStepIdx === null && (
-              <StepInspectionTip
-                ready={inspectPopupReady}
-                onDismiss={() => setShowStepInspectionTip(false)}
-              />
-            )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* First-run hint that a past step can be inspected. It is a one-time
+          explainer, not an annotation of one line, so it reads as a centred
+          card over the workspace instead of floating beside the expression. */}
+      <AnimatePresence>
+        {showStepInspectionTip && inspectedStepIdx === null && (
+          <div
+            key="step-inspection-tip"
+            className="fixed inset-0 z-40 flex items-center justify-center px-4 pointer-events-none"
+            aria-hidden={false}
+          >
+            <div className="pointer-events-auto">
+              <StepInspectionTip ready={inspectPopupReady} onDismiss={dismissInspectionTip} />
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── INTERACTIVE TUTORIAL OVERLAY ── */}
       {isTutorialLevel && isTutorialActive && (
@@ -548,14 +654,11 @@ export default function ProblemPage() {
               navigate('/levels')
             }
           }}
-          onSkip={() => {
-            setIsTutorialActive(false)
-            setShowStepHistory(false)
-            navigate('/level/0/stages')
-          }}
+          onSkip={handleTutorialExit}
           onOpenStepHistory={openStepHistory}
         />
       )}
     </div>
+    </ZoomProvider>
   )
 }

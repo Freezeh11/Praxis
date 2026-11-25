@@ -7,8 +7,18 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     rootDir: backend
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      # Render terminates TLS and appends the caller's address to
+      # X-Forwarded-For; without this every request shares one rate-limit bucket.
+      - key: TRUST_PROXY_HEADERS
+        value: "1"
       - key: FRONTEND_URL
         value: https://praxis-seven-puce.vercel.app
+      # Host-header allowlist: the public service host plus the Render wildcard
+      # (health checks can arrive on either), and loopback for smoke tests.
+      - key: ALLOWED_HOSTS
+        value: praxis-backend-5302.onrender.com,*.onrender.com,localhost,127.0.0.1,testserver
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

@@ -55,24 +55,23 @@ everything else is something it depends on or someone who uses it.
 
 **What it shows:** two kinds of human actor (a **learner** who solves puzzles and a **tutor** who walks
 the same flow to verify gates and scores), the single Praxis system, the external Supabase project
-that supplies both identity and storage, and one outbound-only hyperlink to a feedback survey.
+that supplies identity, storage and the feedback inbox. Feedback is **in-app**: a learner
+reports from `/contact`, the API writes the row, and nothing is opened in another tab.
 Hosting platforms are deliberately **not** here: they are infrastructure rather than a system in
 context, and they appear in [D11 — Deployment diagram](#d11--deployment-diagram) instead.
 
-**Source of truth:** `backend/main.py:25`, `backend/supabase_client.py:22-31`, `backend/supabase_client.py:87-98`, `backend/core/security.py:17-35`, `database/init.sql:8`, `database/init.sql:18`, `database/init.sql:30`, `frontend/src/services/authActions.js:9-31`, `frontend/src/config/appLinks.js:8-9`, `frontend/src/components/TutorialGate.jsx:10-33`.
+**Source of truth:** `backend/main.py:25`, `backend/supabase_client.py:22-31`, `backend/supabase_client.py:87-98`, `backend/core/security.py:17-35`, `database/init.sql:8`, `database/init.sql:18`, `database/init.sql:30`, `frontend/src/services/authActions.js:9-31`, `frontend/src/pages/ContactPage.jsx:93`, `backend/api/routes/feedback.py:22`, `database/feedback.sql:8`, `frontend/src/components/TutorialGate.jsx:10-33`.
 
 ```mermaid
 flowchart TD
   Learner["Learner<br/>practises Boolean simplification in a browser"]
   Tutor["Tutor<br/>previews the puzzle flow, gates and scores"]
   Praxis["Praxis<br/>interactive Boolean-simplification tutor<br/>40 puzzles across 4 levels plus a free sandbox"]
-  Supabase["Supabase<br/>hosted Postgres plus Auth<br/>accounts, progress rows, score history"]
-  Forms["Google Forms<br/>learner feedback survey<br/>outbound link only"]
+  Supabase["Supabase<br/>hosted Postgres plus Auth<br/>accounts, progress rows, score history, feedback inbox"]
 
   Learner -->|"signs up, solves puzzles, reviews progress over HTTPS"| Praxis
   Tutor -->|"walks the same flows, inspects gates and scores"| Praxis
-  Praxis -->|"signs learners in and stores progress and scores"| Supabase
-  Praxis -.->|"opens the survey in a new tab, nothing returns"| Forms
+  Praxis -->|"signs learners in, stores progress and scores, writes feedback"| Supabase
 ```
 
 **Notes.**
@@ -82,8 +81,10 @@ flowchart TD
 - There is no better-auth server and no `POST /sandbox/validate` in this picture, because neither
   exists in the repository. The `vite.config.js` comment about a port-3001 auth server is a dead
   remnant (`frontend/vite.config.js:24-28`).
-- The survey link is defined once at `frontend/src/config/appLinks.js:9` and opened from
-  `frontend/src/components/layout/SurveyButton.jsx:17`.
+- Feedback never leaves the product: the **Feedback** button is a router link into
+  `frontend/src/pages/ContactPage.jsx`, which posts to `/api/feedback`
+  (`frontend/src/services/feedbackApi.js:40`, `backend/api/routes/feedback.py:22`). The row lands
+  in `public.feedback` and is read by the operator in the Supabase dashboard, never by the app.
 
 ---
 
@@ -174,8 +175,6 @@ erDiagram
     USER_PROGRESS {
         uuid user_id PK "FK -> auth.users(id) ON DELETE CASCADE"
         integer points "client-authoritative running total"
-        integer streak "current streak, client-computed"
-        integer best_streak "high-water mark of streak"
         timestamptz updated_at "insert time only - no trigger refreshes it"
     }
 
@@ -935,7 +934,7 @@ flowchart TB
     subgraph state["State layer"]
         session["components/puzzle/usePuzzleSession.js<br/>route identity, puzzle load, completion and scoring"]
         game["state/useGameState.js<br/>history, selection, status, hints, animation"]
-        progress["state/progressStore.js<br/>module-level snapshot: points, streak, scores"]
+        progress["state/progressStore.js<br/>module-level snapshot: points, scores"]
         uprogress["state/useProgress.js<br/>useSyncExternalStore binding"]
         authctx["state/AuthProvider.jsx to authContext.js to useSession.js<br/>session: data, isPending, error"]
     end

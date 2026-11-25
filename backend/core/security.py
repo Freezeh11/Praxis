@@ -16,17 +16,20 @@ from supabase_client import supabase
 
 async def get_current_user(request: Request) -> dict[str, Any]:
     """Return the Supabase user for the request's bearer token, or raise 401."""
-    auth_header = request.headers.get("authorization", "")
+    auth_header = request.headers.get("authorization", "").strip()
+    scheme, _, credentials = auth_header.partition(" ")
+    token = credentials.strip()
 
-    if not auth_header or not auth_header.startswith("Bearer "):
+    # "Bearer " with no token used to slip through startswith() and crash the
+    # header builder, leaking httpx's text into a 502. Reject it as anonymous.
+    if scheme.lower() != "bearer" or not token:
         raise UnauthorizedError("Not authenticated")
-
-    token = auth_header.split(" ")[1]
 
     try:
         user_data = await supabase.get_user(token)
     except httpx.HTTPError as exc:
-        raise UpstreamError("Authentication service is unavailable", detail=str(exc)) from exc
+        # Never surface upstream text: it can contain the submitted credential.
+        raise UpstreamError("Authentication service is unavailable") from exc
 
     if not user_data:
         raise UnauthorizedError("Invalid session")

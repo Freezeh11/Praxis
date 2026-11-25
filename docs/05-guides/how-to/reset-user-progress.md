@@ -1,6 +1,6 @@
 # How to reset a learner's progress
 
-**What this is:** the exact procedure for wiping progress — points, streaks, completed stages, best
+**What this is:** the exact procedure for wiping progress — points, stars, completed stages, best
 scores and saved derivations — either for the learner signed in on your machine or for everyone in the
 Supabase project.
 
@@ -29,9 +29,9 @@ anyone whose own progress is stuck after an experiment. If you have never run th
 
 | Layer | What | Key / table | Cleared by |
 |---|---|---|---|
-| Browser `localStorage` | the full snapshot: points, streak, best streak, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/config/storageKeys.js:10`) | DevTools, §2 |
+| Browser `localStorage` | the full snapshot: points, `levelsCompleted`, `stageProgress`, `stageScores`, `stageSolutions`, `hasSeenTutorial` | `praxis_v1_<userId>` (`frontend/src/config/storageKeys.js:10`) | DevTools, §2 |
 | Browser `sessionStorage` | "don't ask again" flags and the sandbox hand-off puzzle | `praxis_skip_tutorial_replay_prompt`, `praxis_skip_reset_confirm`, `praxis_sandbox_custom_puzzle`, `praxis_hide_rotate_banner` (`frontend/src/config/storageKeys.js:16-25`) | closing the tab, §2 |
-| Supabase `user_progress` | one row per learner: `points`, `streak`, `best_streak`, `updated_at` | `database/init.sql:7-13` | SQL, §3/§6 |
+| Supabase `user_progress` | one row per learner: `points`, `updated_at` | `database/init.sql:7-13` | SQL, §3/§6 |
 | Supabase `stage_progress` | one row per completed stage: `best_score`, `completed`, `completed_at` | `database/init.sql:16-25` | SQL, §3/§6 |
 | Supabase `score_history` | one row per scored attempt | `database/init.sql:28-42` | SQL, §3/§6 |
 
@@ -44,8 +44,6 @@ The snapshot shape is defined once, in `frontend/src/state/progressStore.js:30-3
 ```js
 const defaultProgress = {
   points: 0,
-  streak: 0,
-  bestStreak: 0,
   levelsCompleted: [],        // [1, 2, 3]
   stageProgress: {},          // { "1": [0, 1, 2] } → level 1, stages 0,1,2 done
   stageScores: {},            // { "1:0": 87.5 } → best total score per stage
@@ -191,7 +189,6 @@ snapshot and then calls `loadProgress()`; the answer is merged:
 
 ```js
 points: Math.max(local.points, server.points || 0),
-bestStreak: Math.max(local.bestStreak, server.bestStreak || 0),
 ```
 
 plus a union of completed stages and `Math.max` per stage score
@@ -290,8 +287,8 @@ if (p.stageSolutions) delete p.stageSolutions['1:0']
 localStorage.setItem(key, JSON.stringify(p))
 ```
 
-A single-stage reset does not change `points` or `streak`; those are monotonic totals maintained by
-`addPoints` (`frontend/src/state/progressStore.js:170-176`). If you need those reset too, do the full
+A single-stage reset does not change `points`; the balance is a monotonic total maintained by
+`addPoints` (`frontend/src/state/progressStore.js:210-214`). If you need those reset too, do the full
 reset in §3.
 
 ### 5.4 Reset the score history only (keep current progress)
@@ -375,7 +372,7 @@ curl -s -H 'Authorization: Bearer <token>' http://127.0.0.1:8000/api/progress
 Expected (envelope shortened):
 
 ```json
-{"success":true,"data":{"points":0,"streak":0,"bestStreak":0,"stageProgress":{},"stageScores":{}},"error":null}
+{"success":true,"data":{"points":0,"stageProgress":{},"stageScores":{}},"error":null}
 ```
 
 **3. The browser is empty.** In DevTools → **Application → Local Storage**, the learner's
@@ -392,7 +389,7 @@ Expected (envelope shortened):
 | Progress came back seconds later | a signed-in tab was still open and pushed its snapshot | sign out and close the tabs first |
 | Deleting the DB row did nothing visible | the browser snapshot is the fast path and is read first | clear `localStorage` too |
 | The learner cannot replay the tutorial | the gate reads four stage indexes, not "seen" | §5.1 |
-| Points stay high after a level reset | `points`/`streak` are monotonic totals | full reset (§3) |
+| Points stay high after a level reset | `points` is a monotonic total | full reset (§3) |
 | A different account on the same browser seems reset | keys are per user id — you cleared the wrong one | check the key suffix (§2.2) |
 | Guest progress survived a database wipe | guests never sync to the server | clear `praxis_v1_guest` |
 | `sessionStorage` flags reset themselves | they are session-scoped by design | nothing to fix; use them as intended |

@@ -3,12 +3,10 @@
 -- These tables store user game progress and score history.
 -- Better Auth tables (user, session, account, verification) are created automatically by `npx auth migrate`.
 
--- User game progress (points, streak, etc.)
+-- User game progress (points)
 CREATE TABLE IF NOT EXISTS user_progress (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,        -- References Supabase auth.users
   points INTEGER DEFAULT 0,
-  streak INTEGER DEFAULT 0,
-  best_streak INTEGER DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -46,13 +44,29 @@ CREATE INDEX IF NOT EXISTS idx_stage_progress_user ON stage_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_user ON score_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_score_history_level ON score_history(user_id, level_id, stage_idx);
 
--- Enable Row Level Security (permissive for now — tighten when auth RLS is set up)
+-- Enable Row Level Security
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stage_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE score_history ENABLE ROW LEVEL SECURITY;
 
--- Permissive policies (the backend uses service_role key which bypasses RLS,
--- but these are needed in case the frontend queries Supabase directly)
-CREATE POLICY "Service role full access" ON user_progress FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON stage_progress FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON score_history FOR ALL USING (true);
+-- Owner-only policies. The anon key is shipped to every browser, so a
+-- `FOR ALL USING (true)` policy hands the whole table to anyone who reads it.
+-- The backend still signs in with the service_role key, which bypasses RLS.
+-- The old permissive policies are dropped so re-running this file repairs an
+-- existing database instead of leaving them in place.
+DROP POLICY IF EXISTS "Service role full access" ON user_progress;
+DROP POLICY IF EXISTS "Service role full access" ON stage_progress;
+DROP POLICY IF EXISTS "Service role full access" ON score_history;
+
+CREATE POLICY "Users manage own progress" ON user_progress
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users manage own stages" ON stage_progress
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users manage own scores" ON score_history
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);

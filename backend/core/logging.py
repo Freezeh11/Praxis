@@ -63,6 +63,12 @@ def configure_logging(level: int = logging.INFO) -> None:
     root = logging.getLogger()
     root.handlers = [handler]
     root.setLevel(level)
+    # httpx logs one INFO line per upstream request, including the PostgREST
+    # query string (which carries the caller's user id) and the Supabase project
+    # host. Keep transport chatter out of the platform log stream; our own
+    # warning lines still report failures with a request id.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     _configured = True
 
 

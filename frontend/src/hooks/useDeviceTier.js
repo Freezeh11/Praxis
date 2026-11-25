@@ -3,10 +3,11 @@
  * workspace (Feature 2).
  *
  * Design rules:
- *  - NO User-Agent sniffing. Touch capability comes from `(pointer: coarse)`,
- *    `navigator.maxTouchPoints` and the legacy `ontouchstart` probe; the device
- *    class comes from the *width* of a touch device, which is what actually
- *    determines whether a layout fits.
+ *  - NO User-Agent sniffing. Touch class comes from a coarse PRIMARY pointer
+ *    (`(pointer: coarse)`); `navigator.maxTouchPoints` / `ontouchstart` are only
+ *    a fallback for browsers without the pointer query, so a touchscreen laptop
+ *    keeps the desktop layout. The device class comes from the *width* of a
+ *    touch device, which is what actually determines whether a layout fits.
  *  - The tier decision is a pure function (`detectDeviceTier`) so it can be
  *    unit-tested without a DOM.
  *  - The hook re-evaluates on every relevant event (resize, orientationchange,
@@ -96,15 +97,23 @@ export function detectDeviceTier({ width, height, isTouch, orientation, bannerDi
 /** Touch capability without any UA sniffing. */
 function readIsTouch() {
   if (typeof window === 'undefined') return false
-  let coarse
-  try {
-    coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
-  } catch {
-    coarse = false
+  // The PRIMARY pointer decides the layout. A touchscreen laptop reports touch
+  // points (and `ontouchstart`) while its everyday pointer is a mouse; treating
+  // it as a tablet re-homes the whole workspace into the squeezed tablet
+  // layout for no reason. Only a coarse primary pointer is a touch device.
+  let coarse = null
+  if (typeof window.matchMedia === 'function') {
+    try {
+      coarse = window.matchMedia('(pointer: coarse)').matches
+    } catch {
+      coarse = null
+    }
   }
+  if (coarse !== null) return coarse
+  // No pointer query (very old browsers): fall back to the legacy probes.
   const maxTouchPoints = typeof navigator !== 'undefined' ? Number(navigator.maxTouchPoints) || 0 : 0
   const hasTouchStart = 'ontouchstart' in window
-  return Boolean(coarse || maxTouchPoints > 0 || hasTouchStart)
+  return Boolean(maxTouchPoints > 0 || hasTouchStart)
 }
 
 /**
