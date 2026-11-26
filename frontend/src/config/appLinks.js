@@ -13,7 +13,7 @@
  * exported, without a deploy, and nothing a learner types there reaches Praxis.
  */
 export const SURVEY_URL =
-  'https://docs.google.com/forms/d/1P4O0MdbQUAUGz-xNL-neMHX5ukDuLTjCq-nXpEaFdb8/viewform?edit_requested=true'
+  'https://docs.google.com/forms/d/e/1FAIpQLSdV3tt3aOzlrEBgATtygdy2HD8lMJy2DKvqrhcLQZZdu_cZ8w/viewform?usp=sharing&ouid=115127992330434863311'
 
 /**
  * The plain-mail alternative shown on the in-app contact page.
